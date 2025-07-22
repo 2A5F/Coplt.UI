@@ -1,0 +1,2 @@
+﻿global using GridVecTrackSizingFunction = Coplt.UI.Styles.TrackSizingFunction<Coplt.UI.Styles.GridVec<Coplt.UI.Styles.NonRepeatedTrackSizingFunction>>;
+global using GridVecIGridContainerStyle = Coplt.UI.Styles.IGridContainerStyle<Coplt.UI.Styles.GridVec<Coplt.UI.Styles.NonRepeatedTrackSizingFunction>>;
