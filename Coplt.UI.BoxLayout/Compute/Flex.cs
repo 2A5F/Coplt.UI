@@ -134,7 +134,16 @@ file static class FlexCompute
             constants.NodeInnerSize.SetMain(constants.Direction, constants.InnerContainerSize.Main(constants.Direction));
             constants.NodeOuterSize.SetMain(constants.Direction, constants.ContainerSize.Main(constants.Direction));
 
-            // todo
+            // Re-resolve percentage gaps
+            var style = tree.GetFlexBoxContainerStyle(node);
+            var inner_container_size = constants.InnerContainerSize.Main(constants.Direction);
+            var new_gap =
+                style
+                    .Gap
+                    .Main(constants.Direction)
+                    .TryResolve(inner_container_size, ref tree)
+                ?? 0f;
+            constants.Gap.SetMain(constants.Direction, new_gap);
         }
 
         // todo
@@ -697,6 +706,7 @@ file static class FlexCompute
         }
     }
 
+    /// Determine the container's main size (if not already known)
     private static void DetermineContainerMainSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, Size<AvailableSpace> available_space,
         Span<FlexItem> flex_items, Span<FlexLine> lines, ref AlgoConstants constants
