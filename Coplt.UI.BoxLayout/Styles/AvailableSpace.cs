@@ -65,6 +65,14 @@ public static partial class BoxStyleExtensions
         _ => self,
     };
 
+    public static AvailableSpace TryClamp(this AvailableSpace self, float? min, float? max) => (self.Tag, min, max) switch
+    {
+        (AvailableSpace.Tags.Definite, { } Min, { } Max) => AvailableSpace.MakeDefinite(Math.Clamp(self.Definite, Min, Max)),
+        (AvailableSpace.Tags.Definite, null, { } Max) => AvailableSpace.MakeDefinite(Math.Min(self.Definite, Max)),
+        (AvailableSpace.Tags.Definite, { } Min, null) => AvailableSpace.MakeDefinite(Math.Max(self.Definite, Min)),
+        _ => self,
+    };
+
     public static AvailableSpace MapDefiniteValue(this AvailableSpace self, Func<float, float> f) => self.Tag switch
     {
         AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(f(self.Definite)),

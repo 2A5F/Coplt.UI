@@ -16,4 +16,12 @@ public static partial class BoxStyleExtensions
 
     public static Point<U> Map<A, T, U>(this Point<T> self, A arg, Func<A, T, U> f)
         where A : allows ref struct => new(f(arg, self.X), f(arg, self.Y));
+    
+    public static Size<T> ToSize<T>(this Point<T> self) => new(self.X, self.Y);
+    
+    public static ref readonly T Main<T>(this in Point<T> self, FlexDirection direction)
+        => ref direction.IsRow() ? ref self.X : ref self.Y;
+    
+    public static ref readonly T Cross<T>(this in Point<T> self, FlexDirection direction)
+        => ref direction.IsRow() ? ref self.Y : ref self.X;
 }

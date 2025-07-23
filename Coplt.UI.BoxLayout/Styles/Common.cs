@@ -1,4 +1,6 @@
-﻿namespace Coplt.UI.Styles;
+﻿using System;
+
+namespace Coplt.UI.Styles;
 
 public enum Display : byte
 {
@@ -44,4 +46,6 @@ public static partial class BoxStyleExtensions
     };
 
     public static float? TryAutoMinSize(this Overflow self) => self.IsScrollContainer() ? 0 : null;
+
+    public static float? TryIntoAutomaticMinSize(this Overflow self) => self.IsScrollContainer() ? 0 : null;
 }
