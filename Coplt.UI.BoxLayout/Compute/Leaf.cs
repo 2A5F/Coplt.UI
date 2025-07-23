@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Coplt.UI.BoxLayout.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Styles;
@@ -8,6 +9,7 @@ namespace Coplt.UI.Layouts;
 
 public static partial class BoxLayout
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static LayoutOutput ComputeLeafLayout<TCoreContainerStyle, TCalc>(
         LayoutInput inputs, TCoreContainerStyle style, ref TCalc calc,
         Func<Size<float?>, Size<AvailableSpace>, Size<float>> measure_function

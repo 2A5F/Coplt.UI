@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Coplt.UI.BoxLayouts;
 
 namespace Coplt.UI.Styles;
@@ -17,12 +18,15 @@ public enum AbstractAxis : byte
 
 public static partial class BoxStyleExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AbsoluteAxis Other(this AbsoluteAxis self) => self switch
     {
         AbsoluteAxis.Horizontal => AbsoluteAxis.Vertical,
         AbsoluteAxis.Vertical => AbsoluteAxis.Horizontal,
         _ => throw new ArgumentOutOfRangeException(nameof(self), self, null)
     };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AbstractAxis Other(this AbstractAxis self) => self switch
     {
         AbstractAxis.Inline => AbstractAxis.Block,
@@ -30,6 +34,7 @@ public static partial class BoxStyleExtensions
         _ => throw new ArgumentOutOfRangeException(nameof(self), self, null)
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RequestedAxis ToRequestedAxis(this AbsoluteAxis self) => self switch
     {
         AbsoluteAxis.Horizontal => RequestedAxis.Horizontal,

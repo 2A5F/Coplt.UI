@@ -1,4 +1,6 @@
-﻿namespace Coplt.UI.BoxLayout.Utilities;
+﻿using System.Runtime.CompilerServices;
+
+namespace Coplt.UI.BoxLayout.Utilities;
 
 public ref struct Ref<T>(ref T Value)
 {
@@ -12,7 +14,9 @@ public ref struct RoRef<T>(in T Value)
 
 public static class Ref
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Ref<T> Of<T>(ref T value) => new(ref value);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RoRef<T> In<T>(in T value) => new(in value);
 }

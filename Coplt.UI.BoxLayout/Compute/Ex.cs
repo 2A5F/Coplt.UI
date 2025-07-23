@@ -1,4 +1,5 @@
-﻿using Coplt.UI.BoxLayout.Utilities;
+﻿using System.Runtime.CompilerServices;
+using Coplt.UI.BoxLayout.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Styles;
 
@@ -6,6 +7,7 @@ namespace Coplt.UI.Layouts;
 
 public static partial class BoxLayout
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static float MeasureChildSize<TTree, TNodeId, TChildIter, TCoreContainerStyle>(
         ref TTree tree,
         TNodeId node_id,

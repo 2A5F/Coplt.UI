@@ -1,4 +1,6 @@
-﻿namespace Coplt.UI.Styles;
+﻿using System.Runtime.CompilerServices;
+
+namespace Coplt.UI.Styles;
 
 public enum AlignItems : byte
 {
@@ -72,6 +74,9 @@ public enum JustifyContent : byte
 
 public static partial class BoxStyleExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static JustifyContent ToJustifyContent(this AlignContent self) => (JustifyContent)self;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AlignContent ToAlignContent(this JustifyContent self) => (AlignContent)self;
 }

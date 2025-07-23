@@ -169,7 +169,6 @@ file static class FlexCompute
     }
 
     /// Compute constants that can be reused during the flexbox algorithm.
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static AlgoConstants ComputeConstants<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TFlexBoxContainerStyle style, Size<float?> known_dimensions, Size<float?> parent_size
     )
@@ -287,7 +286,6 @@ file static class FlexCompute
     /// # [9.1. Initial Setup](https://www.w3.org/TR/css-flexbox-1/#box-manip)
     ///
     /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static PooledList<FlexItem> GenerateAnonymousFlexItems<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, in AlgoConstants constants
     )
@@ -370,7 +368,6 @@ file static class FlexCompute
     /// if that dimension of the flex container is being sized under a min or max-content constraint, the available space in that dimension is that constraint;
     /// otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value.
     /// **This might result in an infinite value**.
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Size<AvailableSpace> DetermineAvailableSpace(
         Size<float?> known_dimensions, Size<AvailableSpace> outer_available_space, in AlgoConstants constants
     )
@@ -417,7 +414,6 @@ file static class FlexCompute
     ///   When determining the flex base size, the item’s min and max main sizes are ignored (no clamping occurs).
     ///   Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
     ///   (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DetermineFlexBaseSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, in AlgoConstants constants, Size<AvailableSpace> available_space, Span<FlexItem> flex_items
     )
@@ -608,6 +604,7 @@ file static class FlexCompute
         public float CrossSize;
         public float OffsetCross;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<FlexItem> GetItems(Span<FlexItem> flex_items) => flex_items.Slice(ItemsStart, ItemsCount);
     }
 
@@ -628,7 +625,6 @@ file static class FlexCompute
     ///       Repeat until all flex items have been collected into flex lines.
     ///
     ///       **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static PooledList<FlexLine> CollectFlexLines(
         in AlgoConstants constants,
         Size<AvailableSpace> available_space,
@@ -701,7 +697,6 @@ file static class FlexCompute
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void DetermineContainerMainSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, Size<AvailableSpace> available_space,
         Span<FlexItem> flex_items, Span<FlexLine> lines, ref AlgoConstants constants

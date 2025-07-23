@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Coplt.UI.Styles;
 
@@ -38,6 +39,7 @@ public enum Overflow
 
 public static partial class BoxStyleExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsScrollContainer(this Overflow self) => self switch
     {
         Overflow.Visible or Overflow.Clip => false,
@@ -45,7 +47,9 @@ public static partial class BoxStyleExtensions
         _ => false
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float? TryAutoMinSize(this Overflow self) => self.IsScrollContainer() ? 0 : null;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float? TryIntoAutomaticMinSize(this Overflow self) => self.IsScrollContainer() ? 0 : null;
 }

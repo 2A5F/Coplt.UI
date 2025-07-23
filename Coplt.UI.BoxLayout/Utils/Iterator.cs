@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Coplt.UI.BoxLayout.Utilities;
@@ -18,6 +19,7 @@ public readonly ref struct IteratorEnumerable<TIterator, T>(TIterator Value)
 {
     public readonly TIterator Value = Value;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IteratorIEnumerator<TIterator, T> GetEnumerator() => new(Value);
 }
 
@@ -27,22 +29,32 @@ public ref struct IteratorIEnumerator<TIterator, T>(TIterator Value)
 {
     public TIterator Value = Value;
 
-    public T Current => Value.Current;
+    public T Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Value.Current;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => Value.MoveNext();
 }
 
 public static class IteratorEx
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IteratorEnumerable<TIterator, T> AsEnumerable<TIterator, T>(this TIterator Value)
         where TIterator : IIterator<T>, allows ref struct
         where T : allows ref struct => new(Value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SpanIter<T> AsIter<T>(this Span<T> self) => new(self);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RoSpanIter<T> AsIter<T>(this ReadOnlySpan<T> self) => new(self);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SpanIter<T> AsIter<T>(this T[] self) => new(self.AsSpan());
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static SpanIter<T> AsIter<T>(this List<T> self) => new(CollectionsMarshal.AsSpan(self));
 }
 
@@ -50,7 +62,12 @@ public ref struct SpanIter<T>(Span<T> self) : IIterator<T>
 {
     private Span<T>.Enumerator enumerator = self.GetEnumerator();
 
-    public T Current => enumerator.Current;
+    public T Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => enumerator.Current;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => enumerator.MoveNext();
 }
 
@@ -58,6 +75,11 @@ public ref struct RoSpanIter<T>(ReadOnlySpan<T> self) : IIterator<T>
 {
     private ReadOnlySpan<T>.Enumerator enumerator = self.GetEnumerator();
 
-    public T Current => enumerator.Current;
+    public T Current
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => enumerator.Current;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => enumerator.MoveNext();
 }

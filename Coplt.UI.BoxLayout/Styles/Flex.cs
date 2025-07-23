@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Coplt.UI.Styles;
 
@@ -93,12 +94,16 @@ public enum FlexDirection : byte
 
 public static partial class BoxStyleExtensions
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsRow(this FlexDirection self) => self is FlexDirection.Row or FlexDirection.RowReverse;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsColumn(this FlexDirection self) => self is FlexDirection.Column or FlexDirection.ColumnReverse;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsReverse(this FlexDirection self) => self is FlexDirection.RowReverse or FlexDirection.ColumnReverse;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AbsoluteAxis MainAxis(this FlexDirection self) => self switch
     {
         FlexDirection.Row or FlexDirection.RowReverse => AbsoluteAxis.Horizontal,
@@ -106,6 +111,7 @@ public static partial class BoxStyleExtensions
         _ => throw new ArgumentOutOfRangeException(nameof(self), self, null)
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AbsoluteAxis CrossAxis(this FlexDirection self) => self switch
     {
         FlexDirection.Row or FlexDirection.RowReverse => AbsoluteAxis.Vertical,

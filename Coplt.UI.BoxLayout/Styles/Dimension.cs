@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Coplt.UI.BoxLayouts;
 using Coplt.Union;
 
@@ -43,6 +44,7 @@ public readonly partial struct LengthPercentage : ITryResolve<float?>
         _ => throw new ArgumentOutOfRangeException()
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float? TryResolve<TCalc>(float? ctx, ref TCalc calc)
         where TCalc : ICalc, allows ref struct => Tag switch
     {
@@ -87,6 +89,7 @@ public readonly partial struct LengthPercentageAuto : ITryResolve<float?>
         _ => throw new ArgumentOutOfRangeException()
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float? TryResolve<TCalc>(float? ctx, ref TCalc calc)
         where TCalc : ICalc, allows ref struct => Tag switch
     {
@@ -132,6 +135,7 @@ public readonly partial struct Dimension : ITryResolve<float?>
         _ => throw new ArgumentOutOfRangeException()
     };
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float? TryResolve<TCalc>(float? ctx, ref TCalc calc)
         where TCalc : ICalc, allows ref struct => Tag switch
     {
