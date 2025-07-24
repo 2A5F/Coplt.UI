@@ -30,6 +30,16 @@ public static partial class BoxStyleExtensions
             self.Bottom.TryResolve(ctx, ref calc) ?? 0,
             self.Left.TryResolve(ctx, ref calc) ?? 0
         );
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Rect<float> ResolveOrZero<T, TCalc>(this Rect<T> self, Size<float?> ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        where T : ITryResolve<float?>
+        => new(
+            self.Top.TryResolve(ctx.Height, ref calc) ?? 0,
+            self.Right.TryResolve(ctx.Width, ref calc) ?? 0,
+            self.Bottom.TryResolve(ctx.Height, ref calc) ?? 0,
+            self.Left.TryResolve(ctx.Width, ref calc) ?? 0
+        );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Rect<T> Add<T>(this Rect<T> self, Rect<T> other)
@@ -89,6 +99,14 @@ public static partial class BoxStyleExtensions
         where T : IAdditionOperators<T, T, T>
         => direction.IsRow() ? self.HorizontalAxisSum() : self.VerticalAxisSum();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T MainStart<T>(this Rect<T> self, FlexDirection direction)
+        => direction.IsRow() ? self.Left : self.Top;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T MainEnd<T>(this Rect<T> self, FlexDirection direction)
+        => direction.IsRow() ? self.Right : self.Bottom;
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T CrossStart<T>(this Rect<T> self, FlexDirection direction)
         => direction.IsRow() ? self.Top : self.Left;

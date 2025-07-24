@@ -175,6 +175,36 @@ file static class FlexCompute
         // 9. Handle 'align-content: stretch'.
         HandleAlignContentStretch(flex_lines.AsSpan, known_dimensions, in constants);
 
+        // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
+        //     note the cross size of the line they’re in as the item’s strut size, and restart
+        //     layout from the beginning.
+        //
+        //     In this second layout round, when collecting items into lines, treat the collapsed
+        //     items as having zero main size. For the rest of the algorithm following that step,
+        //     ignore the collapsed items entirely (as if they were display:none) except that after
+        //     calculating the cross size of the lines, if any line’s cross size is less than the
+        //     largest strut size among all the collapsed items in the line, set its cross size to
+        //     that strut size.
+        //
+        //     Skip this step in the second layout round.
+
+        // visibility:collapse not supported yet
+
+        // 11. Determine the used cross size of each flex item.
+        DetermineUsedCrossSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+            ref tree, node, flex_items.AsSpan, flex_lines.AsSpan, in constants
+        );
+
+        // 9.5. Main-Axis Alignment
+
+        // 12. Distribute any remaining free space.
+        DistributeRemainingFreeSpace(flex_items.AsSpan, flex_lines.AsSpan, in constants);
+
+        // 9.6. Cross-Axis Alignment
+
+        // 13. Resolve cross-axis auto margins (also includes 14).
+        ResolveCrossAxisAutoMargins(flex_items.AsSpan, flex_lines.AsSpan, in constants);
+
         // todo
         return default;
     }
@@ -1482,4 +1512,263 @@ file static class FlexCompute
             }
         }
     }
+
+    /// Determine the used cross size of each flex item.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Determine the used cross size of each flex item**](https://www.w3.org/TR/css-flexbox-1/#algo-stretch). If a flex item has align-self: stretch, its computed cross size property is auto,
+    ///   and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line, clamped according to the item’s used min and max cross sizes.
+    ///   Otherwise, the used cross size is the item’s hypothetical cross size.
+    ///
+    ///   If the flex item has align-self: stretch, redo layout for its contents, treating this used size as its definite cross size so that percentage-sized children can be resolved.
+    ///
+    ///   **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
+    private static void DetermineUsedCrossSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        var dir = constants.Direction;
+        foreach (ref var line in flex_lines)
+        {
+            var line_cross_size = line.CrossSize;
+
+            var items = line.GetItems(flex_items);
+            foreach (ref var child in items)
+            {
+                var child_id = tree.GetChildId(node, child.NodeIndex);
+                var child_style = tree.GetFlexboxChildStyle(child_id);
+                if (
+                    child.AlignSelf == AlignSelf.Stretch
+                    && !child.MarginIsAuto.CrossStart(dir)
+                    && !child.MarginIsAuto.CrossEnd(dir)
+                    && child_style.Size.Cross(dir).IsAuto
+                )
+                {
+                    // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
+                    // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
+                    // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
+                    var padding = child_style.Padding
+                        .ResolveOrZero(constants.NodeInnerSize, ref tree);
+                    var border = child_style.Border
+                        .ResolveOrZero(constants.NodeInnerSize, ref tree);
+                    var pb_sum = padding.Add(border).SumAxes();
+                    var box_sizing_adjustment = child_style.BoxSizing == BoxSizing.ContentBox ? pb_sum : default;
+
+                    var max_size_ignoring_aspect_ratio = child_style
+                        .MaxSize
+                        .TryResolve(constants.NodeInnerSize, ref tree)
+                        .TryAdd(box_sizing_adjustment);
+
+                    child.TargetSize.SetCross(dir, (line_cross_size - child.Margin.CrossAxisSum(dir)).TryClamp(
+                        child.MinSize.Cross(dir),
+                        max_size_ignoring_aspect_ratio.Cross(dir)
+                    ));
+                }
+                else
+                {
+                    child.TargetSize.SetCross(dir, child.HypotheticalInnerSize.Cross(dir));
+                }
+
+                child.OuterTargetSize.SetCross(
+                    dir,
+                    child.TargetSize.Cross(dir) + child.Margin.CrossAxisSum(dir)
+                );
+            }
+        }
+    }
+
+    /// Distribute any remaining free space.
+    ///
+    /// # [9.5. Main-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#main-alignment)
+    ///
+    /// - [**Distribute any remaining free space**](https://www.w3.org/TR/css-flexbox-1/#algo-main-align). For each flex line:
+    ///
+    ///   1. If the remaining free space is positive and at least one main-axis margin on this line is `auto`, distribute the free space equally among these margins.
+    ///      Otherwise, set all `auto` margins to zero.
+    ///
+    ///   2. Align the items along the main-axis per `justify-content`.
+    private static void DistributeRemainingFreeSpace(
+        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    )
+    {
+        var dir = constants.Direction;
+        foreach (ref var line in flex_lines)
+        {
+            var items = line.GetItems(flex_items);
+
+            var total_main_axis_gap = SumAxisGaps(constants.Gap.Main(dir), line.ItemsCount);
+            var used_space = total_main_axis_gap;
+            foreach (ref readonly var child in items)
+            {
+                used_space += child.OuterTargetSize.Main(dir);
+            }
+            var free_space = constants.InnerContainerSize.Main(dir) - used_space;
+            var num_auto_margins = 0;
+
+            foreach (ref var child in items)
+            {
+                if (child.MarginIsAuto.MainStart(dir))
+                {
+                    num_auto_margins++;
+                }
+                if (child.MarginIsAuto.MainEnd(dir))
+                {
+                    num_auto_margins++;
+                }
+            }
+
+            if (free_space > 0 && num_auto_margins > 0)
+            {
+                var margin = free_space / num_auto_margins;
+
+                foreach (ref var child in items)
+                {
+                    if (child.MarginIsAuto.MainStart(dir))
+                    {
+                        if (constants.IsRow) child.Margin.Left = margin;
+                        else child.Margin.Top = margin;
+                    }
+                    if (child.MarginIsAuto.MainEnd(dir))
+                    {
+                        if (constants.IsRow) child.Margin.Right = margin;
+                        else child.Margin.Bottom = margin;
+                    }
+                }
+            }
+            else
+            {
+                var num_items = line.ItemsCount;
+                var layout_reverse = dir.IsReverse();
+                var gap = constants.Gap.Main(dir);
+                var is_safe = false;
+                var raw_justify_content_mode = constants.JustifyContent ?? JustifyContent.FlexStart;
+                var justify_content_mode =
+                    BoxLayout.ApplyAlignmentFallback(free_space, num_items, raw_justify_content_mode.ToAlignContent(), is_safe);
+
+                if (layout_reverse)
+                {
+                    var end = items.Length - 1;
+                    for (var i = end; i >= 0; i--)
+                    {
+                        ref var child = ref items[i];
+                        var is_first = i == end;
+                        child.OffsetMain = BoxLayout.ComputeAlignmentOffset(
+                            free_space, num_items, gap, justify_content_mode, layout_reverse, is_first
+                        );
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < items.Length; i++)
+                    {
+                        ref var child = ref items[i];
+                        var is_first = i == 0;
+                        child.OffsetMain = BoxLayout.ComputeAlignmentOffset(
+                            free_space, num_items, gap, justify_content_mode, layout_reverse, is_first
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /// Resolve cross-axis `auto` margins.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Resolve cross-axis `auto` margins**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-margins).
+    ///   If a flex item has auto cross-axis margins:
+    ///
+    ///   - If its outer cross size (treating those auto margins as zero) is less than the cross size of its flex line,
+    ///     distribute the difference in those sizes equally to the auto margins.
+    ///
+    ///   - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
+    ///     Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
+    private static void ResolveCrossAxisAutoMargins(
+        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    )
+    {
+        var dir = constants.Direction;
+        foreach (ref var line in flex_lines)
+        {
+            var line_cross_size = line.CrossSize;
+            var items = line.GetItems(flex_items);
+            var max_baseline = 0f;
+            foreach (ref readonly var child in items)
+            {
+                max_baseline = Math.Max(max_baseline, child.BaseLine);
+            }
+
+            foreach (ref var child in items)
+            {
+                var free_space = line_cross_size - child.OuterTargetSize.Cross(dir);
+
+                if (child.MarginIsAuto.CrossStart(dir) && child.MarginIsAuto.CrossEnd(dir))
+                {
+                    if (constants.IsRow)
+                    {
+                        child.Margin.Top = free_space / 2;
+                        child.Margin.Bottom = free_space / 2;
+                    }
+                    else
+                    {
+                        child.Margin.Left = free_space / 2;
+                        child.Margin.Right = free_space / 2;
+                    }
+                }
+                else if (child.MarginIsAuto.CrossStart(dir))
+                {
+                    if (constants.IsRow)
+                    {
+                        child.Margin.Top = free_space;
+                    }
+                    else
+                    {
+                        child.Margin.Left = free_space;
+                    }
+                }
+                else if (child.MarginIsAuto.CrossEnd(dir))
+                {
+                    if (constants.IsRow)
+                    {
+                        child.Margin.Bottom = free_space;
+                    }
+                    else
+                    {
+                        child.Margin.Right = free_space;
+                    }
+                }
+                else
+                {
+                    // 14. Align all flex items along the cross-axis.
+                    child.OffsetCross = AlignFlexItemsAlongCrossAxis(ref child, free_space, max_baseline, constants);
+                }
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static float AlignFlexItemsAlongCrossAxis(
+        ref readonly FlexItem child, float free_space, float max_baseline, in AlgoConstants constants
+    ) => child.AlignSelf switch
+    {
+        AlignSelf.Start => 0,
+        AlignSelf.End => free_space,
+        AlignSelf.FlexStart => constants.IsWrapReverse ? free_space : 0,
+        AlignSelf.FlexEnd => constants.IsWrapReverse ? 0 : free_space,
+        AlignSelf.Center => free_space / 2,
+        AlignSelf.Baseline => constants.IsRow ? max_baseline - child.BaseLine :
+            // Until we support vertical writing modes, baseline alignment only makes sense if
+            // the constants.direction is row, so we treat it as flex-start alignment in columns.
+            constants.IsWrapReverse ? free_space : 0,
+        AlignSelf.Stretch => constants.IsWrapReverse ? free_space : 0,
+        _ => throw new ArgumentOutOfRangeException()
+    };
 }
