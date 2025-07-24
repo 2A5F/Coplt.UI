@@ -76,6 +76,20 @@ public static partial class BoxStyleExtensions
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AvailableSpace TryMin(this AvailableSpace self, float other) => self.Tag switch
+    {
+        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(Math.Min(self.Definite, other)),
+        _ => self,
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AvailableSpace TryMax(this AvailableSpace self, float other) => self.Tag switch
+    {
+        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(Math.Max(self.Definite, other)),
+        _ => self,
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace TryClamp(this AvailableSpace self, float? min, float? max) => (self.Tag, min, max) switch
     {
         (AvailableSpace.Tags.Definite, { } Min, { } Max) => AvailableSpace.MakeDefinite(Math.Clamp(self.Definite, Min, Max)),

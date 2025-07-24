@@ -13,7 +13,7 @@ public struct PooledList<T> : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public PooledList(int capacity)
     {
-        m_items = ArrayPool<T>.Shared.Rent(capacity);
+        m_items = ArrayPool<T>.Shared.Rent(Math.Max(capacity, 4));
         m_size = 0;
     }
 

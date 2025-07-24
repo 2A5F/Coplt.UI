@@ -146,6 +146,35 @@ file static class FlexCompute
             constants.Gap.SetMain(constants.Direction, new_gap);
         }
 
+        // 6. Resolve the flexible lengths of all the flex items to find their used main size.
+        foreach (ref var line in flex_lines)
+        {
+            ResolveFlexibleLengths(flex_items.AsSpan, ref line, in constants);
+        }
+
+        // 9.4. Cross Size Determination
+
+        // 7. Determine the hypothetical cross size of each item.
+
+        foreach (ref var line in flex_lines)
+        {
+            DetermineHypotheticalCrossSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+                ref tree, node, flex_items.AsSpan, ref line, in constants, available_space
+            );
+        }
+
+        // Calculate child baselines. This function is internally smart and only computes child baselines
+        // if they are necessary.
+        CalculateChildrenBaseLines<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+            ref tree, node, known_dimensions, available_space, flex_items.AsSpan, flex_lines.AsSpan, in constants
+        );
+
+        // 8. Calculate the cross size of each flex line.
+        CalculateCrossSize(flex_items.AsSpan, flex_lines.AsSpan, known_dimensions, in constants);
+
+        // 9. Handle 'align-content: stretch'.
+        HandleAlignContentStretch(flex_lines.AsSpan, known_dimensions, in constants);
+
         // todo
         return default;
     }
@@ -985,6 +1014,472 @@ file static class FlexCompute
         {
             // ...otherwise there are (num_items - 1) gaps
             return gap * (num_items - 1);
+        }
+    }
+
+    /// Resolve the flexible lengths of the items within a flex line.
+    /// Sets the `main` component of each item's `target_size` and `outer_target_size`
+    ///
+    /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
+    private static void ResolveFlexibleLengths(Span<FlexItem> flex_items, ref FlexLine line, in AlgoConstants constants)
+    {
+        var dir = constants.Direction;
+
+        var total_main_axis_gap = SumAxisGaps(constants.Gap.Main(dir), line.ItemsCount);
+
+        // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
+        //    items on the line. If the sum is less than the flex container’s inner main size,
+        //    use the flex grow factor for the rest of this algorithm; otherwise, use the
+        //    flex shrink factor.
+
+        var items = line.GetItems(flex_items);
+
+        var total_hypothetical_outer_main_size = 0f;
+        foreach (ref var child in items)
+        {
+            total_hypothetical_outer_main_size += child.HypotheticalOuterSize.Main(dir);
+        }
+        var used_flex_factor = total_main_axis_gap + total_hypothetical_outer_main_size;
+        var growing = used_flex_factor < (constants.NodeInnerSize.Main(dir) ?? 0);
+        var shrinking = used_flex_factor > (constants.NodeInnerSize.Main(dir) ?? 0);
+        var exactly_sized = !growing & !shrinking;
+
+        // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
+        //    - Any item that has a flex factor of zero
+        //    - If using the flex grow factor: any item that has a flex base size
+        //      greater than its hypothetical main size
+        //    - If using the flex shrink factor: any item that has a flex base size
+        //      smaller than its hypothetical main size
+
+        foreach (ref var child in items)
+        {
+            var inner_target_size = child.HypotheticalInnerSize.Main(dir);
+            child.TargetSize.SetMain(dir, inner_target_size);
+
+            if (
+                exactly_sized
+                || (child.FlexGrow == 0.0 && child.FlexShrink == 0.0)
+                || (growing && child.FlexBasis > child.HypotheticalInnerSize.Main(dir))
+                || (shrinking && child.FlexBasis < child.HypotheticalInnerSize.Main(dir))
+            )
+            {
+                child.Frozen = true;
+                var outer_target_size = inner_target_size + child.Margin.MainAxisSum(dir);
+                child.OuterTargetSize.SetMain(dir, outer_target_size);
+            }
+        }
+
+        if (exactly_sized) return;
+
+        // 3. Calculate initial free space. Sum the outer sizes of all items on the line,
+        //    and subtract this from the flex container’s inner main size. For frozen items,
+        //    use their outer target main size; for other items, use their outer flex base size.
+
+        float initial_free_space;
+        {
+            var used_space = total_main_axis_gap;
+            foreach (ref var child in items)
+            {
+                used_space += child.Frozen
+                    ? child.OuterTargetSize.Main(dir)
+                    : child.FlexBasis + child.Margin.MainAxisSum(dir);
+            }
+
+            initial_free_space = constants.NodeInnerSize.Main(dir).TrySub(used_space) ?? 0;
+        }
+
+        // 4. Loop
+
+        for (;;)
+        {
+            // a. Check for flexible items. If all the flex items on the line are frozen,
+            //    free space has been distributed; exit this loop.
+
+            foreach (ref readonly var item in items)
+            {
+                if (!item.Frozen) goto continue_loop;
+            }
+            break;
+            continue_loop: ;
+
+            // b. Calculate the remaining free space as for initial free space, above.
+            //    If the sum of the unfrozen flex items’ flex factors is less than one,
+            //    multiply the initial free space by this sum. If the magnitude of this
+            //    value is less than the magnitude of the remaining free space, use this
+            //    as the remaining free space.
+
+            var used_space = total_main_axis_gap;
+            foreach (ref readonly var child in items)
+            {
+                used_space += child.Frozen
+                    ? child.OuterTargetSize.Main(dir)
+                    : child.FlexBasis + child.Margin.MainAxisSum(dir);
+            }
+
+            using var unfrozen = new PooledList<int>(line.ItemsCount);
+            for (var i = 0; i < items.Length; i++)
+            {
+                ref readonly var item = ref items[i];
+                if (!item.Frozen) unfrozen.Add(i);
+            }
+
+            float sum_flex_grow = 0, sum_flex_shrink = 0;
+            foreach (var i in unfrozen)
+            {
+                ref var item = ref items[i];
+                sum_flex_grow += item.FlexGrow;
+                sum_flex_shrink += item.FlexShrink;
+            }
+
+            float free_space;
+            if (growing && sum_flex_grow < 1)
+            {
+                free_space = (initial_free_space * sum_flex_grow - total_main_axis_gap)
+                    .TryMin(constants.NodeInnerSize.Main(dir).TrySub(used_space));
+            }
+            else if (shrinking && sum_flex_shrink < 1)
+            {
+                free_space = (initial_free_space * sum_flex_shrink - total_main_axis_gap)
+                    .TryMax(constants.NodeInnerSize.Main(dir).TrySub(used_space));
+            }
+            else
+            {
+                free_space = constants.NodeInnerSize.Main(dir).TrySub(used_space) ?? used_flex_factor - used_space;
+            }
+
+            // c. Distribute free space proportional to the flex factors.
+            //    - If the remaining free space is zero
+            //        Do Nothing
+            //    - If using the flex grow factor
+            //        Find the ratio of the item’s flex grow factor to the sum of the
+            //        flex grow factors of all unfrozen items on the line. Set the item’s
+            //        target main size to its flex base size plus a fraction of the remaining
+            //        free space proportional to the ratio.
+            //    - If using the flex shrink factor
+            //        For every unfrozen item on the line, multiply its flex shrink factor by
+            //        its inner flex base size, and note this as its scaled flex shrink factor.
+            //        Find the ratio of the item’s scaled flex shrink factor to the sum of the
+            //        scaled flex shrink factors of all unfrozen items on the line. Set the item’s
+            //        target main size to its flex base size minus a fraction of the absolute value
+            //        of the remaining free space proportional to the ratio. Note this may result
+            //        in a negative inner main size; it will be corrected in the next step.
+            //    - Otherwise
+            //        Do Nothing
+
+            if (float.IsNormal(free_space))
+            {
+                if (growing && sum_flex_grow > 0)
+                {
+                    foreach (var i in unfrozen)
+                    {
+                        ref var child = ref items[i];
+                        child.TargetSize.SetMain(dir, child.FlexBasis + free_space * (child.FlexGrow / sum_flex_grow));
+                    }
+                }
+                else if (shrinking && sum_flex_shrink > 0)
+                {
+                    var sum_scaled_shrink_factor = 0f;
+                    foreach (var i in unfrozen)
+                    {
+                        ref var child = ref items[i];
+                        sum_scaled_shrink_factor += child.InnerFlexBasis * child.FlexShrink;
+                    }
+
+                    if (sum_scaled_shrink_factor > 0)
+                    {
+                        foreach (var i in unfrozen)
+                        {
+                            ref var child = ref items[i];
+                            var scaled_shrink_factor = child.InnerFlexBasis * child.FlexShrink;
+                            child.TargetSize.SetMain(
+                                dir,
+                                child.FlexBasis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor)
+                            );
+                        }
+                    }
+                }
+            }
+
+            // d. Fix min/max violations. Clamp each non-frozen item’s target main size by its
+            //    used min and max main sizes and floor its content-box size at zero. If the
+            //    item’s target main size was made smaller by this, it’s a max violation.
+            //    If the item’s target main size was made larger by this, it’s a min violation.
+
+            var total_violation = 0f;
+            {
+                foreach (var i in unfrozen)
+                {
+                    ref var child = ref items[i];
+                    var resolved_min_main = child.ResolvedMinimumMainSize;
+                    var max_main = child.MaxSize.Main(dir);
+                    var clamped = child.TargetSize.Main(dir).TryClamp(resolved_min_main, max_main).Max(0f);
+                    child.Violation = clamped - child.TargetSize.Main(dir);
+                    child.TargetSize.SetMain(dir, clamped);
+                    child.OuterTargetSize.SetMain(
+                        dir,
+                        child.TargetSize.Main(dir) + child.Margin.MainAxisSum(dir)
+                    );
+
+                    total_violation += child.Violation;
+                }
+            }
+
+            // e. Freeze over-flexed items. The total violation is the sum of the adjustments
+            //    from the previous step ∑(clamped size - unclamped size). If the total violation is:
+            //    - Zero
+            //        Freeze all items.
+            //    - Positive
+            //        Freeze all the items with min violations.
+            //    - Negative
+            //        Freeze all the items with max violations.
+
+            foreach (var i in unfrozen)
+            {
+                ref var child = ref items[i];
+                child.Frozen = total_violation switch
+                {
+                    > 0 => child.Violation > 0,
+                    < 0 => child.Violation < 0,
+                    _ => true
+                };
+            }
+
+            // f. Return to the start of this loop.
+        }
+    }
+
+    /// Determine the hypothetical cross size of each item.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Determine the hypothetical cross size of each item**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-item)
+    ///   by performing layout with the used main size and the available space, treating auto as fit-content.
+    private static void DetermineHypotheticalCrossSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, ref FlexLine line, in AlgoConstants constants, Size<AvailableSpace> available_space
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        var dir = constants.Direction;
+        var items = line.GetItems(flex_items);
+        foreach (ref var child in items)
+        {
+            var padding_border_sum = (child.Padding.Add(child.Border)).CrossAxisSum(dir);
+
+            var child_known_main = AvailableSpace.MakeDefinite(constants.ContainerSize.Main(dir));
+
+            var child_cross = child.Size.Cross(dir)
+                .TryClamp(child.MinSize.Cross(dir), child.MaxSize.Cross(dir))
+                .TryMax(padding_border_sum);
+
+            var child_available_cross = available_space
+                .Cross(dir)
+                .TryClamp(child.MinSize.Cross(dir), child.MaxSize.Cross(dir))
+                .TryMax(padding_border_sum);
+
+            var child_inner_cross = child_cross ?? BoxLayout.MeasureChildSize<TTree, TNodeId, TChildIter, TCoreContainerStyle>(
+                    ref tree,
+                    tree.GetChildId(node, child.NodeIndex),
+                    new(
+                        constants.IsRow ? child.TargetSize.Width : child_cross,
+                        constants.IsRow ? child_cross : child.TargetSize.Height
+                    ),
+                    constants.NodeInnerSize,
+                    new(
+                        constants.IsRow ? child_known_main : child_available_cross,
+                        constants.IsRow ? child_available_cross : child_known_main
+                    ),
+                    SizingMode.ContentSize,
+                    dir.CrossAxis(),
+                    default
+                )
+                .TryClamp(child.MinSize.Cross(dir), child.MaxSize.Cross(dir))
+                .Max(padding_border_sum);
+            var child_outer_cross = child_inner_cross + child.Margin.CrossAxisSum(dir);
+
+            child.HypotheticalInnerSize.SetCross(dir, child_inner_cross);
+            child.HypotheticalOuterSize.SetCross(dir, child_outer_cross);
+        }
+    }
+
+    /// Calculate the base lines of the children.
+    private static void CalculateChildrenBaseLines<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, Size<float?> node_size, Size<AvailableSpace> available_space,
+        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        // Only compute baselines for flex rows because we only support baseline alignment in the cross axis
+        // where that axis is also the inline axis
+        if (!constants.IsRow) return;
+
+        foreach (var line in flex_lines)
+        {
+            var items = line.GetItems(flex_items);
+            using var baseline_children = new PooledList<int>(items.Length);
+
+            // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
+            for (var i = 0; i < items.Length; i++)
+            {
+                ref readonly var child = ref items[i];
+                if (child.AlignSelf != AlignSelf.Baseline) continue;
+                baseline_children.Add(i);
+            }
+            if (baseline_children.Count <= 1) continue;
+
+            // Only calculate baselines for children participating in baseline alignment
+            foreach (ref readonly var i in baseline_children)
+            {
+                ref var child = ref items[i];
+
+                var measured_size_and_baselines = tree.PerformChildLayout(
+                    tree.GetChildId(node, child.NodeIndex),
+                    new(
+                        constants.IsRow ? child.TargetSize.Width : child.HypotheticalInnerSize.Width,
+                        constants.IsRow ? child.HypotheticalInnerSize.Height : child.TargetSize.Height
+                    ),
+                    constants.NodeInnerSize,
+                    new(
+                        constants.IsRow ? constants.ContainerSize.Width : available_space.Width.TrySet(node_size.Width),
+                        constants.IsRow ? available_space.Height.TrySet(node_size.Height) : constants.ContainerSize.Height
+                    ),
+                    SizingMode.ContentSize,
+                    default
+                );
+
+                var baseline = measured_size_and_baselines.FirstBaseLines.Y;
+                var height = measured_size_and_baselines.Size.Height;
+
+                child.BaseLine = (baseline ?? height) + child.Margin.Top;
+            }
+        }
+    }
+
+    /// Calculate the cross size of each flex line.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Calculate the cross size of each flex line**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-line).
+    private static void CalculateCrossSize(
+        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, Size<float?> node_size, in AlgoConstants constants
+    )
+    {
+        var dir = constants.Direction;
+
+        // If the flex container is single-line and has a definite cross size,
+        // the cross size of the flex line is the flex container’s inner cross size.
+        if (!constants.IsWrap && node_size.Cross(dir).HasValue)
+        {
+            var cross_axis_padding_border = constants.ContentBoxInset.CrossAxisSum(dir);
+            var cross_min_size = constants.MinSize.Cross(dir);
+            var cross_max_size = constants.MaxSize.Cross(dir);
+            flex_lines[0].CrossSize =
+                node_size
+                    .Cross(dir)
+                    .TryClamp(cross_min_size, cross_max_size)
+                    .TrySub(cross_axis_padding_border)
+                    .TryMax(0f)
+                ?? 0f;
+        }
+        else
+        {
+            // Otherwise, for each flex line:
+            //
+            //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
+            //       align-self is baseline, and whose cross-axis margins are both non-auto. Find the
+            //       largest of the distances between each item’s baseline and its hypothetical outer
+            //       cross-start edge, and the largest of the distances between each item’s baseline
+            //       and its hypothetical outer cross-end edge, and sum these two values.
+
+            //    2. Among all the items not collected by the previous step, find the largest
+            //       outer hypothetical cross size.
+
+            //    3. The used cross-size of the flex line is the largest of the numbers found in the
+            //       previous two steps and zero.
+            foreach (ref var line in flex_lines)
+            {
+                var items = line.GetItems(flex_items);
+                var max_baseline = 0f;
+                foreach (ref var child in items)
+                {
+                    max_baseline = Math.Max(max_baseline, child.BaseLine);
+                }
+                line.CrossSize = 0;
+                foreach (ref var child in items)
+                {
+                    var x =
+                        child.AlignSelf == AlignSelf.Baseline
+                        && !child.MarginIsAuto.CrossStart(dir)
+                        && !child.MarginIsAuto.CrossEnd(dir)
+                            ? max_baseline - child.BaseLine + child.HypotheticalOuterSize.Cross(dir)
+                            : child.HypotheticalOuterSize.Cross(dir);
+                    line.CrossSize = Math.Max(line.CrossSize, x);
+                }
+            }
+
+            // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
+            // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
+            if (!constants.IsWrap)
+            {
+                var cross_axis_padding_border = constants.ContentBoxInset.CrossAxisSum(dir);
+                var cross_min_size = constants.MinSize.Cross(dir);
+                var cross_max_size = constants.MaxSize.Cross(dir);
+                flex_lines[0].CrossSize = flex_lines[0].CrossSize.TryClamp(
+                    cross_min_size.TrySub(cross_axis_padding_border),
+                    cross_max_size.TrySub(cross_axis_padding_border)
+                );
+            }
+        }
+    }
+
+    /// Handle 'align-content: stretch'.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Handle 'align-content: stretch'**](https://www.w3.org/TR/css-flexbox-1/#algo-line-stretch). If the flex container has a definite cross size, align-content is stretch,
+    ///   and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
+    ///   increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
+    private static void HandleAlignContentStretch(
+        Span<FlexLine> flex_lines, Size<float?> node_size, in AlgoConstants constants
+    )
+    {
+        if (constants.AlignContent != AlignContent.Stretch) return;
+        var dir = constants.Direction;
+        var cross_axis_padding_border = constants.ContentBoxInset.CrossAxisSum(dir);
+        var cross_min_size = constants.MinSize.Cross(dir);
+        var cross_max_size = constants.MaxSize.Cross(dir);
+        var container_min_inner_cross =
+            (node_size
+                .Cross(dir) ?? cross_min_size)
+            .TryClamp(cross_min_size, cross_max_size)
+            .TrySub(cross_axis_padding_border)
+            .TryMax(0)
+            ?? 0;
+
+        var total_cross_axis_gap = SumAxisGaps(constants.Gap.Cross(dir), flex_lines.Length);
+        var lines_total_cross = total_cross_axis_gap;
+        foreach (ref readonly var line in flex_lines)
+        {
+            lines_total_cross += line.CrossSize;
+        }
+
+        if (lines_total_cross < container_min_inner_cross)
+        {
+            var remaining = container_min_inner_cross - lines_total_cross;
+            var addition = remaining / flex_lines.Length;
+            foreach (ref var line in flex_lines)
+            {
+                line.CrossSize += addition;
+            }
         }
     }
 }

@@ -88,4 +88,12 @@ public static partial class BoxStyleExtensions
     public static T MainAxisSum<T>(this Rect<T> self, FlexDirection direction)
         where T : IAdditionOperators<T, T, T>
         => direction.IsRow() ? self.HorizontalAxisSum() : self.VerticalAxisSum();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T CrossStart<T>(this Rect<T> self, FlexDirection direction)
+        => direction.IsRow() ? self.Top : self.Left;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T CrossEnd<T>(this Rect<T> self, FlexDirection direction)
+        => direction.IsRow() ? self.Bottom : self.Right;
 }

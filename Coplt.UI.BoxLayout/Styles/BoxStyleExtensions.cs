@@ -48,7 +48,7 @@ public static partial class BoxStyleExtensions
     public static float? TryAdd(this float? self, float other) => self is { } v ? v + other : null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float TryMin(this float? self, float other) => self is { } v ? Math.Min(v, other) : other;
+    public static float? TryMin(this float? self, float other) => self is { } v ? Math.Min(v, other) : null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float TryMin(this float self, float? other) => other is { } v ? Math.Min(self, v) : self;
@@ -57,7 +57,7 @@ public static partial class BoxStyleExtensions
     public static float? TryMin(this float? self, float? other) => self is { } v && other is { } o ? Math.Min(v, o) : null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float TryMax(this float? self, float other) => self is { } v ? Math.Max(v, other) : other;
+    public static float? TryMax(this float? self, float other) => self is { } v ? Math.Max(v, other) : null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float TryMax(this float self, float? other) => other is { } v ? Math.Max(self, v) : self;
