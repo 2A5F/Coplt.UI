@@ -40,6 +40,8 @@ public static partial class BoxStyleExtensions
         ({ } min, null) => Math.Max(self, min),
         (null, null) => self,
     };
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float? TryNeg(this float? self) => self is { } v ? -v : null;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float? TrySub(this float? self, float other) => self is { } v ? v - other : null;
@@ -70,6 +72,9 @@ public static partial class BoxStyleExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Max(this float self, float other) => Math.Max(self, other);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float TrySub(this float self, float? other) => other is { } v ? self - v : self;
 }
 
 public static partial class BoxStyleStructExtensions

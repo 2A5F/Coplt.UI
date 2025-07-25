@@ -4,7 +4,7 @@ namespace Coplt.UI.BoxLayouts;
 
 public record struct Layout
 {
-    public uint Order;
+    public int Order;
     public Point<float> Location;
     public Size<float> Size;
     public Size<float> ContentSize;
@@ -12,4 +12,16 @@ public record struct Layout
     public Rect<float> Border;
     public Rect<float> Padding;
     public Rect<float> Margin;
+
+    public static Layout WithOrder(int order) => new()
+    {
+        Order = order,
+        Location = default,
+        Size = default,
+        ContentSize = default,
+        ScrollbarSize = default,
+        Border = default,
+        Padding = default,
+        Margin = default,
+    };
 }

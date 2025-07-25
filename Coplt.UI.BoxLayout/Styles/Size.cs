@@ -33,7 +33,19 @@ public static partial class BoxStyleStructExtensions
 public static partial class BoxStyleExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasNonZeroArea(this Size<float> self) => self is { Width: > 0, Height: > 0 };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<float?> TryResolve<T, TCalc>(this Size<T> self, Size<float?> ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        where T : ITryResolve<float?>
+        => new(
+            self.Width.TryResolve(ctx.Width, ref calc),
+            self.Height.TryResolve(ctx.Height, ref calc)
+        );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Size<float?> TryResolve<T, TCalc>(this Size<T> self, Size<float> ctx, ref TCalc calc)
         where TCalc : ICalc, allows ref struct
         where T : ITryResolve<float?>
         => new(
@@ -111,6 +123,10 @@ public static partial class BoxStyleExtensions
     );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Size<U> Map<T, U>(this Size<T> self, Func<T, U> f) =>
+        new(f(self.Width), f(self.Height));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<U> ZipMap<T, U>(this Size<T> self, Size<T> other, Func<T, T, U> f) =>
         new(f(self.Width, other.Width), f(self.Height, other.Height));
 
@@ -131,6 +147,20 @@ public static partial class BoxStyleExtensions
         self.Width + other.Width,
         self.Height + other.Height
     );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Size<float> Sub(this Size<float> self, Size<float> value)
+        => new(
+            self.Width - value.Width,
+            self.Height - value.Height
+        );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Size<float> Sub(this Size<float> self, Point<float> value)
+        => new(
+            self.Width - value.X,
+            self.Height - value.Y
+        );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ref T CrossRef<T>(this ref Size<T> self, FlexDirection direction)

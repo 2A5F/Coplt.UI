@@ -205,8 +205,76 @@ file static class FlexCompute
         // 13. Resolve cross-axis auto margins (also includes 14).
         ResolveCrossAxisAutoMargins(flex_items.AsSpan, flex_lines.AsSpan, in constants);
 
-        // todo
-        return default;
+        // 15. Determine the flex container’s used cross size.
+        var total_line_cross_size = DetermineContainerCrossSize(
+            flex_lines.AsSpan, known_dimensions, ref constants
+        );
+
+        // We have the container size.
+        // If our caller does not care about performing layout we are done now.
+        if (run_mode == RunMode.ComputeSize) return LayoutOutput.FromOuterSize(constants.ContainerSize);
+
+        // 16. Align all flex lines per align-content.
+        AlignFlexLinesPerAlignContent(flex_lines.AsSpan, in constants, total_line_cross_size);
+
+        // Do a final layout pass and gather the resulting layouts
+        var inflow_content_size = FinalLayoutPass<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+            ref tree, node, flex_items.AsSpan, flex_lines.AsSpan, in constants
+        );
+
+        // Before returning we perform absolute layout on all absolutely positioned children
+        var absolute_content_size =
+            PerformAbsoluteLayoutOnAbsoluteChildren<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+                ref tree, node, in constants
+            );
+
+        var len = tree.ChildCount(node);
+        for (var order = 0; order < len; order++)
+        {
+            var child = tree.GetChildId(node, order);
+            if (tree.GetFlexboxChildStyle(child).BoxGenerationMode != BoxGenerationMode.None) continue;
+            tree.SetUnroundedLayout(child, Layout.WithOrder(order));
+            tree.PerformChildLayout(
+                child,
+                default,
+                default,
+                new(AvailableSpace.MaxContent),
+                SizingMode.InherentSize,
+                default
+            );
+        }
+
+        // 8.5. Flex Container Baselines: calculate the flex container's first baseline
+        // See https://www.w3.org/TR/css-flexbox-1/#flex-baselines
+        float? first_vertical_baseline = null;
+        if (flex_lines.Count > 0)
+        {
+            var items = flex_lines[0].GetItems(flex_items.AsSpan);
+            var index = -1;
+            var i = 0;
+            foreach (ref var item in items)
+            {
+                var nth = i++;
+                if (constants.IsColumn || item.AlignSelf == AlignSelf.Baseline)
+                {
+                    index = nth;
+                    break;
+                }
+            }
+            if (index < 0 && items.Length > 0) index = 0;
+            if (index >= 0)
+            {
+                ref var child = ref items[index];
+                var offset_vertical = constants.IsRow ? child.OffsetCross : child.OffsetMain;
+                first_vertical_baseline = offset_vertical + child.BaseLine;
+            }
+        }
+
+        return LayoutOutput.FromSizesAndBaselines(
+            constants.ContainerSize,
+            inflow_content_size.Max(absolute_content_size),
+            new(null, first_vertical_baseline)
+        );
     }
 
     [StructLayout(LayoutKind.Auto)]
@@ -1754,6 +1822,12 @@ file static class FlexCompute
         }
     }
 
+    /// Align all flex items along the cross-axis.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Align all flex items along the cross-axis**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-align) per `align-self`,
+    ///   if neither of the item's cross-axis margins are `auto`.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float AlignFlexItemsAlongCrossAxis(
         ref readonly FlexItem child, float free_space, float max_baseline, in AlgoConstants constants
@@ -1771,4 +1845,550 @@ file static class FlexCompute
         AlignSelf.Stretch => constants.IsWrapReverse ? free_space : 0,
         _ => throw new ArgumentOutOfRangeException()
     };
+
+    /// Determine the flex container’s used cross size.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Determine the flex container’s used cross size**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-container):
+    ///
+    ///     - If the cross size property is a definite size, use that, clamped by the used min and max cross sizes of the flex container.
+    ///
+    ///     - Otherwise, use the sum of the flex lines' cross sizes, clamped by the used min and max cross sizes of the flex container.
+    private static float DetermineContainerCrossSize(
+        Span<FlexLine> flex_lines, Size<float?> node_size, ref AlgoConstants constants
+    )
+    {
+        var dir = constants.Direction;
+        var total_cross_axis_gap = SumAxisGaps(constants.Gap.Cross(dir), flex_lines.Length);
+        var total_line_cross_size = 0f;
+        foreach (ref readonly var line in flex_lines)
+        {
+            total_line_cross_size += line.CrossSize;
+        }
+
+        var padding_border_sum = constants.ContentBoxInset.CrossAxisSum(dir);
+        var cross_scrollbar_gutter = constants.ScrollbarGutter.Cross(dir);
+        var min_cross_size = constants.MinSize.Cross(dir);
+        var max_cross_size = constants.MaxSize.Cross(dir);
+        var outer_container_size =
+            (node_size.Cross(dir)
+             ?? total_line_cross_size + total_cross_axis_gap + padding_border_sum)
+            .TryClamp(min_cross_size, max_cross_size)
+            .Max(padding_border_sum - cross_scrollbar_gutter);
+        var inner_container_size = Math.Max(outer_container_size - padding_border_sum, 0);
+
+        constants.ContainerSize.SetCross(dir, outer_container_size);
+        constants.InnerContainerSize.SetCross(dir, inner_container_size);
+
+        return total_line_cross_size;
+    }
+
+    /// Align all flex lines per `align-content`.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Align all flex lines**](https://www.w3.org/TR/css-flexbox-1/#algo-line-align) per `align-content`.
+    private static void AlignFlexLinesPerAlignContent(
+        Span<FlexLine> flex_lines, in AlgoConstants constants, float total_cross_size
+    )
+    {
+        var dir = constants.Direction;
+        var num_lines = flex_lines.Length;
+        var gap = constants.Gap.Cross(dir);
+        var total_cross_axis_gap = SumAxisGaps(gap, num_lines);
+        var free_space = constants.InnerContainerSize.Cross(dir) - total_cross_size - total_cross_axis_gap;
+        var is_safe = false;
+
+        var align_content_mode = BoxLayout.ApplyAlignmentFallback(free_space, num_lines, constants.AlignContent, is_safe);
+
+        if (constants.IsWrapReverse)
+        {
+            var end = flex_lines.Length - 1;
+            for (var i = end; i >= 0; i--)
+            {
+                ref var line = ref flex_lines[i];
+                line.OffsetCross = BoxLayout.ComputeAlignmentOffset(
+                    free_space, num_lines, gap, align_content_mode, constants.IsWrapReverse, i == end
+                );
+            }
+        }
+        else
+        {
+            for (var i = 0; i < flex_lines.Length; i++)
+            {
+                ref var line = ref flex_lines[i];
+                line.OffsetCross = BoxLayout.ComputeAlignmentOffset(
+                    free_space, num_lines, gap, align_content_mode, constants.IsWrapReverse, i == 0
+                );
+            }
+        }
+    }
+
+    /// Do a final layout pass and collect the resulting layouts.
+    private static Size<float> FinalLayoutPass<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        var dir = constants.Direction;
+        var total_offset_cross = constants.ContentBoxInset.CrossStart(dir);
+
+        Size<float> content_size = default;
+        if (constants.IsWrapReverse)
+        {
+            var end = flex_lines.Length - 1;
+            for (var i = end; i >= 0; i--)
+            {
+                CalculateLayoutLine<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+                    ref tree,
+                    node,
+                    flex_items,
+                    ref flex_lines[i],
+                    ref total_offset_cross,
+                    ref content_size,
+                    constants.ContainerSize,
+                    constants.NodeInnerSize,
+                    constants.ContentBoxInset,
+                    dir
+                );
+            }
+        }
+        else
+        {
+            for (var i = 0; i < flex_lines.Length; i++)
+            {
+                CalculateLayoutLine<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+                    ref tree,
+                    node,
+                    flex_items,
+                    ref flex_lines[i],
+                    ref total_offset_cross,
+                    ref content_size,
+                    constants.ContainerSize,
+                    constants.NodeInnerSize,
+                    constants.ContentBoxInset,
+                    dir
+                );
+            }
+        }
+
+        content_size.Width += constants.ContentBoxInset.Right - constants.Border.Right - constants.ScrollbarGutter.X;
+        content_size.Height += constants.ContentBoxInset.Bottom - constants.Border.Bottom - constants.ScrollbarGutter.Y;
+
+        return content_size;
+    }
+
+    /// Calculates the layout line
+    private static void CalculateLayoutLine<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, ref FlexLine line, ref float total_offset_cross, ref Size<float> content_size,
+        Size<float> container_size, Size<float?> node_inner_size, Rect<float> padding_border, FlexDirection direction
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        var total_offset_main = padding_border.MainStart(direction);
+        var line_offset_cross = line.OffsetCross;
+
+        var items = line.GetItems(flex_items);
+        if (direction.IsReverse())
+        {
+            var end = items.Length - 1;
+            for (var i = end; i >= 0; i--)
+            {
+                CalculateFlexItem<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+                    ref tree,
+                    node,
+                    ref items[i],
+                    ref total_offset_main,
+                    total_offset_cross,
+                    line_offset_cross,
+                    ref content_size,
+                    container_size,
+                    node_inner_size,
+                    direction
+                );
+            }
+        }
+        else
+        {
+            for (var i = 0; i < items.Length; i++)
+            {
+                CalculateFlexItem<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+                    ref tree,
+                    node,
+                    ref items[i],
+                    ref total_offset_main,
+                    total_offset_cross,
+                    line_offset_cross,
+                    ref content_size,
+                    container_size,
+                    node_inner_size,
+                    direction
+                );
+            }
+        }
+    }
+
+    /// Calculates the layout for a flex-item
+    private static void CalculateFlexItem<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, ref FlexItem item, ref float total_offset_main, float total_offset_cross, float line_offset_cross,
+        ref Size<float> total_content_size, Size<float> container_size, Size<float?> node_inner_size, FlexDirection direction
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        var item_node = tree.GetChildId(node, item.NodeIndex);
+        var layout_output = tree.PerformChildLayout(
+            item_node,
+            item.TargetSize.MapNullable(),
+            node_inner_size,
+            container_size.Map(AvailableSpace.MakeDefinite),
+            SizingMode.ContentSize,
+            default
+        );
+        var size = layout_output.Size;
+        var content_size = layout_output.ContentSize;
+
+        var offset_main =
+            total_offset_main
+            + item.OffsetMain
+            + item.Margin.MainStart(direction)
+            + ((item.Inset.MainStart(direction) ?? item.Inset.MainEnd(direction).TryNeg()) ?? 0);
+
+        var offset_cross =
+            total_offset_cross
+            + item.OffsetCross
+            + line_offset_cross
+            + item.Margin.CrossStart(direction)
+            + ((item.Inset.CrossStart(direction) ?? item.Inset.CrossEnd(direction).TryNeg()) ?? 0);
+
+        if (direction.IsRow())
+        {
+            var baseline_offset_cross = total_offset_cross + item.OffsetCross + item.Margin.CrossStart(direction);
+            var inner_baseline = layout_output.FirstBaseLines.Y ?? size.Height;
+            item.BaseLine = baseline_offset_cross + inner_baseline;
+        }
+        else
+        {
+            var baseline_offset_main = total_offset_main + item.OffsetMain + item.Margin.MainStart(direction);
+            var inner_baseline = layout_output.FirstBaseLines.Y ?? size.Height;
+            item.BaseLine = baseline_offset_main + inner_baseline;
+        }
+
+        Point<float> location = direction.IsRow()
+            ? new(offset_main, offset_cross)
+            : new(offset_cross, offset_main);
+        Size<float> scrollbar_size = new(
+            item.Overflow.Y == Overflow.Scroll ? item.ScrollbarWidth : 0,
+            item.Overflow.X == Overflow.Scroll ? item.ScrollbarWidth : 0
+        );
+
+        tree.SetUnroundedLayout(
+            item_node,
+            new Layout
+            {
+                Order = item.Order,
+                Location = location,
+                Size = size,
+                ContentSize = content_size,
+                ScrollbarSize = scrollbar_size,
+                Border = item.Border,
+                Padding = item.Padding,
+                Margin = item.Margin,
+            }
+        );
+
+        total_offset_main += item.OffsetMain + item.Margin.MainAxisSum(direction) + size.Main(direction);
+        total_content_size =
+            total_content_size.Max(BoxLayout.ComputeContentSizeContribution(location, size, content_size, item.Overflow));
+    }
+
+    /// Perform absolute layout on all absolutely positioned children.
+    private static Size<float> PerformAbsoluteLayoutOnAbsoluteChildren<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle,
+        TFlexboxItemStyle>(
+        ref TTree tree, TNodeId node, in AlgoConstants constants
+    )
+        where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
+        where TNodeId : allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+        where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
+        where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
+    {
+        var container_width = constants.ContainerSize.Width;
+        var container_height = constants.ContainerSize.Height;
+
+        var inset_relative_size =
+            constants.ContainerSize.Sub(constants.Border.SumAxes()).Sub(constants.ScrollbarGutter);
+
+        Size<float> content_size = default;
+
+        var child_count = tree.ChildCount(node);
+        for (var order = 0; order < child_count; order++)
+        {
+            var child = tree.GetChildId(node, order);
+            var child_style = tree.GetFlexboxChildStyle(child);
+
+            // Skip items that are display:none or are not position:absolute
+            if (child_style.BoxGenerationMode == BoxGenerationMode.None || child_style.Position != Position.Absolute)
+                continue;
+
+            var overflow = child_style.Overflow;
+            var scrollbar_width = child_style.ScrollbarWidth;
+            var aspect_ratio = child_style.AspectRatio;
+            var align_self = child_style.AlignSelf ?? (AlignSelf)constants.AlignItems;
+            var margin = child_style.Margin.TryResolve(inset_relative_size.Width, ref tree);
+            var padding = child_style.Padding.ResolveOrZero(inset_relative_size.Width, ref tree);
+            var border = child_style.Border.ResolveOrZero(inset_relative_size.Width, ref tree);
+            var padding_border_sum = padding.Add(border).SumAxes();
+            var box_sizing_adjustment = child_style.BoxSizing == BoxSizing.ContentBox ? padding_border_sum : default;
+
+            // Resolve inset
+            // Insets are resolved against the container size minus border
+            var left =
+                child_style.Inset.Left.TryResolve(inset_relative_size.Width, ref tree);
+            var right =
+                child_style.Inset.Right.TryResolve(inset_relative_size.Width, ref tree);
+            var top = child_style.Inset.Top.TryResolve(inset_relative_size.Height, ref tree);
+            var bottom =
+                child_style.Inset.Bottom.TryResolve(inset_relative_size.Height, ref tree);
+
+            // Compute known dimensions from min/max/inherent size styles
+            var style_size = child_style
+                .Size
+                .TryResolve(inset_relative_size, ref tree)
+                .TryApplyAspectRatio(aspect_ratio)
+                .TryAdd(box_sizing_adjustment);
+            var min_size = child_style
+                .MinSize
+                .TryResolve(inset_relative_size, ref tree)
+                .TryApplyAspectRatio(aspect_ratio)
+                .TryAdd(box_sizing_adjustment)
+                .Or(padding_border_sum.MapNullable())
+                .TryMax(padding_border_sum);
+            var max_size = child_style
+                .MaxSize
+                .TryResolve(inset_relative_size, ref tree)
+                .TryApplyAspectRatio(aspect_ratio)
+                .TryAdd(box_sizing_adjustment);
+            var known_dimensions = style_size.TryClamp(min_size, max_size);
+
+            // Fill in width from left/right and reapply aspect ratio if:
+            //   - Width is not already known
+            //   - Item has both left and right inset properties set
+            if ((known_dimensions.Width, left, right) is (null, { } left1, { } right1))
+            {
+                var new_width_raw = inset_relative_size.Width.TrySub(margin.Left).TrySub(margin.Right) - left1 - right1;
+                known_dimensions.Width = Math.Max(new_width_raw, 0);
+                known_dimensions = known_dimensions.TryApplyAspectRatio(aspect_ratio).TryClamp(min_size, max_size);
+            }
+
+            // Fill in height from top/bottom and reapply aspect ratio if:
+            //   - Height is not already known
+            //   - Item has both top and bottom inset properties set
+            if ((known_dimensions.Height, top, bottom) is (null, { } top1, { } bottom1))
+            {
+                var new_height_raw = inset_relative_size.Height.TrySub(margin.Top).TrySub(margin.Bottom) - top1 - bottom1;
+                known_dimensions.Height = Math.Max(new_height_raw, 0);
+                known_dimensions = known_dimensions.TryApplyAspectRatio(aspect_ratio).TryClamp(min_size, max_size);
+            }
+
+            var layout_output = tree.PerformChildLayout(
+                child,
+                known_dimensions,
+                constants.NodeInnerSize,
+                new(
+                    AvailableSpace.MakeDefinite(container_width.TryClamp(min_size.Width, max_size.Width)),
+                    AvailableSpace.MakeDefinite(container_height.TryClamp(min_size.Height, max_size.Height))
+                ),
+                SizingMode.InherentSize,
+                default
+            );
+            var measured_size = layout_output.Size;
+            var final_size = known_dimensions.Or(measured_size).TryClamp(min_size, max_size);
+
+            var non_auto_margin = margin.Map(static a => a ?? 0);
+
+            var free_space = new Size<float>(
+                constants.ContainerSize.Width - final_size.Width - non_auto_margin.HorizontalAxisSum(),
+                constants.ContainerSize.Height - final_size.Height - non_auto_margin.VerticalAxisSum()
+            ).Max(default);
+
+            // Expand auto margins to fill available space
+            Rect<float> resolved_margin;
+            {
+                Size<float> auto_margin_size = default;
+                {
+                    var auto_margin_count = (margin.Left is null ? 1 : 0) + (margin.Right is null ? 1 : 0);
+                    auto_margin_size.Width = auto_margin_count > 0 ? free_space.Width / auto_margin_count : 0;
+                }
+                {
+                    var auto_margin_count = (margin.Top is null ? 1 : 0) + (margin.Bottom is null ? 1 : 0);
+                    auto_margin_size.Height = auto_margin_count > 0 ? free_space.Height / auto_margin_count : 0;
+                }
+
+                resolved_margin = new(
+                    margin.Top ?? auto_margin_size.Height,
+                    margin.Right ?? auto_margin_size.Width,
+                    margin.Bottom ?? auto_margin_size.Height,
+                    margin.Left ?? auto_margin_size.Width
+                );
+            }
+
+            // Determine flex-relative insets
+            var (start_main, end_main) = constants.IsRow ? (left, right) : (top, bottom);
+            var (start_cross, end_cross) = constants.IsRow ? (top, bottom) : (left, right);
+
+
+            // Apply main-axis alignment
+            float offset_main;
+            if (start_main is { } start1)
+            {
+                offset_main = start1 + constants.Border.MainStart(constants.Direction) + resolved_margin.MainStart(constants.Direction);
+            }
+            else if (end_main is { } end1)
+            {
+                offset_main =
+                    constants.ContainerSize.Main(constants.Direction)
+                    - constants.Border.MainEnd(constants.Direction)
+                    - constants.ScrollbarGutter.Main(constants.Direction)
+                    - final_size.Main(constants.Direction)
+                    - end1
+                    - resolved_margin.MainEnd(constants.Direction);
+            }
+            else
+            {
+                // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
+                // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
+                offset_main = (constants.JustifyContent ?? JustifyContent.Start, constants.IsWrapReverse) switch
+                {
+                    (JustifyContent.SpaceBetween, _)
+                        or (JustifyContent.Start, _)
+                        or (JustifyContent.Stretch, false)
+                        or (JustifyContent.FlexStart, false)
+                        or (JustifyContent.FlexEnd, true) =>
+                        constants.ContentBoxInset.MainStart(constants.Direction) + resolved_margin.MainStart(constants.Direction),
+                    (JustifyContent.End, _)
+                        or (JustifyContent.FlexEnd, false)
+                        or (JustifyContent.FlexStart, true)
+                        or (JustifyContent.Stretch, true) =>
+                        constants.ContainerSize.Main(constants.Direction)
+                        - constants.ContentBoxInset.MainEnd(constants.Direction)
+                        - final_size.Main(constants.Direction)
+                        - resolved_margin.MainEnd(constants.Direction),
+                    (JustifyContent.SpaceEvenly, _) or (JustifyContent.SpaceAround, _) or (JustifyContent.Center, _) =>
+                        (constants.ContainerSize.Main(constants.Direction)
+                         + constants.ContentBoxInset.MainStart(constants.Direction)
+                         + constants.ContentBoxInset.MainEnd(constants.Direction)
+                         - final_size.Main(constants.Direction)
+                         + resolved_margin.MainStart(constants.Direction)
+                         - resolved_margin.MainEnd(constants.Direction))
+                        / 2,
+                    _ => throw new ArgumentOutOfRangeException(),
+                };
+            }
+
+            // Apply cross-axis alignment
+            // let free_cross_space = free_space.cross(constants.dir) - resolved_margin.cross_axis_sum(constants.dir);
+            float offset_cross;
+            if (start_cross is { } start2)
+            {
+                offset_cross = start2 + constants.Border.CrossStart(constants.Direction) + resolved_margin.CrossStart(constants.Direction);
+            }
+            else if (end_cross is { } end2)
+            {
+                offset_cross =
+                    constants.ContainerSize.Cross(constants.Direction)
+                    - constants.Border.CrossEnd(constants.Direction)
+                    - constants.ScrollbarGutter.Cross(constants.Direction)
+                    - final_size.Cross(constants.Direction)
+                    - end2
+                    - resolved_margin.CrossEnd(constants.Direction);
+            }
+            else
+            {
+                offset_cross = (align_self, constants.IsWrapReverse) switch
+                {
+                    // Stretch alignment does not apply to absolutely positioned items
+                    // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
+                    // Note: Stretch should be FlexStart not Start when we support both
+                    (AlignSelf.Start, _)
+                        or (AlignSelf.Baseline or AlignSelf.Stretch or AlignSelf.FlexStart, false)
+                        or (AlignSelf.FlexEnd, true) =>
+                        constants.ContentBoxInset.CrossStart(constants.Direction) + resolved_margin.CrossStart(constants.Direction),
+                    (AlignSelf.End, _)
+                        or (AlignSelf.Baseline or AlignSelf.Stretch or AlignSelf.FlexStart, true)
+                        or (AlignSelf.FlexEnd, false) =>
+                        constants.ContainerSize.Cross(constants.Direction)
+                        - constants.ContentBoxInset.CrossEnd(constants.Direction)
+                        - final_size.Cross(constants.Direction)
+                        - resolved_margin.CrossEnd(constants.Direction),
+                    (AlignSelf.Center, _) =>
+                        (constants.ContainerSize.Cross(constants.Direction)
+                         + constants.ContentBoxInset.CrossStart(constants.Direction)
+                         - constants.ContentBoxInset.CrossEnd(constants.Direction)
+                         - final_size.Cross(constants.Direction)
+                         + resolved_margin.CrossStart(constants.Direction)
+                         - resolved_margin.CrossEnd(constants.Direction))
+                        / 2,
+                    _ => throw new ArgumentOutOfRangeException(),
+                };
+            }
+
+            Point<float> location = constants.IsRow
+                ? new(offset_main, offset_cross)
+                : new(offset_cross, offset_main);
+            Size<float> scrollbar_size = new(
+                overflow.Y == Overflow.Scroll ? scrollbar_width : 0,
+                overflow.X == Overflow.Scroll ? scrollbar_width : 0
+            );
+            tree.SetUnroundedLayout(
+                child,
+                new()
+                {
+                    Order = order,
+                    Location = location,
+                    Size = final_size,
+                    ContentSize = layout_output.ContentSize,
+                    ScrollbarSize = scrollbar_size,
+                    Border = border,
+                    Padding = padding,
+                    Margin = resolved_margin,
+                }
+            );
+
+            Size<float> size_content_size_contribution = new(
+                overflow.X is Overflow.Visible
+                    ? Math.Max(final_size.Width, layout_output.ContentSize.Width)
+                    : final_size.Width,
+                overflow.Y is Overflow.Visible
+                    ? Math.Max(final_size.Height, layout_output.ContentSize.Height)
+                    : final_size.Height
+            );
+            if (size_content_size_contribution.HasNonZeroArea())
+            {
+                Size<float> content_size_contribution = new(
+                    location.X + size_content_size_contribution.Width,
+                    location.Y + size_content_size_contribution.Height
+                );
+                content_size = content_size.Max(content_size_contribution);
+            }
+        }
+
+        return content_size;
+    }
 }

@@ -21,6 +21,17 @@ public record struct Rect<T>(T Top, T Right, T Bottom, T Left)
 public static partial class BoxStyleExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Rect<float?> TryResolve<T, TCalc>(this Rect<T> self, float? ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        where T : ITryResolve<float?>
+        => new(
+            self.Top.TryResolve(ctx, ref calc),
+            self.Right.TryResolve(ctx, ref calc),
+            self.Bottom.TryResolve(ctx, ref calc),
+            self.Left.TryResolve(ctx, ref calc)
+        );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Rect<float> ResolveOrZero<T, TCalc>(this Rect<T> self, float? ctx, ref TCalc calc)
         where TCalc : ICalc, allows ref struct
         where T : ITryResolve<float?>
@@ -106,7 +117,7 @@ public static partial class BoxStyleExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T MainEnd<T>(this Rect<T> self, FlexDirection direction)
         => direction.IsRow() ? self.Right : self.Bottom;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T CrossStart<T>(this Rect<T> self, FlexDirection direction)
         => direction.IsRow() ? self.Top : self.Left;
