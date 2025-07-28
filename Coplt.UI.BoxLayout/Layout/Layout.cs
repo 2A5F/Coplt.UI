@@ -1,4 +1,5 @@
-﻿using Coplt.UI.Styles;
+﻿using System.Runtime.CompilerServices;
+using Coplt.UI.Styles;
 
 namespace Coplt.UI.BoxLayouts;
 
@@ -13,6 +14,7 @@ public record struct Layout
     public Rect<float> Padding;
     public Rect<float> Margin;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Layout WithOrder(int order) => new()
     {
         Order = order,
