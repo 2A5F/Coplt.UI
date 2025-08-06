@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Coplt.Union" Version="0.17.0" />
+      <PackageReference Include="Coplt.Union" Version="0.18.0" />
     </ItemGroup>
 
 </Project>
