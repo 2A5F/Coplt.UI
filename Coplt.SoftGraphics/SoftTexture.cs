@@ -1,208 +1,498 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using Coplt.Mathematics;
 using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
 
-public sealed class SoftTexture
+public enum SoftTextureFormat
 {
+    Unknown,
+    R8_G8_B8_A8_UNorm,
+    R32_G32_B32_A32_Float,
+    D24_UNorm_S8_UInt,
+}
+
+public abstract class SoftTexture
+{
+    #region Metas
+
     public uint Width { get; }
     public uint Height { get; }
     public SoftTextureFormat Format { get; }
 
-    internal readonly byte[]? m_blob0;
-    internal readonly byte[]? m_blob1;
-    internal readonly byte[]? m_blob2;
-    internal readonly byte[]? m_blob3;
+    public bool HasColor { get; protected set; }
+    public bool HasDepth { get; protected set; }
+    public bool HasStencil { get; protected set; }
 
-    internal readonly uint2_mt16 m_size_cache;
+    public bool HasDepthStencil => HasDepth || HasStencil;
 
-    public SoftTexture(uint width, uint height, SoftTextureFormat format)
+    #endregion
+
+    #region Fields
+
+    protected readonly uint2_mt16 m_size_cache;
+
+    protected static readonly uint_mt16 s_inc_mt16 = new(Vector512.Create(0u, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+
+    #endregion
+
+    #region Ctor
+
+    protected SoftTexture(uint width, uint height, SoftTextureFormat format)
     {
         Width = width;
         Height = height;
         Format = format;
         m_size_cache = new(width, height);
-        switch (format)
-        {
-            case SoftTextureFormat.R8_G8_B8_A8_UNorm:
-                Impl_R8_G8_B8_A8_UNorm.Init(
-                    this,
-                    ref m_blob0,
-                    ref m_blob1,
-                    ref m_blob2,
-                    ref m_blob3
-                );
-                break;
-            case SoftTextureFormat.R32_G32_B32_A32_Float:
-                Impl_R32_G32_B32_A32_Float.Init(
-                    this,
-                    ref m_blob0,
-                    ref m_blob1,
-                    ref m_blob2,
-                    ref m_blob3
-                );
-                break;
-            case SoftTextureFormat.D24_UNorm_S8_UInt:
-                throw new NotImplementedException("todo");
-            default:
-                throw new ArgumentOutOfRangeException(nameof(format), format, null);
-        }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float4_mt16 Sample(
-        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color
-    ) => throw new NotImplementedException();
+    #endregion
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float_mt16 SampleDepth(
-        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv
-    ) => throw new NotImplementedException();
+    #region Create
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float4_mt16 Load(
-        ref readonly SoftLaneContext ctx, uint2_mt16 uv
-    ) => Format switch
+    public static SoftTexture Create(SoftTextureFormat format, uint width, uint height, bool zeroed = true) => format switch
     {
-        SoftTextureFormat.R8_G8_B8_A8_UNorm => Impl_R8_G8_B8_A8_UNorm.Load(this, in ctx, uv),
-        SoftTextureFormat.R32_G32_B32_A32_Float => Impl_R32_G32_B32_A32_Float.Load(this, in ctx, uv),
-        SoftTextureFormat.D24_UNorm_S8_UInt => throw new NotSupportedException(),
-        _ => throw new ArgumentOutOfRangeException()
+        SoftTextureFormat.R8_G8_B8_A8_UNorm => new Impl_R8_G8_B8_A8_UNorm(width, height, zeroed),
+        SoftTextureFormat.R32_G32_B32_A32_Float => new Impl_R32_G32_B32_A32_Float(width, height, zeroed),
+        SoftTextureFormat.D24_UNorm_S8_UInt => throw new NotImplementedException("todo"),
+        _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
     };
 
+    #endregion
+
+    #region Sample
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(
+    public abstract float4_mt16 Sample(
+        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color
+    );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract float_mt16 SampleDepth(
+        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv
+    );
+
+    #endregion
+
+    #region Load
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract float4_mt16 Load(
         ref readonly SoftLaneContext ctx, uint2_mt16 uv
-    ) => throw new NotImplementedException();
+    );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Store(
+    public abstract (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(
+        ref readonly SoftLaneContext ctx, uint2_mt16 uv
+    );
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public abstract (float r, float g, float b, float a) Load(uint u, uint v);
+
+    #endregion
+
+    #region Store
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract void Store(
         ref readonly SoftLaneContext ctx, uint2_mt16 uv, float4_mt16 value
-    )
-    {
-        switch (Format)
-        {
-            case SoftTextureFormat.R8_G8_B8_A8_UNorm: Impl_R8_G8_B8_A8_UNorm.Store(this, in ctx, uv, value); break;
-            case SoftTextureFormat.R32_G32_B32_A32_Float: Impl_R32_G32_B32_A32_Float.Store(this, in ctx, uv, value); break;
-            case SoftTextureFormat.D24_UNorm_S8_UInt: throw new NotSupportedException();
-            default: throw new ArgumentOutOfRangeException();
-        }
-    }
+    );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void StoreDepthStencil(
+    public abstract void StoreDepthStencil(
         ref readonly SoftLaneContext ctx, uint2_mt16 uv, float_mt16 depth, uint_mt16 stencil
-    ) => throw new NotImplementedException();
+    );
 
-    static class Impl_R8_G8_B8_A8_UNorm
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public abstract void Store(uint u, uint v, float r, float g, float b, float a);
+
+    #endregion
+
+    #region QuadQuad
+
+    /// <summary>
+    /// <code>
+    /// c2 c3   d2 d3
+    /// c0 c1   d0 d1
+    ///              
+    /// a2 a3   b2 b3
+    /// a0 a1   b0 b1
+    /// </code>
+    /// </summary>
+    public abstract void QuadQuadStore(uint x, uint y, float4_mt16 color);
+
+    #endregion
+
+    #region Read
+
+    public abstract void ReadRowUNorm8(int row, Span<byte> target, AJobScheduler? scheduler = null);
+
+    #endregion
+
+    #region Impl
+
+    internal sealed class Impl_R8_G8_B8_A8_UNorm : SoftTexture
     {
-        public static void Init(
-            SoftTexture texture,
-            ref byte[]? m_blob0,
-            ref byte[]? m_blob1,
-            ref byte[]? m_blob2,
-            ref byte[]? m_blob3
-        )
+        #region Blobs
+
+        internal readonly byte[] m_blob0;
+        internal readonly byte[] m_blob1;
+        internal readonly byte[] m_blob2;
+        internal readonly byte[] m_blob3;
+
+        #endregion
+
+        #region Ctor
+
+        public Impl_R8_G8_B8_A8_UNorm(uint width, uint height, bool zeroed) : base(width, height, SoftTextureFormat.R8_G8_B8_A8_UNorm)
         {
-            var max_size = math.max(texture.Width, texture.Height).up2pow2();
-            var byte_size = max_size;
-            var arr_size = byte_size * byte_size + 15;
-            m_blob0 = new byte[arr_size];
-            m_blob1 = new byte[arr_size];
-            m_blob2 = new byte[arr_size];
-            m_blob3 = new byte[arr_size];
+            HasColor = true;
+            var max_size = math.max(width, height).up2pow2();
+            var arr_size = max_size * max_size + 63;
+            if (zeroed)
+            {
+                m_blob0 = new byte[arr_size];
+                m_blob1 = new byte[arr_size];
+                m_blob2 = new byte[arr_size];
+                m_blob3 = new byte[arr_size];
+            }
+            else
+            {
+                m_blob0 = GC.AllocateUninitializedArray<byte>((int)arr_size);
+                m_blob1 = GC.AllocateUninitializedArray<byte>((int)arr_size);
+                m_blob2 = GC.AllocateUninitializedArray<byte>((int)arr_size);
+                m_blob3 = GC.AllocateUninitializedArray<byte>((int)arr_size);
+            }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public static float4_mt16 Load(
-            SoftTexture texture,
-            ref readonly SoftLaneContext ctx,
-            uint2_mt16 uv
-        )
+        #endregion
+
+        #region NotSupported
+
+        public override float_mt16 SampleDepth(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv)
+            => throw new NotSupportedException();
+        public override (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
+            => throw new NotSupportedException();
+        public override void StoreDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float_mt16 depth, uint_mt16 stencil)
+            => throw new NotSupportedException();
+
+        #endregion
+
+        #region Sample
+
+        public override float4_mt16 Sample(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color)
         {
-            var p = uv.min(texture.m_size_cache);
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Load
+
+        public override float4_mt16 Load(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
+        {
+            var p = uv.min(m_size_cache);
             var offset = Utils.EncodeZOrder(p).asi();
-            var r = Utils.GatherUNorm(ref texture.m_blob0![0], offset, ctx.ActiveLanes);
-            var g = Utils.GatherUNorm(ref texture.m_blob1![0], offset, ctx.ActiveLanes);
-            var b = Utils.GatherUNorm(ref texture.m_blob2![0], offset, ctx.ActiveLanes);
-            var a = Utils.GatherUNorm(ref texture.m_blob3![0], offset, ctx.ActiveLanes);
+            var r = Utils.GatherUNorm(ref m_blob0[0], offset, ctx.ActiveLanes);
+            var g = Utils.GatherUNorm(ref m_blob1[0], offset, ctx.ActiveLanes);
+            var b = Utils.GatherUNorm(ref m_blob2[0], offset, ctx.ActiveLanes);
+            var a = Utils.GatherUNorm(ref m_blob3[0], offset, ctx.ActiveLanes);
             return new(r, g, b, a);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public static void Store(
-            SoftTexture texture,
+        public override (float r, float g, float b, float a) Load(uint u, uint v)
+        {
+            var x = math.min(u, Width);
+            var y = math.min(v, Height);
+            var offset = Utils.EncodeZOrder(x, y);
+            var r = Unsafe.Add(ref m_blob0[0], offset) * (1f / 255f);
+            var g = Unsafe.Add(ref m_blob1[0], offset) * (1f / 255f);
+            var b = Unsafe.Add(ref m_blob2[0], offset) * (1f / 255f);
+            var a = Unsafe.Add(ref m_blob3[0], offset) * (1f / 255f);
+            return (r, g, b, a);
+        }
+
+        #endregion
+
+        #region Store
+
+        public override void Store(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float4_mt16 value)
+        {
+            var p = uv.min(m_size_cache);
+            var offset = Utils.EncodeZOrder(p).asi();
+            Utils.ScatterUNorm(value.x, ref m_blob0[0], offset, ctx.ActiveLanes);
+            Utils.ScatterUNorm(value.y, ref m_blob1[0], offset, ctx.ActiveLanes);
+            Utils.ScatterUNorm(value.z, ref m_blob2[0], offset, ctx.ActiveLanes);
+            Utils.ScatterUNorm(value.w, ref m_blob3[0], offset, ctx.ActiveLanes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void Store(uint u, uint v, float r, float g, float b, float a)
+        {
+            var x = math.min(u, Width);
+            var y = math.min(v, Height);
+            var offset = Utils.EncodeZOrder(x, y);
+            Unsafe.Add(ref m_blob0[0], offset) = (byte)Math.Round(Math.Clamp(r * 255f, 0f, 255f));
+            Unsafe.Add(ref m_blob1[0], offset) = (byte)Math.Round(Math.Clamp(g * 255f, 0f, 255f));
+            Unsafe.Add(ref m_blob2[0], offset) = (byte)Math.Round(Math.Clamp(b * 255f, 0f, 255f));
+            Unsafe.Add(ref m_blob3[0], offset) = (byte)Math.Round(Math.Clamp(a * 255f, 0f, 255f));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint x, uint y, float4_mt16 color)
+        {
+            var index = Utils.EncodeZOrder(x, y) * 16;
+
+            var r512 = ((uint_mt16)math_mt.clamp(color.r * 255f, 0f, 255f).round()).vector;
+            var g512 = ((uint_mt16)math_mt.clamp(color.g * 255f, 0f, 255f).round()).vector;
+            var b512 = ((uint_mt16)math_mt.clamp(color.b * 255f, 0f, 255f).round()).vector;
+            var a512 = ((uint_mt16)math_mt.clamp(color.a * 255f, 0f, 255f).round()).vector;
+
+            var r256 = Vector256.Narrow(r512.GetLower(), r512.GetUpper());
+            var g256 = Vector256.Narrow(g512.GetLower(), g512.GetUpper());
+            var b256 = Vector256.Narrow(b512.GetLower(), b512.GetUpper());
+            var a256 = Vector256.Narrow(a512.GetLower(), a512.GetUpper());
+
+            var r128 = Vector128.Narrow(r256.GetLower(), r256.GetUpper());
+            var g128 = Vector128.Narrow(g256.GetLower(), g256.GetUpper());
+            var b128 = Vector128.Narrow(b256.GetLower(), b256.GetUpper());
+            var a128 = Vector128.Narrow(a256.GetLower(), a256.GetUpper());
+
+            r128.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], index));
+            g128.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], index));
+            b128.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], index));
+            a128.StoreUnsafe(ref Unsafe.Add(ref m_blob3[0], index));
+        }
+
+        #endregion
+
+        #region Read
+
+        public override void ReadRowUNorm8(int row, Span<byte> target, AJobScheduler? scheduler = null)
+        {
+            scheduler ??= SyncJobScheduler.Instance;
+
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    internal sealed class Impl_R32_G32_B32_A32_Float : SoftTexture
+    {
+        #region Blobs
+
+        internal readonly float[] m_blob0;
+        internal readonly float[] m_blob1;
+        internal readonly float[] m_blob2;
+        internal readonly float[] m_blob3;
+
+        #endregion
+
+        #region Ctor
+
+        public Impl_R32_G32_B32_A32_Float(uint width, uint height, bool zeroed) : base(width, height, SoftTextureFormat.R32_G32_B32_A32_Float)
+        {
+            HasColor = true;
+            var max_size = math.max(width, height).up2pow2();
+            var arr_size = max_size * max_size + 15;
+            if (zeroed)
+            {
+                m_blob0 = new float[arr_size];
+                m_blob1 = new float[arr_size];
+                m_blob2 = new float[arr_size];
+                m_blob3 = new float[arr_size];
+            }
+            else
+            {
+                m_blob0 = GC.AllocateUninitializedArray<float>((int)arr_size);
+                m_blob1 = GC.AllocateUninitializedArray<float>((int)arr_size);
+                m_blob2 = GC.AllocateUninitializedArray<float>((int)arr_size);
+                m_blob3 = GC.AllocateUninitializedArray<float>((int)arr_size);
+            }
+        }
+
+        #endregion
+
+        #region NotSupported
+
+        public override float_mt16 SampleDepth(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv)
+            => throw new NotSupportedException();
+        public override (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
+            => throw new NotSupportedException();
+        public override void StoreDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float_mt16 depth, uint_mt16 stencil)
+            => throw new NotSupportedException();
+
+        #endregion
+
+        #region Sample
+
+        public override float4_mt16 Sample(
+            ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color
+        )
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Load
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float4_mt16 Load(
+            ref readonly SoftLaneContext ctx,
+            uint2_mt16 uv
+        )
+        {
+            var p = uv.min(m_size_cache);
+            var offset = Utils.EncodeZOrder(p).asi();
+            var r = Utils.Gather(ref m_blob0[0], offset, ctx.ActiveLanes);
+            var g = Utils.Gather(ref m_blob1[0], offset, ctx.ActiveLanes);
+            var b = Utils.Gather(ref m_blob2[0], offset, ctx.ActiveLanes);
+            var a = Utils.Gather(ref m_blob3[0], offset, ctx.ActiveLanes);
+            return new(r, g, b, a);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override (float r, float g, float b, float a) Load(uint u, uint v)
+        {
+            var x = math.min(u, Width);
+            var y = math.min(v, Height);
+            var offset = Utils.EncodeZOrder(x, y);
+            var r = Unsafe.Add(ref m_blob0[0], offset);
+            var g = Unsafe.Add(ref m_blob1[0], offset);
+            var b = Unsafe.Add(ref m_blob2[0], offset);
+            var a = Unsafe.Add(ref m_blob3[0], offset);
+            return (r, g, b, a);
+        }
+
+        #endregion
+
+        #region Store
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void Store(
             ref readonly SoftLaneContext ctx,
             uint2_mt16 uv,
             float4_mt16 value
         )
         {
-            var p = uv.min(texture.m_size_cache);
+            var p = uv.min(m_size_cache);
             var offset = Utils.EncodeZOrder(p).asi();
-            Utils.ScatterUNorm(value.x, ref texture.m_blob0![0], offset, ctx.ActiveLanes);
-            Utils.ScatterUNorm(value.y, ref texture.m_blob1![0], offset, ctx.ActiveLanes);
-            Utils.ScatterUNorm(value.z, ref texture.m_blob2![0], offset, ctx.ActiveLanes);
-            Utils.ScatterUNorm(value.w, ref texture.m_blob3![0], offset, ctx.ActiveLanes);
-        }
-    }
-
-    static class Impl_R32_G32_B32_A32_Float
-    {
-        public static void Init(
-            SoftTexture texture,
-            ref byte[]? m_blob0,
-            ref byte[]? m_blob1,
-            ref byte[]? m_blob2,
-            ref byte[]? m_blob3
-        )
-        {
-            var max_size = math.max(texture.Width, texture.Height).up2pow2();
-            var byte_size = max_size * sizeof(float);
-            var arr_size = byte_size * byte_size;
-            m_blob0 = new byte[arr_size];
-            m_blob1 = new byte[arr_size];
-            m_blob2 = new byte[arr_size];
-            m_blob3 = new byte[arr_size];
+            Utils.Scatter(value.x, ref m_blob0[0], offset, ctx.ActiveLanes);
+            Utils.Scatter(value.y, ref m_blob1[0], offset, ctx.ActiveLanes);
+            Utils.Scatter(value.z, ref m_blob2[0], offset, ctx.ActiveLanes);
+            Utils.Scatter(value.w, ref m_blob3[0], offset, ctx.ActiveLanes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public static float4_mt16 Load(
-            SoftTexture texture,
-            ref readonly SoftLaneContext ctx,
-            uint2_mt16 uv
-        )
+        public override void Store(uint u, uint v, float r, float g, float b, float a)
         {
-            var p = uv.min(texture.m_size_cache);
-            var offset = Utils.EncodeZOrder(p).asi();
-            var r = Utils.Gather(ref Unsafe.As<byte, float>(ref texture.m_blob0![0]), offset, ctx.ActiveLanes);
-            var g = Utils.Gather(ref Unsafe.As<byte, float>(ref texture.m_blob1![0]), offset, ctx.ActiveLanes);
-            var b = Utils.Gather(ref Unsafe.As<byte, float>(ref texture.m_blob2![0]), offset, ctx.ActiveLanes);
-            var a = Utils.Gather(ref Unsafe.As<byte, float>(ref texture.m_blob3![0]), offset, ctx.ActiveLanes);
-            return new(r, g, b, a);
+            var x = math.min(u, Width);
+            var y = math.min(v, Height);
+            var offset = Utils.EncodeZOrder(x, y);
+            Unsafe.Add(ref m_blob0[0], offset) = r;
+            Unsafe.Add(ref m_blob1[0], offset) = g;
+            Unsafe.Add(ref m_blob2[0], offset) = b;
+            Unsafe.Add(ref m_blob3[0], offset) = a;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public static void Store(
-            SoftTexture texture,
-            ref readonly SoftLaneContext ctx,
-            uint2_mt16 uv,
-            float4_mt16 value
-        )
+        public override void QuadQuadStore(uint x, uint y, float4_mt16 color)
         {
-            var p = uv.min(texture.m_size_cache);
-            var offset = Utils.EncodeZOrder(p).asi();
-            Utils.Scatter(value.x, ref Unsafe.As<byte, float>(ref texture.m_blob0![0]), offset, ctx.ActiveLanes);
-            Utils.Scatter(value.y, ref Unsafe.As<byte, float>(ref texture.m_blob1![0]), offset, ctx.ActiveLanes);
-            Utils.Scatter(value.z, ref Unsafe.As<byte, float>(ref texture.m_blob2![0]), offset, ctx.ActiveLanes);
-            Utils.Scatter(value.w, ref Unsafe.As<byte, float>(ref texture.m_blob3![0]), offset, ctx.ActiveLanes);
-        }
-    }
-}
+            var index = Utils.EncodeZOrder(x, y) * 16;
 
-public enum SoftTextureFormat
-{
-    R8_G8_B8_A8_UNorm,
-    R32_G32_B32_A32_Float,
-    D24_UNorm_S8_UInt,
+            color.r.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], index));
+            color.g.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], index));
+            color.b.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], index));
+            color.a.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob3[0], index));
+        }
+
+        #endregion
+
+        #region Read
+
+        public override unsafe void ReadRowUNorm8(int row, Span<byte> target, AJobScheduler? scheduler = null)
+        {
+            scheduler ??= SyncJobScheduler.Instance;
+
+            var w = (Width + 15) / 16;
+            uint_mt16 y = (uint)row;
+            fixed (byte* p_target = target)
+            {
+                scheduler.Dispatch(w, 1, (self: this, (IntPtr)p_target, len: target.Length, y), static (ctx, x, _) =>
+                {
+                    var (self, p_target, target_len, y) = ctx;
+                    var target = new Span<byte>((byte*)p_target, target_len);
+                    
+                    var index = new uint_mt16(x * 16) + s_inc_mt16;
+                    var active = index < self.m_size_cache.x;
+                    var offset = Utils.EncodeZOrder(new(index, y)).asi();
+                    var r = Utils.Gather(ref self.m_blob0[0], offset, active);
+                    var g = Utils.Gather(ref self.m_blob1[0], offset, active);
+                    var b = Utils.Gather(ref self.m_blob2[0], offset, active);
+                    var a = Utils.Gather(ref self.m_blob3[0], offset, active);
+
+                    var r512 = ((uint_mt16)math_mt.clamp(r * 255f, 0f, 255f).round()).vector;
+                    var g512 = ((uint_mt16)math_mt.clamp(g * 255f, 0f, 255f).round()).vector;
+                    var b512 = ((uint_mt16)math_mt.clamp(b * 255f, 0f, 255f).round()).vector;
+                    var a512 = ((uint_mt16)math_mt.clamp(a * 255f, 0f, 255f).round()).vector;
+
+                    var r256 = Vector256.Narrow(r512.GetLower(), r512.GetUpper());
+                    var g256 = Vector256.Narrow(g512.GetLower(), g512.GetUpper());
+                    var b256 = Vector256.Narrow(b512.GetLower(), b512.GetUpper());
+                    var a256 = Vector256.Narrow(a512.GetLower(), a512.GetUpper());
+
+                    var r128 = Vector128.Narrow(r256.GetLower(), r256.GetUpper());
+                    var g128 = Vector128.Narrow(g256.GetLower(), g256.GetUpper());
+                    var b128 = Vector128.Narrow(b256.GetLower(), b256.GetUpper());
+                    var a128 = Vector128.Narrow(a256.GetLower(), a256.GetUpper());
+
+                    var rgba = Vector512.Create(
+                        Vector256.Create(
+                            r128,
+                            g128
+                        ),
+                        Vector256.Create(
+                            b128,
+                            a128
+                        )
+                    );
+                    rgba = Vector512.Shuffle(
+                        rgba,
+                        Vector512.Create(
+                            (byte) /**/ 00, 16, 32, 48, /**/ 01, 17, 33, 49,
+                            /*       */ 02, 18, 34, 50, /**/ 03, 19, 35, 51,
+                            /*       */ 04, 20, 36, 52, /**/ 05, 21, 37, 53,
+                            /*       */ 06, 22, 38, 54, /**/ 07, 23, 39, 55,
+                            /*                                            */
+                            /*       */ 08, 24, 40, 56, /**/ 09, 25, 41, 57,
+                            /*       */ 10, 26, 42, 58, /**/ 11, 27, 43, 59,
+                            /*       */ 12, 28, 44, 60, /**/ 13, 29, 45, 61,
+                            /*       */ 14, 30, 46, 62, /**/ 15, 31, 47, 63
+                        )
+                    );
+
+                    if (x + 15 < self.Width)
+                    {
+                        rgba.StoreUnsafe(ref target[0], x * 64);
+                    }
+                    else
+                    {
+                        var len = self.Width - (x + 15);
+                        Span<byte> tmp = stackalloc byte[64];
+                        rgba.StoreUnsafe(ref tmp[0]);
+                        tmp.CopyTo(target.Slice((int)x * 64, (int)len * 4));
+                    }
+                });
+            }
+        }
+
+        #endregion
+    }
+
+    #endregion
 }

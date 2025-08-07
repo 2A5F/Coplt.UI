@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using Coplt.Mathematics;
 using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
@@ -208,6 +207,127 @@ public static partial class Utils
     [MethodImpl(256 | 512)]
     public static uint2_mt16 DecodeZOrder(uint_mt16 code) => DecodeZOrderSoft(code);
 
+    [MethodImpl(256 | 512)]
+    public static uint EncodeZOrderPclmulqdq(uint x, uint y)
+    {
+        if (!Pclmulqdq.IsSupported) throw new NotSupportedException("Pclmulqdq is not supported");
+
+        var v = Vector128.Create(x, y);
+        var a = Pclmulqdq.CarrylessMultiply(v, v, 0);
+        var r = a | (Vector128.Shuffle(a, Vector128.Create(1, 0)) << 1);
+        return (uint)r[0];
+    }
+
+    [MethodImpl(256 | 512)]
+    public static uint EncodeZOrderBmi2(uint x, uint y)
+    {
+        if (!Bmi2.IsSupported) throw new NotSupportedException("Bmi2 is not supported");
+        return Bmi2.ParallelBitDeposit(x, 0x55555555u) | Bmi2.ParallelBitDeposit(y, 0xAAAAAAAAu);
+    }
+
+    [MethodImpl(256 | 512)]
+    public static (uint x, uint y) DecodeZOrderBmi2(uint code)
+    {
+        if (!Bmi2.IsSupported) throw new NotSupportedException("Bmi2 is not supported");
+        return (Bmi2.ParallelBitExtract(code, 0x55555555u), Bmi2.ParallelBitExtract(code, 0xAAAAAAAAu));
+    }
+
+    [MethodImpl(256 | 512)]
+    public static uint EncodeZOrderSoft(uint x, uint y)
+    {
+        if (Vector64.IsHardwareAccelerated)
+        {
+            var n = Vector64.Create(x).WithElement(1, y);
+            n &= Vector64.Create(0x0000FFFFu);
+            n = (n | (n << 8)) & Vector64.Create(0x00FF00FFu);
+            n = (n | (n << 4)) & Vector64.Create(0x0F0F0F0Fu);
+            n = (n | (n << 2)) & Vector64.Create(0x33333333u);
+            n = (n | (n << 1)) & Vector64.Create(0x55555555u);
+            var r = n | (Vector64.Shuffle(n, Vector64.Create(1u, 0)) << 1);
+            return r[0];
+        }
+        else if (Vector128.IsHardwareAccelerated)
+        {
+            var n = Vector128.Create(x).WithElement(1, y);
+            n &= Vector128.Create(0x0000FFFFu);
+            n = (n | (n << 8)) & Vector128.Create(0x00FF00FFu);
+            n = (n | (n << 4)) & Vector128.Create(0x0F0F0F0Fu);
+            n = (n | (n << 2)) & Vector128.Create(0x33333333u);
+            n = (n | (n << 1)) & Vector128.Create(0x55555555u);
+            var r = n | (Vector128.Shuffle(n, Vector128.Create(1u, 0, 0, 0)) << 1);
+            return r[0];
+        }
+        else
+        {
+            return (Encode(y) << 1) | Encode(x);
+
+            [MethodImpl(256 | 512)]
+            static uint Encode(uint n)
+            {
+                n &= 0x0000FFFF;
+                n = (n | (n << 8)) & 0x00FF00FF;
+                n = (n | (n << 4)) & 0x0F0F0F0F;
+                n = (n | (n << 2)) & 0x33333333;
+                n = (n | (n << 1)) & 0x55555555;
+                return n;
+            }
+        }
+    }
+
+    [MethodImpl(256 | 512)]
+    public static (uint x, uint y) DecodeZOrderSoft(uint code)
+    {
+        if (Vector64.IsHardwareAccelerated)
+        {
+            var n = (Vector64.Create(code) >> 1).WithElement(0, code);
+            n &= Vector64.Create(0x55555555u);
+            n = (n | (n >> 1)) & Vector64.Create(0x33333333u);
+            n = (n | (n >> 2)) & Vector64.Create(0x0F0F0F0Fu);
+            n = (n | (n >> 4)) & Vector64.Create(0x00FF00FFu);
+            n = (n | (n >> 8)) & Vector64.Create(0x0000FFFFu);
+            return (n[0], n[1]);
+        }
+        else if (Vector128.IsHardwareAccelerated)
+        {
+            var n = (Vector128.Create(code) >> 1).WithElement(0, code);
+            n &= Vector128.Create(0x55555555u);
+            n = (n | (n >> 1)) & Vector128.Create(0x33333333u);
+            n = (n | (n >> 2)) & Vector128.Create(0x0F0F0F0Fu);
+            n = (n | (n >> 4)) & Vector128.Create(0x00FF00FFu);
+            n = (n | (n >> 8)) & Vector128.Create(0x0000FFFFu);
+            return (n[0], n[1]);
+        }
+        else
+        {
+            return new(Decode(code), Decode(code >> 1));
+
+            [MethodImpl(256 | 512)]
+            static uint Decode(uint n)
+            {
+                n &= 0x55555555;
+                n = (n | (n >> 1)) & 0x33333333;
+                n = (n | (n >> 2)) & 0x0F0F0F0F;
+                n = (n | (n >> 4)) & 0x00FF00FF;
+                n = (n | (n >> 8)) & 0x0000FFFF;
+                return n;
+            }
+        }
+    }
+
+    [MethodImpl(256 | 512)]
+    public static uint EncodeZOrder(uint x, uint y)
+    {
+        if (Bmi2.IsSupported) return EncodeZOrderBmi2(x, y);
+        else return EncodeZOrderSoft(x, y);
+    }
+
+    [MethodImpl(256 | 512)]
+    public static (uint x, uint y) DecodeZOrder(uint code)
+    {
+        if (Bmi2.IsSupported) return DecodeZOrderBmi2(code);
+        return DecodeZOrderSoft(code);
+    }
+
     #endregion
 
     #region Gather Unsafe
@@ -276,8 +396,8 @@ public static partial class Utils
                 Vector128.Create(active_lanes, default)
             ).GetLower();
         return Vector64.Create(
-            active_lanes[0] != 0 ? (float)addr[offset[0]] : 0,
-            active_lanes[1] != 0 ? (float)addr[offset[1]] : 0
+            active_lanes[0] != 0 ? addr[offset[0]] * (1f / 255f) : 0,
+            active_lanes[1] != 0 ? addr[offset[1]] * (1f / 255f) : 0
         );
     }
 
@@ -384,7 +504,7 @@ public static partial class Utils
     public static unsafe void ScatterUNorm(Vector64<float> value, byte* addr, Vector64<int> offset, Vector64<uint> active_lanes)
     {
         if (active_lanes[0] != 0) addr[offset[0]] = (byte)Math.Round(Math.Clamp(value[0] * 255f, 0f, 255f));
-        if (active_lanes[1] != 0) addr[offset[1]] = (byte)Math.Round(Math.Clamp(value[0] * 255f, 0f, 255f));
+        if (active_lanes[1] != 0) addr[offset[1]] = (byte)Math.Round(Math.Clamp(value[1] * 255f, 0f, 255f));
     }
 
     [MethodImpl(256 | 512)]
