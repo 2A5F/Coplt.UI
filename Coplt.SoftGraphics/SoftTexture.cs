@@ -271,11 +271,60 @@ public abstract class SoftTexture
 
         #region Read
 
-        public override void ReadRowUNorm8(int row, Span<byte> target, AJobScheduler? scheduler = null)
+        public override unsafe void ReadRowUNorm8(int row, Span<byte> target, AJobScheduler? scheduler = null)
         {
             scheduler ??= SyncJobScheduler.Instance;
 
-            throw new NotImplementedException();
+            var w = (Width + 15) / 16;
+            uint_mt16 y = (uint)row;
+            fixed (byte* p_target = target)
+            {
+                scheduler.Dispatch(w, 1, (self: this, (IntPtr)p_target, len: target.Length, y), static (ctx, x, _) =>
+                {
+                    var (self, p_target, target_len, y) = ctx;
+                    var target = new Span<byte>((byte*)p_target, target_len);
+
+                    var index = new uint_mt16(x * 16) + s_inc_mt16;
+                    var active = index < self.m_size_cache.x;
+                    var offset = Utils.EncodeZOrder(new(index, y)).asi();
+
+                    var r = Utils.GatherByte(ref self.m_blob0[0], offset.vector, active.vector);
+                    var g = Utils.GatherByte(ref self.m_blob1[0], offset.vector, active.vector);
+                    var b = Utils.GatherByte(ref self.m_blob2[0], offset.vector, active.vector);
+                    var a = Utils.GatherByte(ref self.m_blob3[0], offset.vector, active.vector);
+
+                    var rgba = Vector512.Create(
+                        Vector256.Create(r, g),
+                        Vector256.Create(b, a)
+                    );
+                    rgba = Vector512.Shuffle(
+                        rgba,
+                        Vector512.Create(
+                            (byte) /**/ 00, 16, 32, 48, /**/ 01, 17, 33, 49,
+                            /*       */ 02, 18, 34, 50, /**/ 03, 19, 35, 51,
+                            /*       */ 04, 20, 36, 52, /**/ 05, 21, 37, 53,
+                            /*       */ 06, 22, 38, 54, /**/ 07, 23, 39, 55,
+                            /*                                            */
+                            /*       */ 08, 24, 40, 56, /**/ 09, 25, 41, 57,
+                            /*       */ 10, 26, 42, 58, /**/ 11, 27, 43, 59,
+                            /*       */ 12, 28, 44, 60, /**/ 13, 29, 45, 61,
+                            /*       */ 14, 30, 46, 62, /**/ 15, 31, 47, 63
+                        )
+                    );
+
+                    if (x + 15 < self.Width)
+                    {
+                        rgba.StoreUnsafe(ref target[0], x * 64);
+                    }
+                    else
+                    {
+                        var len = self.Width - (x + 15);
+                        Span<byte> tmp = stackalloc byte[64];
+                        rgba.StoreUnsafe(ref tmp[0]);
+                        tmp.CopyTo(target.Slice((int)x * 64, (int)len * 4));
+                    }
+                });
+            }
         }
 
         #endregion
@@ -427,10 +476,11 @@ public abstract class SoftTexture
                 {
                     var (self, p_target, target_len, y) = ctx;
                     var target = new Span<byte>((byte*)p_target, target_len);
-                    
+
                     var index = new uint_mt16(x * 16) + s_inc_mt16;
                     var active = index < self.m_size_cache.x;
                     var offset = Utils.EncodeZOrder(new(index, y)).asi();
+
                     var r = Utils.Gather(ref self.m_blob0[0], offset, active);
                     var g = Utils.Gather(ref self.m_blob1[0], offset, active);
                     var b = Utils.Gather(ref self.m_blob2[0], offset, active);
@@ -452,14 +502,8 @@ public abstract class SoftTexture
                     var a128 = Vector128.Narrow(a256.GetLower(), a256.GetUpper());
 
                     var rgba = Vector512.Create(
-                        Vector256.Create(
-                            r128,
-                            g128
-                        ),
-                        Vector256.Create(
-                            b128,
-                            a128
-                        )
+                        Vector256.Create(r128, g128),
+                        Vector256.Create(b128, a128)
                     );
                     rgba = Vector512.Shuffle(
                         rgba,

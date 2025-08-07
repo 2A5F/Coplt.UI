@@ -466,6 +466,79 @@ public static partial class Utils
 
     #endregion
 
+    #region Gather Byte
+
+    [MethodImpl(256 | 512)]
+    public static unsafe ushort GatherByte(byte* addr, Vector64<int> offset, Vector64<uint> active_lanes)
+    {
+        return Unsafe.BitCast<(byte, byte), ushort>((
+            active_lanes[0] != 0 ? addr[offset[0]] : (byte)0,
+            active_lanes[0] != 0 ? addr[offset[1]] : (byte)0
+        ));
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe uint GatherByte(byte* addr, Vector128<int> offset, Vector128<uint> active_lanes)
+    {
+        if (Avx2.IsSupported)
+        {
+            var a = Avx2.GatherMaskVector128(
+                Vector128<uint>.Zero, (uint*)addr, offset, active_lanes, 1
+            );
+            var b = Vector128.Narrow(a, a);
+            var c = Vector128.Narrow(b, b);
+            return c.AsUInt32()[0];
+        }
+        var xy = GatherByte(addr, offset.GetLower(), active_lanes.GetLower());
+        var zw = GatherByte(addr, offset.GetUpper(), active_lanes.GetUpper());
+        return Unsafe.BitCast<(ushort, ushort), uint>((xy, zw));
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe Vector64<byte> GatherByte(byte* addr, Vector256<int> offset, Vector256<uint> active_lanes)
+    {
+        if (Avx2.IsSupported)
+        {
+            var a = Avx2.GatherMaskVector256(
+                Vector256<uint>.Zero, (uint*)addr, offset, active_lanes, 1
+            );
+            var b = Vector128.Narrow(a.GetLower(), a.GetUpper());
+            var c = Vector128.Narrow(b, b);
+            return c.GetLower();
+        }
+        else
+        {
+            var a = GatherByte(addr, offset.GetLower(), active_lanes.GetLower());
+            var b = GatherByte(addr, offset.GetUpper(), active_lanes.GetUpper());
+            return Vector64.Create(a).WithElement(1, b).AsByte();
+        }
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe Vector128<byte> GatherByte(ref byte addr, Vector512<int> offset, Vector512<uint> active_lanes)
+    {
+        fixed (byte* ptr = &addr)
+        {
+            if (Avx2.IsSupported)
+            {
+                var la = Avx2.GatherMaskVector256(
+                    Vector256<uint>.Zero, (uint*)ptr, offset.GetLower(), active_lanes.GetLower(), 1
+                );
+                var ua = Avx2.GatherMaskVector256(
+                    Vector256<uint>.Zero, (uint*)ptr, offset.GetUpper(), active_lanes.GetUpper(), 1
+                );
+                var lb = Vector128.Narrow(la.GetLower(), la.GetUpper());
+                var ub = Vector128.Narrow(ua.GetLower(), ua.GetUpper());
+                return Vector128.Narrow(lb, ub);
+            }
+            var a = GatherByte(ptr, offset.GetLower(), active_lanes.GetLower());
+            var b = GatherByte(ptr, offset.GetUpper(), active_lanes.GetUpper());
+            return Vector128.Create(a, b);
+        }
+    }
+
+    #endregion
+
     #region Scatter Unsafe
 
     [MethodImpl(256 | 512)]
