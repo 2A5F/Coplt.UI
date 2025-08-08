@@ -6,14 +6,6 @@ using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
 
-public enum SoftTextureFormat
-{
-    Unknown,
-    R8_G8_B8_A8_UNorm,
-    R32_G32_B32_A32_Float,
-    D24_UNorm_S8_UInt,
-}
-
 public abstract class SoftTexture
 {
     #region Metas
@@ -33,8 +25,6 @@ public abstract class SoftTexture
     #region Fields
 
     protected readonly uint2_mt16 m_size_cache;
-
-    protected static readonly uint_mt16 s_inc_mt16 = new(Vector512.Create(0u, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
 
     #endregion
 
@@ -113,12 +103,14 @@ public abstract class SoftTexture
     #region QuadQuad
 
     /// <summary>
+    /// Store 4x4 (16) pixels in z-curve order, these pixels will be contiguous in memory.<br/>
+    /// x y must be a multiple of 4, otherwise it will be undefined behavior.
     /// <code>
-    /// c2 c3   d2 d3
-    /// c0 c1   d0 d1
-    ///              
-    /// a2 a3   b2 b3
-    /// a0 a1   b0 b1
+    /// c2 c3   d2 d3    |    10 11   14 15
+    /// c0 c1   d0 d1    |    08 09   12 13
+    ///                  |                 
+    /// a2 a3   b2 b3    |    02 03   06 07
+    /// a0 a1   b0 b1    |    00 01   04 05
     /// </code>
     /// </summary>
     public abstract void QuadQuadStore(uint x, uint y, float4_mt16 color);
@@ -194,11 +186,11 @@ public abstract class SoftTexture
         public override float4_mt16 Load(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
         {
             var p = uv.min(m_size_cache);
-            var offset = Utils.EncodeZOrder(p).asi();
-            var r = Utils.GatherUNorm(ref m_blob0[0], offset, ctx.ActiveLanes);
-            var g = Utils.GatherUNorm(ref m_blob1[0], offset, ctx.ActiveLanes);
-            var b = Utils.GatherUNorm(ref m_blob2[0], offset, ctx.ActiveLanes);
-            var a = Utils.GatherUNorm(ref m_blob3[0], offset, ctx.ActiveLanes);
+            var offset = SoftGraphicsUtils.EncodeZOrder(p).asi();
+            var r = SoftGraphicsUtils.GatherUNorm(ref m_blob0[0], offset, ctx.ActiveLanes);
+            var g = SoftGraphicsUtils.GatherUNorm(ref m_blob1[0], offset, ctx.ActiveLanes);
+            var b = SoftGraphicsUtils.GatherUNorm(ref m_blob2[0], offset, ctx.ActiveLanes);
+            var a = SoftGraphicsUtils.GatherUNorm(ref m_blob3[0], offset, ctx.ActiveLanes);
             return new(r, g, b, a);
         }
 
@@ -207,7 +199,7 @@ public abstract class SoftTexture
         {
             var x = math.min(u, Width);
             var y = math.min(v, Height);
-            var offset = Utils.EncodeZOrder(x, y);
+            var offset = SoftGraphicsUtils.EncodeZOrder(x, y);
             var r = Unsafe.Add(ref m_blob0[0], offset) * (1f / 255f);
             var g = Unsafe.Add(ref m_blob1[0], offset) * (1f / 255f);
             var b = Unsafe.Add(ref m_blob2[0], offset) * (1f / 255f);
@@ -222,11 +214,11 @@ public abstract class SoftTexture
         public override void Store(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float4_mt16 value)
         {
             var p = uv.min(m_size_cache);
-            var offset = Utils.EncodeZOrder(p).asi();
-            Utils.ScatterUNorm(value.x, ref m_blob0[0], offset, ctx.ActiveLanes);
-            Utils.ScatterUNorm(value.y, ref m_blob1[0], offset, ctx.ActiveLanes);
-            Utils.ScatterUNorm(value.z, ref m_blob2[0], offset, ctx.ActiveLanes);
-            Utils.ScatterUNorm(value.w, ref m_blob3[0], offset, ctx.ActiveLanes);
+            var offset = SoftGraphicsUtils.EncodeZOrder(p).asi();
+            SoftGraphicsUtils.ScatterUNorm(value.x, ref m_blob0[0], offset, ctx.ActiveLanes);
+            SoftGraphicsUtils.ScatterUNorm(value.y, ref m_blob1[0], offset, ctx.ActiveLanes);
+            SoftGraphicsUtils.ScatterUNorm(value.z, ref m_blob2[0], offset, ctx.ActiveLanes);
+            SoftGraphicsUtils.ScatterUNorm(value.w, ref m_blob3[0], offset, ctx.ActiveLanes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -234,7 +226,7 @@ public abstract class SoftTexture
         {
             var x = math.min(u, Width);
             var y = math.min(v, Height);
-            var offset = Utils.EncodeZOrder(x, y);
+            var offset = SoftGraphicsUtils.EncodeZOrder(x, y);
             Unsafe.Add(ref m_blob0[0], offset) = (byte)Math.Round(Math.Clamp(r * 255f, 0f, 255f));
             Unsafe.Add(ref m_blob1[0], offset) = (byte)Math.Round(Math.Clamp(g * 255f, 0f, 255f));
             Unsafe.Add(ref m_blob2[0], offset) = (byte)Math.Round(Math.Clamp(b * 255f, 0f, 255f));
@@ -244,7 +236,7 @@ public abstract class SoftTexture
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public override void QuadQuadStore(uint x, uint y, float4_mt16 color)
         {
-            var index = Utils.EncodeZOrder(x, y) * 16;
+            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
 
             var r512 = ((uint_mt16)math_mt.clamp(color.r * 255f, 0f, 255f).round()).vector;
             var g512 = ((uint_mt16)math_mt.clamp(color.g * 255f, 0f, 255f).round()).vector;
@@ -284,14 +276,14 @@ public abstract class SoftTexture
                     var (self, p_target, target_len, y) = ctx;
                     var target = new Span<byte>((byte*)p_target, target_len);
 
-                    var index = new uint_mt16(x * 16) + s_inc_mt16;
+                    var index = new uint_mt16(x * 16) + SoftGraphicsUtils.IncMt16;
                     var active = index < self.m_size_cache.x;
-                    var offset = Utils.EncodeZOrder(new(index, y)).asi();
+                    var offset = SoftGraphicsUtils.EncodeZOrder(new(index, y)).asi();
 
-                    var r = Utils.GatherByte(ref self.m_blob0[0], offset.vector, active.vector);
-                    var g = Utils.GatherByte(ref self.m_blob1[0], offset.vector, active.vector);
-                    var b = Utils.GatherByte(ref self.m_blob2[0], offset.vector, active.vector);
-                    var a = Utils.GatherByte(ref self.m_blob3[0], offset.vector, active.vector);
+                    var r = SoftGraphicsUtils.GatherByte(ref self.m_blob0[0], offset.vector, active.vector);
+                    var g = SoftGraphicsUtils.GatherByte(ref self.m_blob1[0], offset.vector, active.vector);
+                    var b = SoftGraphicsUtils.GatherByte(ref self.m_blob2[0], offset.vector, active.vector);
+                    var a = SoftGraphicsUtils.GatherByte(ref self.m_blob3[0], offset.vector, active.vector);
 
                     var rgba = Vector512.Create(
                         Vector256.Create(r, g),
@@ -397,11 +389,11 @@ public abstract class SoftTexture
         )
         {
             var p = uv.min(m_size_cache);
-            var offset = Utils.EncodeZOrder(p).asi();
-            var r = Utils.Gather(ref m_blob0[0], offset, ctx.ActiveLanes);
-            var g = Utils.Gather(ref m_blob1[0], offset, ctx.ActiveLanes);
-            var b = Utils.Gather(ref m_blob2[0], offset, ctx.ActiveLanes);
-            var a = Utils.Gather(ref m_blob3[0], offset, ctx.ActiveLanes);
+            var offset = SoftGraphicsUtils.EncodeZOrder(p).asi();
+            var r = SoftGraphicsUtils.Gather(ref m_blob0[0], offset, ctx.ActiveLanes);
+            var g = SoftGraphicsUtils.Gather(ref m_blob1[0], offset, ctx.ActiveLanes);
+            var b = SoftGraphicsUtils.Gather(ref m_blob2[0], offset, ctx.ActiveLanes);
+            var a = SoftGraphicsUtils.Gather(ref m_blob3[0], offset, ctx.ActiveLanes);
             return new(r, g, b, a);
         }
 
@@ -410,7 +402,7 @@ public abstract class SoftTexture
         {
             var x = math.min(u, Width);
             var y = math.min(v, Height);
-            var offset = Utils.EncodeZOrder(x, y);
+            var offset = SoftGraphicsUtils.EncodeZOrder(x, y);
             var r = Unsafe.Add(ref m_blob0[0], offset);
             var g = Unsafe.Add(ref m_blob1[0], offset);
             var b = Unsafe.Add(ref m_blob2[0], offset);
@@ -430,11 +422,11 @@ public abstract class SoftTexture
         )
         {
             var p = uv.min(m_size_cache);
-            var offset = Utils.EncodeZOrder(p).asi();
-            Utils.Scatter(value.x, ref m_blob0[0], offset, ctx.ActiveLanes);
-            Utils.Scatter(value.y, ref m_blob1[0], offset, ctx.ActiveLanes);
-            Utils.Scatter(value.z, ref m_blob2[0], offset, ctx.ActiveLanes);
-            Utils.Scatter(value.w, ref m_blob3[0], offset, ctx.ActiveLanes);
+            var offset = SoftGraphicsUtils.EncodeZOrder(p).asi();
+            SoftGraphicsUtils.Scatter(value.x, ref m_blob0[0], offset, ctx.ActiveLanes);
+            SoftGraphicsUtils.Scatter(value.y, ref m_blob1[0], offset, ctx.ActiveLanes);
+            SoftGraphicsUtils.Scatter(value.z, ref m_blob2[0], offset, ctx.ActiveLanes);
+            SoftGraphicsUtils.Scatter(value.w, ref m_blob3[0], offset, ctx.ActiveLanes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -442,7 +434,7 @@ public abstract class SoftTexture
         {
             var x = math.min(u, Width);
             var y = math.min(v, Height);
-            var offset = Utils.EncodeZOrder(x, y);
+            var offset = SoftGraphicsUtils.EncodeZOrder(x, y);
             Unsafe.Add(ref m_blob0[0], offset) = r;
             Unsafe.Add(ref m_blob1[0], offset) = g;
             Unsafe.Add(ref m_blob2[0], offset) = b;
@@ -452,7 +444,7 @@ public abstract class SoftTexture
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public override void QuadQuadStore(uint x, uint y, float4_mt16 color)
         {
-            var index = Utils.EncodeZOrder(x, y) * 16;
+            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
 
             color.r.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], index));
             color.g.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], index));
@@ -477,14 +469,14 @@ public abstract class SoftTexture
                     var (self, p_target, target_len, y) = ctx;
                     var target = new Span<byte>((byte*)p_target, target_len);
 
-                    var index = new uint_mt16(x * 16) + s_inc_mt16;
+                    var index = new uint_mt16(x * 16) + SoftGraphicsUtils.IncMt16;
                     var active = index < self.m_size_cache.x;
-                    var offset = Utils.EncodeZOrder(new(index, y)).asi();
+                    var offset = SoftGraphicsUtils.EncodeZOrder(new(index, y)).asi();
 
-                    var r = Utils.Gather(ref self.m_blob0[0], offset, active);
-                    var g = Utils.Gather(ref self.m_blob1[0], offset, active);
-                    var b = Utils.Gather(ref self.m_blob2[0], offset, active);
-                    var a = Utils.Gather(ref self.m_blob3[0], offset, active);
+                    var r = SoftGraphicsUtils.Gather(ref self.m_blob0[0], offset, active);
+                    var g = SoftGraphicsUtils.Gather(ref self.m_blob1[0], offset, active);
+                    var b = SoftGraphicsUtils.Gather(ref self.m_blob2[0], offset, active);
+                    var a = SoftGraphicsUtils.Gather(ref self.m_blob3[0], offset, active);
 
                     var r512 = ((uint_mt16)math_mt.clamp(r * 255f, 0f, 255f).round()).vector;
                     var g512 = ((uint_mt16)math_mt.clamp(g * 255f, 0f, 255f).round()).vector;

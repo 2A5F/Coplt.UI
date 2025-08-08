@@ -28,7 +28,7 @@ public class ZOrder
     [Test]
     public static void Test2()
     {
-        var r = Utils.EncodeZOrderGather(new(31, 101));
+        var r = SoftGraphicsUtils.EncodeZOrderGather(new(31, 101));
         Console.WriteLine(r);
     }
 }

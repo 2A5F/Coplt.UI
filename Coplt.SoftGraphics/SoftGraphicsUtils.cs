@@ -5,8 +5,14 @@ using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
 
-public static partial class Utils
+public static partial class SoftGraphicsUtils
 {
+    #region IncMt16
+
+    public static readonly uint_mt16 IncMt16 = new(Vector512.Create(0u, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+
+    #endregion
+
     #region ZOrder
 
     private static readonly ushort[] s_z_order_encode_table =
@@ -444,10 +450,64 @@ public static partial class Utils
 
     #endregion
 
+    #region Gather Unsafe UInt
+
+    [MethodImpl(256 | 512)]
+    public static unsafe Vector64<uint> GatherUInt(uint* addr, Vector64<int> offset, Vector64<uint> active_lanes)
+    {
+        if (Avx2.IsSupported)
+            return GatherUInt(
+                addr,
+                Vector128.Create(offset, offset),
+                Vector128.Create(active_lanes, default)
+            ).GetLower();
+        return Vector64.Create(
+            active_lanes[0] != 0 ? addr[offset[0]] : 0,
+            active_lanes[0] != 0 ? addr[offset[1]] : 0
+        );
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe Vector128<uint> GatherUInt(uint* addr, Vector128<int> offset, Vector128<uint> active_lanes)
+    {
+        if (Avx2.IsSupported)
+            return Avx2.GatherMaskVector128(
+                Vector128<uint>.Zero, addr, offset, active_lanes, 4
+            );
+        return Vector128.Create(
+            GatherUInt(addr, offset.GetLower(), active_lanes.GetLower()),
+            GatherUInt(addr, offset.GetUpper(), active_lanes.GetUpper())
+        );
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe Vector256<uint> GatherUInt(uint* addr, Vector256<int> offset, Vector256<uint> active_lanes)
+    {
+        if (Avx2.IsSupported)
+            return Avx2.GatherMaskVector256(
+                Vector256<uint>.Zero, addr, offset, active_lanes, 4
+            );
+        return Vector256.Create(
+            GatherUInt(addr, offset.GetLower(), active_lanes.GetLower()),
+            GatherUInt(addr, offset.GetUpper(), active_lanes.GetUpper())
+        );
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe Vector512<uint> GatherUInt(uint* addr, Vector512<int> offset, Vector512<uint> active_lanes)
+    {
+        return Vector512.Create(
+            GatherUInt(addr, offset.GetLower(), active_lanes.GetLower()),
+            GatherUInt(addr, offset.GetUpper(), active_lanes.GetUpper())
+        );
+    }
+
+    #endregion
+
     #region Gather
 
     [MethodImpl(256 | 512)]
-    public static unsafe float_mt16 Gather(ref float addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe float_mt16 Gather(ref readonly float addr, int_mt16 offset, b32_mt16 active_lanes)
     {
         fixed (float* ptr = &addr)
         {
@@ -456,11 +516,20 @@ public static partial class Utils
     }
 
     [MethodImpl(256 | 512)]
-    public static unsafe float_mt16 GatherUNorm(ref byte addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe float_mt16 GatherUNorm(ref readonly byte addr, int_mt16 offset, b32_mt16 active_lanes)
     {
         fixed (byte* ptr = &addr)
         {
             return new(GatherUNorm(ptr, offset.vector, active_lanes.vector));
+        }
+    }
+
+    [MethodImpl(256 | 512)]
+    public static unsafe uint_mt16 GatherUInt(ref readonly uint addr, int_mt16 offset, b32_mt16 active_lanes)
+    {
+        fixed (uint* ptr = &addr)
+        {
+            return new(GatherUInt(ptr, offset.vector, active_lanes.vector));
         }
     }
 

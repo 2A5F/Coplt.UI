@@ -5,35 +5,43 @@ namespace Coplt.SoftGraphics;
 /// <summary>
 /// 4 pixels per operation
 /// </summary>
-public delegate PixelData SoftPixelShader<in VertexData, out PixelData>(
-    SoftLaneContext ctx, VertexData input
+public delegate void SoftPixelShader<in VertexData, in PixelData>(
+    SoftLaneContext ctx, VertexData input, PixelData output
 )
-    where VertexData : unmanaged, IVertexData<VertexData>
-    where PixelData : unmanaged, IPixelData<PixelData>;
+    where VertexData : IVertexData, allows ref struct
+    where PixelData : IPixelData, allows ref struct;
 
 /// <summary>
 /// Wave line context
 /// </summary>
 public struct SoftLaneContext
 {
+    public int_mt16 Index;
     public b32_mt16 ActiveLanes;
     public uint_mt16 QuadMask;
 }
 
-public interface IVertexData<T> where T : unmanaged, IVertexData<T>
+public interface IVertexData
 {
-    public float4_mt16 Position_ClipSpace { get; }
+    public float4_mt16 Gather_Position_ClipSpace(
+        int_mt16 index, b32_mt16 active_lanes
+    );
+    
+    public float2_mt16 Gather_Position_ClipSpace_XY_Only(
+        int_mt16 index, b32_mt16 active_lanes
+    );
 
-    public static abstract T Interpolation(in T a, in T b, float_mt16 t);
+    // public static abstract void Interpolation(out T r, in T a, in T b, float_mt16 t);
 }
 
-public interface IPixelData<T> where T : unmanaged, IPixelData<T>
+public interface IPixelData
 {
-    public float4_mt16 Color0 { get; }
-    
-    public float_mt16 Depth { get; }
-    public uint_mt16 Stencil { get; }
-    
-    public static abstract bool HasDepth { get; }
-    public static abstract bool HasStencil { get; }
+    // public static abstract ref readonly float4_mt16 Get_Color0(in T input);
+    //
+    // public static abstract ref readonly float_mt16 Get_Depth(in T input);
+    //
+    // public static abstract ref readonly uint_mt16 Get_Stencil(in T input);
+    //
+    // public static abstract bool HasDepth { get; }
+    // public static abstract bool HasStencil { get; }
 }
