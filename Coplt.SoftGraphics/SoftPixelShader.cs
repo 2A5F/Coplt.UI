@@ -26,10 +26,6 @@ public interface IVertexData
     public float4_mt16 Gather_Position_ClipSpace(
         int_mt16 index, b32_mt16 active_lanes
     );
-    
-    public float2_mt16 Gather_Position_ClipSpace_XY_Only(
-        int_mt16 index, b32_mt16 active_lanes
-    );
 
     // public static abstract void Interpolation(out T r, in T a, in T b, float_mt16 t);
 }

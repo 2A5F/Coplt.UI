@@ -2,10 +2,8 @@
 
 public abstract class AJobScheduler
 {
-    public virtual void Dispatch<T>(uint x, T ctx, Action<T, uint, uint> action, bool async = false) => Dispatch(x, 1, ctx, action, async);
-    public abstract void Dispatch<T>(uint x, uint y, T ctx, Action<T, uint, uint> action, bool async = false);
-
-    public abstract void WaitAsyncComplete();
+    public virtual void Dispatch<T>(uint x, T ctx, Action<T, uint, uint> action) => Dispatch(x, 1, ctx, action);
+    public abstract void Dispatch<T>(uint x, uint y, T ctx, Action<T, uint, uint> action);
 }
 
 public sealed class SyncJobScheduler : AJobScheduler
@@ -14,7 +12,7 @@ public sealed class SyncJobScheduler : AJobScheduler
 
     public static SyncJobScheduler Instance { get; } = new();
 
-    public override void Dispatch<T>(uint x, T ctx, Action<T, uint, uint> action, bool async = false)
+    public override void Dispatch<T>(uint x, T ctx, Action<T, uint, uint> action)
     {
         for (var a = 0u; a < x; a++)
         {
@@ -22,7 +20,7 @@ public sealed class SyncJobScheduler : AJobScheduler
         }
     }
 
-    public override void Dispatch<T>(uint x, uint y, T ctx, Action<T, uint, uint> action, bool async = false)
+    public override void Dispatch<T>(uint x, uint y, T ctx, Action<T, uint, uint> action)
     {
         for (var b = 0u; b < y; b++)
         {
@@ -32,8 +30,6 @@ public sealed class SyncJobScheduler : AJobScheduler
             }
         }
     }
-
-    public override void WaitAsyncComplete() { }
 }
 
 public sealed class ParallelJobScheduler : AJobScheduler
@@ -41,10 +37,12 @@ public sealed class ParallelJobScheduler : AJobScheduler
     public static int ProcessorCount { get; } = Environment.ProcessorCount;
     public static int MinLoad { get; } = Math.Max(32, Environment.ProcessorCount * 2);
 
-    public override void Dispatch<T>(uint x, T ctx, Action<T, uint, uint> action, bool async = false)
-    {
-        // todo async
+    private ParallelJobScheduler() { }
 
+    public static ParallelJobScheduler Instance { get; } = new();
+
+    public override void Dispatch<T>(uint x, T ctx, Action<T, uint, uint> action)
+    {
         if (x < MinLoad)
         {
             SyncJobScheduler.Instance.Dispatch(x, ctx, action);
@@ -54,10 +52,8 @@ public sealed class ParallelJobScheduler : AJobScheduler
         Parallel.For(0, x, i => { action(ctx, (uint)i, 0); });
     }
 
-    public override void Dispatch<T>(uint x, uint y, T ctx, Action<T, uint, uint> action, bool async = false)
+    public override void Dispatch<T>(uint x, uint y, T ctx, Action<T, uint, uint> action)
     {
-        // todo async
-
         var size = x * y;
         if (size < MinLoad)
         {
@@ -71,6 +67,4 @@ public sealed class ParallelJobScheduler : AJobScheduler
             action(ctx, a, b);
         });
     }
-
-    public override void WaitAsyncComplete() { }
 }

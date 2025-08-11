@@ -22,13 +22,13 @@ public class TestDraw
         for (var y = 0; y < img.Height; y++)
         {
             var span = buf.DangerousGetRowSpan(y);
-            rt.ReadRowUNorm8(y, MemoryMarshal.AsBytes(span), new ParallelJobScheduler());
+            rt.ReadRowUNorm8(y, MemoryMarshal.AsBytes(span), ParallelJobScheduler.Instance);
         }
         img.SaveAsPng("./Test_ClearColor_1024x1024_R32_G32_B32_A32_Float.png");
 
         Assert.Multiple(() =>
         {
-            new ParallelJobScheduler().Dispatch((uint)img.Width, (uint)img.Height, buf, static (buf, x, y) =>
+            ParallelJobScheduler.Instance.Dispatch((uint)img.Width, (uint)img.Height, buf, static (buf, x, y) =>
             {
                 var span = buf.DangerousGetRowSpan((int)y);
                 var pixel = span[(int)x];
@@ -50,13 +50,13 @@ public class TestDraw
         for (var y = 0; y < img.Height; y++)
         {
             var span = buf.DangerousGetRowSpan(y);
-            rt.ReadRowUNorm8(y, MemoryMarshal.AsBytes(span), new ParallelJobScheduler());
+            rt.ReadRowUNorm8(y, MemoryMarshal.AsBytes(span), ParallelJobScheduler.Instance);
         }
         img.SaveAsPng("./Test_ClearColor_1024x1024_R8_G8_B8_A8_UNorm.png");
 
         Assert.Multiple(() =>
         {
-            new ParallelJobScheduler().Dispatch((uint)img.Width, (uint)img.Height, buf, static (buf, x, y) =>
+            ParallelJobScheduler.Instance.Dispatch((uint)img.Width, (uint)img.Height, buf, static (buf, x, y) =>
             {
                 var span = buf.DangerousGetRowSpan((int)y);
                 var pixel = span[(int)x];
@@ -86,13 +86,6 @@ public class TestDraw
             var z = SoftGraphicsUtils.Gather(in Position_ClipSpace_Z[0], index, active_lanes);
             var w = SoftGraphicsUtils.Gather(in Position_ClipSpace_W[0], index, active_lanes);
             return new(x, y, z, w);
-        }
-
-        public float2_mt16 Gather_Position_ClipSpace_XY_Only(int_mt16 index, b32_mt16 active_lanes)
-        {
-            var x = SoftGraphicsUtils.Gather(in Position_ClipSpace_X[0], index, active_lanes);
-            var y = SoftGraphicsUtils.Gather(in Position_ClipSpace_Y[0], index, active_lanes);
-            return new(x, y);
         }
 
         #endregion

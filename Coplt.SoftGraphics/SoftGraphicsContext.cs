@@ -12,7 +12,7 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 {
     #region Fields
 
-    private AJobScheduler m_job_scheduler = scheduler ?? new ParallelJobScheduler();
+    private AJobScheduler m_job_scheduler = scheduler ?? ParallelJobScheduler.Instance;
 
     private SoftTexture? m_rt_color;
     private SoftTexture? m_rt_depth_stencil;
@@ -141,30 +141,23 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
             var num_triangles = NumIndices / 3;
             var num_triangles_mt = (num_triangles + 15) / 16;
 
-            #region Calc AABB
+            #region Calc AABB then Cull then Gen Task
 
-            using var triangles_aabb_min_x = PooledArray.Rent<float_mt16>((int)num_triangles_mt);
-            using var triangles_aabb_min_y = PooledArray.Rent<float_mt16>((int)num_triangles_mt);
-            using var triangles_aabb_max_x = PooledArray.Rent<float_mt16>((int)num_triangles_mt);
-            using var triangles_aabb_max_y = PooledArray.Rent<float_mt16>((int)num_triangles_mt);
+            using var tasks = PooledArray.Rent<int>((int)num_triangles);
 
             m_job_scheduler.Dispatch(
                 num_triangles_mt,
                 (
-                    num_triangles, n_indices_a, n_indices_b, n_indices_c, p_vertices: (nuint)(&Vertices),
-                    triangles_aabb_min_x, triangles_aabb_min_y, triangles_aabb_max_x, triangles_aabb_max_y
+                    num_triangles, n_indices_a, n_indices_b, n_indices_c, p_vertices: (nuint)(&Vertices), m_viewport
                 ),
                 static (ctx, i, _) =>
                 {
                     var num_triangles = ctx.num_triangles;
+                    var viewport = ctx.m_viewport;
                     var indices_a = ctx.n_indices_a.Span;
                     var indices_b = ctx.n_indices_b.Span;
                     var indices_c = ctx.n_indices_c.Span;
                     var vertices = *(VertexData*)ctx.p_vertices;
-                    var triangles_aabb_min_x = ctx.triangles_aabb_min_x.Span;
-                    var triangles_aabb_min_y = ctx.triangles_aabb_min_y.Span;
-                    var triangles_aabb_max_x = ctx.triangles_aabb_max_x.Span;
-                    var triangles_aabb_max_y = ctx.triangles_aabb_max_y.Span;
 
                     var index = i * 16 + SoftGraphicsUtils.IncMt16;
                     var active_lanes = index < num_triangles;
@@ -173,17 +166,70 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                     var index_b = indices_b[(int)i];
                     var index_c = indices_c[(int)i];
 
-                    var pos_a = vertices.Gather_Position_ClipSpace_XY_Only(index_a.asi(), active_lanes);
-                    var pos_b = vertices.Gather_Position_ClipSpace_XY_Only(index_b.asi(), active_lanes);
-                    var pos_c = vertices.Gather_Position_ClipSpace_XY_Only(index_c.asi(), active_lanes);
+                    var pos_a = vertices.Gather_Position_ClipSpace(index_a.asi(), active_lanes);
+                    var pos_b = vertices.Gather_Position_ClipSpace(index_b.asi(), active_lanes);
+                    var pos_c = vertices.Gather_Position_ClipSpace(index_c.asi(), active_lanes);
 
-                    var min = pos_a.min(pos_b).min(pos_c);
-                    var max = pos_a.max(pos_b).max(pos_c);
+                    var visible_a = Visible(pos_a);
+                    var visible_b = Visible(pos_a);
+                    var visible_c = Visible(pos_a);
 
-                    triangles_aabb_min_x[(int)i] = min.x;
-                    triangles_aabb_min_y[(int)i] = min.y;
-                    triangles_aabb_max_x[(int)i] = max.x;
-                    triangles_aabb_max_y[(int)i] = max.y;
+                    var visible_any = active_lanes & (visible_a | visible_b | visible_c);
+
+                    var ndc_a = ToNdc(pos_a);
+                    var ndc_b = ToNdc(pos_b);
+                    var ndc_c = ToNdc(pos_c);
+
+                    var ss_a = ToScreenSpace(ndc_a, viewport);
+                    var ss_b = ToScreenSpace(ndc_b, viewport);
+                    var ss_c = ToScreenSpace(ndc_c, viewport);
+
+                    var clamp_min = new float3_mt16(0, 0, viewport.MinDepth);
+                    var clamp_max = new float3_mt16(viewport.Width, viewport.Height, viewport.MaxDepth);
+
+                    var css_a = ss_a.clamp(clamp_min, clamp_max);
+                    var css_b = ss_b.clamp(clamp_min, clamp_max);
+                    var css_c = ss_c.clamp(clamp_min, clamp_max);
+
+                    var min = math_mt.floor(css_a.xy.min(css_b.xy).min(css_c.xy) * (1f / 4f));
+                    var max = math_mt.ceil(css_a.xy.max(css_b.xy).max(css_c.xy) * (1f / 4f));
+
+                    var visibles = new Span<b32>(&visible_any, 16);
+                    var min_xs = new Span<float>(&min.x, 16);
+                    var min_ys = new Span<float>(&min.y, 16);
+                    var max_xs = new Span<float>(&max.x, 16);
+                    var max_ys = new Span<float>(&max.y, 16);
+
+                    for (var c = 0; c < 16; c++)
+                    {
+                        if (!visibles[c]) continue;
+                        var min_x = min_xs[c];
+                        var min_y = min_ys[c];
+                        var max_x = max_xs[c];
+                        var max_y = max_ys[c];
+                    }
+
+                    return;
+
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    static b32_mt16 Visible(float4_mt16 pos)
+                    {
+                        var nw = -pos.w;
+                        var pw = pos.w;
+                        return pos.x >= nw & pos.x <= pw & pos.y >= nw & pos.y <= pw & pos.z >= 0 & pos.z <= pw;
+                    }
+
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    static float3_mt16 ToNdc(float4_mt16 pos) => new(pos.x / pos.w, pos.y / pos.w, pos.z / pos.w);
+
+                    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                    static float3_mt16 ToScreenSpace(float3_mt16 pos, SoftViewport viewport)
+                    {
+                        var x = math_mt.fam(viewport.TopLeftX, (pos.x + 1) * 0.5f, viewport.Width);
+                        var y = math_mt.fam(viewport.TopLeftX, (1 - pos.y) * 0.5f, viewport.Height);
+                        var z = viewport.MinDepth + pos.z * (viewport.MaxDepth - viewport.MinDepth);
+                        return new(x, y, z);
+                    }
                 }
             );
 
