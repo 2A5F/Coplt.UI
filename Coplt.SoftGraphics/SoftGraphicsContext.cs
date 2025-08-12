@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.CompilerServices;
 using Coplt.Mathematics;
 using Coplt.Mathematics.Simt;
 using Coplt.SoftGraphics.Utilities;
@@ -107,13 +105,6 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
     #region Draw
 
-    private record struct PixelTask
-    {
-        public int QuadQuadX;
-        public int QuadQuadY;
-        public uint Index;
-    }
-
     /// <summary>
     /// Dispatching pixel shader<br/>
     /// <b>Not an async operation, will block until complete</b>
@@ -212,31 +203,79 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                     var max = (int2_mt16)math_mt.ceil(css_a.xy.max(css_b.xy).max(css_c.xy) * (1f / 4f));
 
                     var visibles = new Span<b32>(&visible_any, 16);
-                    var min_xs = new Span<int>(&min.x, 16);
-                    var min_ys = new Span<int>(&min.y, 16);
-                    var max_xs = new Span<int>(&max.x, 16);
-                    var max_ys = new Span<int>(&max.y, 16);
+                    var indexes = new Span<uint>(&index, 16);
+
+                    var min_xs = new Span<uint>(&min.x, 16);
+                    var min_ys = new Span<uint>(&min.y, 16);
+
+                    var max_xs = new Span<uint>(&max.x, 16);
+                    var max_ys = new Span<uint>(&max.y, 16);
+
+                    var cs_a_x = new Span<float>(&pos_a.x, 16);
+                    var cs_a_y = new Span<float>(&pos_a.y, 16);
+                    var cs_a_z = new Span<float>(&pos_a.z, 16);
+                    var cs_a_w = new Span<float>(&pos_a.w, 16);
+
+                    var cs_b_x = new Span<float>(&pos_b.x, 16);
+                    var cs_b_y = new Span<float>(&pos_b.y, 16);
+                    var cs_b_z = new Span<float>(&pos_b.z, 16);
+                    var cs_b_w = new Span<float>(&pos_b.w, 16);
+
+                    var cs_c_x = new Span<float>(&pos_c.x, 16);
+                    var cs_c_y = new Span<float>(&pos_c.y, 16);
+                    var cs_c_z = new Span<float>(&pos_c.z, 16);
+                    var cs_c_w = new Span<float>(&pos_c.w, 16);
+
+                    var ss_a_x = new Span<float>(&ss_a.x, 16);
+                    var ss_a_y = new Span<float>(&ss_a.y, 16);
+                    var ss_a_z = new Span<float>(&ss_a.z, 16);
+
+                    var ss_b_x = new Span<float>(&ss_b.x, 16);
+                    var ss_b_y = new Span<float>(&ss_b.y, 16);
+                    var ss_b_z = new Span<float>(&ss_b.z, 16);
+
+                    var ss_c_x = new Span<float>(&ss_c.x, 16);
+                    var ss_c_y = new Span<float>(&ss_c.y, 16);
+                    var ss_c_z = new Span<float>(&ss_c.z, 16);
 
                     for (var c = 0; c < 16; c++)
                     {
                         if (!visibles[c]) continue;
-                        var min_x = min_xs[c];
-                        var min_y = min_ys[c];
-                        var max_x = max_xs[c];
-                        var max_y = max_ys[c];
+                        ref var slot = ref local_tasks.Add();
+                        slot.Index = indexes[c];
 
-                        for (var y = min_y; y <= max_y; y++)
-                        {
-                            for (var x = min_x; x <= max_x; x++)
-                            {
-                                local_tasks.Add() = new()
-                                {
-                                    QuadQuadX = x,
-                                    QuadQuadY = y,
-                                    Index = i,
-                                };
-                            }
-                        }
+                        slot.MinX = min_xs[c];
+                        slot.MinY = min_ys[c];
+
+                        slot.MaxX = max_xs[c];
+                        slot.MaxY = max_ys[c];
+
+                        slot.PosA_CS_X = cs_a_x[c];
+                        slot.PosA_CS_Y = cs_a_y[c];
+                        slot.PosA_CS_Z = cs_a_z[c];
+                        slot.PosA_CS_W = cs_a_w[c];
+
+                        slot.PosB_CS_X = cs_b_x[c];
+                        slot.PosB_CS_Y = cs_b_y[c];
+                        slot.PosB_CS_Z = cs_b_z[c];
+                        slot.PosB_CS_W = cs_b_w[c];
+
+                        slot.PosC_CS_X = cs_c_x[c];
+                        slot.PosC_CS_Y = cs_c_y[c];
+                        slot.PosC_CS_Z = cs_c_z[c];
+                        slot.PosC_CS_W = cs_c_w[c];
+
+                        slot.PosA_SS_X = ss_a_x[c];
+                        slot.PosA_SS_Y = ss_a_y[c];
+                        slot.PosA_SS_Z = ss_a_z[c];
+
+                        slot.PosB_SS_X = ss_b_x[c];
+                        slot.PosB_SS_Y = ss_b_y[c];
+                        slot.PosB_SS_Z = ss_b_z[c];
+
+                        slot.PosC_SS_X = ss_c_x[c];
+                        slot.PosC_SS_Y = ss_c_y[c];
+                        slot.PosC_SS_Z = ss_c_z[c];
                     }
 
                     return;
@@ -268,15 +307,64 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
             #region Dispatch pixel
 
             using var collected_tasks = tasks.ToCollected();
-
-            var num_dispatch = (collected_tasks.Count + 15) / 16;
-            m_job_scheduler.Dispatch((uint)num_dispatch, ((nuint)(&collected_tasks)), (ctx, i, _) =>
+            foreach (ref var pt in collected_tasks)
             {
-                // todo
-            });
+                m_job_scheduler.Dispatch(
+                    pt.MaxX - pt.MinX, pt.MaxY - pt.MinX,
+                    (pt, 0),
+                    static (ctx, x, y) =>
+                    {
+                        var pt = ctx.pt;
+
+                        // todo calc z index
+
+                        var ss_a = new float3_mt16(pt.PosA_SS_X, pt.PosA_SS_Y, pt.PosA_SS_Z);
+                        var ss_b = new float3_mt16(pt.PosB_SS_X, pt.PosB_SS_Y, pt.PosB_SS_Z);
+                        var ss_c = new float3_mt16(pt.PosC_SS_X, pt.PosC_SS_Y, pt.PosC_SS_Z);
+                    }
+                );
+            }
 
             #endregion
         }
+    }
+
+    private record struct PixelTask
+    {
+        public uint Index;
+
+        public uint MinX;
+        public uint MinY;
+
+        public uint MaxX;
+        public uint MaxY;
+
+        public float PosA_CS_X;
+        public float PosA_CS_Y;
+        public float PosA_CS_Z;
+        public float PosA_CS_W;
+
+        public float PosB_CS_X;
+        public float PosB_CS_Y;
+        public float PosB_CS_Z;
+        public float PosB_CS_W;
+
+        public float PosC_CS_X;
+        public float PosC_CS_Y;
+        public float PosC_CS_Z;
+        public float PosC_CS_W;
+
+        public float PosA_SS_X;
+        public float PosA_SS_Y;
+        public float PosA_SS_Z;
+
+        public float PosB_SS_X;
+        public float PosB_SS_Y;
+        public float PosB_SS_Z;
+
+        public float PosC_SS_X;
+        public float PosC_SS_Y;
+        public float PosC_SS_Z;
     }
 
     #endregion
