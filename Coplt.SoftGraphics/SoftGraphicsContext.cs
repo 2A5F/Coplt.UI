@@ -1,7 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using Coplt.Mathematics;
 using Coplt.Mathematics.Simt;
+using Coplt.SoftGraphics.Utilities;
 
 namespace Coplt.SoftGraphics;
 
@@ -105,6 +107,13 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
     #region Draw
 
+    private record struct PixelTask
+    {
+        public int QuadQuadX;
+        public int QuadQuadY;
+        public uint Index;
+    }
+
     /// <summary>
     /// Dispatching pixel shader<br/>
     /// <b>Not an async operation, will block until complete</b>
@@ -143,15 +152,23 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
             #region Calc AABB then Cull then Gen Task
 
-            using var tasks = PooledArray.Rent<int>((int)num_triangles);
+            using var tasks = new Collector<PixelTask>();
 
             m_job_scheduler.Dispatch(
                 num_triangles_mt,
                 (
-                    num_triangles, n_indices_a, n_indices_b, n_indices_c, p_vertices: (nuint)(&Vertices), m_viewport
+                    num_triangles, n_indices_a, n_indices_b, n_indices_c, p_vertices: (nuint)(&Vertices), m_viewport,
+                    p_tasks: (nuint)(&tasks)
                 ),
-                static (ctx, i, _) =>
+                static ctx =>
                 {
+                    ref var tasks = ref *(Collector<PixelTask>*)ctx.p_tasks;
+                    return tasks.Alloc();
+                },
+                static (ctx, local, i, _) =>
+                {
+                    ref var tasks = ref *(Collector<PixelTask>*)ctx.p_tasks;
+                    ref var local_tasks = ref tasks[local];
                     var num_triangles = ctx.num_triangles;
                     var viewport = ctx.m_viewport;
                     var indices_a = ctx.n_indices_a.Span;
@@ -191,14 +208,14 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                     var css_b = ss_b.clamp(clamp_min, clamp_max);
                     var css_c = ss_c.clamp(clamp_min, clamp_max);
 
-                    var min = math_mt.floor(css_a.xy.min(css_b.xy).min(css_c.xy) * (1f / 4f));
-                    var max = math_mt.ceil(css_a.xy.max(css_b.xy).max(css_c.xy) * (1f / 4f));
+                    var min = (int2_mt16)math_mt.floor(css_a.xy.min(css_b.xy).min(css_c.xy) * (1f / 4f));
+                    var max = (int2_mt16)math_mt.ceil(css_a.xy.max(css_b.xy).max(css_c.xy) * (1f / 4f));
 
                     var visibles = new Span<b32>(&visible_any, 16);
-                    var min_xs = new Span<float>(&min.x, 16);
-                    var min_ys = new Span<float>(&min.y, 16);
-                    var max_xs = new Span<float>(&max.x, 16);
-                    var max_ys = new Span<float>(&max.y, 16);
+                    var min_xs = new Span<int>(&min.x, 16);
+                    var min_ys = new Span<int>(&min.y, 16);
+                    var max_xs = new Span<int>(&max.x, 16);
+                    var max_ys = new Span<int>(&max.y, 16);
 
                     for (var c = 0; c < 16; c++)
                     {
@@ -207,6 +224,19 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                         var min_y = min_ys[c];
                         var max_x = max_xs[c];
                         var max_y = max_ys[c];
+
+                        for (var y = min_y; y <= max_y; y++)
+                        {
+                            for (var x = min_x; x <= max_x; x++)
+                            {
+                                local_tasks.Add() = new()
+                                {
+                                    QuadQuadX = x,
+                                    QuadQuadY = y,
+                                    Index = i,
+                                };
+                            }
+                        }
                     }
 
                     return;
@@ -235,7 +265,17 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
             #endregion
 
-            // todo
+            #region Dispatch pixel
+
+            using var collected_tasks = tasks.ToCollected();
+
+            var num_dispatch = (collected_tasks.Count + 15) / 16;
+            m_job_scheduler.Dispatch((uint)num_dispatch, ((nuint)(&collected_tasks)), (ctx, i, _) =>
+            {
+                // todo
+            });
+
+            #endregion
         }
     }
 
