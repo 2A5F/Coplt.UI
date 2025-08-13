@@ -2,14 +2,14 @@
 
 namespace Coplt.SoftGraphics;
 
-/// <summary>
-/// 4 pixels per operation
-/// </summary>
-public delegate void SoftPixelShader<in VertexData, in PixelData>(
-    SoftLaneContext ctx, VertexData input, PixelData output
-)
-    where VertexData : IVertexData, allows ref struct
-    where PixelData : IPixelData, allows ref struct;
+// /// <summary>
+// /// 4 pixels per operation
+// /// </summary>
+// public delegate void SoftPixelShader<in VertexData, in PixelData>(
+//     SoftLaneContext ctx, VertexData input, PixelData output
+// )
+//     where VertexData : IVertexData, allows ref struct
+//     where PixelData : IPixelData, allows ref struct;
 
 /// <summary>
 /// Wave line context
@@ -21,14 +21,14 @@ public struct SoftLaneContext
     public uint_mt QuadMask;
 }
 
-public interface IVertexData
-{
-    public float4_mt Gather_Position_ClipSpace(
-        int_mt index, b32_mt active_lanes
-    );
-
-    // public static abstract void Interpolation(out T r, in T a, in T b, float_mt t);
-}
+// public interface IVertexData
+// {
+//     public float4_mt Gather_Position_ClipSpace(
+//         int_mt index, b32_mt active_lanes
+//     );
+//
+//     // public static abstract void Interpolation(out T r, in T a, in T b, float_mt t);
+// }
 
 public interface IPixelData
 {
