@@ -79,7 +79,7 @@ public class TestDraw
 
         #region Interface
 
-        public float4_mt16 Gather_Position_ClipSpace(int_mt16 index, b32_mt16 active_lanes)
+        public float4_mt Gather_Position_ClipSpace(int_mt index, b32_mt active_lanes)
         {
             var x = SoftGraphicsUtils.Gather(in Position_ClipSpace_X[0], index, active_lanes);
             var y = SoftGraphicsUtils.Gather(in Position_ClipSpace_Y[0], index, active_lanes);
@@ -115,5 +115,14 @@ public class TestDraw
             ),
             static (SoftLaneContext ctx, Vertex1 input, Pixel1 output) => { }
         );
+
+        using Image<Rgba32> img = new(1024, 1024);
+        var buf = img.Frames[0].PixelBuffer;
+        for (var y = 0; y < img.Height; y++)
+        {
+            var span = buf.DangerousGetRowSpan(y);
+            rt.ReadRowUNorm8(y, MemoryMarshal.AsBytes(span), ParallelJobScheduler.Instance);
+        }
+        img.SaveAsPng("./Test_Draw.png");
     }
 }

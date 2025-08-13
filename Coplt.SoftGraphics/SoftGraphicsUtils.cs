@@ -9,7 +9,25 @@ public static partial class SoftGraphicsUtils
 {
     #region IncMt16
 
-    public static readonly uint_mt16 IncMt16 = new(Vector512.Create(0u, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+    public static readonly uint_mt IncMt = new(Vector512.Create(0u, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+
+    /// <summary>
+    /// <code>
+    /// c2 c3   d2 d3    |    10 11   14 15    |    03 13   23 33
+    /// c0 c1   d0 d1    |    08 09   12 13    |    02 12   22 32
+    ///                  |                     |                 
+    /// a2 a3   b2 b3    |    02 03   06 07    |    01 11   21 31
+    /// a0 a1   b0 b1    |    00 01   04 05    |    00 10   20 30
+    /// </code>
+    /// </summary>
+    public static readonly float2_mt ZOrderOffMt = new float2_mt(
+        new(Vector512.Create(
+            0.5f, 1.5f, 0.5f, 1.5f, 2.5f, 3.5f, 2.5f, 3.5f, 0.5f, 1.5f, 0.5f, 1.5f, 2.5f, 3.5f, 2.5f, 3.5f
+        )),
+        new(Vector512.Create(
+            0.5f, 0.5f, 1.5f, 1.5f, 0.5f, 0.5f, 1.5f, 1.5f, 2.5f, 2.5f, 3.5f, 3.5f, 2.5f, 2.5f, 3.5f, 3.5f
+        ))
+    ) ;
 
     #endregion
 
@@ -31,7 +49,7 @@ public static partial class SoftGraphicsUtils
     ];
 
     [MethodImpl(256 | 512)]
-    public static unsafe uint_mt16 EncodeZOrderGather(uint2_mt16 xy)
+    public static unsafe uint_mt EncodeZOrderGather(uint2_mt xy)
     {
         if (!Avx2.IsSupported) throw new NotSupportedException("Avx2 is not supported");
 
@@ -68,7 +86,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static uint_mt16 EncodeZOrderPclmulqdq(uint2_mt16 xy)
+    public static uint_mt EncodeZOrderPclmulqdq(uint2_mt xy)
     {
         if (!Pclmulqdq.IsSupported) throw new NotSupportedException("Pclmulqdq is not supported");
 
@@ -136,7 +154,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static uint_mt16 EncodeZOrderSoft(uint2_mt16 xy)
+    public static uint_mt EncodeZOrderSoft(uint2_mt xy)
     {
         var x = xy.x.vector;
         var y = xy.y.vector;
@@ -157,7 +175,7 @@ public static partial class SoftGraphicsUtils
         // return (Encode(xy.y) << 1) | Encode(xy.x);
         //
         // [MethodImpl(256 | 512)]
-        // static uint_mt16 Encode(uint_mt16 n)
+        // static uint_mt Encode(uint_mt n)
         // {
         //     n &= 0x0000FFFF;
         //     n = (n | (n << 8)) & 0x00FF00FF;
@@ -169,7 +187,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static uint_mt16 EncodeZOrder(uint2_mt16 xy)
+    public static uint_mt EncodeZOrder(uint2_mt xy)
     {
         if (Avx512F.IsSupported) return EncodeZOrderSoft(xy);
         if (Avx2.IsSupported) return EncodeZOrderGather(xy);
@@ -178,7 +196,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static uint2_mt16 DecodeZOrderSoft(uint_mt16 code)
+    public static uint2_mt DecodeZOrderSoft(uint_mt code)
     {
         var x = code.vector;
         var y = x >> 1;
@@ -199,7 +217,7 @@ public static partial class SoftGraphicsUtils
         // return new(Decode(code), Decode(code >> 1));
         //
         // [MethodImpl(256 | 512)]
-        // static uint_mt16 Decode(uint_mt16 n)
+        // static uint_mt Decode(uint_mt n)
         // {
         //     n &= 0x55555555;
         //     n = (n | (n >> 1)) & 0x33333333;
@@ -211,7 +229,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static uint2_mt16 DecodeZOrder(uint_mt16 code) => DecodeZOrderSoft(code);
+    public static uint2_mt DecodeZOrder(uint_mt code) => DecodeZOrderSoft(code);
 
     [MethodImpl(256 | 512)]
     public static uint EncodeZOrderPclmulqdq(uint x, uint y)
@@ -507,7 +525,7 @@ public static partial class SoftGraphicsUtils
     #region Gather
 
     [MethodImpl(256 | 512)]
-    public static unsafe float_mt16 Gather(ref readonly float addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe float_mt Gather(ref readonly float addr, int_mt offset, b32_mt active_lanes)
     {
         fixed (float* ptr = &addr)
         {
@@ -516,7 +534,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static unsafe float_mt16 GatherUNorm(ref readonly byte addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe float_mt GatherUNorm(ref readonly byte addr, int_mt offset, b32_mt active_lanes)
     {
         fixed (byte* ptr = &addr)
         {
@@ -525,7 +543,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static unsafe uint_mt16 GatherUInt(ref readonly uint addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe uint_mt GatherUInt(ref readonly uint addr, int_mt offset, b32_mt active_lanes)
     {
         fixed (uint* ptr = &addr)
         {
@@ -675,7 +693,7 @@ public static partial class SoftGraphicsUtils
     #region Scatter
 
     [MethodImpl(256 | 512)]
-    public static unsafe void Scatter(float_mt16 value, ref float addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe void Scatter(float_mt value, ref float addr, int_mt offset, b32_mt active_lanes)
     {
         fixed (float* ptr = &addr)
         {
@@ -684,7 +702,7 @@ public static partial class SoftGraphicsUtils
     }
 
     [MethodImpl(256 | 512)]
-    public static unsafe void ScatterUNorm(float_mt16 value, ref byte addr, int_mt16 offset, b32_mt16 active_lanes)
+    public static unsafe void ScatterUNorm(float_mt value, ref byte addr, int_mt offset, b32_mt active_lanes)
     {
         fixed (byte* ptr = &addr)
         {

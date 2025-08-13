@@ -144,7 +144,7 @@ internal struct LocalCollector<T>(int InitCap) : IDisposable
             if (m_current >= m_cap) Grow();
         }
         m_count++;
-        return ref slot;
+        return ref slot!;
     }
 
     public void BatchAdd(ReadOnlySpan<T> items)

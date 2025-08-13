@@ -24,7 +24,7 @@ public abstract class SoftTexture
 
     #region Fields
 
-    protected readonly uint2_mt16 m_size_cache;
+    protected readonly uint2_mt m_size_cache;
 
     #endregion
 
@@ -55,13 +55,13 @@ public abstract class SoftTexture
     #region Sample
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public abstract float4_mt16 Sample(
-        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color
+    public abstract float4_mt Sample(
+        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt uv, out float4_mt color
     );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public abstract float_mt16 SampleDepth(
-        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv
+    public abstract float_mt SampleDepth(
+        ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt uv
     );
 
     #endregion
@@ -69,13 +69,13 @@ public abstract class SoftTexture
     #region Load
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public abstract float4_mt16 Load(
-        ref readonly SoftLaneContext ctx, uint2_mt16 uv
+    public abstract float4_mt Load(
+        ref readonly SoftLaneContext ctx, uint2_mt uv
     );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public abstract (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(
-        ref readonly SoftLaneContext ctx, uint2_mt16 uv
+    public abstract (float_mt depth, uint_mt stencil) LoadDepthStencil(
+        ref readonly SoftLaneContext ctx, uint2_mt uv
     );
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -87,12 +87,12 @@ public abstract class SoftTexture
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public abstract void Store(
-        ref readonly SoftLaneContext ctx, uint2_mt16 uv, float4_mt16 value
+        ref readonly SoftLaneContext ctx, uint2_mt uv, float4_mt value
     );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public abstract void StoreDepthStencil(
-        ref readonly SoftLaneContext ctx, uint2_mt16 uv, float_mt16 depth, uint_mt16 stencil
+        ref readonly SoftLaneContext ctx, uint2_mt uv, float_mt depth, uint_mt stencil
     );
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -113,7 +113,24 @@ public abstract class SoftTexture
     /// a0 a1   b0 b1    |    00 01   04 05
     /// </code>
     /// </summary>
-    public abstract void QuadQuadStore(uint x, uint y, float4_mt16 color);
+    public abstract void QuadQuadStore(uint x, uint y, float4_mt color);
+
+    public abstract void QuadQuadStore(uint z_index, float4_mt color);
+
+    /// <summary>
+    /// Load 4x4 (16) pixels in z-curve order, these pixels will be contiguous in memory.<br/>
+    /// x y must be a multiple of 4, otherwise it will be undefined behavior.
+    /// <code>
+    /// c2 c3   d2 d3    |    10 11   14 15
+    /// c0 c1   d0 d1    |    08 09   12 13
+    ///                  |                 
+    /// a2 a3   b2 b3    |    02 03   06 07
+    /// a0 a1   b0 b1    |    00 01   04 05
+    /// </code>
+    /// </summary>
+    public abstract float4_mt QuadQuadLoad(uint x, uint y);
+
+    public abstract float4_mt QuadQuadLoad(uint z_index);
 
     #endregion
 
@@ -163,18 +180,18 @@ public abstract class SoftTexture
 
         #region NotSupported
 
-        public override float_mt16 SampleDepth(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv)
+        public override float_mt SampleDepth(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt uv)
             => throw new NotSupportedException();
-        public override (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
+        public override (float_mt depth, uint_mt stencil) LoadDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt uv)
             => throw new NotSupportedException();
-        public override void StoreDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float_mt16 depth, uint_mt16 stencil)
+        public override void StoreDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt uv, float_mt depth, uint_mt stencil)
             => throw new NotSupportedException();
 
         #endregion
 
         #region Sample
 
-        public override float4_mt16 Sample(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color)
+        public override float4_mt Sample(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt uv, out float4_mt color)
         {
             throw new NotImplementedException();
         }
@@ -183,7 +200,7 @@ public abstract class SoftTexture
 
         #region Load
 
-        public override float4_mt16 Load(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
+        public override float4_mt Load(ref readonly SoftLaneContext ctx, uint2_mt uv)
         {
             var p = uv.min(m_size_cache);
             var offset = SoftGraphicsUtils.EncodeZOrder(p).asi();
@@ -211,7 +228,7 @@ public abstract class SoftTexture
 
         #region Store
 
-        public override void Store(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float4_mt16 value)
+        public override void Store(ref readonly SoftLaneContext ctx, uint2_mt uv, float4_mt value)
         {
             var p = uv.min(m_size_cache);
             var offset = SoftGraphicsUtils.EncodeZOrder(p).asi();
@@ -233,32 +250,6 @@ public abstract class SoftTexture
             Unsafe.Add(ref m_blob3[0], offset) = (byte)Math.Round(Math.Clamp(a * 255f, 0f, 255f));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public override void QuadQuadStore(uint x, uint y, float4_mt16 color)
-        {
-            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
-
-            var r512 = ((uint_mt16)math_mt.clamp(color.r * 255f, 0f, 255f).round()).vector;
-            var g512 = ((uint_mt16)math_mt.clamp(color.g * 255f, 0f, 255f).round()).vector;
-            var b512 = ((uint_mt16)math_mt.clamp(color.b * 255f, 0f, 255f).round()).vector;
-            var a512 = ((uint_mt16)math_mt.clamp(color.a * 255f, 0f, 255f).round()).vector;
-
-            var r256 = Vector256.Narrow(r512.GetLower(), r512.GetUpper());
-            var g256 = Vector256.Narrow(g512.GetLower(), g512.GetUpper());
-            var b256 = Vector256.Narrow(b512.GetLower(), b512.GetUpper());
-            var a256 = Vector256.Narrow(a512.GetLower(), a512.GetUpper());
-
-            var r128 = Vector128.Narrow(r256.GetLower(), r256.GetUpper());
-            var g128 = Vector128.Narrow(g256.GetLower(), g256.GetUpper());
-            var b128 = Vector128.Narrow(b256.GetLower(), b256.GetUpper());
-            var a128 = Vector128.Narrow(a256.GetLower(), a256.GetUpper());
-
-            r128.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], index));
-            g128.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], index));
-            b128.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], index));
-            a128.StoreUnsafe(ref Unsafe.Add(ref m_blob3[0], index));
-        }
-
         #endregion
 
         #region Read
@@ -268,7 +259,7 @@ public abstract class SoftTexture
             scheduler ??= SyncJobScheduler.Instance;
 
             var w = (Width + 15) / 16;
-            uint_mt16 y = (uint)row;
+            uint_mt y = (uint)row;
             fixed (byte* p_target = target)
             {
                 scheduler.Dispatch(w, 1, (self: this, (IntPtr)p_target, len: target.Length, y), static (ctx, x, _) =>
@@ -276,7 +267,7 @@ public abstract class SoftTexture
                     var (self, p_target, target_len, y) = ctx;
                     var target = new Span<byte>((byte*)p_target, target_len);
 
-                    var index = new uint_mt16(x * 16) + SoftGraphicsUtils.IncMt16;
+                    var index = new uint_mt(x * 16) + SoftGraphicsUtils.IncMt;
                     var active = index < self.m_size_cache.x;
                     var offset = SoftGraphicsUtils.EncodeZOrder(new(index, y)).asi();
 
@@ -320,6 +311,69 @@ public abstract class SoftTexture
         }
 
         #endregion
+
+        #region QuadQuad
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint x, uint y, float4_mt color)
+        {
+            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
+            QuadQuadStore(index, color);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint z_index, float4_mt color)
+        {
+            var r512 = ((uint_mt)math_mt.clamp(color.r * 255f, 0f, 255f).round()).vector;
+            var g512 = ((uint_mt)math_mt.clamp(color.g * 255f, 0f, 255f).round()).vector;
+            var b512 = ((uint_mt)math_mt.clamp(color.b * 255f, 0f, 255f).round()).vector;
+            var a512 = ((uint_mt)math_mt.clamp(color.a * 255f, 0f, 255f).round()).vector;
+
+            var r256 = Vector256.Narrow(r512.GetLower(), r512.GetUpper());
+            var g256 = Vector256.Narrow(g512.GetLower(), g512.GetUpper());
+            var b256 = Vector256.Narrow(b512.GetLower(), b512.GetUpper());
+            var a256 = Vector256.Narrow(a512.GetLower(), a512.GetUpper());
+
+            var r128 = Vector128.Narrow(r256.GetLower(), r256.GetUpper());
+            var g128 = Vector128.Narrow(g256.GetLower(), g256.GetUpper());
+            var b128 = Vector128.Narrow(b256.GetLower(), b256.GetUpper());
+            var a128 = Vector128.Narrow(a256.GetLower(), a256.GetUpper());
+
+            r128.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index));
+            g128.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index));
+            b128.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index));
+            a128.StoreUnsafe(ref Unsafe.Add(ref m_blob3[0], z_index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float4_mt QuadQuadLoad(uint x, uint y)
+        {
+            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
+            return QuadQuadLoad(index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float4_mt QuadQuadLoad(uint z_index)
+        {
+            var (r128a, r128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index)));
+            var (g128a, g128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index)));
+            var (b128a, b128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index)));
+            var (a128a, a128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob3[0], z_index)));
+
+            var (r256a, r256b) = Vector256.Widen(Vector256.Create(r128a, r128b));
+            var (g256a, g256b) = Vector256.Widen(Vector256.Create(g128a, g128b));
+            var (b256a, b256b) = Vector256.Widen(Vector256.Create(b128a, b128b));
+            var (a256a, a256b) = Vector256.Widen(Vector256.Create(a128a, a128b));
+
+            var r = Vector512.ConvertToSingle(Vector512.Create(r256a, r256b)) * (1f / 255f);
+            var g = Vector512.ConvertToSingle(Vector512.Create(g256a, g256b)) * (1f / 255f);
+            var b = Vector512.ConvertToSingle(Vector512.Create(b256a, b256b)) * (1f / 255f);
+            var a = Vector512.ConvertToSingle(Vector512.Create(a256a, a256b)) * (1f / 255f);
+
+            return new(new(r), new(g), new(b), new(a));
+        }
+
+        #endregion
     }
 
     internal sealed class Impl_R32_G32_B32_A32_Float : SoftTexture
@@ -360,19 +414,19 @@ public abstract class SoftTexture
 
         #region NotSupported
 
-        public override float_mt16 SampleDepth(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv)
+        public override float_mt SampleDepth(ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt uv)
             => throw new NotSupportedException();
-        public override (float_mt16 depth, uint_mt16 stencil) LoadDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv)
+        public override (float_mt depth, uint_mt stencil) LoadDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt uv)
             => throw new NotSupportedException();
-        public override void StoreDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt16 uv, float_mt16 depth, uint_mt16 stencil)
+        public override void StoreDepthStencil(ref readonly SoftLaneContext ctx, uint2_mt uv, float_mt depth, uint_mt stencil)
             => throw new NotSupportedException();
 
         #endregion
 
         #region Sample
 
-        public override float4_mt16 Sample(
-            ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt16 uv, out float4_mt16 color
+        public override float4_mt Sample(
+            ref readonly SoftLaneContext ctx, in SoftSamplerState state, float2_mt uv, out float4_mt color
         )
         {
             throw new NotImplementedException();
@@ -383,9 +437,9 @@ public abstract class SoftTexture
         #region Load
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public override float4_mt16 Load(
+        public override float4_mt Load(
             ref readonly SoftLaneContext ctx,
-            uint2_mt16 uv
+            uint2_mt uv
         )
         {
             var p = uv.min(m_size_cache);
@@ -417,8 +471,8 @@ public abstract class SoftTexture
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public override void Store(
             ref readonly SoftLaneContext ctx,
-            uint2_mt16 uv,
-            float4_mt16 value
+            uint2_mt uv,
+            float4_mt value
         )
         {
             var p = uv.min(m_size_cache);
@@ -441,17 +495,6 @@ public abstract class SoftTexture
             Unsafe.Add(ref m_blob3[0], offset) = a;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public override void QuadQuadStore(uint x, uint y, float4_mt16 color)
-        {
-            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
-
-            color.r.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], index));
-            color.g.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], index));
-            color.b.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], index));
-            color.a.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob3[0], index));
-        }
-
         #endregion
 
         #region Read
@@ -461,7 +504,7 @@ public abstract class SoftTexture
             scheduler ??= SyncJobScheduler.Instance;
 
             var w = (Width + 15) / 16;
-            uint_mt16 y = (uint)row;
+            uint_mt y = (uint)row;
             fixed (byte* p_target = target)
             {
                 scheduler.Dispatch(w, 1, (self: this, (IntPtr)p_target, len: target.Length, y), static (ctx, x, _) =>
@@ -469,7 +512,7 @@ public abstract class SoftTexture
                     var (self, p_target, target_len, y) = ctx;
                     var target = new Span<byte>((byte*)p_target, target_len);
 
-                    var index = new uint_mt16(x * 16) + SoftGraphicsUtils.IncMt16;
+                    var index = new uint_mt(x * 16) + SoftGraphicsUtils.IncMt;
                     var active = index < self.m_size_cache.x;
                     var offset = SoftGraphicsUtils.EncodeZOrder(new(index, y)).asi();
 
@@ -478,10 +521,10 @@ public abstract class SoftTexture
                     var b = SoftGraphicsUtils.Gather(ref self.m_blob2[0], offset, active);
                     var a = SoftGraphicsUtils.Gather(ref self.m_blob3[0], offset, active);
 
-                    var r512 = ((uint_mt16)math_mt.clamp(r * 255f, 0f, 255f).round()).vector;
-                    var g512 = ((uint_mt16)math_mt.clamp(g * 255f, 0f, 255f).round()).vector;
-                    var b512 = ((uint_mt16)math_mt.clamp(b * 255f, 0f, 255f).round()).vector;
-                    var a512 = ((uint_mt16)math_mt.clamp(a * 255f, 0f, 255f).round()).vector;
+                    var r512 = ((uint_mt)math_mt.clamp(r * 255f, 0f, 255f).round()).vector;
+                    var g512 = ((uint_mt)math_mt.clamp(g * 255f, 0f, 255f).round()).vector;
+                    var b512 = ((uint_mt)math_mt.clamp(b * 255f, 0f, 255f).round()).vector;
+                    var a512 = ((uint_mt)math_mt.clamp(a * 255f, 0f, 255f).round()).vector;
 
                     var r256 = Vector256.Narrow(r512.GetLower(), r512.GetUpper());
                     var g256 = Vector256.Narrow(g512.GetLower(), g512.GetUpper());
@@ -525,6 +568,44 @@ public abstract class SoftTexture
                     }
                 });
             }
+        }
+
+        #endregion
+
+        #region QuadQuad
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint x, uint y, float4_mt color)
+        {
+            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
+            QuadQuadStore(index, color);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint z_index, float4_mt color)
+        {
+            color.r.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index));
+            color.g.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index));
+            color.b.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index));
+            color.a.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob3[0], z_index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float4_mt QuadQuadLoad(uint x, uint y)
+        {
+            var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
+            return QuadQuadLoad(index);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float4_mt QuadQuadLoad(uint z_index)
+        {
+            var r = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index));
+            var g = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index));
+            var b = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index));
+            var a = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob3[0], z_index));
+
+            return new(new(r), new(g), new(b), new(a));
         }
 
         #endregion
