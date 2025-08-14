@@ -30,14 +30,14 @@ public struct SoftLaneContext
 //     // public static abstract void Interpolation(out T r, in T a, in T b, float_mt t);
 // }
 
-public interface IPixelData
-{
-    // public static abstract ref readonly float4_mt Get_Color0(in T input);
-    //
-    // public static abstract ref readonly float_mt Get_Depth(in T input);
-    //
-    // public static abstract ref readonly uint_mt Get_Stencil(in T input);
-    //
-    // public static abstract bool HasDepth { get; }
-    // public static abstract bool HasStencil { get; }
-}
+// public interface IPixelData
+// {
+//     // public static abstract ref readonly float4_mt Get_Color0(in T input);
+//     //
+//     // public static abstract ref readonly float_mt Get_Depth(in T input);
+//     //
+//     // public static abstract ref readonly uint_mt Get_Stencil(in T input);
+//     //
+//     // public static abstract bool HasDepth { get; }
+//     // public static abstract bool HasStencil { get; }
+// }

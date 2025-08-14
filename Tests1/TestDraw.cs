@@ -66,7 +66,17 @@ public class TestDraw
         });
     }
 
-    public struct Pixel1 : IPixelData { }
+    public struct Pipeline : ISoftGraphicPipeline
+    {
+        private static readonly SoftGraphicPipelineState s_state = new()
+        {
+            BlendEnable = true,
+            SrcBlend = SoftBlend.SrcAlpha,
+            DstBlend = SoftBlend.InvSrcAlpha,
+            BlendOp = SoftBlendOp.Add,
+        };
+        public ref readonly SoftGraphicPipelineState State => ref s_state;
+    }
 
     [Test]
     public void Test_Draw()
@@ -75,6 +85,7 @@ public class TestDraw
         ctx.SetJobScheduler(SyncJobScheduler.Instance);
         var rt = SoftTexture.Create(SoftTextureFormat.R8_G8_B8_A8_UNorm, 1024, 1024);
         ctx.SetRenderTarget(rt);
+        ctx.ClearRenderTarget(new float4(0.89f, 0.56f, 0.24f, 1f));
         ctx.SetViewport(new(0, 0, 1024, 1024, 0, 1));
         ctx.SetScissorRect(new(0, 0, 1024, 1024));
         ctx.Draw(
@@ -86,7 +97,8 @@ public class TestDraw
                 [-0.5f, 0.5f, -0.5f],
                 [1, 1, 1],
                 [1, 1, 1]
-            )
+            ),
+            new Pipeline()
         );
 
         using Image<Rgba32> img = new(1024, 1024);

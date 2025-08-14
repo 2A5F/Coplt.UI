@@ -117,6 +117,10 @@ public abstract class SoftTexture
 
     public abstract void QuadQuadStore(uint z_index, float4_mt color);
 
+    public abstract void QuadQuadStoreRGB(uint z_index, float3_mt color);
+
+    public abstract void QuadQuadStore(uint z_index, float_mt color, SoftColorChannel channel);
+
     /// <summary>
     /// Load 4x4 (16) pixels in z-curve order, these pixels will be contiguous in memory.<br/>
     /// x y must be a multiple of 4, otherwise it will be undefined behavior.
@@ -131,6 +135,10 @@ public abstract class SoftTexture
     public abstract float4_mt QuadQuadLoad(uint x, uint y);
 
     public abstract float4_mt QuadQuadLoad(uint z_index);
+
+    public abstract float3_mt QuadQuadLoadRGB(uint z_index);
+
+    public abstract float_mt QuadQuadLoad(uint z_index, SoftColorChannel channel);
 
     #endregion
 
@@ -346,6 +354,42 @@ public abstract class SoftTexture
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStoreRGB(uint z_index, float3_mt color)
+        {
+            var r512 = ((uint_mt)math_mt.clamp(color.r * 255f, 0f, 255f).round()).vector;
+            var g512 = ((uint_mt)math_mt.clamp(color.g * 255f, 0f, 255f).round()).vector;
+            var b512 = ((uint_mt)math_mt.clamp(color.b * 255f, 0f, 255f).round()).vector;
+
+            var r256 = Vector256.Narrow(r512.GetLower(), r512.GetUpper());
+            var g256 = Vector256.Narrow(g512.GetLower(), g512.GetUpper());
+            var b256 = Vector256.Narrow(b512.GetLower(), b512.GetUpper());
+
+            var r128 = Vector128.Narrow(r256.GetLower(), r256.GetUpper());
+            var g128 = Vector128.Narrow(g256.GetLower(), g256.GetUpper());
+            var b128 = Vector128.Narrow(b256.GetLower(), b256.GetUpper());
+
+            r128.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index));
+            g128.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index));
+            b128.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint z_index, float_mt color, SoftColorChannel channel)
+        {
+            var v512 = ((uint_mt)math_mt.clamp(color * 255f, 0f, 255f).round()).vector;
+            var v256 = Vector256.Narrow(v512.GetLower(), v512.GetUpper());
+            var v128 = Vector128.Narrow(v256.GetLower(), v256.GetUpper());
+            v128.StoreUnsafe(ref Unsafe.Add(ref (channel switch
+            {
+                SoftColorChannel.R => m_blob0,
+                SoftColorChannel.G => m_blob1,
+                SoftColorChannel.B => m_blob2,
+                SoftColorChannel.A => m_blob3,
+                _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, null)
+            })[0], z_index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public override float4_mt QuadQuadLoad(uint x, uint y)
         {
             var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
@@ -371,6 +415,39 @@ public abstract class SoftTexture
             var a = Vector512.ConvertToSingle(Vector512.Create(a256a, a256b)) * (1f / 255f);
 
             return new(new(r), new(g), new(b), new(a));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float3_mt QuadQuadLoadRGB(uint z_index)
+        {
+            var (r128a, r128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index)));
+            var (g128a, g128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index)));
+            var (b128a, b128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index)));
+
+            var (r256a, r256b) = Vector256.Widen(Vector256.Create(r128a, r128b));
+            var (g256a, g256b) = Vector256.Widen(Vector256.Create(g128a, g128b));
+            var (b256a, b256b) = Vector256.Widen(Vector256.Create(b128a, b128b));
+
+            var r = Vector512.ConvertToSingle(Vector512.Create(r256a, r256b)) * (1f / 255f);
+            var g = Vector512.ConvertToSingle(Vector512.Create(g256a, g256b)) * (1f / 255f);
+            var b = Vector512.ConvertToSingle(Vector512.Create(b256a, b256b)) * (1f / 255f);
+
+            return new(new(r), new(g), new(b));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float_mt QuadQuadLoad(uint z_index, SoftColorChannel channel)
+        {
+            var (v128a, v128b) = Vector128.Widen(Vector128.LoadUnsafe(ref Unsafe.Add(ref (channel switch
+            {
+                SoftColorChannel.R => m_blob0,
+                SoftColorChannel.G => m_blob1,
+                SoftColorChannel.B => m_blob2,
+                SoftColorChannel.A => m_blob3,
+                _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, null)
+            })[0], z_index)));
+            var (v256a, v256b) = Vector256.Widen(Vector256.Create(v128a, v128b));
+            return new(Vector512.ConvertToSingle(Vector512.Create(v256a, v256b)) * (1f / 255f));
         }
 
         #endregion
@@ -591,6 +668,27 @@ public abstract class SoftTexture
         }
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStoreRGB(uint z_index, float3_mt color)
+        {
+            color.r.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index));
+            color.g.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index));
+            color.b.vector.StoreUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override void QuadQuadStore(uint z_index, float_mt color, SoftColorChannel channel)
+        {
+            color.vector.StoreUnsafe(ref Unsafe.Add(ref (channel switch
+            {
+                SoftColorChannel.R => m_blob0,
+                SoftColorChannel.G => m_blob1,
+                SoftColorChannel.B => m_blob2,
+                SoftColorChannel.A => m_blob3,
+                _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, null)
+            })[0], z_index));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public override float4_mt QuadQuadLoad(uint x, uint y)
         {
             var index = SoftGraphicsUtils.EncodeZOrder(x, y) * 16;
@@ -606,6 +704,29 @@ public abstract class SoftTexture
             var a = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob3[0], z_index));
 
             return new(new(r), new(g), new(b), new(a));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float3_mt QuadQuadLoadRGB(uint z_index)
+        {
+            var r = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob0[0], z_index));
+            var g = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob1[0], z_index));
+            var b = Vector512.LoadUnsafe(ref Unsafe.Add(ref m_blob2[0], z_index));
+
+            return new(new(r), new(g), new(b));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public override float_mt QuadQuadLoad(uint z_index, SoftColorChannel channel)
+        {
+            return new(Vector512.LoadUnsafe(ref Unsafe.Add(ref (channel switch
+            {
+                SoftColorChannel.R => m_blob0,
+                SoftColorChannel.G => m_blob1,
+                SoftColorChannel.B => m_blob2,
+                SoftColorChannel.A => m_blob3,
+                _ => throw new ArgumentOutOfRangeException(nameof(channel), channel, null)
+            })[0], z_index)));
         }
 
         #endregion

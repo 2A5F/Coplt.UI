@@ -111,10 +111,11 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
     /// <b>Not an async operation, will block until complete</b>
     /// </summary>
     [MethodImpl(512)]
-    public unsafe void Draw<MeshData>(
-        MeshData Mesh
+    public unsafe void Draw<TMesh, TPipeline>(
+        TMesh Mesh, TPipeline Pipeline
     )
-        where MeshData : ISoftMeshData, allows ref struct
+        where TMesh : ISoftMeshData, allows ref struct
+        where TPipeline : ISoftGraphicPipeline, allows ref struct
     {
         if (
             m_viewport.Width < float.Epsilon || m_viewport.Height < float.Epsilon ||
@@ -196,7 +197,7 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                         PosC_SS_Z = ss_c.z[c],
                     };
 
-                    DispatchPixel(&task);
+                    DispatchPixel(&task, &Pipeline);
                 }
             }
         }
@@ -265,14 +266,20 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
     }
 
     [MethodImpl(512)]
-    private unsafe void DispatchPixel(PixelTask* pt)
+    private unsafe void DispatchPixel<TPipeline>(PixelTask* pt, TPipeline* pipeline)
+        where TPipeline : ISoftGraphicPipeline, allows ref struct
     {
+        var width = m_rt_color?.Width ?? m_rt_depth_stencil!.Width;
+        var height = m_rt_color?.Height ?? m_rt_depth_stencil!.Height;
+
         m_job_scheduler.Dispatch(
             pt->MaxX - pt->MinX, pt->MaxY - pt->MinX,
-            (p_pt: (nuint)pt, m_rt_color, m_rt_depth_stencil),
+            (p_pt: (nuint)pt, pipeline: (nuint)pipeline, m_rt_color, m_rt_depth_stencil, w: width + 0.5f, h: height + 0.5f),
             [MethodImpl(512)] static (ctx, x, y) =>
             {
                 var pt = (PixelTask*)ctx.p_pt;
+                var pipeline = (TPipeline*)ctx.pipeline;
+                ref readonly var state = ref pipeline->State;
                 var rt_color = ctx.m_rt_color;
                 var rt_depth_stencil = ctx.m_rt_depth_stencil;
 
@@ -287,7 +294,8 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                 var ss_c = new float2_mt(pt->PosC_SS_X, pt->PosC_SS_Y);
 
                 var ic = new InterpolateContext();
-                var active_lanes = PointInTriangle(s_pos, ss_a, ss_b, ss_c, ref ic);
+                var active_lanes = (s_pos < new float2_mt(ctx.w, ctx.h)).all();
+                active_lanes &= PointInTriangle(s_pos, ss_a, ss_b, ss_c, ref ic);
                 if (!active_lanes.lane_any()) return;
 
                 var z_index_first = SoftGraphicsUtils.EncodeZOrder(start_x, start_y);
@@ -298,31 +306,38 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                 var cs_c = new float4_mt(pt->PosC_CS_X, pt->PosC_CS_Y, pt->PosC_CS_Z, pt->PosC_CS_W);
 
                 ic.Init(cs_a.w, cs_a.w, cs_a.w);
-                
+
                 // todo interpolate
                 // todo pixel shader
 
-                var r_color = new float4_mt(1);
+                var r_color = new float4_mt(1, 1, 1, 0.5f);
 
                 // todo depth
 
                 if (rt_color != null)
                 {
-                    // todo blend
-
-                    if (active_lanes.lane_all())
+                    if (state.BlendEnable)
                     {
-                        rt_color.QuadQuadStore(z_index_first, r_color);
+                        Blend(rt_color, in state, z_index_first, r_color, active_lanes);
                     }
                     else
                     {
-                        var c = rt_color.QuadQuadLoad(z_index_first);
-                        var color = math_mt.select(active_lanes, r_color, c);
-                        rt_color.QuadQuadStore(z_index_first, color);
+                        if (active_lanes.lane_all())
+                        {
+                            rt_color.QuadQuadStore(z_index_first, r_color);
+                        }
+                        else
+                        {
+                            var c = rt_color.QuadQuadLoad(z_index_first);
+                            var color = math_mt.select(active_lanes, r_color, c);
+                            rt_color.QuadQuadStore(z_index_first, color);
+                        }
                     }
                 }
 
                 return;
+
+                #region Rasterization
 
                 [MethodImpl(256 | 512)]
                 static float_mt Edge(float2_mt a, float2_mt b, float2_mt p)
@@ -375,6 +390,137 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
                     return is_in;
                 }
+
+                #endregion
+
+                #region Blend
+
+                [MethodImpl(256 | 512)]
+                static void Blend(
+                    SoftTexture rt,
+                    in SoftGraphicPipelineState state,
+                    uint index,
+                    float4_mt src,
+                    b32_mt active_lanes
+                )
+                {
+                    var all_active = active_lanes.lane_all();
+
+                    var need_dst_color = !all_active || state.SrcBlend.NeedFetchDst(false, src) || state.DstBlend.NeedFetchDst(true, src);
+                    var need_dst_alpha = !all_active || state.SrcAlphaBlend.NeedFetchDst(false, src) || state.DstAlphaBlend.NeedFetchDst(true, src);
+                    var dst_color = need_dst_color ? rt.QuadQuadLoadRGB(index) : default;
+                    var dst_alpha = need_dst_alpha ? rt.QuadQuadLoad(index, SoftColorChannel.A) : default;
+                    var dst = new float4_mt(dst_color, dst_alpha);
+
+                    var rsc = ApplyBlendColor(src.rgb, src, dst, state.SrcBlend);
+                    var rdc = ApplyBlendColor(dst.rgb, src, dst, state.DstBlend);
+                    var rsa = ApplyBlendAlpha(src.a, src, dst, state.SrcAlphaBlend);
+                    var rda = ApplyBlendAlpha(dst.a, src, dst, state.DstAlphaBlend);
+
+                    var rc = ApplyBlendOpColor(rsc, rdc, state.BlendOp);
+                    var ra = ApplyBlendOpAlpha(rsa, rda, state.AlphaBlendOp);
+
+                    var r = new float4_mt(rc, ra);
+
+                    if ((state.ColorBlendWriteMask & SoftColorWriteMask.RGBA) == SoftColorWriteMask.RGBA)
+                    {
+                        r = active_lanes.select(r, dst);
+                        rt.QuadQuadStore(index, r);
+                    }
+                    else if ((state.ColorBlendWriteMask & SoftColorWriteMask.RGB) == SoftColorWriteMask.RGB)
+                    {
+                        r.rgb = active_lanes.select(r.rgb, dst.rgb);
+                        rt.QuadQuadStoreRGB(index, r.rgb);
+                    }
+                    else if ((state.ColorBlendWriteMask & SoftColorWriteMask.R) != 0)
+                    {
+                        r.r = active_lanes.select(r.r, dst.r);
+                        rt.QuadQuadStore(index, r.r, SoftColorChannel.R);
+                    }
+                    else if ((state.ColorBlendWriteMask & SoftColorWriteMask.G) != 0)
+                    {
+                        r.g = active_lanes.select(r.g, dst.g);
+                        rt.QuadQuadStore(index, r.g, SoftColorChannel.G);
+                    }
+                    else if ((state.ColorBlendWriteMask & SoftColorWriteMask.B) != 0)
+                    {
+                        r.b = active_lanes.select(r.b, dst.b);
+                        rt.QuadQuadStore(index, r.b, SoftColorChannel.B);
+                    }
+                    else if ((state.ColorBlendWriteMask & SoftColorWriteMask.A) != 0)
+                    {
+                        r.a = active_lanes.select(r.a, dst.a);
+                        rt.QuadQuadStore(index, r.a, SoftColorChannel.A);
+                    }
+                }
+
+                #region ApplyBlend
+
+                [MethodImpl(256 | 512)]
+                static float3_mt ApplyBlendColor(float3_mt self, float4_mt src, float4_mt dst, SoftBlend blend) => blend switch
+                {
+                    SoftBlend.None => self,
+                    SoftBlend.Zero => default,
+                    SoftBlend.One => self,
+                    SoftBlend.SrcColor => self * src.rgb,
+                    SoftBlend.InvSrcColor => self * (float3_mt.One - src.rgb),
+                    SoftBlend.SrcAlpha => self * src.a,
+                    SoftBlend.InvSrcAlpha => self * (1 - src.a),
+                    SoftBlend.DstAlpha => self * dst.a,
+                    SoftBlend.InvDstAlpha => self * (1 - dst.a),
+                    SoftBlend.DstColor => self * dst.rgb,
+                    SoftBlend.InvDstColor => self * (float3_mt.One - dst.rgb),
+                    _ => throw new ArgumentOutOfRangeException(nameof(blend), blend, null)
+                };
+
+                [MethodImpl(256 | 512)]
+                static float_mt ApplyBlendAlpha(float_mt self, float4_mt src, float4_mt dst, SoftBlend blend) => blend switch
+                {
+                    SoftBlend.None => self,
+                    SoftBlend.Zero => default,
+                    SoftBlend.One => self,
+                    SoftBlend.SrcColor => self * src.r,
+                    SoftBlend.InvSrcColor => self * (1 - src.r),
+                    SoftBlend.SrcAlpha => self * src.a,
+                    SoftBlend.InvSrcAlpha => self * (1 - src.a),
+                    SoftBlend.DstAlpha => self * dst.a,
+                    SoftBlend.InvDstAlpha => self * (1 - dst.a),
+                    SoftBlend.DstColor => self * dst.r,
+                    SoftBlend.InvDstColor => self * (1 - dst.r),
+                    _ => throw new ArgumentOutOfRangeException(nameof(blend), blend, null)
+                };
+
+                #endregion
+
+                #region ApplyBlendOp
+
+                [MethodImpl(256 | 512)]
+                static float3_mt ApplyBlendOpColor(float3_mt src, float3_mt dst, SoftBlendOp op) => op switch
+                {
+                    SoftBlendOp.None => src,
+                    SoftBlendOp.Add => src + dst,
+                    SoftBlendOp.Sub => src - dst,
+                    SoftBlendOp.RevSub => dst - src,
+                    SoftBlendOp.Min => math_mt.min(src, dst),
+                    SoftBlendOp.Max => math_mt.max(src, dst),
+                    _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+                };
+
+                [MethodImpl(256 | 512)]
+                static float_mt ApplyBlendOpAlpha(float_mt src, float_mt dst, SoftBlendOp op) => op switch
+                {
+                    SoftBlendOp.None => src,
+                    SoftBlendOp.Add => src + dst,
+                    SoftBlendOp.Sub => src - dst,
+                    SoftBlendOp.RevSub => dst - src,
+                    SoftBlendOp.Min => math_mt.min(src, dst),
+                    SoftBlendOp.Max => math_mt.max(src, dst),
+                    _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+                };
+
+                #endregion
+
+                #endregion
             }
         );
     }

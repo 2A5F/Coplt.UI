@@ -4,24 +4,43 @@ using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
 
-public ref struct SoftRefMesh(
-    ReadOnlySpan<int> Indices_A,
-    ReadOnlySpan<int> Indices_B,
-    ReadOnlySpan<int> Indices_C,
-    ReadOnlySpan<float> Position_ClipSpace_X,
-    ReadOnlySpan<float> Position_ClipSpace_Y,
-    ReadOnlySpan<float> Position_ClipSpace_Z,
-    ReadOnlySpan<float> Position_ClipSpace_W
-) : ISoftMeshData
+public ref struct SoftRefMesh : ISoftMeshData
 {
-    public ReadOnlySpan<int> Indices_A = Indices_A;
-    public ReadOnlySpan<int> Indices_B = Indices_B;
-    public ReadOnlySpan<int> Indices_C = Indices_C;
+    public ReadOnlySpan<int> Indices_A;
+    public ReadOnlySpan<int> Indices_B;
+    public ReadOnlySpan<int> Indices_C;
 
-    public ReadOnlySpan<float> Position_ClipSpace_X = Position_ClipSpace_X;
-    public ReadOnlySpan<float> Position_ClipSpace_Y = Position_ClipSpace_Y;
-    public ReadOnlySpan<float> Position_ClipSpace_Z = Position_ClipSpace_Z;
-    public ReadOnlySpan<float> Position_ClipSpace_W = Position_ClipSpace_W;
+    public ReadOnlySpan<float> Position_ClipSpace_X;
+    public ReadOnlySpan<float> Position_ClipSpace_Y;
+    public ReadOnlySpan<float> Position_ClipSpace_Z;
+    public ReadOnlySpan<float> Position_ClipSpace_W;
+
+    public SoftRefMesh(
+        ReadOnlySpan<int> Indices_A,
+        ReadOnlySpan<int> Indices_B,
+        ReadOnlySpan<int> Indices_C,
+        ReadOnlySpan<float> Position_ClipSpace_X,
+        ReadOnlySpan<float> Position_ClipSpace_Y,
+        ReadOnlySpan<float> Position_ClipSpace_Z,
+        ReadOnlySpan<float> Position_ClipSpace_W
+    )
+    {
+        if (Indices_A.Length != Indices_B.Length || Indices_A.Length != Indices_C.Length)
+            throw new ArgumentException("Indices length not same");
+        if (
+            Position_ClipSpace_X.Length != Position_ClipSpace_Y.Length
+            || Position_ClipSpace_X.Length != Position_ClipSpace_Z.Length
+            || Position_ClipSpace_X.Length != Position_ClipSpace_W.Length
+        ) throw new ArgumentException("Position ClipSpace length not same");
+
+        this.Indices_A = Indices_A;
+        this.Indices_B = Indices_B;
+        this.Indices_C = Indices_C;
+        this.Position_ClipSpace_X = Position_ClipSpace_X;
+        this.Position_ClipSpace_Y = Position_ClipSpace_Y;
+        this.Position_ClipSpace_Z = Position_ClipSpace_Z;
+        this.Position_ClipSpace_W = Position_ClipSpace_W;
+    }
 
     [MethodImpl(256 | 512)]
     private static unsafe int_mt LoadIndex(int index, ReadOnlySpan<int> span)
