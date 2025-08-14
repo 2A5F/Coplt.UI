@@ -66,7 +66,13 @@ public class TestDraw
         });
     }
 
-    public struct Pipeline : ISoftGraphicPipeline
+    public ref struct PixelInput
+    {
+        public float4_mt Position_CS;
+        public float3_mt Color;
+    }
+
+    public struct Pipeline : ISoftGraphicPipelineState, ISoftPixelShader<SoftRefMesh, PixelInput, float4_mt>
     {
         private static readonly SoftGraphicPipelineState s_state = new()
         {
@@ -76,6 +82,23 @@ public class TestDraw
             BlendOp = SoftBlendOp.Add,
         };
         public ref readonly SoftGraphicPipelineState State => ref s_state;
+
+        public static bool HasDepth => false;
+        public static bool HasStencil => false;
+
+        public PixelInput CreateInput(ref SoftRefMesh mesh, in InterpolateContext ctx, in PixelBasicData data) => new()
+        {
+            Position_CS = ctx.InterpolateClipSpace(data.cs_a, data.cs_a, data.cs_c),
+            Color = ctx.PerspectiveInterpolate(
+                new float3_mt(0.9f, 0.2f, 0.2f),
+                new float3_mt(0.2f, 0.9f, 0.2f),
+                new float3_mt(0.2f, 0.2f, 0.9f)
+            ),
+        };
+
+        public float4_mt GetColor(in float4_mt output) => output;
+        public float_mt GetDepth(in float4_mt output) => throw new NotSupportedException();
+        public uint_mt GetStencil(in float4_mt output) => throw new NotSupportedException();
     }
 
     [Test]
@@ -98,7 +121,12 @@ public class TestDraw
                 [1, 1, 1],
                 [1, 1, 1]
             ),
-            new Pipeline()
+            new Pipeline(),
+            static (ref Pipeline _, SoftLaneContext ctx, scoped PixelInput input) =>
+            {
+                var color = input.Color;
+                return new float4_mt(color, 0.95f);
+            }
         );
 
         using Image<Rgba32> img = new(1024, 1024);

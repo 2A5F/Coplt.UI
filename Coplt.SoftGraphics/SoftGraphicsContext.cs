@@ -111,11 +111,13 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
     /// <b>Not an async operation, will block until complete</b>
     /// </summary>
     [MethodImpl(512)]
-    public unsafe void Draw<TMesh, TPipeline>(
-        TMesh Mesh, TPipeline Pipeline
+    public unsafe void Draw<TMesh, TPipeline, TInput, TOutput>(
+        TMesh Mesh, TPipeline Pipeline, SoftPixelShader<TPipeline, TInput, TOutput> PixelShader
     )
         where TMesh : ISoftMeshData, allows ref struct
-        where TPipeline : ISoftGraphicPipeline, allows ref struct
+        where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh, TInput, TOutput>, allows ref struct
+        where TInput : allows ref struct
+        where TOutput : allows ref struct
     {
         if (
             m_viewport.Width < float.Epsilon || m_viewport.Height < float.Epsilon ||
@@ -197,7 +199,7 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                         PosC_SS_Z = ss_c.z[c],
                     };
 
-                    DispatchPixel(&task, &Pipeline);
+                    DispatchPixel(&Mesh, &task, &Pipeline, PixelShader);
                 }
             }
         }
@@ -266,17 +268,24 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
     }
 
     [MethodImpl(512)]
-    private unsafe void DispatchPixel<TPipeline>(PixelTask* pt, TPipeline* pipeline)
-        where TPipeline : ISoftGraphicPipeline, allows ref struct
+    private unsafe void DispatchPixel<TMesh, TPipeline, TInput, TOutput>(
+        TMesh* mesh, PixelTask* pt, TPipeline* pipeline, SoftPixelShader<TPipeline, TInput, TOutput> PixelShader
+    )
+        where TMesh : ISoftMeshData, allows ref struct
+        where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh, TInput, TOutput>, allows ref struct
+        where TInput : allows ref struct
+        where TOutput : allows ref struct
     {
         var width = m_rt_color?.Width ?? m_rt_depth_stencil!.Width;
         var height = m_rt_color?.Height ?? m_rt_depth_stencil!.Height;
 
         m_job_scheduler.Dispatch(
             pt->MaxX - pt->MinX, pt->MaxY - pt->MinX,
-            (p_pt: (nuint)pt, pipeline: (nuint)pipeline, m_rt_color, m_rt_depth_stencil, w: width + 0.5f, h: height + 0.5f),
+            (PixelShader, mesh: (nuint)mesh, p_pt: (nuint)pt, pipeline: (nuint)pipeline, m_rt_color, m_rt_depth_stencil, w: width + 0.5f, h: height + 0.5f),
             [MethodImpl(512)] static (ctx, x, y) =>
             {
+                var PixelShader = ctx.PixelShader;
+                var mesh = (TMesh*)ctx.mesh;
                 var pt = (PixelTask*)ctx.p_pt;
                 var pipeline = (TPipeline*)ctx.pipeline;
                 ref readonly var state = ref pipeline->State;
@@ -289,28 +298,36 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                 var start_y = qq_y * 4;
 
                 var s_pos = new float2_mt(start_x, start_y) + SoftGraphicsUtils.ZOrderOffMt;
-                var ss_a = new float2_mt(pt->PosA_SS_X, pt->PosA_SS_Y);
-                var ss_b = new float2_mt(pt->PosB_SS_X, pt->PosB_SS_Y);
-                var ss_c = new float2_mt(pt->PosC_SS_X, pt->PosC_SS_Y);
+                var ss_a = new float3_mt(pt->PosA_SS_X, pt->PosA_SS_Y, pt->PosA_SS_Z);
+                var ss_b = new float3_mt(pt->PosB_SS_X, pt->PosB_SS_Y, pt->PosB_SS_Z);
+                var ss_c = new float3_mt(pt->PosC_SS_X, pt->PosC_SS_Y, pt->PosC_SS_Z);
 
                 var ic = new InterpolateContext();
                 var active_lanes = (s_pos < new float2_mt(ctx.w, ctx.h)).all();
-                active_lanes &= PointInTriangle(s_pos, ss_a, ss_b, ss_c, ref ic);
+                active_lanes &= PointInTriangle(s_pos, ss_a.xy, ss_b.xy, ss_c.xy, ref ic);
                 if (!active_lanes.lane_any()) return;
 
-                var z_index_first = SoftGraphicsUtils.EncodeZOrder(start_x, start_y);
-                var z_index = new uint_mt(z_index_first) + SoftGraphicsUtils.IncMt;
+                var zz_index_first = SoftGraphicsUtils.EncodeZOrder(start_x, start_y);
+                var zz_index = new uint_mt(zz_index_first) + SoftGraphicsUtils.IncMt;
 
                 var cs_a = new float4_mt(pt->PosA_CS_X, pt->PosA_CS_Y, pt->PosA_CS_Z, pt->PosA_CS_W);
                 var cs_b = new float4_mt(pt->PosB_CS_X, pt->PosB_CS_Y, pt->PosB_CS_Z, pt->PosB_CS_W);
                 var cs_c = new float4_mt(pt->PosC_CS_X, pt->PosC_CS_Y, pt->PosC_CS_Z, pt->PosC_CS_W);
 
-                ic.Init(cs_a.w, cs_a.w, cs_a.w);
+                ic.Init(cs_a.w, cs_b.w, cs_c.w);
 
-                // todo interpolate
-                // todo pixel shader
+                var pbd = new PixelBasicData(
+                    zz_index,
+                    active_lanes,
+                    cs_a, cs_b, cs_c,
+                    ss_a, ss_b, ss_c
+                );
 
-                var r_color = new float4_mt(1, 1, 1, 0.5f);
+                var pixel_ctx = new SoftLaneContext();
+                var pixel_input = pipeline->CreateInput(ref *mesh, in ic, in pbd);
+                var pixel_output = PixelShader(ref *pipeline, pixel_ctx, pixel_input);
+
+                var r_color = pipeline->GetColor(in pixel_output);
 
                 // todo depth
 
@@ -318,19 +335,19 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                 {
                     if (state.BlendEnable)
                     {
-                        Blend(rt_color, in state, z_index_first, r_color, active_lanes);
+                        Blend(rt_color, in state, zz_index_first, r_color, active_lanes);
                     }
                     else
                     {
                         if (active_lanes.lane_all())
                         {
-                            rt_color.QuadQuadStore(z_index_first, r_color);
+                            rt_color.QuadQuadStore(zz_index_first, r_color);
                         }
                         else
                         {
-                            var c = rt_color.QuadQuadLoad(z_index_first);
+                            var c = rt_color.QuadQuadLoad(zz_index_first);
                             var color = math_mt.select(active_lanes, r_color, c);
-                            rt_color.QuadQuadStore(z_index_first, color);
+                            rt_color.QuadQuadStore(zz_index_first, color);
                         }
                     }
                 }

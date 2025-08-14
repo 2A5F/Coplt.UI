@@ -4,7 +4,7 @@ using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
 
-public interface ISoftGraphicPipeline
+public interface ISoftGraphicPipelineState
 {
     public ref readonly SoftGraphicPipelineState State { get; }
 }
