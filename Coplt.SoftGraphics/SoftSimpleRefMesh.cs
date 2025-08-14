@@ -4,7 +4,7 @@ using Coplt.Mathematics.Simt;
 
 namespace Coplt.SoftGraphics;
 
-public ref struct SoftRefMesh : ISoftMeshData
+public ref struct SoftSimpleRefMesh : ISoftMeshData
 {
     public ReadOnlySpan<int> Indices_A;
     public ReadOnlySpan<int> Indices_B;
@@ -15,7 +15,7 @@ public ref struct SoftRefMesh : ISoftMeshData
     public ReadOnlySpan<float> Position_ClipSpace_Z;
     public ReadOnlySpan<float> Position_ClipSpace_W;
 
-    public SoftRefMesh(
+    public SoftSimpleRefMesh(
         ReadOnlySpan<int> Indices_A,
         ReadOnlySpan<int> Indices_B,
         ReadOnlySpan<int> Indices_C,

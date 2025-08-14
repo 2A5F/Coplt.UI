@@ -366,9 +366,9 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                 }
 
                 [MethodImpl(256 | 512)]
-                static b32_mt IsTopLeft(float2_mt a, float2_mt b)
+                static b32_mt IsTopLeft(float2_mt a, float2_mt b, float_mt s)
                 {
-                    var e = b - a;
+                    var e = (b - a) * s;
                     return (e.y < 0f) | (e.y == 0f & e.x > 0f);
                 }
 
@@ -390,9 +390,9 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
                     var e1 = Edge(c, a, p) * s;
                     var e2 = Edge(a, b, p) * s;
 
-                    var tl0 = IsTopLeft(b, c);
-                    var tl1 = IsTopLeft(c, a);
-                    var tl2 = IsTopLeft(a, b);
+                    var tl0 = IsTopLeft(b, c, s);
+                    var tl1 = IsTopLeft(c, a, s);
+                    var tl2 = IsTopLeft(a, b, s);
 
                     var in0 = (e0 > ep) | (e0.abs() <= ep & tl0);
                     var in1 = (e1 > ep) | (e1.abs() <= ep & tl1);

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Mathematics;
 using Coplt.Mathematics.Simt;
@@ -72,7 +73,7 @@ public class TestDraw
         public float3_mt Color;
     }
 
-    public struct Pipeline : ISoftGraphicPipelineState, ISoftPixelShader<SoftRefMesh, PixelInput, float4_mt>
+    public struct Pipeline : ISoftGraphicPipelineState, ISoftPixelShader<SoftSimpleRefMesh, PixelInput, float4_mt>
     {
         private static readonly SoftGraphicPipelineState s_state = new()
         {
@@ -86,7 +87,7 @@ public class TestDraw
         public static bool HasDepth => false;
         public static bool HasStencil => false;
 
-        public PixelInput CreateInput(ref SoftRefMesh mesh, in InterpolateContext ctx, in PixelBasicData data) => new()
+        public PixelInput CreateInput(ref SoftSimpleRefMesh mesh, in InterpolateContext ctx, in PixelBasicData data) => new()
         {
             Position_CS = ctx.InterpolateClipSpace(data.cs_a, data.cs_a, data.cs_c),
             Color = ctx.PerspectiveInterpolate(
@@ -112,20 +113,20 @@ public class TestDraw
         ctx.SetViewport(new(0, 0, 1024, 1024, 0, 1));
         ctx.SetScissorRect(new(0, 0, 1024, 1024));
         ctx.Draw(
-            new SoftRefMesh(
-                [0],
-                [1],
-                [2],
-                [-0.5f, 0, 0.5f],
-                [-0.5f, 0.5f, -0.5f],
-                [1, 1, 1],
-                [1, 1, 1]
+            new SoftSimpleRefMesh(
+                [0, 2],
+                [1, 1],
+                [2, 3],
+                [-0.5f, 0.5f, -0.5f, 0.5f],
+                [-0.5f, -0.5f, 0.5f, 0.5f],
+                [1, 1, 1, 1],
+                [1, 1, 1, 1]
             ),
             new Pipeline(),
             static (ref Pipeline _, SoftLaneContext ctx, scoped PixelInput input) =>
             {
                 var color = input.Color;
-                return new float4_mt(color, 0.95f);
+                return new float4_mt(color, 0.75f);
             }
         );
 
@@ -138,4 +139,40 @@ public class TestDraw
         }
         img.SaveAsPng("./Test_Draw.png");
     }
+
+    // [Test, Repeat(100)]
+    // public void Test_Draw2()
+    // {
+    //     var ctx = new SoftGraphicsContext();
+    //     ctx.SetJobScheduler(SyncJobScheduler.Instance);
+    //     var rt = SoftTexture.Create(SoftTextureFormat.R8_G8_B8_A8_UNorm, 1024, 1024);
+    //     ctx.SetRenderTarget(rt);
+    //     ctx.ClearRenderTarget(new float4(0.89f, 0.56f, 0.24f, 1f));
+    //     ctx.SetViewport(new(0, 0, 1024, 1024, 0, 1));
+    //     ctx.SetScissorRect(new(0, 0, 1024, 1024));
+    //
+    //     var start = Stopwatch.GetTimestamp();
+    //
+    //     ctx.Draw(
+    //         new SoftRefMesh(
+    //             [0],
+    //             [1],
+    //             [2],
+    //             [-0.5f, -0.5f, 0.5f],
+    //             [-0.5f, 0.5f, -0.5f],
+    //             [1, 1, 1],
+    //             [1, 1, 1]
+    //         ),
+    //         new Pipeline(),
+    //         static (ref Pipeline _, SoftLaneContext ctx, scoped PixelInput input) =>
+    //         {
+    //             var color = input.Color;
+    //             return new float4_mt(color, 0.95f);
+    //         }
+    //     );
+    //
+    //     var end = Stopwatch.GetTimestamp();
+    //     var el = Stopwatch.GetElapsedTime(start, end);
+    //     Console.WriteLine($"{el} ; {el.TotalMilliseconds}");
+    // }
 }
