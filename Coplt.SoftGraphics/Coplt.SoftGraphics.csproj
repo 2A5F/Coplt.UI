@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <NoWarn>CS8500;CS0649</NoWarn>
+        <NoWarn>CS8500;CS0649;CS9080</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

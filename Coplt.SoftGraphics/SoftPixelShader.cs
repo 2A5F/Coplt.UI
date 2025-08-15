@@ -30,7 +30,7 @@ public interface ISoftPixelShader<TMesh, out TInput, TOutput>
         in PixelBasicData data
     );
 
-    public float4_mt GetColor(in TOutput output);
-    public float_mt GetDepth(in TOutput output);
-    public uint_mt GetStencil(in TOutput output);
+    public float4_mt GetColor(scoped in TOutput output);
+    public float_mt GetDepth(scoped in TOutput output);
+    public uint_mt GetStencil(scoped in TOutput output);
 }

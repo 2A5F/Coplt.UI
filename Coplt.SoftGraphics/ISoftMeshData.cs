@@ -4,6 +4,8 @@ namespace Coplt.SoftGraphics;
 
 public interface ISoftMeshData
 {
+    public uint MaxPrimitives { get; }
+    
     public uint NumClusters { get; }
 
     public uint NumPrimitives(uint Cluster);

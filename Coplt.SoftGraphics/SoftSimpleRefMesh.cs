@@ -67,6 +67,8 @@ public ref struct SoftSimpleRefMesh : ISoftMeshData
         return new(x, y, z, w);
     }
 
+    public uint MaxPrimitives => (uint)Indices_A.Length;
+
     public uint NumClusters
     {
         [MethodImpl(256 | 512)]
