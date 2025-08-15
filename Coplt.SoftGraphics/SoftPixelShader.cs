@@ -2,13 +2,6 @@
 
 namespace Coplt.SoftGraphics;
 
-public delegate TOutput SoftPixelShader<TPipeline, in TInput, out TOutput>(
-    ref TPipeline pipeline, SoftLaneContext ctx, scoped TInput input
-)
-    where TPipeline : allows ref struct
-    where TInput : allows ref struct
-    where TOutput : allows ref struct;
-
 public struct SoftLaneContext
 {
     public int_mt Index;
@@ -16,21 +9,16 @@ public struct SoftLaneContext
     public uint_mt QuadMask;
 }
 
-public interface ISoftPixelShader<TMesh, out TInput, TOutput>
+public interface ISoftPixelShader<TMesh>
     where TMesh : ISoftMeshData, allows ref struct
-    where TInput : allows ref struct
-    where TOutput : allows ref struct
 {
-    public static abstract bool HasDepth { get; }
-    public static abstract bool HasStencil { get; }
-
-    public TInput CreateInput(
+    public void Invoke(
         ref TMesh mesh,
-        in InterpolateContext ctx,
-        in PixelBasicData data
+        in InterpolateContext ic,
+        in SoftLaneContext lc,
+        in PixelBasicData data,
+        ref float4_mt output_color,
+        ref float_mt output_depth,
+        ref uint_mt output_stencil
     );
-
-    public float4_mt GetColor(scoped in TOutput output);
-    public float_mt GetDepth(scoped in TOutput output);
-    public uint_mt GetStencil(scoped in TOutput output);
 }

@@ -111,13 +111,11 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
     /// <b>Not an async operation, will block until complete</b>
     /// </summary>
     [MethodImpl(512)]
-    public unsafe void Draw<TMesh, TPipeline, TInput, TOutput>(
-        TMesh Mesh, TPipeline Pipeline, SoftPixelShader<TPipeline, TInput, TOutput> PixelShader
+    public unsafe void Draw<TMesh, TPipeline>(
+        TMesh Mesh, TPipeline Pipeline
     )
         where TMesh : ISoftMeshData, allows ref struct
-        where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh, TInput, TOutput>, allows ref struct
-        where TInput : allows ref struct
-        where TOutput : allows ref struct
+        where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh>, allows ref struct
     {
         if (
             m_viewport.Width < float.Epsilon || m_viewport.Height < float.Epsilon ||
@@ -151,10 +149,10 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
         if (triangle_count == 0) return;
 
-        DispatchTileContext<TMesh, TPipeline, TInput, TOutput> dtc = new(
-            Mesh, Pipeline, PixelShader, m_rt_color, m_rt_depth_stencil, triangles.Span[..triangle_count]
+        DispatchTileContext<TMesh, TPipeline> dtc = new(
+            Mesh, Pipeline, m_rt_color, m_rt_depth_stencil, triangles.Span[..triangle_count]
         );
-        Rasterizer<TMesh, TPipeline, TInput, TOutput>.DispatchTile(m_job_scheduler, &rc, &dtc);
+        Rasterizer<TMesh, TPipeline>.DispatchTile(m_job_scheduler, &rc, &dtc);
     }
 
     #endregion

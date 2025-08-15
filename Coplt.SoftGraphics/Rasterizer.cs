@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using Coplt.Mathematics;
@@ -48,19 +49,68 @@ internal struct TriangleContext(uint cluster, uint_mt index, b32_mt active_lanes
     [MethodImpl(512)]
     public bool Setup(in RasterizerContext rc)
     {
+        if (CheckVisible()) return true;
+        CalcScreenSpace(in rc);
+        if (CalcArea(in rc)) return true;
+        CalcAABB();
+        CalcTopLeft();
+        return false;
+    }
+
+    #endregion
+
+    #region Visible
+
+    [MethodImpl(512)]
+    private bool CheckVisible()
+    {
         active_lanes &= Visible(cs_a) | Visible(cs_b) | Visible(cs_c);
-        if (active_lanes.lane_all_false()) return true;
+        return active_lanes.lane_all_false();
+    }
 
-        ScreenSpaceCtx ss_ctx = new(in rc.viewport);
-        ss_a = ss_ctx.ToScreenSpace(cs_a);
-        ss_b = ss_ctx.ToScreenSpace(cs_b);
-        ss_c = ss_ctx.ToScreenSpace(cs_c);
+    [MethodImpl(256 | 512)]
+    private static b32_mt Visible(in float4_mt pos_cs)
+    {
+        var nw = -pos_cs.w;
+        var pw = pos_cs.w;
+        return pos_cs.x >= nw & pos_cs.x <= pw & pos_cs.y >= nw & pos_cs.y <= pw & pos_cs.z >= 0 & pos_cs.z <= pw;
+    }
 
-        var a = ss_a.xy;
-        var b = ss_b.xy;
-        var c = ss_c.xy;
+    #endregion
+
+    #region ScreenSpace
+
+    [MethodImpl(512)]
+    private void CalcScreenSpace(in RasterizerContext rc)
+    {
+        ToScreenSpace(out ss_a, in rc.viewport, in cs_a);
+        ToScreenSpace(out ss_b, in rc.viewport, in cs_b);
+        ToScreenSpace(out ss_c, in rc.viewport, in cs_c);
+    }
+
+    [MethodImpl(256 | 512)]
+    private static void ToScreenSpace(out float3_mt r, in SoftViewport viewport, in float4_mt pos_cs)
+    {
+        var ndc = pos_cs.xyz * (1f / pos_cs.w);
+        var x = math_mt.fam(viewport.TopLeftX, math_mt.fma(ndc.x, 0.5f, 0.5f), viewport.Width);
+        var y = math_mt.fam(viewport.TopLeftY, math_mt.fma(-ndc.y, 0.5f, 0.5f), viewport.Height);
+        var z = math_mt.fam(viewport.MinDepth, math_mt.fma(ndc.z, 0.5f, 0.5f), viewport.MaxDepth - viewport.MinDepth);
+        r = new(x, y, z);
+    }
+
+    #endregion
+
+    #region CheckArea
+
+    [MethodImpl(512)]
+    public bool CalcArea(in RasterizerContext rc)
+    {
+        ref var a = ref Unsafe.As<float3_mt, float2_mt>(ref ss_a);
+        ref var b = ref Unsafe.As<float3_mt, float2_mt>(ref ss_b);
+        ref var c = ref Unsafe.As<float3_mt, float2_mt>(ref ss_c);
 
         var area = Rasterizer.Edge(a, b, c);
+
         active_lanes = area.isFinite() & (area.abs() > float.Epsilon);
         active_lanes &= rc.state.CullMode switch
         {
@@ -73,61 +123,45 @@ internal struct TriangleContext(uint cluster, uint_mt index, b32_mt active_lanes
         inv_area = 1 / area.abs();
         sign = math_mt.select(area > 0f, 1f, -1f);
 
-        min = a.min(b).min(c);
-        max = a.max(b).max(c);
-
-        tla = TopLeft(b, c, sign);
-        tlb = TopLeft(c, a, sign);
-        tlc = TopLeft(a, b, sign);
-
         return false;
     }
 
     #endregion
 
-    #region Visible
+    #region CalcAABB
 
-    [MethodImpl(256 | 512)]
-    private static b32_mt Visible(float4_mt pos_cs)
+    [MethodImpl(512)]
+    private void CalcAABB()
     {
-        var nw = -pos_cs.w;
-        var pw = pos_cs.w;
-        return pos_cs.x >= nw & pos_cs.x <= pw & pos_cs.y >= nw & pos_cs.y <= pw & pos_cs.z >= 0 & pos_cs.z <= pw;
-    }
+        ref var a = ref Unsafe.As<float3_mt, float2_mt>(ref ss_a);
+        ref var b = ref Unsafe.As<float3_mt, float2_mt>(ref ss_b);
+        ref var c = ref Unsafe.As<float3_mt, float2_mt>(ref ss_c);
 
-    #endregion
-
-    #region ScreenSpace
-
-    private readonly struct ScreenSpaceCtx(in SoftViewport viewport)
-    {
-        private readonly float_mt TopLeftX = viewport.TopLeftX;
-        private readonly float_mt TopLeftY = viewport.TopLeftY;
-        private readonly float_mt Width = viewport.Width;
-        private readonly float_mt Height = viewport.Height;
-        private readonly float_mt MinDepth = viewport.MinDepth;
-        private readonly float_mt DepthRange = viewport.MaxDepth - viewport.MinDepth;
-
-        [MethodImpl(256 | 512)]
-        public float3_mt ToScreenSpace(float4_mt pos_cs)
-        {
-            var ndc = pos_cs.xyz * (1f / pos_cs.w);
-            var x = math_mt.fam(TopLeftX, math_mt.fma(ndc.x, 0.5f, 0.5f), Width);
-            var y = math_mt.fam(TopLeftY, math_mt.fma(-ndc.y, 0.5f, 0.5f), Height);
-            var z = math_mt.fam(MinDepth, math_mt.fma(ndc.z, 0.5f, 0.5f), DepthRange);
-            return new(x, y, z);
-        }
+        min = a.min(b).min(c);
+        max = a.max(b).max(c);
     }
 
     #endregion
 
     #region TopLeft
 
+    [MethodImpl(512)]
+    private void CalcTopLeft()
+    {
+        ref var a = ref Unsafe.As<float3_mt, float2_mt>(ref ss_a);
+        ref var b = ref Unsafe.As<float3_mt, float2_mt>(ref ss_b);
+        ref var c = ref Unsafe.As<float3_mt, float2_mt>(ref ss_c);
+
+        TopLeft(out tla, b, c, sign);
+        TopLeft(out tlb, c, a, sign);
+        TopLeft(out tlc, a, b, sign);
+    }
+
     [MethodImpl(256 | 512)]
-    private static b32_mt TopLeft(float2_mt a, float2_mt b, float_mt s)
+    private static void TopLeft(out b32_mt r, in float2_mt a, in float2_mt b, in float_mt s)
     {
         var e = (b - a).chgsign(s);
-        return (e.y < 0f) | (e.y == 0f & e.x > 0f);
+        r = (e.y < 0f) | (e.y == 0f & e.x > 0f);
     }
 
     #endregion
@@ -135,57 +169,52 @@ internal struct TriangleContext(uint cluster, uint_mt index, b32_mt active_lanes
     #region AABBOverlap
 
     [MethodImpl(256 | 512)]
-    public b32_mt AABBOverlap(float2_mt box_min, float2_mt box_max) => (max >= box_min).all() & (min <= box_max).all();
+    public readonly b32_mt AABBOverlap(in float2_mt box_min, in float2_mt box_max) => (max >= box_min).all() & (min <= box_max).all();
 
     #endregion
 
     #region Slice
 
     [MethodImpl(256 | 512)]
-    public readonly TriangleSlice At(int lane) => new()
+    public readonly void LoadSlice(ref TriangleSlice r_, int lane_)
     {
-        cs_a = new(
-            new(Vector512.Shuffle(cs_a.x.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_a.y.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_a.z.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_a.w.vector, Vector512.Create(lane)))
-        ),
-        cs_b = new(
-            new(Vector512.Shuffle(cs_b.x.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_b.y.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_b.z.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_b.w.vector, Vector512.Create(lane)))
-        ),
-        cs_c = new(
-            new(Vector512.Shuffle(cs_c.x.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_c.y.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_c.z.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(cs_c.w.vector, Vector512.Create(lane)))
-        ),
+        ref var r = ref r_;
+        var lane = lane_;
 
-        ss_a = new(
-            new(Vector512.Shuffle(ss_a.x.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(ss_a.y.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(ss_a.z.vector, Vector512.Create(lane)))
-        ),
-        ss_b = new(
-            new(Vector512.Shuffle(ss_b.x.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(ss_b.y.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(ss_b.z.vector, Vector512.Create(lane)))
-        ),
-        ss_c = new(
-            new(Vector512.Shuffle(ss_c.x.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(ss_c.y.vector, Vector512.Create(lane))),
-            new(Vector512.Shuffle(ss_c.z.vector, Vector512.Create(lane)))
-        ),
+        r.cs_a.x = cs_a.x[lane];
+        r.cs_a.y = cs_a.y[lane];
+        r.cs_a.z = cs_a.z[lane];
+        r.cs_a.w = cs_a.w[lane];
 
-        sign = new(Vector512.Shuffle(sign.vector, Vector512.Create(lane))),
-        inv_area = new(Vector512.Shuffle(inv_area.vector, Vector512.Create(lane))),
+        r.cs_b.x = cs_b.x[lane];
+        r.cs_b.y = cs_b.y[lane];
+        r.cs_b.z = cs_b.z[lane];
+        r.cs_b.w = cs_b.w[lane];
 
-        tla = new(Vector512.Shuffle(tla.vector, Vector512.Create((uint)lane))),
-        tlb = new(Vector512.Shuffle(tlb.vector, Vector512.Create((uint)lane))),
-        tlc = new(Vector512.Shuffle(tlc.vector, Vector512.Create((uint)lane))),
-    };
+        r.cs_c.x = cs_c.x[lane];
+        r.cs_c.y = cs_c.y[lane];
+        r.cs_c.z = cs_c.z[lane];
+        r.cs_c.w = cs_c.w[lane];
+
+        r.ss_a.x = ss_a.x[lane];
+        r.ss_a.y = ss_a.y[lane];
+        r.ss_a.z = ss_a.z[lane];
+
+        r.ss_b.x = ss_b.x[lane];
+        r.ss_b.y = ss_b.y[lane];
+        r.ss_b.z = ss_b.z[lane];
+
+        r.ss_c.x = ss_c.x[lane];
+        r.ss_c.y = ss_c.y[lane];
+        r.ss_c.z = ss_c.z[lane];
+
+        r.sign = sign[lane];
+        r.inv_area = inv_area[lane];
+
+        r.tla = tla[lane];
+        r.tlb = tlb[lane];
+        r.tlc = tlc[lane];
+    }
 
     #endregion
 }
@@ -238,22 +267,18 @@ internal struct TriangleSlice
 }
 
 [StructLayout(LayoutKind.Auto)]
-internal ref struct DispatchTileContext<TMesh, TPipeline, TInput, TOutput>(
+internal ref struct DispatchTileContext<TMesh, TPipeline>(
     TMesh Mesh,
     TPipeline Pipeline,
-    SoftPixelShader<TPipeline, TInput, TOutput> PixelShader,
     SoftTexture? RtColor,
     SoftTexture? RtDepthStencil,
     ReadOnlySpan<TriangleContext> Triangles
 )
     where TMesh : ISoftMeshData, allows ref struct
-    where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh, TInput, TOutput>, allows ref struct
-    where TInput : allows ref struct
-    where TOutput : allows ref struct
+    where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh>, allows ref struct
 {
     public TMesh Mesh = Mesh;
     public TPipeline Pipeline = Pipeline;
-    public SoftPixelShader<TPipeline, TInput, TOutput> PixelShader = PixelShader;
     public SoftTexture? RtColor = RtColor;
     public SoftTexture? RtDepthStencil = RtDepthStencil;
     public uint Width = RtColor?.Width ?? RtDepthStencil!.Width;
@@ -261,17 +286,17 @@ internal ref struct DispatchTileContext<TMesh, TPipeline, TInput, TOutput>(
     public ReadOnlySpan<TriangleContext> Triangles = Triangles;
 }
 
-internal abstract unsafe class Rasterizer<TMesh, TPipeline, TInput, TOutput> : Rasterizer
+internal abstract unsafe class Rasterizer<TMesh, TPipeline> : Rasterizer
     where TMesh : ISoftMeshData, allows ref struct
-    where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh, TInput, TOutput>, allows ref struct
-    where TInput : allows ref struct
-    where TOutput : allows ref struct
+    where TPipeline : ISoftGraphicPipelineState, ISoftPixelShader<TMesh>, allows ref struct
 {
+    #region TileTask
+
     [MethodImpl(256 | 512)]
     public static void DispatchTile(
         AJobScheduler scheduler,
         RasterizerContext* rc,
-        DispatchTileContext<TMesh, TPipeline, TInput, TOutput>* dtc
+        DispatchTileContext<TMesh, TPipeline>* dtc
     )
     {
         var w = (dtc->Width + (TileSize - 1)) / TileSize;
@@ -283,110 +308,100 @@ internal abstract unsafe class Rasterizer<TMesh, TPipeline, TInput, TOutput> : R
     private static void TileTask((nuint rc, nuint dtc) ctx, uint x, uint y)
     {
         var rc = (RasterizerContext*)ctx.rc;
-        var dtc = (DispatchTileContext<TMesh, TPipeline, TInput, TOutput>*)ctx.dtc;
+        var dtc = (DispatchTileContext<TMesh, TPipeline>*)ctx.dtc;
         TileTask(in *rc, ref *dtc, x, y);
     }
 
-    [MethodImpl(256 | 512)]
+
+    [MethodImpl(512)]
     private static void TileTask(
         in RasterizerContext rc,
-        ref DispatchTileContext<TMesh, TPipeline, TInput, TOutput> dtc,
+        ref DispatchTileContext<TMesh, TPipeline> dtc,
         uint x, uint y
     )
     {
-        var pixel_x = x * TileSize;
-        var pixel_y = y * TileSize;
-        var end_x = pixel_x + TileSize + 1;
-        var end_y = pixel_y + TileSize + 1;
-        var tile_zi = SoftGraphicsUtils.EncodeZOrder(pixel_x, pixel_y);
-
-        var box_min = new float2_mt(pixel_x, pixel_y);
-        var box_max = new float2_mt(end_x, end_y);
-
-        var size = new float2_mt(dtc.Width, dtc.Height);
+        Unsafe.SkipInit(out TileTaskContext tc);
+        tc.Init(x, y, dtc.Width, dtc.Height);
 
         foreach (ref readonly var triangle in dtc.Triangles)
         {
-            var active_lanes = triangle.active_lanes;
-            active_lanes &= triangle.AABBOverlap(box_min, box_max);
-            if (active_lanes.lane_all_false()) continue;
+            if (TileGenActiveLanes(out var active_lanes, in tc, in triangle)) continue;
 
             for (var c = 0; c < 16; c++)
             {
-                if (!active_lanes[c]) continue;
-                var ts = triangle.At(c);
+                if (!CheckLane(active_lanes, c)) continue;
+                TriangleSlice ts;
+                triangle.LoadSlice(ref *&ts, c);
                 for (var zi = 0u; zi < TileSize * TileSize; zi += 16)
                 {
                     PixelTask(
                         in rc, ref dtc,
-                        pixel_x, pixel_y, tile_zi, zi,
-                        c, in triangle, in ts,
-                        size
+                        tc.pixel_x, tc.pixel_y, tc.tile_zi, zi,
+                        in triangle, in ts,
+                        tc.size
                     );
                 }
             }
         }
     }
 
-    [MethodImpl(256 | 512)]
+    #endregion
+
+    #region PixelTask
+
+    [MethodImpl(512)]
     private static void PixelTask(
         in RasterizerContext rc,
-        ref DispatchTileContext<TMesh, TPipeline, TInput, TOutput> dtc,
+        ref DispatchTileContext<TMesh, TPipeline> dtc,
         uint tx, uint ty, uint tzi, uint lzi,
-        int c, in TriangleContext tc, in TriangleSlice ts,
-        float2_mt size
+        in TriangleContext tc, in TriangleSlice ts,
+        in float2_mt size
     )
     {
-        var (ox, oy) = SoftGraphicsUtils.DecodeZOrder(lzi);
-        var zis = tzi + lzi;
-        var zi = zis + SoftGraphicsUtils.IncMt;
-        var pos = new float2_mt(tx + ox, ty + oy) + SoftGraphicsUtils.ZOrderOffMt;
-        InterpolateContext ic = new();
+        Unsafe.SkipInit(out PixelTaskContext ptc);
+        ptc.Init(tx, ty, tzi, lzi);
+        if (ptc.InitActiveLanes(in ts, in size)) return;
+        ptc.ic.Init(in ts);
 
-        var active_lanes = (pos < size).all();
-        if (active_lanes.lane_all_false()) return;
+        Unsafe.SkipInit(out PixelBasicData pbd);
+        pbd.ptc = ref ptc;
+        pbd.ts = ref ts;
 
-        active_lanes &= ts.PointInTriangle(ref ic, pos);
-        if (active_lanes.lane_all_false()) return;
-
-        ic.Init(ts.cs_a.w, ts.cs_b.w, ts.cs_c.w);
-
-        var pbd = new PixelBasicData(
-            zi,
-            active_lanes,
-            ts.cs_a, ts.cs_b, ts.cs_c,
-            ts.ss_a, ts.ss_b, ts.ss_c
+        Unsafe.SkipInit(out float4_mt output_color);
+        Unsafe.SkipInit(out float_mt output_depth);
+        Unsafe.SkipInit(out uint_mt output_stencil);
+        InvokePixelShader(
+            ref output_color, ref output_depth, ref output_stencil,
+            ref dtc, in ptc, in pbd
         );
 
-        var pixel_ctx = new SoftLaneContext();
-        var pixel_input = dtc.Pipeline.CreateInput(ref dtc.Mesh, in ic, in pbd);
-        var pixel_output = dtc.PixelShader(ref dtc.Pipeline, pixel_ctx, pixel_input);
-
-        var r_color = dtc.Pipeline.GetColor(in pixel_output);
-        
         // todo depth
 
-        if (dtc.RtColor != null)
+        if (dtc.RtColor != null & rc.state.PixelWriteColor) // & is faster then &&
         {
-            if (rc.state.BlendEnable)
-            {
-                Blend(dtc.RtColor, in rc.state, zis, r_color, active_lanes);
-            }
-            else
-            {
-                if (active_lanes.lane_all())
-                {
-                    dtc.RtColor.QuadQuadStore(zis, r_color);
-                }
-                else
-                {
-                    var dst = dtc.RtColor.QuadQuadLoad(zis);
-                    var color = math_mt.select(active_lanes, r_color, dst);
-                    dtc.RtColor.QuadQuadStore(zis, color);
-                }
-            }
+            WriteColor(in rc, in ptc, dtc.RtColor!, in output_color);
         }
     }
+
+    #endregion
+
+    #region InvokePixelShader
+
+    [MethodImpl(256 | 512)]
+    private static void InvokePixelShader(
+        ref float4_mt output_color, ref float_mt output_depth, ref uint_mt output_stencil,
+        ref DispatchTileContext<TMesh, TPipeline> dtc,
+        in PixelTaskContext ptc, in PixelBasicData pbd
+    )
+    {
+        var lc = new SoftLaneContext(); // todo
+        dtc.Pipeline.Invoke(
+            ref dtc.Mesh, in ptc.ic, in lc, in pbd,
+            ref output_color, ref output_depth, ref output_stencil
+        );
+    }
+
+    #endregion
 }
 
 internal abstract class Rasterizer
@@ -397,10 +412,94 @@ internal abstract class Rasterizer
 
     #endregion
 
+    #region Utils
+
+    [MethodImpl(256 | 512)]
+    public static bool CheckLane(in b32_mt active_lanes, int lane) => active_lanes.vector[lane] != 0;
+
+    #endregion
+
+    #region TileTaskContext
+
+    [StructLayout(LayoutKind.Auto)]
+    public struct TileTaskContext
+    {
+        public uint pixel_x;
+        public uint pixel_y;
+        public uint tile_zi;
+
+        public float2_mt box_min;
+        public float2_mt box_max;
+
+        public float2_mt size;
+
+        [MethodImpl(512)]
+        public void Init(uint x, uint y, uint width, uint height)
+        {
+            pixel_x = x * TileSize;
+            pixel_y = y * TileSize;
+            var end_x = pixel_x + TileSize + 1;
+            var end_y = pixel_y + TileSize + 1;
+            tile_zi = SoftGraphicsUtils.EncodeZOrder(pixel_x, pixel_y);
+
+            box_min = new float2_mt(pixel_x, pixel_y);
+            box_max = new float2_mt(end_x, end_y);
+
+            size = new(width, height);
+        }
+    }
+
+    [MethodImpl(512)]
+    public static bool TileGenActiveLanes(out b32_mt active_lanes, in TileTaskContext tc, in TriangleContext triangle)
+    {
+        var active_lanes_ = triangle.active_lanes;
+        active_lanes_ &= triangle.AABBOverlap(tc.box_min, tc.box_max);
+        active_lanes = active_lanes_;
+        return active_lanes_.lane_all_false();
+    }
+
+    #endregion
+
+    #region PixelTaskContext
+
+    [StructLayout(LayoutKind.Auto)]
+    public struct PixelTaskContext
+    {
+        public uint zis;
+        public uint_mt zi;
+        public float2_mt pos;
+        public InterpolateContext ic;
+
+        public b32_mt active_lanes;
+
+        [MethodImpl(512)]
+        public void Init(uint tx, uint ty, uint tzi, uint lzi)
+        {
+            var (ox, oy) = SoftGraphicsUtils.DecodeZOrder(lzi);
+            zis = tzi + lzi;
+            zi = zis + SoftGraphicsUtils.IncMt;
+            pos = new float2_mt(tx + ox, ty + oy) + SoftGraphicsUtils.ZOrderOffMt;
+        }
+
+        [MethodImpl(512)]
+        public bool InitActiveLanes(in TriangleSlice ts, in float2_mt size)
+        {
+            active_lanes = (pos < size).all();
+            if (active_lanes.lane_all_false()) return true;
+
+            active_lanes &= ts.PointInTriangle(ref ic, pos);
+            if (active_lanes.lane_all_false()) return true;
+
+            return false;
+        }
+    }
+
+    #endregion
+
     #region Edge
 
     [MethodImpl(256 | 512)]
-    public static float_mt Edge(float2_mt a, float2_mt b, float2_mt p)
+    public static float_mt Edge(in float2_mt a, in float2_mt b, in float2_mt p)
     {
         var ab = b - a;
         var ap = p - a;
@@ -536,6 +635,37 @@ internal abstract class Rasterizer
     };
 
     #endregion
+
+    #endregion
+
+    #region WriteColor
+
+    [MethodImpl(256 | 512)]
+    public static void WriteColor(
+        in RasterizerContext rc,
+        in PixelTaskContext ptc,
+        SoftTexture rt_color,
+        in float4_mt output_color
+    )
+    {
+        if (rc.state.BlendEnable)
+        {
+            Blend(rt_color, in rc.state, ptc.zis, output_color, ptc.active_lanes);
+        }
+        else
+        {
+            if (ptc.active_lanes.lane_all())
+            {
+                rt_color.QuadQuadStore(ptc.zis, output_color);
+            }
+            else
+            {
+                var dst = rt_color.QuadQuadLoad(ptc.zis);
+                var color = math_mt.select(ptc.active_lanes, output_color, dst);
+                rt_color.QuadQuadStore(ptc.zis, color);
+            }
+        }
+    }
 
     #endregion
 }

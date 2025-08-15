@@ -34,6 +34,10 @@ public record struct SoftGraphicPipelineState()
     public byte StencilWriteMask = 255;
     public SoftStencilState FrontStencil;
     public SoftStencilState BackStencil;
+
+    public bool PixelWriteColor = true;
+    public bool PixelWriteDepth = false;
+    public bool PixelWriteStencil = false;
 }
 
 [StructLayout(LayoutKind.Auto)]

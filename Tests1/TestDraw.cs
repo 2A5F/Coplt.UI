@@ -73,7 +73,7 @@ public class TestDraw
         public float3_mt Color;
     }
 
-    public struct Pipeline : ISoftGraphicPipelineState, ISoftPixelShader<SoftSimpleRefMesh, PixelInput, float4_mt>
+    public struct Pipeline : ISoftGraphicPipelineState, ISoftPixelShader<SoftSimpleRefMesh>
     {
         private static readonly SoftGraphicPipelineState s_state = new()
         {
@@ -84,22 +84,19 @@ public class TestDraw
         };
         public ref readonly SoftGraphicPipelineState State => ref s_state;
 
-        public static bool HasDepth => false;
-        public static bool HasStencil => false;
-
-        public PixelInput CreateInput(ref SoftSimpleRefMesh mesh, in InterpolateContext ctx, in PixelBasicData data) => new()
+        [MethodImpl(256 | 512)]
+        public void Invoke(
+            ref SoftSimpleRefMesh mesh, in InterpolateContext ic, in SoftLaneContext lc, in PixelBasicData data,
+            ref float4_mt output_color, ref float_mt output_depth, ref uint_mt output_stencil
+        )
         {
-            Position_CS = ctx.InterpolateClipSpace(data.cs_a, data.cs_a, data.cs_c),
-            Color = ctx.PerspectiveInterpolate(
+            var color = ic.PerspectiveInterpolate(
                 new float3_mt(0.9f, 0.2f, 0.2f),
                 new float3_mt(0.2f, 0.9f, 0.2f),
                 new float3_mt(0.2f, 0.2f, 0.9f)
-            ),
-        };
-
-        public float4_mt GetColor(in float4_mt output) => output;
-        public float_mt GetDepth(in float4_mt output) => throw new NotSupportedException();
-        public uint_mt GetStencil(in float4_mt output) => throw new NotSupportedException();
+            );
+            output_color = new float4_mt(color, 0.75f);
+        }
     }
 
     [Test]
@@ -122,12 +119,7 @@ public class TestDraw
                 [1, 1, 1, 1],
                 [1, 1, 1, 1]
             ),
-            new Pipeline(),
-            static (ref Pipeline _, SoftLaneContext ctx, scoped PixelInput input) =>
-            {
-                var color = input.Color;
-                return new float4_mt(color, 0.75f);
-            }
+            new Pipeline()
         );
 
         using Image<Rgba32> img = new(1024, 1024);
@@ -149,9 +141,9 @@ public class TestDraw
         ctx.ClearRenderTarget(new float4(0.89f, 0.56f, 0.24f, 1f));
         ctx.SetViewport(new(0, 0, 1024, 1024, 0, 1));
         ctx.SetScissorRect(new(0, 0, 1024, 1024));
-    
+
         var start = Stopwatch.GetTimestamp();
-    
+
         ctx.Draw(
             new SoftSimpleRefMesh(
                 [0, 2],
@@ -162,14 +154,9 @@ public class TestDraw
                 [1, 1, 1, 1],
                 [1, 1, 1, 1]
             ),
-            new Pipeline(),
-            static (ref Pipeline _, SoftLaneContext ctx, scoped PixelInput input) =>
-            {
-                var color = input.Color;
-                return new float4_mt(color, 0.75f);
-            }
+            new Pipeline()
         );
-    
+
         var end = Stopwatch.GetTimestamp();
         var el = Stopwatch.GetElapsedTime(start, end);
         Console.WriteLine($"{el} ; {el.TotalMilliseconds}ms ; {el.TotalMicroseconds}us");

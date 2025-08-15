@@ -15,21 +15,21 @@ public record struct InterpolateContext
     internal float_mt r1;
     internal float_mt r2;
 
-    internal float_mt den;
+    internal float_mt i_den;
 
     #endregion
 
     #region Init
 
     [MethodImpl(256 | 512)]
-    internal void Init(float_mt w0, float_mt w1, float_mt w2)
+    internal void Init(in TriangleSlice ts)
     {
-        r0 = w0.rcp();
-        r1 = w1.rcp();
-        r2 = w2.rcp();
+        r0 = ts.cs_a.w.rcp();
+        r1 = ts.cs_b.w.rcp();
+        r2 = ts.cs_c.w.rcp();
 
         // l0 * r0 + l1 * r1 + l2 * r2
-        den = math_mt.fam(math_mt.fam(l0 * r0, l1, r1), l2, r2);
+        i_den = 1 / math_mt.fam(math_mt.fam(l0 * r0, l1, r1), l2, r2);
     }
 
     #endregion
@@ -54,7 +54,7 @@ public record struct InterpolateContext
     {
         // l0 * r0 * f0 + l1 * r1 * f1 + l2 * r2 * f2;
         var num = math_mt.fam(math_mt.fam(l0 * r0 * f0, l1 * r1, f1), l2 * r2, f2);
-        return num / den;
+        return num * i_den;
     }
 
     [MethodImpl(256 | 512)]
@@ -62,7 +62,7 @@ public record struct InterpolateContext
     {
         // l0 * r0 * f0 + l1 * r1 * f1 + l2 * r2 * f2;
         var num = math_mt.fam(math_mt.fam(l0 * r0 * f0, l1 * r1, f1), l2 * r2, f2);
-        return num / den;
+        return num * i_den;
     }
 
     [MethodImpl(256 | 512)]
@@ -70,7 +70,7 @@ public record struct InterpolateContext
     {
         // l0 * r0 * f0 + l1 * r1 * f1 + l2 * r2 * f2;
         var num = math_mt.fam(math_mt.fam(l0 * r0 * f0, l1 * r1, f1), l2 * r2, f2);
-        return num / den;
+        return num * i_den;
     }
 
     [MethodImpl(256 | 512)]
@@ -78,7 +78,7 @@ public record struct InterpolateContext
     {
         // l0 * r0 * f0 + l1 * r1 * f1 + l2 * r2 * f2;
         var num = math_mt.fam(math_mt.fam(l0 * r0 * f0, l1 * r1, f1), l2 * r2, f2);
-        return num / den;
+        return num * i_den;
     }
 
     #endregion
@@ -116,24 +116,19 @@ public record struct InterpolateContext
     #endregion
 }
 
-public record struct PixelBasicData(
-    uint_mt Index,
-    b32_mt ActiveLanes,
-    float4_mt cs_a,
-    float4_mt cs_b,
-    float4_mt cs_c,
-    float3_mt ss_a,
-    float3_mt ss_b,
-    float3_mt ss_c)
+public ref struct PixelBasicData
 {
-    public uint_mt Index = Index;
-    public b32_mt ActiveLanes = ActiveLanes;
+    internal ref readonly Rasterizer.PixelTaskContext ptc;
+    internal ref readonly TriangleSlice ts;
 
-    public float4_mt cs_a = cs_a;
-    public float4_mt cs_b = cs_b;
-    public float4_mt cs_c = cs_c;
+    public ref readonly uint_mt Index => ref ptc.zi;
+    public ref readonly b32_mt ActiveLanes => ref ptc.active_lanes;
 
-    public float3_mt ss_a = ss_a;
-    public float3_mt ss_b = ss_b;
-    public float3_mt ss_c = ss_c;
+    public ref readonly float4_mt cs_a => ref ts.cs_a;
+    public ref readonly float4_mt cs_b => ref ts.cs_b;
+    public ref readonly float4_mt cs_c => ref ts.cs_c;
+
+    public ref readonly float3_mt ss_a => ref ts.ss_a;
+    public ref readonly float3_mt ss_b => ref ts.ss_b;
+    public ref readonly float3_mt ss_c => ref ts.ss_c;
 }
