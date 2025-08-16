@@ -522,8 +522,8 @@ internal abstract class Rasterizer
     {
         var all_active = active_lanes.lane_all();
 
-        var need_dst_color = !all_active || state.SrcBlend.NeedFetchDst(false, src) || state.DstBlend.NeedFetchDst(true, src);
-        var need_dst_alpha = !all_active || state.SrcAlphaBlend.NeedFetchDst(false, src) || state.DstAlphaBlend.NeedFetchDst(true, src);
+        var need_dst_color = !all_active | state.SrcBlend.NeedFetchDst(false, src) | state.DstBlend.NeedFetchDst(true, src);
+        var need_dst_alpha = !all_active | state.SrcAlphaBlend.NeedFetchDst(false, src) | state.DstAlphaBlend.NeedFetchDst(true, src);
         var dst_color = need_dst_color ? rt.QuadQuadLoadRGB(index) : default;
         var dst_alpha = need_dst_alpha ? rt.QuadQuadLoad(index, SoftColorChannel.A) : default;
         var dst = new float4_mt(dst_color, dst_alpha);

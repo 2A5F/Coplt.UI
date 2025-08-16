@@ -5,11 +5,27 @@
         <Nullable>enable</Nullable>
         <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
         <TargetFramework>net9.0</TargetFramework>
-        <RootNamespace>Coplt.BoxLayout</RootNamespace>
+        <Version>0.1.0</Version>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageProjectUrl>https://github.com/coplt/Coplt.UI</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/coplt/Coplt.UI</RepositoryUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Coplt.Union" Version="0.18.0" />
+      <None Include="..\LICENSE.md">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+      <None Include="README.md">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>
