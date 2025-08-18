@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Coplt.UI.BoxLayout\Coplt.UI.BoxLayout.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Elements\" />
+    </ItemGroup>
+
+</Project>

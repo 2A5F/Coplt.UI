@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.SoftGraphics", "Coplt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests1", "Tests1\Tests1.csproj", "{39D3EA76-0696-4CB5-9EA9-1041B5A289F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI", "Coplt.UI\Coplt.UI.csproj", "{3B5A784A-3D5A-45AC-ABBC-B050BAFA43CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{39D3EA76-0696-4CB5-9EA9-1041B5A289F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39D3EA76-0696-4CB5-9EA9-1041B5A289F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39D3EA76-0696-4CB5-9EA9-1041B5A289F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B5A784A-3D5A-45AC-ABBC-B050BAFA43CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B5A784A-3D5A-45AC-ABBC-B050BAFA43CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B5A784A-3D5A-45AC-ABBC-B050BAFA43CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B5A784A-3D5A-45AC-ABBC-B050BAFA43CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -24,6 +24,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Coplt.SoftGraphics\Coplt.SoftGraphics.csproj" />
       <ProjectReference Include="..\Coplt.UI.BoxLayout\Coplt.UI.BoxLayout.csproj" />
+      <ProjectReference Include="..\Coplt.UI\Coplt.UI.csproj" />
     </ItemGroup>
 
 </Project>
