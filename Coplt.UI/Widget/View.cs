@@ -7,7 +7,7 @@ public ref struct View<Self>
     public void Dispose() { }
 
     [UnscopedRef]
-    public ref View<Self> On<E>(Action<Self, E> Callback)
+    public ref View<Self> On<E>(Action<Self, E> Callback, bool Capture = false)
     {
         return ref this;
     }
@@ -34,7 +34,7 @@ public ref struct View<Self, T> where T : AWidget
     public void Dispose() { }
 
     [UnscopedRef]
-    public ref View<Self, T> On<E>(Action<Self, E> Callback)
+    public ref View<Self, T> On<E>(Action<Self, E> Callback, bool Capture = false)
     {
         return ref this;
     }

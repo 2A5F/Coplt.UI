@@ -1,4 +1,6 @@
-﻿using Coplt.UI.Widgets;
+﻿using Coplt.UI.Elements;
+using Coplt.UI.Events;
+using Coplt.UI.Widgets;
 
 namespace Coplt.UI;
 
@@ -32,7 +34,7 @@ public class UIPanel
         // todo
     }
 
-    public void DispatchEvent<E>(E Event)
+    public void DispatchEvent<E>(UIElement Target, E Event, EventConfig config)
     {
         // todo
     }
