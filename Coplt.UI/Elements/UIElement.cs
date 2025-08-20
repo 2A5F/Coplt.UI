@@ -16,6 +16,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     internal StyleSet m_computed_style = new();
     internal Layout m_unrounded_layout;
+    internal Layout m_final_layout;
 
     internal bool m_dirty;
 
@@ -32,7 +33,10 @@ public sealed class UIElement : IEnumerable<UIElement>
     public UIElement? Parent { get; internal set; }
 
     public string? Name { get; set; }
+
+    public ref readonly StyleSet ComputedStyle => ref m_computed_style;
     public ref readonly Layout UnroundedLayout => ref m_unrounded_layout;
+    public ref readonly Layout FinalLayout => ref m_final_layout;
 
     #endregion
 

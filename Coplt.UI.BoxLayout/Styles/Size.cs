@@ -86,14 +86,14 @@ public static partial class BoxStyleExtensions
     public static Size<float?> TryAdd(this Size<float?> self, Size<float> value)
         => new(
             self.Width is { } width ? width + value.Width : null,
-            self.Width is { } height ? height + value.Height : null
+            self.Height is { } height ? height + value.Height : null
         );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<float?> TrySub(this Size<float?> self, Size<float> value)
         => new(
             self.Width is { } width ? width - value.Width : null,
-            self.Width is { } height ? height - value.Height : null
+            self.Height is { } height ? height - value.Height : null
         );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

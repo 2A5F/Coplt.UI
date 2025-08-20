@@ -23,6 +23,7 @@ public class Tests
         public BoxStyle Style;
         public Size<float> LeafSize;
         public Layout UnroundedLayout;
+        public Layout FinalLayout;
 
         #region Ctor
 
@@ -64,7 +65,10 @@ public class Tests
         {
             StatelessLayoutTree tree = default;
             BoxLayout.ComputeRootLayout<StatelessLayoutTree, Node, SpanIter<Node>, RefCoreStyle<BoxStyle>>(ref tree, this, available_space);
-            // todo rounding
+            if (use_rounding)
+            {
+                BoxLayout.RoundLayout<StatelessLayoutTree, Node, SpanIter<Node>>(ref tree, this);
+            }
         }
 
         #endregion
@@ -82,7 +86,7 @@ public class Tests
 
     public struct StatelessLayoutTree :
         ILayoutFlexboxContainer<Node, SpanIter<Node>, RefCoreStyle<BoxStyle>, RefFlexContainerStyle<BoxStyle>, RefFlexItemStyle<BoxStyle>>,
-        IPrintTree<Node, SpanIter<Node>>
+        IRoundTree<Node, SpanIter<Node>>, IPrintTree<Node, SpanIter<Node>>
     {
         public SpanIter<Node> ChildIds(Node parent_node_id) => new(CollectionsMarshal.AsSpan(parent_node_id.Childs));
         public int ChildCount(Node parent_node_id) => parent_node_id.Childs.Count;
@@ -111,7 +115,11 @@ public class Tests
 
         public void FormatDebugLabel(Node node_id, StringBuilder builder) => builder.Append($"{node_id.Kind}");
 
-        public ref readonly Layout GetFinalLayout(Node node_id) => ref node_id.UnroundedLayout; // todo round
+        public ref readonly Layout GetFinalLayout(Node node_id) => ref node_id.FinalLayout;
+
+        public ref readonly Layout GetUnroundedLayout(Node node_id) => ref node_id.UnroundedLayout;
+
+        public void SetFinalLayout(Node node_id, in Layout layout) => node_id.FinalLayout = layout;
     }
 
     [Test]

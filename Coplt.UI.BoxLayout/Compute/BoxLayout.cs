@@ -1,4 +1,5 @@
-﻿using Coplt.UI.BoxLayouts.Utilities;
+﻿using System;
+using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Styles;
 
@@ -6,6 +7,8 @@ namespace Coplt.UI.Layouts;
 
 public static partial class BoxLayout
 {
+    #region ComputeRootLayout
+
     public static void ComputeRootLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
         (ref TTree tree, TNodeId root, Size<AvailableSpace> available_space)
         where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, allows ref struct
@@ -108,4 +111,69 @@ public static partial class BoxLayout
 
         #endregion
     }
+
+    #endregion
+
+    #region RoundLayout
+
+    public static void RoundLayout<TTree, TNodeId, TChildIter>(ref TTree tree, TNodeId node)
+        where TTree : IRoundTree<TNodeId, TChildIter>, allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        => RoundLayout<TTree, TNodeId, TChildIter>(ref tree, node, 0, 0);
+
+    private static void RoundLayout<TTree, TNodeId, TChildIter>
+        (ref TTree tree, TNodeId node, float cumulative_x_, float cumulative_y_)
+        where TTree : IRoundTree<TNodeId, TChildIter>, allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+    {
+        var unrounded_layout = tree.GetUnroundedLayout(node);
+        var layout = unrounded_layout;
+
+        var cumulative_x = cumulative_x_ + unrounded_layout.Location.X;
+        var cumulative_y = cumulative_y_ + unrounded_layout.Location.Y;
+
+        layout.Location.X = MathF.Round(unrounded_layout.Location.X);
+        layout.Location.Y = MathF.Round(unrounded_layout.Location.Y);
+        layout.Size.Width = MathF.Round(cumulative_x + unrounded_layout.Size.Width) - MathF.Round(cumulative_x);
+        layout.Size.Height = MathF.Round(cumulative_y + unrounded_layout.Size.Height) - MathF.Round(cumulative_y);
+        layout.ScrollbarSize.Width = MathF.Round(unrounded_layout.ScrollbarSize.Width);
+        layout.ScrollbarSize.Height = MathF.Round(unrounded_layout.ScrollbarSize.Height);
+        layout.Border.Left = MathF.Round(cumulative_x + unrounded_layout.Border.Left) - MathF.Round(cumulative_x);
+        layout.Border.Right = MathF.Round(cumulative_x + unrounded_layout.Size.Width)
+                              - MathF.Round(cumulative_x + unrounded_layout.Size.Width - unrounded_layout.Border.Right);
+        layout.Border.Top = MathF.Round(cumulative_y + unrounded_layout.Border.Top) - MathF.Round(cumulative_y);
+        layout.Border.Bottom = MathF.Round(cumulative_y + unrounded_layout.Size.Height)
+                               - MathF.Round(cumulative_y + unrounded_layout.Size.Height - unrounded_layout.Border.Bottom);
+        layout.Padding.Left = MathF.Round(cumulative_x + unrounded_layout.Padding.Left) - MathF.Round(cumulative_x);
+        layout.Padding.Right = MathF.Round(cumulative_x + unrounded_layout.Size.Width)
+                               - MathF.Round(cumulative_x + unrounded_layout.Size.Width - unrounded_layout.Padding.Right);
+        layout.Padding.Top = MathF.Round(cumulative_y + unrounded_layout.Padding.Top) - MathF.Round(cumulative_y);
+        layout.Padding.Bottom = MathF.Round(cumulative_y + unrounded_layout.Size.Height)
+                                - MathF.Round(cumulative_y + unrounded_layout.Size.Height - unrounded_layout.Padding.Bottom);
+
+        layout.ContentSize.Width = MathF.Round(cumulative_x + unrounded_layout.ContentSize.Width) - MathF.Round(cumulative_x);
+        layout.ContentSize.Height = MathF.Round(cumulative_y + unrounded_layout.ContentSize.Height) - MathF.Round(cumulative_y);
+
+        tree.SetFinalLayout(node, layout);
+
+        foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
+        {
+            RoundLayout<TTree, TNodeId, TChildIter>(ref tree, child, cumulative_x, cumulative_y);
+        }
+    }
+
+    #endregion
+
+    // #region ComputeHiddenLayout
+    //
+    // public static void ComputeHiddenLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
+    //     (ref TTree tree, TNodeId root, Size<AvailableSpace> available_space)
+    //     where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, allows ref struct
+    //     where TChildIter : IIterator<TNodeId>, allows ref struct
+    //     where TCoreContainerStyle : ICoreStyle, allows ref struct
+    // {
+    //     // todo
+    // }
+    //
+    // #endregion
 }
