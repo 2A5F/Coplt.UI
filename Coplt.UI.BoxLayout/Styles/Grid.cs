@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Coplt.UI.BoxLayout.Utilities;
+using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.Union;
 
 namespace Coplt.UI.Styles;

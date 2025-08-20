@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Coplt.UI.BoxLayouts.Utilities;
 
 namespace Coplt.UI.Collections;
 
@@ -436,7 +437,7 @@ public struct OrderedSet<T> : ICollection<T>
     [UnscopedRef]
     public Enumerator GetEnumerator() => new(ref this);
 
-    public ref struct Enumerator(ref OrderedSet<T> self)
+    public ref struct Enumerator(ref OrderedSet<T> self) : IIterator<T>
     {
         private ref OrderedSet<T> self = ref self;
         private ref Node cur = ref Unsafe.NullRef<Node>();
@@ -457,6 +458,7 @@ public struct OrderedSet<T> : ICollection<T>
         }
 
         public ref T Current => ref cur.Value;
+        T IIterator<T>.Current => cur.Value;
     }
 
     #endregion

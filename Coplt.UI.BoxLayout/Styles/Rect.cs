@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Coplt.UI.BoxLayout.Utilities;
+using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.BoxLayouts;
 
 namespace Coplt.UI.Styles;

@@ -1,10 +1,9 @@
 ﻿using System.Text;
 using Coplt.UI.BoxLayouts;
 
-namespace Coplt.UI.BoxLayout.Utilities;
+namespace Coplt.UI.BoxLayouts.Utilities;
 
 public interface IPrintTree<TNodeId, out TChildIter> : ITraverseTree<TNodeId, TChildIter>
-    where TNodeId : allows ref struct
     where TChildIter : IIterator<TNodeId>, allows ref struct
 {
     public void FormatDebugLabel(TNodeId node_id, StringBuilder builder);
@@ -16,7 +15,6 @@ public static class PrintTree
 {
     public static string Print<TTree, TNodeId, TChildIter>(ref TTree tree, TNodeId root)
         where TTree : IPrintTree<TNodeId, TChildIter>
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
     {
         var sb = new StringBuilder();
@@ -26,7 +24,6 @@ public static class PrintTree
 
     public static void Print<TTree, TNodeId, TChildIter>(StringBuilder sb, ref TTree tree, TNodeId root)
         where TTree : IPrintTree<TNodeId, TChildIter>
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
     {
         sb.AppendLine($"Tree");
@@ -37,7 +34,6 @@ public static class PrintTree
         StringBuilder sb, ref TTree tree, TNodeId node_id, bool has_sibling, string lines
     )
         where TTree : IPrintTree<TNodeId, TChildIter>
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
     {
         ref readonly var layout = ref tree.GetFinalLayout(node_id);

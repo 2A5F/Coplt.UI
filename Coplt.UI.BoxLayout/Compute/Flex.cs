@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Coplt.UI.BoxLayout.Utilities;
+using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Styles;
 using static Coplt.UI.Layouts.FlexCompute;
@@ -15,7 +15,6 @@ public static partial class BoxLayout
         ref TTree tree, TNodeId node, LayoutInput inputs
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -78,7 +77,6 @@ file static class FlexCompute
         ref TTree tree, TNodeId node, LayoutInput inputs
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -228,12 +226,11 @@ file static class FlexCompute
                 ref tree, node, in constants
             );
 
-        var len = tree.ChildCount(node);
-        for (var order = 0; order < len; order++)
+        var order = 0;
+        foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
         {
-            var child = tree.GetChildId(node, order);
             if (tree.GetFlexboxChildStyle(child).BoxGenerationMode != BoxGenerationMode.None) continue;
-            tree.SetUnroundedLayout(child, Layout.WithOrder(order));
+            tree.SetUnroundedLayout(child, Layout.WithOrder(order++));
             tree.PerformChildLayout(
                 child,
                 default,
@@ -249,7 +246,7 @@ file static class FlexCompute
         float? first_vertical_baseline = null;
         if (flex_lines.Count > 0)
         {
-            var items = flex_lines[0].GetItems(flex_items.AsSpan);
+            var items = GetItems(flex_lines[0], flex_items.AsSpan);
             var index = -1;
             var i = 0;
             foreach (ref var item in items)
@@ -309,7 +306,6 @@ file static class FlexCompute
         ref TTree tree, TFlexBoxContainerStyle style, Size<float?> known_dimensions, Size<float?> parent_size
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -373,9 +369,9 @@ file static class FlexCompute
     }
 
     [StructLayout(LayoutKind.Auto)]
-    private struct FlexItem
+    private struct FlexItem<TNodeId>
     {
-        public int NodeIndex;
+        public TNodeId Node;
 
         public int Order;
 
@@ -422,17 +418,17 @@ file static class FlexCompute
     /// # [9.1. Initial Setup](https://www.w3.org/TR/css-flexbox-1/#box-manip)
     ///
     /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
-    private static PooledList<FlexItem> GenerateAnonymousFlexItems<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
+    private static PooledList<FlexItem<TNodeId>> GenerateAnonymousFlexItems<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle,
+        TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, in AlgoConstants constants
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
         where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
     {
-        using var list = new PooledList<FlexItem>(tree.ChildCount(node));
+        using var list = new PooledList<FlexItem<TNodeId>>(tree.ChildCount(node));
         var i = 0;
         foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
         {
@@ -447,7 +443,7 @@ file static class FlexCompute
             var box_sizing_adjustment = style.BoxSizing == BoxSizing.ContentBox ? pb_sum : default;
             list.Add(new()
             {
-                NodeIndex = index,
+                Node = child,
                 Order = index,
                 Size = style.Size
                     .TryResolve(constants.NodeInnerSize, ref tree)
@@ -551,10 +547,9 @@ file static class FlexCompute
     ///   Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
     ///   (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
     private static void DetermineFlexBaseSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
-        ref TTree tree, TNodeId node, in AlgoConstants constants, Size<AvailableSpace> available_space, Span<FlexItem> flex_items
+        ref TTree tree, TNodeId node, in AlgoConstants constants, Size<AvailableSpace> available_space, Span<FlexItem<TNodeId>> flex_items
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -564,8 +559,7 @@ file static class FlexCompute
 
         foreach (ref var child in flex_items)
         {
-            var child_id = tree.GetChildId(node, child.NodeIndex);
-            var style = tree.GetFlexboxChildStyle(child_id);
+            var style = tree.GetFlexboxChildStyle(child.Node);
 
             // Parent size for child sizing
             var cross_axis_parent_size = constants.NodeInnerSize.Cross(dir);
@@ -662,7 +656,7 @@ file static class FlexCompute
 
                 child.FlexBasis = BoxLayout.MeasureChildSize<TTree, TNodeId, TChildIter, TCoreContainerStyle>(
                     ref tree,
-                    child_id,
+                    child.Node,
                     child_known_dimensions,
                     child_parent_size,
                     child_available_space,
@@ -706,7 +700,7 @@ file static class FlexCompute
             {
                 var child_available_space = new Size<AvailableSpace>(AvailableSpace.MinContent).WithCross(dir, cross_axis_available_space);
                 var min_content_main_size = BoxLayout.MeasureChildSize<TTree, TNodeId, TChildIter, TCoreContainerStyle>(
-                    ref tree, child_id,
+                    ref tree, child.Node,
                     child_known_dimensions,
                     child_parent_size,
                     child_available_space,
@@ -739,10 +733,11 @@ file static class FlexCompute
         public int ItemsCount;
         public float CrossSize;
         public float OffsetCross;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Span<FlexItem> GetItems(Span<FlexItem> flex_items) => flex_items.Slice(ItemsStart, ItemsCount);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Span<FlexItem<TNodeId>> GetItems<TNodeId>(in FlexLine line, Span<FlexItem<TNodeId>> flex_items) =>
+        flex_items.Slice(line.ItemsStart, line.ItemsCount);
 
     /// Collect flex items into flex lines.
     ///
@@ -761,10 +756,10 @@ file static class FlexCompute
     ///       Repeat until all flex items have been collected into flex lines.
     ///
     ///       **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
-    private static PooledList<FlexLine> CollectFlexLines(
+    private static PooledList<FlexLine> CollectFlexLines<TNodeId>(
         in AlgoConstants constants,
         Size<AvailableSpace> available_space,
-        Span<FlexItem> flex_items
+        Span<FlexItem<TNodeId>> flex_items
     )
     {
         if (!constants.IsWrap) goto ret_all;
@@ -836,10 +831,9 @@ file static class FlexCompute
     /// Determine the container's main size (if not already known)
     private static void DetermineContainerMainSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, Size<AvailableSpace> available_space,
-        Span<FlexItem> flex_items, Span<FlexLine> lines, ref AlgoConstants constants
+        Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> lines, ref AlgoConstants constants
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -875,7 +869,7 @@ file static class FlexCompute
 
                     foreach (ref var line in lines)
                     {
-                        var items = line.GetItems(flex_items);
+                        var items = GetItems(line, flex_items);
                         foreach (ref var item in items)
                         {
                             var style_min = item.MinSize.Main(dir);
@@ -947,7 +941,7 @@ file static class FlexCompute
                                     // Either the min- or max- content size depending on which constraint we are sizing under.
                                     var content_main_size = BoxLayout.MeasureChildSize<TTree, TNodeId, TChildIter, TCoreContainerStyle>(
                                         ref tree,
-                                        tree.GetChildId(node, item.NodeIndex),
+                                        item.Node,
                                         child_known_dimensions,
                                         constants.NodeInnerSize,
                                         child_available_space,
@@ -1022,7 +1016,7 @@ file static class FlexCompute
                         //
                         // The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
                         var item_main_size_sum = 0f;
-                        foreach (ref var item in line.GetItems(flex_items))
+                        foreach (ref var item in GetItems(line, flex_items))
                         {
                             var flex_fraction = item.ContentFlexFraction;
 
@@ -1066,7 +1060,7 @@ file static class FlexCompute
 
         return;
 
-        static float LongestLineLength(Span<FlexItem> flex_items, Span<FlexLine> lines, in AlgoConstants constants)
+        static float LongestLineLength(Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> lines, in AlgoConstants constants)
         {
             var dir = constants.Direction;
             var longest_line_length = 0f;
@@ -1074,7 +1068,7 @@ file static class FlexCompute
             foreach (ref readonly var line in lines)
             {
                 var line_main_axis_gap = SumAxisGaps(constants.Gap.Main(dir), line.ItemsCount);
-                var items = line.GetItems(flex_items);
+                var items = GetItems(line, flex_items);
                 var total_target_size = 0f;
                 foreach (ref readonly var child in items)
                 {
@@ -1119,7 +1113,7 @@ file static class FlexCompute
     /// Sets the `main` component of each item's `target_size` and `outer_target_size`
     ///
     /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
-    private static void ResolveFlexibleLengths(Span<FlexItem> flex_items, ref FlexLine line, in AlgoConstants constants)
+    private static void ResolveFlexibleLengths<TNodeId>(Span<FlexItem<TNodeId>> flex_items, ref FlexLine line, in AlgoConstants constants)
     {
         var dir = constants.Direction;
 
@@ -1130,7 +1124,7 @@ file static class FlexCompute
         //    use the flex grow factor for the rest of this algorithm; otherwise, use the
         //    flex shrink factor.
 
-        var items = line.GetItems(flex_items);
+        var items = GetItems(line, flex_items);
 
         var total_hypothetical_outer_main_size = 0f;
         foreach (ref var child in items)
@@ -1353,17 +1347,16 @@ file static class FlexCompute
     /// - [**Determine the hypothetical cross size of each item**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-item)
     ///   by performing layout with the used main size and the available space, treating auto as fit-content.
     private static void DetermineHypotheticalCrossSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
-        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, ref FlexLine line, in AlgoConstants constants, Size<AvailableSpace> available_space
+        ref TTree tree, TNodeId node, Span<FlexItem<TNodeId>> flex_items, ref FlexLine line, in AlgoConstants constants, Size<AvailableSpace> available_space
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
         where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
     {
         var dir = constants.Direction;
-        var items = line.GetItems(flex_items);
+        var items = GetItems(line, flex_items);
         foreach (ref var child in items)
         {
             var padding_border_sum = (child.Padding.Add(child.Border)).CrossAxisSum(dir);
@@ -1381,7 +1374,7 @@ file static class FlexCompute
 
             var child_inner_cross = child_cross ?? BoxLayout.MeasureChildSize<TTree, TNodeId, TChildIter, TCoreContainerStyle>(
                     ref tree,
-                    tree.GetChildId(node, child.NodeIndex),
+                    child.Node,
                     new(
                         constants.IsRow ? child.TargetSize.Width : child_cross,
                         constants.IsRow ? child_cross : child.TargetSize.Height
@@ -1407,10 +1400,9 @@ file static class FlexCompute
     /// Calculate the base lines of the children.
     private static void CalculateChildrenBaseLines<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
         ref TTree tree, TNodeId node, Size<float?> node_size, Size<AvailableSpace> available_space,
-        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+        Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -1422,7 +1414,7 @@ file static class FlexCompute
 
         foreach (var line in flex_lines)
         {
-            var items = line.GetItems(flex_items);
+            var items = GetItems(line, flex_items);
             using var baseline_children = new PooledList<int>(items.Length);
 
             // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
@@ -1440,7 +1432,7 @@ file static class FlexCompute
                 ref var child = ref items[i];
 
                 var measured_size_and_baselines = tree.PerformChildLayout(
-                    tree.GetChildId(node, child.NodeIndex),
+                    child.Node,
                     new(
                         constants.IsRow ? child.TargetSize.Width : child.HypotheticalInnerSize.Width,
                         constants.IsRow ? child.HypotheticalInnerSize.Height : child.TargetSize.Height
@@ -1467,8 +1459,8 @@ file static class FlexCompute
     /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
     ///
     /// - [**Calculate the cross size of each flex line**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-line).
-    private static void CalculateCrossSize(
-        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, Size<float?> node_size, in AlgoConstants constants
+    private static void CalculateCrossSize<TNodeId>(
+        Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> flex_lines, Size<float?> node_size, in AlgoConstants constants
     )
     {
         var dir = constants.Direction;
@@ -1505,7 +1497,7 @@ file static class FlexCompute
             //       previous two steps and zero.
             foreach (ref var line in flex_lines)
             {
-                var items = line.GetItems(flex_items);
+                var items = GetItems(line, flex_items);
                 var max_baseline = 0f;
                 foreach (ref var child in items)
                 {
@@ -1593,10 +1585,9 @@ file static class FlexCompute
     ///
     ///   **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
     private static void DetermineUsedCrossSize<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
-        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+        ref TTree tree, TNodeId node, Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -1607,10 +1598,10 @@ file static class FlexCompute
         {
             var line_cross_size = line.CrossSize;
 
-            var items = line.GetItems(flex_items);
+            var items = GetItems(line, flex_items);
             foreach (ref var child in items)
             {
-                var child_id = tree.GetChildId(node, child.NodeIndex);
+                var child_id = child.Node;
                 var child_style = tree.GetFlexboxChildStyle(child_id);
                 if (
                     child.AlignSelf == AlignSelf.Stretch
@@ -1662,14 +1653,14 @@ file static class FlexCompute
     ///      Otherwise, set all `auto` margins to zero.
     ///
     ///   2. Align the items along the main-axis per `justify-content`.
-    private static void DistributeRemainingFreeSpace(
-        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    private static void DistributeRemainingFreeSpace<TNodeId>(
+        Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
     )
     {
         var dir = constants.Direction;
         foreach (ref var line in flex_lines)
         {
-            var items = line.GetItems(flex_items);
+            var items = GetItems(line, flex_items);
 
             var total_main_axis_gap = SumAxisGaps(constants.Gap.Main(dir), line.ItemsCount);
             var used_space = total_main_axis_gap;
@@ -1759,15 +1750,15 @@ file static class FlexCompute
     ///
     ///   - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
     ///     Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
-    private static void ResolveCrossAxisAutoMargins(
-        Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+    private static void ResolveCrossAxisAutoMargins<TNodeId>(
+        Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
     )
     {
         var dir = constants.Direction;
         foreach (ref var line in flex_lines)
         {
             var line_cross_size = line.CrossSize;
-            var items = line.GetItems(flex_items);
+            var items = GetItems(line, flex_items);
             var max_baseline = 0f;
             foreach (ref readonly var child in items)
             {
@@ -1829,8 +1820,8 @@ file static class FlexCompute
     /// - [**Align all flex items along the cross-axis**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-align) per `align-self`,
     ///   if neither of the item's cross-axis margins are `auto`.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float AlignFlexItemsAlongCrossAxis(
-        ref readonly FlexItem child, float free_space, float max_baseline, in AlgoConstants constants
+    private static float AlignFlexItemsAlongCrossAxis<TNodeId>(
+        ref readonly FlexItem<TNodeId> child, float free_space, float max_baseline, in AlgoConstants constants
     ) => child.AlignSelf switch
     {
         AlignSelf.Start => 0,
@@ -1927,10 +1918,9 @@ file static class FlexCompute
 
     /// Do a final layout pass and collect the resulting layouts.
     private static Size<float> FinalLayoutPass<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
-        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
+        ref TTree tree, TNodeId node, Span<FlexItem<TNodeId>> flex_items, Span<FlexLine> flex_lines, in AlgoConstants constants
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -1986,11 +1976,10 @@ file static class FlexCompute
 
     /// Calculates the layout line
     private static void CalculateLayoutLine<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
-        ref TTree tree, TNodeId node, Span<FlexItem> flex_items, ref FlexLine line, ref float total_offset_cross, ref Size<float> content_size,
+        ref TTree tree, TNodeId node, Span<FlexItem<TNodeId>> flex_items, ref FlexLine line, ref float total_offset_cross, ref Size<float> content_size,
         Size<float> container_size, Size<float?> node_inner_size, Rect<float> padding_border, FlexDirection direction
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -1999,7 +1988,7 @@ file static class FlexCompute
         var total_offset_main = padding_border.MainStart(direction);
         var line_offset_cross = line.OffsetCross;
 
-        var items = line.GetItems(flex_items);
+        var items = GetItems(line, flex_items);
         if (direction.IsReverse())
         {
             var end = items.Length - 1;
@@ -2041,17 +2030,16 @@ file static class FlexCompute
 
     /// Calculates the layout for a flex-item
     private static void CalculateFlexItem<TTree, TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>(
-        ref TTree tree, TNodeId node, ref FlexItem item, ref float total_offset_main, float total_offset_cross, float line_offset_cross,
+        ref TTree tree, TNodeId node, ref FlexItem<TNodeId> item, ref float total_offset_main, float total_offset_cross, float line_offset_cross,
         ref Size<float> total_content_size, Size<float> container_size, Size<float?> node_inner_size, FlexDirection direction
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
         where TFlexboxItemStyle : IFlexItemStyle, allows ref struct
     {
-        var item_node = tree.GetChildId(node, item.NodeIndex);
+        var item_node = item.Node;
         var layout_output = tree.PerformChildLayout(
             item_node,
             item.TargetSize.MapNullable(),
@@ -2123,7 +2111,6 @@ file static class FlexCompute
         ref TTree tree, TNodeId node, in AlgoConstants constants
     )
         where TTree : ILayoutFlexboxContainer<TNodeId, TChildIter, TCoreContainerStyle, TFlexBoxContainerStyle, TFlexboxItemStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         where TFlexBoxContainerStyle : IFlexContainerStyle, allows ref struct
@@ -2137,10 +2124,9 @@ file static class FlexCompute
 
         Size<float> content_size = default;
 
-        var child_count = tree.ChildCount(node);
-        for (var order = 0; order < child_count; order++)
+        var order = 0;
+        foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
         {
-            var child = tree.GetChildId(node, order);
             var child_style = tree.GetFlexboxChildStyle(child);
 
             // Skip items that are display:none or are not position:absolute
@@ -2360,7 +2346,7 @@ file static class FlexCompute
                 child,
                 new()
                 {
-                    Order = order,
+                    Order = order++,
                     Location = location,
                     Size = final_size,
                     ContentSize = layout_output.ContentSize,

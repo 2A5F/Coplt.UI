@@ -3,7 +3,7 @@ using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Coplt.UI.BoxLayout.Utilities;
+namespace Coplt.UI.BoxLayouts.Utilities;
 
 public struct PooledList<T> : IDisposable
 {

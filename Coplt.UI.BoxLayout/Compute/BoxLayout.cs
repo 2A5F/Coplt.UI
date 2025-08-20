@@ -1,4 +1,4 @@
-﻿using Coplt.UI.BoxLayout.Utilities;
+﻿using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Styles;
 
@@ -9,7 +9,6 @@ public static partial class BoxLayout
     public static void ComputeRootLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
         (ref TTree tree, TNodeId root, Size<AvailableSpace> available_space)
         where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
     {

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Coplt.UI.BoxLayout.Utilities;
+namespace Coplt.UI.BoxLayouts.Utilities;
 
 public ref struct Ref<T>(ref T Value)
 {

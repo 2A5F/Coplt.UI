@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using Coplt.UI.BoxLayout.Utilities;
+using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Styles;
 
@@ -19,7 +19,6 @@ public static partial class BoxLayout
         Line<bool> vertical_margins_are_collapsible
     )
         where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, allows ref struct
-        where TNodeId : allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
         where TCoreContainerStyle : ICoreStyle, allows ref struct
         => tree.ComputeChildLayout(node_id, new()

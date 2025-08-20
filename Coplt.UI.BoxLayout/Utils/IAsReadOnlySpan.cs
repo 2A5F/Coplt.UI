@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Coplt.UI.BoxLayout.Utilities;
+namespace Coplt.UI.BoxLayouts.Utilities;
 
 public interface IAsReadOnlySpan<T>
 {

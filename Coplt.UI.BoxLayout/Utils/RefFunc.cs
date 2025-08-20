@@ -1,4 +1,4 @@
-﻿namespace Coplt.UI.BoxLayout.Utilities;
+﻿namespace Coplt.UI.BoxLayouts.Utilities;
 
 public delegate R RefFunc<A, in T, in U, out R>(ref A a, T t, U u)
     where A : allows ref struct

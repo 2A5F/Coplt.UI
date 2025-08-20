@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using Coplt.UI.BoxLayout.Utilities;
+using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Layouts;
 using Coplt.UI.Styles;
@@ -86,7 +86,6 @@ public class Tests
     {
         public SpanIter<Node> ChildIds(Node parent_node_id) => new(CollectionsMarshal.AsSpan(parent_node_id.Childs));
         public int ChildCount(Node parent_node_id) => parent_node_id.Childs.Count;
-        public Node GetChildId(Node parent_node_id, int index) => parent_node_id.Childs[index];
         public float Calc(CalcId id, float basis) => 0;
         public RefCoreStyle<BoxStyle> GetCoreContainerStyle(Node node_id) => new(ref node_id.Style);
         public RefFlexContainerStyle<BoxStyle> GetFlexBoxContainerStyle(Node node_id) => new(ref node_id.Style);

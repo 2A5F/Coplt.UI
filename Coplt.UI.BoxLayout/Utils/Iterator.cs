@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Coplt.UI.BoxLayout.Utilities;
+namespace Coplt.UI.BoxLayouts.Utilities;
 
 public interface IIterator<out T>
     where T : allows ref struct
