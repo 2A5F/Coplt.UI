@@ -180,7 +180,7 @@ public struct OrderedSet<T> : ICollection<T>
 
     #region AddIfNotPresent
 
-    private bool AddIfNotPresent(T value, out int location)
+    private bool AddIfNotPresent(T value, out int location, bool insert_first)
     {
         if (m_buckets == null) Initialize(0);
         Debug.Assert(m_buckets != null);
@@ -242,18 +242,35 @@ public struct OrderedSet<T> : ICollection<T>
             node.HashCode = hash_code;
             node.Next = bucket - 1;
             node.Value = value;
-            var last = m_last;
-            node.OrderNext = -1;
-            node.OrderPrev = last;
-            if (m_first == -1) m_first = index;
-            if (last != -1)
-            {
-                ref var prev = ref nodes[last];
-                prev.OrderNext = index;
-            }
-            m_last = index;
             bucket = index + 1;
             location = index;
+
+            if (insert_first)
+            {
+                var first = m_first;
+                node.OrderPrev = -1;
+                node.OrderNext = first;
+                if (m_last == -1) m_last = index;
+                if (first != -1)
+                {
+                    ref var next = ref nodes[first];
+                    next.OrderPrev = index;
+                }
+                m_first = index;
+            }
+            else
+            {
+                var last = m_last;
+                node.OrderNext = -1;
+                node.OrderPrev = last;
+                if (m_first == -1) m_first = index;
+                if (last != -1)
+                {
+                    ref var prev = ref nodes[last];
+                    prev.OrderNext = index;
+                }
+                m_last = index;
+            }
         }
 
         // Value types never rehash
@@ -275,7 +292,7 @@ public struct OrderedSet<T> : ICollection<T>
 
     private ref Node AddOrGetReturnNode(T item, out int location)
     {
-        AddIfNotPresent(item, out location);
+        AddIfNotPresent(item, out location, false);
         return ref m_nodes![location];
     }
 
@@ -338,9 +355,11 @@ public struct OrderedSet<T> : ICollection<T>
 
     #region Add
 
-    public bool Add(T item) => AddIfNotPresent(item, out _);
+    public bool Add(T item) => AddIfNotPresent(item, out _, false);
 
     public ref T AddOrGet(T item) => ref AddOrGetReturnNode(item, out _).Value;
+
+    public bool AddFirst(T item) => AddIfNotPresent(item, out _, true);
 
     #endregion
 
@@ -444,15 +463,16 @@ public struct OrderedSet<T> : ICollection<T>
 
         public bool MoveNext()
         {
+            if (self.m_nodes == null) return false;
             if (Unsafe.IsNullRef(ref cur))
             {
                 if (self.m_first == -1) return false;
-                cur = ref self.m_nodes![self.m_first];
+                cur = ref self.m_nodes[self.m_first];
             }
             else
             {
                 if (cur.OrderNext == -1) return false;
-                cur = ref self.m_nodes![cur.OrderNext];
+                cur = ref self.m_nodes[cur.OrderNext];
             }
             return true;
         }
@@ -471,11 +491,12 @@ public struct OrderedSet<T> : ICollection<T>
     public sealed class ClassEnumerator(scoped ref OrderedSet<T> self) : IEnumerator<T>
     {
         private readonly int first = self.m_first;
-        private Node[] nodes = self.m_nodes!;
+        private Node[]? nodes = self.m_nodes!;
         private int cur = -1;
 
         public bool MoveNext()
         {
+            if (nodes == null) return false;
             if (cur == -1)
             {
                 if (first == -1) return false;
@@ -490,7 +511,7 @@ public struct OrderedSet<T> : ICollection<T>
             return true;
         }
 
-        public T Current => nodes[cur].Value;
+        public T Current => nodes![cur].Value;
 
         object? IEnumerator.Current => Current;
 
@@ -516,6 +537,36 @@ public struct OrderedSet<T> : ICollection<T>
     }
 
     void ICollection<T>.CopyTo(T[] array, int arrayIndex) => CopyTo(array.AsSpan(arrayIndex));
+
+    #endregion
+
+    #region TryGetFirst
+
+    public bool TryGetFirst([MaybeNullWhen(false)] out T first)
+    {
+        if (m_first >= 0)
+        {
+            first = m_nodes![m_first].Value;
+            return true;
+        }
+        first = default;
+        return false;
+    }
+
+    #endregion
+
+    #region TryGetLast
+
+    public bool TryGetLast([MaybeNullWhen(false)] out T last)
+    {
+        if (m_last >= 0)
+        {
+            last = m_nodes![m_last].Value;
+            return true;
+        }
+        last = default;
+        return false;
+    }
 
     #endregion
 

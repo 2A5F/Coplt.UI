@@ -6,6 +6,8 @@ namespace Coplt.UI;
 
 public class UIPanel
 {
+    public UIDocument Document { get; } = new();
+
     public uint Width { get; private set; }
     public uint Height { get; private set; }
 

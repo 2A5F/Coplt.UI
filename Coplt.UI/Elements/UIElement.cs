@@ -1,11 +1,13 @@
-﻿using Coplt.UI.BoxLayouts;
+﻿using System.Collections;
+using System.Text;
+using Coplt.UI.BoxLayouts;
 using Coplt.UI.Collections;
 using Coplt.UI.Utilities;
 using Coplt.UI.Widgets;
 
 namespace Coplt.UI.Elements;
 
-public sealed class UIElement
+public sealed class UIElement : IEnumerable<UIElement>
 {
     #region Fields
 
@@ -24,6 +26,7 @@ public sealed class UIElement
     public ulong Version { get; internal set; }
 
     public UIPanel? Panel { get; internal set; }
+    public UIDocument? Document { get; internal set; }
     public AWidget? Widget { get; internal set; }
 
     public UIElement? Parent { get; internal set; }
@@ -37,9 +40,10 @@ public sealed class UIElement
 
     public void MarkDirty()
     {
-        if (Panel == null) return;
+        if (Document == null) return;
         if (m_dirty) return;
         m_dirty = true;
+        Version++;
         // todo
     }
 
@@ -85,9 +89,19 @@ public sealed class UIElement
 
     #region Childs
 
+    #region Count
+
     public int Count => m_childs.Count;
 
+    #endregion
+
+    #region Contains
+
     public bool Contains(UIElement child) => m_childs.Contains(child);
+
+    #endregion
+
+    #region Private
 
     private void CheckCirRef(UIElement new_child)
     {
@@ -96,6 +110,20 @@ public sealed class UIElement
             if (cur == new_child) throw new IndexOutOfRangeException("Adding will create a circular reference");
         }
     }
+
+    private void EnsureChildNoAdd(UIElement node, bool no_check = false)
+    {
+        if (node.Parent != this)
+        {
+            if (!no_check) CheckCirRef(node);
+            node.Parent?.Remove(node);
+            node.Parent = this;
+        }
+    }
+
+    #endregion
+
+    #region Add
 
     public void Add(UIElement child, bool no_check = false)
     {
@@ -108,25 +136,134 @@ public sealed class UIElement
         MarkDirty();
     }
 
+    public void Add(params ReadOnlySpan<UIElement> childs)
+    {
+        foreach (var child in childs)
+        {
+            Add(child);
+        }
+    }
+
+    public void Add(bool no_check, params ReadOnlySpan<UIElement> childs)
+    {
+        foreach (var child in childs)
+        {
+            Add(child, no_check);
+        }
+    }
+
+    #endregion
+
+    #region Prepend
+
+    public void Prepend(UIElement child, bool no_check = false)
+    {
+        if (child == this) throw new InvalidOperationException("Cannot add self as child.");
+        if (child.Parent == this) return;
+        if (!no_check) CheckCirRef(child);
+        child.Parent?.Remove(child);
+        m_childs.AddFirst(child);
+        child.Parent = this;
+        MarkDirty();
+    }
+
+    public void Prepend(params ReadOnlySpan<UIElement> childs)
+    {
+        foreach (var child in childs)
+        {
+            Prepend(child);
+        }
+    }
+
+    public void Prepend(bool no_check, params ReadOnlySpan<UIElement> childs)
+    {
+        foreach (var child in childs)
+        {
+            Prepend(child, no_check);
+        }
+    }
+
+    #endregion
+
+    #region Remove
+
     public bool Remove(UIElement child)
     {
         if (!m_childs.Remove(child)) return false;
         child.Parent = null;
+        child.Document = null;
         child.Panel = null;
         MarkDirty();
         return true;
     }
+
+    #endregion
+
+    #region Clear
 
     public void Clear()
     {
         if (m_childs.Count == 0) return;
         foreach (ref var child in m_childs)
         {
-            child.Panel = null;
             child.Parent = null;
+            child.Document = null;
+            child.Panel = null;
         }
         m_childs.Clear();
         MarkDirty();
+    }
+
+    #endregion
+
+    #region SetNext
+
+    public void SetNext(UIElement child, UIElement next_child, bool no_check = false)
+    {
+        EnsureChildNoAdd(child);
+        EnsureChildNoAdd(next_child);
+        m_childs.SetNext(child, next_child);
+    }
+
+    #endregion
+
+    #region SetPrev
+
+    public void SetPrev(UIElement child, UIElement prev_child, bool no_check = false)
+    {
+        EnsureChildNoAdd(child);
+        EnsureChildNoAdd(prev_child);
+        m_childs.SetPrev(child, prev_child);
+    }
+
+    #endregion
+
+    #region Enumerator
+
+    public OrderedSet<UIElement>.Enumerator GetEnumerator() => m_childs.GetEnumerator();
+    IEnumerator<UIElement> IEnumerable<UIElement>.GetEnumerator() => new OrderedSet<UIElement>.ClassEnumerator(ref m_childs);
+    IEnumerator IEnumerable.GetEnumerator() => new OrderedSet<UIElement>.ClassEnumerator(ref m_childs);
+
+    #endregion
+
+    #endregion
+
+    #region Tree
+
+    public UIElement? After => Parent == null ? null : Parent.m_childs.TryGetNext(this, out var next) ? next : null;
+    public UIElement? Before => Parent == null ? null : Parent.m_childs.TryGetPrev(this, out var prev) ? prev : null;
+
+    #endregion
+
+    #region ToString
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append($"<view");
+        if (Name != null) sb.Append($" name=\"{Name.Replace("\"", "\\\"")}\"");
+        sb.Append('>');
+        return sb.ToString();
     }
 
     #endregion
