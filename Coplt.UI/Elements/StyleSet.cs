@@ -1,9 +1,11 @@
-﻿using System.Drawing;
+﻿using System.Runtime.InteropServices;
+using Coplt.Mathematics;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Elements;
 
-public struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
+[StructLayout(LayoutKind.Auto)]
+public record struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
 {
     #region BoxLayout Style
 
@@ -16,6 +18,8 @@ public struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemS
     public Size<Dimension> Size { get; set; } = new(Dimension.Auto, Dimension.Auto);
     public Size<Dimension> MinSize { get; set; } = new(Dimension.Auto, Dimension.Auto);
     public Size<Dimension> MaxSize { get; set; } = new(Dimension.Auto, Dimension.Auto);
+
+    public float? AspectRatio { get; set; } = null;
 
     public Rect<LengthPercentageAuto> Margin { get; set; } = new(LengthPercentageAuto.Zero);
     public Rect<LengthPercentage> Padding { get; set; } = new(LengthPercentage.Zero);
@@ -42,11 +46,15 @@ public struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemS
     bool ICoreStyle.IsCompressibleReplaced => false;
 
     float ICoreStyle.ScrollbarWidth => 0;
-    float? ICoreStyle.AspectRatio => null;
 
     #endregion
 
     #region Rendering Style
+
+    public int ZIndex { get; set; } = 0;
+    public float Opaque { get; set; } = 1f;
+
+    public BoxShadow BoxShadow { get; set; } = new(0.Fx(), 0.Fx(), Color.Transparent);
 
     public Color BackgroundColor { get; set; } = Color.Transparent;
     public UIImage BackgroundImage { get; set; } = UIImage.None;
@@ -57,7 +65,17 @@ public struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemS
     public BorderRadiusMode BorderRadiusMode = BorderRadiusMode.Circle;
 
     public Color TextColor { get; set; } = Color.Black;
-    public LengthPercentage TextSize { get; set; } = 16.Fx();
+    public Length TextSize { get; set; } = 16.Fx();
+
+    public FilterFunc BackDrop { get; set; } = FilterFunc.None;
+    public FilterFunc Filter { get; set; } = FilterFunc.None;
+
+    #endregion
+
+    #region Behavior Style
+
+    public bool TextSelectable { get; set; } = false;
+    public bool PointerEvents { get; set; } = true;
 
     #endregion
 }

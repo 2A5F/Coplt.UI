@@ -7,6 +7,57 @@ using Coplt.Union;
 namespace Coplt.UI.Styles;
 
 [Union]
+public readonly partial struct Length : ITryResolve<float?>
+{
+    [UnionTemplate]
+    private interface Template
+    {
+        [Variant(Tag = 0)]
+        float Fixed();
+        CalcId Calc();
+    }
+
+    public static Length Zero => MakeFixed(0);
+
+    public static implicit operator AnyLength(Length self) => self.Tag switch
+    {
+        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
+        Tags.Calc => AnyLength.MakeCalc(self.Calc),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public static implicit operator LengthPercentage(Length self) => self.Tag switch
+    {
+        Tags.Fixed => LengthPercentage.MakeFixed(self.Fixed),
+        Tags.Calc => LengthPercentage.MakeCalc(self.Calc),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public static implicit operator LengthPercentageAuto(Length self) => self.Tag switch
+    {
+        Tags.Fixed => LengthPercentageAuto.MakeFixed(self.Fixed),
+        Tags.Calc => LengthPercentageAuto.MakeCalc(self.Calc),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public static implicit operator Dimension(Length self) => self.Tag switch
+    {
+        Tags.Fixed => Dimension.MakeFixed(self.Fixed),
+        Tags.Calc => Dimension.MakeCalc(self.Calc),
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float? TryResolve<TCalc>(float? ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct => Tag switch
+    {
+        Tags.Fixed => Fixed,
+        Tags.Calc => ctx is { } dim ? calc.Calc(Calc, dim) : null,
+        _ => throw new ArgumentOutOfRangeException()
+    };
+}
+
+[Union]
 public readonly partial struct LengthPercentage : ITryResolve<float?>
 {
     [UnionTemplate]
