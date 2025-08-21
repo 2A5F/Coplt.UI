@@ -23,7 +23,7 @@ public struct LayoutCache
     }
 
     [InlineArray(CACHE_SIZE)]
-    private struct MeasureEntrieArray
+    private struct MeasureEntryArray
     {
         private CacheEntry<Size<float>>? _;
     }
@@ -31,7 +31,7 @@ public struct LayoutCache
     /// The cache entry for the node's final layout
     private CacheEntry<LayoutOutput>? m_final_layout_entry;
     /// The cache entries for the node's preliminary size measurements
-    private MeasureEntrieArray m_measure_entries;
+    private MeasureEntryArray m_measure_entries;
     /// Tracks if all cache entries are empty
     private bool m_is_empty;
 

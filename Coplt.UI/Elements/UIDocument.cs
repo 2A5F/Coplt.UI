@@ -23,6 +23,8 @@ public sealed class UIDocument
     #endregion
 
     #region Root
+    
+    public UIElement? Root => m_root;
 
     public void SetRoot(UIElement root)
     {

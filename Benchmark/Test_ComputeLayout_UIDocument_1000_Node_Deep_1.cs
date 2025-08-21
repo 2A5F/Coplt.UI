@@ -31,6 +31,21 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
         document = doc;
     }
 
+    [GlobalCleanup]
+    public void Clean()
+    {
+        Console.WriteLine(document);
+    }
+
+    [IterationSetup]
+    public void IterSetup()
+    {
+        foreach (var child in document.Root!)
+        {
+            child.MarkDirty();
+        }
+    }
+
     [Benchmark]
     public void ComputeLayout()
     {

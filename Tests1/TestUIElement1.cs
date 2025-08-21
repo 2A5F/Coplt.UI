@@ -12,12 +12,19 @@ public class TestUIElement1
     {
         var doc = new UIDocument();
         var root = new UIElement { Name = "Root" };
-        var child = new UIElement { Name = "Child" };
-        root.Add(child);
-        Unsafe.AsRef(in child.ComputedStyle).Size
-            = new(50.Fx(), 100.Fx());
+        Unsafe.AsRef(in root.ComputedStyle).FlexDirection = FlexDirection.Row;
+        Unsafe.AsRef(in root.ComputedStyle).FlexWrap = FlexWrap.Wrap;
+
+        for (var i = 0; i < 3; i++)
+        {
+            var child = new UIElement { Name = $"Child{i}" };
+            root.Add(child);
+            Unsafe.AsRef(in child.ComputedStyle).Size
+                = new(5.Fx(), 1.Fx());
+        }
+
         doc.SetRoot(root);
-        doc.ComputeLayout(new(1920, 1080));
+        doc.ComputeLayout(new(10, AvailableSpace.MinContent));
         Console.WriteLine(doc);
     }
 }

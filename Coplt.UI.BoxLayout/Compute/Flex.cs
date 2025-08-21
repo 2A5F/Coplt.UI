@@ -2026,6 +2026,8 @@ file static class FlexCompute
                 );
             }
         }
+
+        total_offset_cross += line_offset_cross + line.CrossSize;
     }
 
     /// Calculates the layout for a flex-item

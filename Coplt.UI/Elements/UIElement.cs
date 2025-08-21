@@ -49,7 +49,8 @@ public sealed class UIElement : IEnumerable<UIElement>
         if (m_dirty) return;
         m_dirty = true;
         Version++;
-        // todo
+        m_cache.Clear();
+        Parent?.MarkDirty();
     }
 
     #endregion
