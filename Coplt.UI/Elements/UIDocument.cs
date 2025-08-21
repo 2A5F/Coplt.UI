@@ -84,12 +84,19 @@ internal struct LayoutTree
     public RefFlexItemStyle<StyleSet> GetFlexboxChildStyle(UIElement child_node_id) => new(ref child_node_id.m_computed_style);
 
     public void SetUnroundedLayout(UIElement node_id, in Layout layout) => node_id.m_unrounded_layout = layout;
-    public LayoutOutput ComputeChildLayout(UIElement node_id, LayoutInput inputs) =>
-        BoxLayout.ComputeCachedLayout(
+    public LayoutOutput ComputeChildLayout(UIElement node_id, LayoutInput inputs)
+    {
+        if (inputs.RunMode == RunMode.PerformHiddenLayout)
+            return BoxLayout.ComputeHiddenLayout
+                <LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<StyleSet>>
+                (ref this, node_id);
+        return BoxLayout.ComputeCachedLayout(
             ref this, node_id, inputs,
             static (ref LayoutTree tree, UIElement node_id, LayoutInput inputs) => (node_id.m_computed_style.Display, node_id.Count) switch
             {
-                (Display.None, _) => throw new NotImplementedException(),
+                (Display.None, _) => BoxLayout.ComputeHiddenLayout
+                    <LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<StyleSet>>
+                    (ref tree, node_id),
                 (Display.Flex, > 0) => BoxLayout.ComputeFlexBoxLayout<LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator,
                         RefCoreStyle<StyleSet>, RefFlexContainerStyle<StyleSet>, RefFlexItemStyle<StyleSet>>
                     (ref tree, node_id, inputs),
@@ -103,6 +110,7 @@ internal struct LayoutTree
                 _ => throw new ArgumentOutOfRangeException()
             }
         );
+    }
 
     public ref readonly Layout GetUnroundedLayout(UIElement node_id) => ref node_id.m_unrounded_layout;
     public void SetFinalLayout(UIElement node_id, in Layout layout) => node_id.m_final_layout = layout;

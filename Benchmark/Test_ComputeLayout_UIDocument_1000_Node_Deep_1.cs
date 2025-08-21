@@ -11,7 +11,7 @@ namespace Benchmark;
 [DisassemblyDiagnoser(maxDepth: 1000, syntax: DisassemblySyntax.Intel)]
 public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
 {
-    private UIDocument document;
+    private UIDocument document = null!;
 
     [GlobalSetup]
     public void SetUp()

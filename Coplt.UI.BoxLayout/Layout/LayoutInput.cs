@@ -20,4 +20,15 @@ public record struct LayoutInput(
     public Size<float?> ParentSize = ParentSize;
     public Size<AvailableSpace> AvailableSpace = AvailableSpace;
     public Line<bool> VerticalMarginsAreCollapsible = VerticalMarginsAreCollapsible;
+
+    public static readonly LayoutInput Hidden = new()
+    {
+        RunMode = RunMode.PerformHiddenLayout,
+        SizingMode = SizingMode.InherentSize,
+        Axis = RequestedAxis.Both,
+        KnownDimensions = default,
+        ParentSize = default,
+        AvailableSpace = new(Styles.AvailableSpace.MaxContent),
+        VerticalMarginsAreCollapsible = default,
+    };
 }

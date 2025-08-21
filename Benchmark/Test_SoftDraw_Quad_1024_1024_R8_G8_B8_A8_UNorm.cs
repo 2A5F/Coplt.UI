@@ -11,8 +11,8 @@ namespace Benchmark;
 [DisassemblyDiagnoser(maxDepth: 1000, syntax: DisassemblySyntax.Intel)]
 public class Test_SoftDraw_Quad_1024_1024_R8_G8_B8_A8_UNorm
 {
-    public SoftGraphicsContext ctx;
-    public SoftTexture rt;
+    public SoftGraphicsContext ctx= null!;
+    public SoftTexture rt= null!;
 
     [GlobalSetup]
     public void Setup()

@@ -204,18 +204,26 @@ public static partial class BoxLayout
 
     #endregion
 
-    // #region ComputeHiddenLayout
-    //
-    // public static void ComputeHiddenLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
-    //     (ref TTree tree, TNodeId root, Size<AvailableSpace> available_space)
-    //     where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, allows ref struct
-    //     where TChildIter : IIterator<TNodeId>, allows ref struct
-    //     where TCoreContainerStyle : ICoreStyle, allows ref struct
-    // {
-    //     // todo
-    // }
-    //
-    // #endregion
+    #region ComputeHiddenLayout
+    
+    public static LayoutOutput ComputeHiddenLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
+        (ref TTree tree, TNodeId node)
+        where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, ICacheTree<TNodeId>, allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        where TCoreContainerStyle : ICoreStyle, allows ref struct
+    {
+        tree.CacheClear(node);
+        tree.SetUnroundedLayout(node, Layout.WithOrder(0));
+
+        foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
+        {
+            tree.ComputeChildLayout(child, LayoutInput.Hidden);
+        }
+        
+        return LayoutOutput.Hidden;
+    }
+    
+    #endregion
 }
 
 public delegate LayoutOutput CachedLayoutComputeFunction<TTree, TNodeId>(

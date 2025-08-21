@@ -32,4 +32,14 @@ public record struct LayoutOutput
             BottomMargin = default,
             MarginsCanCollapseThrough = false,
         };
+
+    public static readonly LayoutOutput Hidden = new()
+    {
+        Size = default,
+        ContentSize = default,
+        FirstBaseLines = default,
+        TopMargin = default,
+        BottomMargin = default,
+        MarginsCanCollapseThrough = false,
+    };
 }
