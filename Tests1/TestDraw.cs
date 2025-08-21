@@ -67,12 +67,6 @@ public class TestDraw
         });
     }
 
-    public ref struct PixelInput
-    {
-        public float4_mt Position_CS;
-        public float3_mt Color;
-    }
-
     public struct Pipeline : ISoftGraphicPipelineState, ISoftPixelShader<SoftSimpleRefMesh>
     {
         private static readonly SoftGraphicPipelineState s_state = new()
@@ -130,35 +124,5 @@ public class TestDraw
             rt.ReadRowUNorm8(y, MemoryMarshal.AsBytes(span), ParallelJobScheduler.Instance);
         }
         img.SaveAsPng("./Test_Draw.png");
-    }
-
-    [Test, Repeat(100)]
-    public void Test_Draw2()
-    {
-        var ctx = new SoftGraphicsContext();
-        var rt = SoftTexture.Create(SoftTextureFormat.R8_G8_B8_A8_UNorm, 1024, 1024);
-        ctx.SetRenderTarget(rt);
-        ctx.ClearRenderTarget(new float4(0.89f, 0.56f, 0.24f, 1f));
-        ctx.SetViewport(new(0, 0, 1024, 1024, 0, 1));
-        ctx.SetScissorRect(new(0, 0, 1024, 1024));
-
-        var start = Stopwatch.GetTimestamp();
-
-        ctx.Draw(
-            new SoftSimpleRefMesh(
-                [0, 2],
-                [1, 1],
-                [2, 3],
-                [-0.5f, 0.5f, -0.5f, 0.5f],
-                [-0.5f, -0.5f, 0.5f, 0.5f],
-                [1, 1, 1, 1],
-                [1, 1, 1, 1]
-            ),
-            new Pipeline()
-        );
-
-        var end = Stopwatch.GetTimestamp();
-        var el = Stopwatch.GetElapsedTime(start, end);
-        Console.WriteLine($"{el} ; {el.TotalMilliseconds}ms ; {el.TotalMicroseconds}us");
     }
 }

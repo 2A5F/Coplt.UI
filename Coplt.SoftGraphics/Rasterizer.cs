@@ -46,7 +46,7 @@ internal struct TriangleContext(uint cluster, uint_mt index, b32_mt active_lanes
     #region Setup
 
     /// <returns>All skipped</returns>
-    [MethodImpl(512)]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public bool Setup(in RasterizerContext rc)
     {
         if (CheckVisible()) return true;

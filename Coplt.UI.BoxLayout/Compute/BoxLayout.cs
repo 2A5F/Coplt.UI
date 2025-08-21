@@ -164,6 +164,46 @@ public static partial class BoxLayout
 
     #endregion
 
+    #region ComputeCachedLayout
+
+    public static LayoutOutput ComputeCachedLayout<TTree, TNodeId>(
+        ref TTree tree, TNodeId node, LayoutInput inputs, CachedLayoutComputeFunction<TTree, TNodeId> compute_uncached
+    ) where TTree : ICacheTree<TNodeId>
+    {
+        var (run_mode, _, _, known_dimensions, _, available_space, _) = inputs;
+
+        // First we check if we have a cached result for the given input
+        var cache_entry = tree.CacheGet(node, known_dimensions, available_space, run_mode);
+        if (cache_entry is { } cached_size_and_baselines) return cached_size_and_baselines;
+
+        var computed_size_and_baselines = compute_uncached(ref tree, node, inputs);
+
+        // Cache result
+        tree.CacheStore(node, known_dimensions, available_space, run_mode, computed_size_and_baselines);
+
+        return computed_size_and_baselines;
+    }
+
+    public static LayoutOutput ComputeCachedLayout<TTree, TNodeId, TArg>(
+        ref TTree tree, TNodeId node, LayoutInput inputs, TArg arg, CachedLayoutComputeFunction<TTree, TNodeId, TArg> compute_uncached
+    ) where TTree : ICacheTree<TNodeId>
+    {
+        var (run_mode, _, _, known_dimensions, _, available_space, _) = inputs;
+
+        // First we check if we have a cached result for the given input
+        var cache_entry = tree.CacheGet(node, known_dimensions, available_space, run_mode);
+        if (cache_entry is { } cached_size_and_baselines) return cached_size_and_baselines;
+
+        var computed_size_and_baselines = compute_uncached(ref tree, node, inputs, arg);
+
+        // Cache result
+        tree.CacheStore(node, known_dimensions, available_space, run_mode, computed_size_and_baselines);
+
+        return computed_size_and_baselines;
+    }
+
+    #endregion
+
     // #region ComputeHiddenLayout
     //
     // public static void ComputeHiddenLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
@@ -177,3 +217,11 @@ public static partial class BoxLayout
     //
     // #endregion
 }
+
+public delegate LayoutOutput CachedLayoutComputeFunction<TTree, TNodeId>(
+    ref TTree tree, TNodeId node, LayoutInput inputs
+) where TTree : ICacheTree<TNodeId>;
+
+public delegate LayoutOutput CachedLayoutComputeFunction<TTree, TNodeId, TArg>(
+    ref TTree tree, TNodeId node, LayoutInput inputs, TArg arg
+) where TTree : ICacheTree<TNodeId>;

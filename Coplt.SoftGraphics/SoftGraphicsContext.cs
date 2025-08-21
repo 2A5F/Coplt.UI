@@ -130,6 +130,21 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
         };
 
         var triangles = PooledArray<TriangleContext>.Rent((int)(Mesh.MaxPrimitives + 15) / 16);
+        var triangle_count = SetupTriangles(Mesh, rc, triangles.Span);
+        if (triangle_count == 0) return;
+
+        DispatchTileContext<TMesh, TPipeline> dtc = new(
+            Mesh, Pipeline, m_rt_color, m_rt_depth_stencil, triangles.Span[..triangle_count]
+        );
+        Rasterizer<TMesh, TPipeline>.DispatchTile(m_job_scheduler, &rc, &dtc);
+    }
+
+    [MethodImpl(512)]
+    private static int SetupTriangles<TMesh>(
+        in TMesh Mesh, in RasterizerContext rc, Span<TriangleContext> triangles
+    )
+        where TMesh : ISoftMeshData, allows ref struct
+    {
         var triangle_count = 0;
 
         var num_clusters = Mesh.NumClusters;
@@ -143,16 +158,11 @@ public sealed class SoftGraphicsContext(AJobScheduler? scheduler = null)
 
                 TriangleContext tc = new(cluster, index, active_lanes, cs_a, cs_b, cs_c);
                 if (tc.Setup(in rc)) continue;
-                triangles.Span[triangle_count++] = tc;
+                triangles[triangle_count++] = tc;
             }
         }
 
-        if (triangle_count == 0) return;
-
-        DispatchTileContext<TMesh, TPipeline> dtc = new(
-            Mesh, Pipeline, m_rt_color, m_rt_depth_stencil, triangles.Span[..triangle_count]
-        );
-        Rasterizer<TMesh, TPipeline>.DispatchTile(m_job_scheduler, &rc, &dtc);
+        return triangle_count;
     }
 
     #endregion

@@ -69,7 +69,8 @@ internal struct LayoutTree
     : ILayoutFlexboxContainer<UIElement, OrderedSet<UIElement>.Enumerator
             , RefCoreStyle<StyleSet>, RefFlexContainerStyle<StyleSet>, RefFlexItemStyle<StyleSet>>,
         IRoundTree<UIElement, OrderedSet<UIElement>.Enumerator>,
-        IPrintTree<UIElement, OrderedSet<UIElement>.Enumerator>
+        IPrintTree<UIElement, OrderedSet<UIElement>.Enumerator>,
+        ICacheTree<UIElement>
 {
     public OrderedSet<UIElement>.Enumerator ChildIds(UIElement parent_node_id) =>
         parent_node_id.m_childs.GetEnumerator();
@@ -84,25 +85,38 @@ internal struct LayoutTree
 
     public void SetUnroundedLayout(UIElement node_id, in Layout layout) => node_id.m_unrounded_layout = layout;
     public LayoutOutput ComputeChildLayout(UIElement node_id, LayoutInput inputs) =>
-        (node_id.m_computed_style.Display, node_id.Count) switch
-        {
-            (Display.None, _) => throw new NotImplementedException(),
-            (Display.Flex, > 0) => BoxLayout.ComputeFlexBoxLayout<LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator,
-                    RefCoreStyle<StyleSet>, RefFlexContainerStyle<StyleSet>, RefFlexItemStyle<StyleSet>>
-                (ref this, node_id, inputs),
-            (Display.Grid, > 0) => throw new NotImplementedException(),
-            (Display.Block, > 0) => throw new NotImplementedException(),
-            (_, <= 0) => BoxLayout.ComputeLeafLayout(
-                inputs, new RefCoreStyle<StyleSet>(ref node_id.m_computed_style), ref this, node_id,
-                static (node, known_dimensions, available_space) => 
-                    known_dimensions.Or(new Size<float>(0f)) // todo
-            ),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        BoxLayout.ComputeCachedLayout(
+            ref this, node_id, inputs,
+            static (ref LayoutTree tree, UIElement node_id, LayoutInput inputs) => (node_id.m_computed_style.Display, node_id.Count) switch
+            {
+                (Display.None, _) => throw new NotImplementedException(),
+                (Display.Flex, > 0) => BoxLayout.ComputeFlexBoxLayout<LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator,
+                        RefCoreStyle<StyleSet>, RefFlexContainerStyle<StyleSet>, RefFlexItemStyle<StyleSet>>
+                    (ref tree, node_id, inputs),
+                (Display.Grid, > 0) => throw new NotImplementedException(),
+                (Display.Block, > 0) => throw new NotImplementedException(),
+                (_, <= 0) => BoxLayout.ComputeLeafLayout(
+                    inputs, new RefCoreStyle<StyleSet>(ref node_id.m_computed_style), ref tree, node_id,
+                    static (node, known_dimensions, available_space) =>
+                        known_dimensions.Or(new Size<float>(0f)) // todo
+                ),
+                _ => throw new ArgumentOutOfRangeException()
+            }
+        );
 
     public ref readonly Layout GetUnroundedLayout(UIElement node_id) => ref node_id.m_unrounded_layout;
     public void SetFinalLayout(UIElement node_id, in Layout layout) => node_id.m_final_layout = layout;
 
     public void FormatDebugLabel(UIElement node_id, StringBuilder builder) => builder.Append($"{node_id}");
     public ref readonly Layout GetFinalLayout(UIElement node_id) => ref node_id.m_final_layout;
+
+    public LayoutOutput? CacheGet(
+        UIElement node_id, Size<float?> known_dimensions, Size<AvailableSpace> available_space, RunMode run_mode
+    ) => node_id.m_cache.Get(known_dimensions, available_space, run_mode);
+    public void CacheStore(
+        UIElement node_id, Size<float?> known_dimensions, Size<AvailableSpace> available_space, RunMode run_mode,
+        LayoutOutput layout_output
+    ) => node_id.m_cache.Store(known_dimensions, available_space, run_mode, layout_output);
+    public void CacheClear(UIElement node_id)
+        => node_id.m_cache.Clear();
 }

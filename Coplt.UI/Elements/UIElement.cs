@@ -15,6 +15,7 @@ public sealed class UIElement : IEnumerable<UIElement>
     internal OrderedSet<UIElement> m_childs;
 
     internal StyleSet m_computed_style = new();
+    internal LayoutCache m_cache;
     internal Layout m_unrounded_layout;
     internal Layout m_final_layout;
 
