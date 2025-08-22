@@ -5,11 +5,11 @@ using Coplt.UI.Styles;
 namespace Coplt.UI.Elements;
 
 [StructLayout(LayoutKind.Auto)]
-public record struct ComputedStyle() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
+public record struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
 {
     #region Default
 
-    public static readonly ComputedStyle Default = new();
+    public static readonly StyleSet Default = new();
 
     #endregion
 

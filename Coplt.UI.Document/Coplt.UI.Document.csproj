@@ -4,12 +4,12 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Coplt.UI.Tree</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Coplt.UI.BoxLayout\Coplt.UI.BoxLayout.csproj" />
       <ProjectReference Include="..\Coplt.UI.Utilities\Coplt.UI.Utilities.csproj" />
-      <ProjectReference Include="..\Coplt.UI.Document\Coplt.UI.Document.csproj" />
     </ItemGroup>
 
     <ItemGroup>

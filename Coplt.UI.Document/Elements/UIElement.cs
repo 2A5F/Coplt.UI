@@ -2,7 +2,6 @@
 using System.Text;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Collections;
-using Coplt.UI.Styles.Rules;
 using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Elements;
@@ -11,18 +10,17 @@ public sealed class UIElement : IEnumerable<UIElement>
 {
     #region Fields
 
-    internal EmbedSet<(object, ulong)> m_tags;
+    internal DirtyFlags m_dirty;
+
+    internal Layout m_final_layout;
+    internal Layout m_unrounded_layout;
+    internal LayoutCache m_cache;
+    internal StyleSet m_style = new();
+
     internal OrderedSet<UIElement> m_childs;
 
-    internal ComputedStyle m_computed_style = new();
-    internal InlineStyle? m_inline_style;
-    internal LayoutCache m_cache;
-    internal Layout m_unrounded_layout;
-    internal Layout m_final_layout;
-
-    internal bool m_layout_dirty;
-    internal bool m_render_dirty;
-    internal bool m_styles_dirty;
+    internal string? m_name;
+    internal EmbedSet<(object, ulong)> m_tags;
 
     #endregion
 
@@ -34,51 +32,57 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     public UIElement? Parent { get; internal set; }
 
-    public string? Name { get; set; }
+    public string? Name
+    {
+        get => m_name;
+        set
+        {
+            m_name = value;
+            MarkSelectorDirty();
+        }
+    }
 
-    public ref readonly ComputedStyle ComputedStyle => ref m_computed_style;
+    public StyleAccess Style => new(this);
+
+    public ref readonly StyleSet RawStyle => ref m_style;
     public ref readonly Layout UnroundedLayout => ref m_unrounded_layout;
     public ref readonly Layout FinalLayout => ref m_final_layout;
 
     #endregion
 
-    #region Style
-
-    public InlineStyleAccess InlineStyle => new(this);
-
-    #endregion
-
     #region Dirty
+
+    public ref readonly DirtyFlags DirtyFlags => ref m_dirty;
 
     internal void LayoutDirtyTouch(UIDocument document)
     {
         Document = document;
-        m_layout_dirty = false;
+        m_dirty &= ~DirtyFlags.Layout;
     }
 
     public void MarkLayoutDirty()
     {
         if (Document == null) return;
-        if (m_layout_dirty) return;
-        m_layout_dirty = true;
+        if ((m_dirty & DirtyFlags.Layout) != 0) return;
+        m_dirty |= DirtyFlags.Layout;
         Version++;
         m_cache.Clear();
         Parent?.MarkLayoutDirty();
-        MarkRenderDirty();
+        MarkVisualDirty();
     }
 
-    public void MarkRenderDirty()
+    public void MarkVisualDirty()
     {
         if (Document == null) return;
-        if (m_render_dirty) return;
-        m_render_dirty = true;
+        if ((m_dirty & DirtyFlags.Visual) != 0) return;
+        m_dirty |= DirtyFlags.Visual;
     }
 
-    public void MarkStylesDirty()
+    public void MarkSelectorDirty()
     {
         if (Document == null) return;
-        if (m_styles_dirty) return;
-        m_styles_dirty = true;
+        if ((m_dirty & DirtyFlags.Selector) != 0) return;
+        m_dirty |= DirtyFlags.Selector;
     }
 
     #endregion
@@ -90,25 +94,25 @@ public sealed class UIElement : IEnumerable<UIElement>
     public bool AddTag(string Tag)
     {
         var r = m_tags.Add((Tag, 0));
-        if (r) MarkStylesDirty();
+        if (r) MarkSelectorDirty();
         return r;
     }
     public bool AddTag<E>(E Tag) where E : struct, Enum
     {
         var r = m_tags.Add((typeof(E), UnsafeUtils.EnumToULong(Tag)));
-        if (r) MarkStylesDirty();
+        if (r) MarkSelectorDirty();
         return r;
     }
     public bool RemoveTag(string Tag)
     {
         var r = m_tags.Remove((Tag, 0));
-        if (r) MarkStylesDirty();
+        if (r) MarkSelectorDirty();
         return r;
     }
     public bool RemoveTag<E>(E Tag) where E : struct, Enum
     {
         var r = m_tags.Remove((typeof(E), UnsafeUtils.EnumToULong(Tag)));
-        if (r) MarkStylesDirty();
+        if (r) MarkSelectorDirty();
         return r;
     }
 
@@ -116,7 +120,7 @@ public sealed class UIElement : IEnumerable<UIElement>
     {
         if (m_tags.Count == 0) return;
         m_tags.Clear();
-        MarkStylesDirty();
+        MarkSelectorDirty();
     }
 
     #endregion
@@ -289,14 +293,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region ToString
 
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-        sb.Append($"<view");
-        if (Name != null) sb.Append($" name=\"{Name.Replace("\"", "\\\"")}\"");
-        sb.Append('>');
-        return sb.ToString();
-    }
+    public override string ToString() => Name ?? "<View>";
 
     #endregion
 }

@@ -23,12 +23,12 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
         {
             var doc = new UIDocument();
             var root = new UIElement { Name = "Root" };
-            Unsafe.AsRef(in root.ComputedStyle).FlexDirection = FlexDirection.Row;
-            Unsafe.AsRef(in root.ComputedStyle).FlexWrap = FlexWrap.Wrap;
+            Unsafe.AsRef(in root.RawStyle).FlexDirection = FlexDirection.Row;
+            Unsafe.AsRef(in root.RawStyle).FlexWrap = FlexWrap.Wrap;
             for (int i = 0; i < 1000; i++)
             {
                 var child = new UIElement { Name = $"Child{i}" };
-                Unsafe.AsRef(in child.ComputedStyle).Size
+                Unsafe.AsRef(in child.RawStyle).Size
                     = new(Random.Shared.Next(10, 100).Fx(), 100.Fx());
                 root.Add(child);
             }

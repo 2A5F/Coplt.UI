@@ -36,7 +36,7 @@ public sealed class UIDocument
     {
         if (m_root == null) return;
         LayoutTree tree = new(this);
-        BoxLayout.ComputeRootLayout<LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<ComputedStyle>>(
+        BoxLayout.ComputeRootLayout<LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<StyleSet>>(
             ref tree, m_root, available_space
         );
         if (use_rounding)
@@ -63,7 +63,7 @@ public sealed class UIDocument
 
 internal struct LayoutTree(UIDocument document)
     : ILayoutFlexboxContainer<UIElement, OrderedSet<UIElement>.Enumerator
-            , RefCoreStyle<ComputedStyle>, RefFlexContainerStyle<ComputedStyle>, RefFlexItemStyle<ComputedStyle>>,
+            , RefCoreStyle<StyleSet>, RefFlexContainerStyle<StyleSet>, RefFlexItemStyle<StyleSet>>,
         IRoundTree<UIElement, OrderedSet<UIElement>.Enumerator>,
         IPrintTree<UIElement, OrderedSet<UIElement>.Enumerator>,
         ICacheTree<UIElement>
@@ -75,31 +75,31 @@ internal struct LayoutTree(UIDocument document)
 
     public float Calc(CalcId id, float basis) => 0; // todo
 
-    public RefCoreStyle<ComputedStyle> GetCoreContainerStyle(UIElement node_id) => new(ref node_id.m_computed_style);
-    public RefFlexContainerStyle<ComputedStyle> GetFlexBoxContainerStyle(UIElement node_id) => new(ref node_id.m_computed_style);
-    public RefFlexItemStyle<ComputedStyle> GetFlexboxChildStyle(UIElement child_node_id) => new(ref child_node_id.m_computed_style);
+    public RefCoreStyle<StyleSet> GetCoreContainerStyle(UIElement node_id) => new(ref node_id.m_style);
+    public RefFlexContainerStyle<StyleSet> GetFlexBoxContainerStyle(UIElement node_id) => new(ref node_id.m_style);
+    public RefFlexItemStyle<StyleSet> GetFlexboxChildStyle(UIElement child_node_id) => new(ref child_node_id.m_style);
 
     public void SetUnroundedLayout(UIElement node_id, in Layout layout) => node_id.m_unrounded_layout = layout;
     public LayoutOutput ComputeChildLayout(UIElement node_id, LayoutInput inputs)
     {
         if (inputs.RunMode == RunMode.PerformHiddenLayout)
             return BoxLayout.ComputeHiddenLayout
-                <LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<ComputedStyle>>
+                <LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<StyleSet>>
                 (ref this, node_id);
         return BoxLayout.ComputeCachedLayout(
             ref this, node_id, inputs,
-            static (ref LayoutTree tree, UIElement node_id, LayoutInput inputs) => (node_id.m_computed_style.Display, node_id.Count) switch
+            static (ref LayoutTree tree, UIElement node_id, LayoutInput inputs) => (node_id.m_style.Display, node_id.Count) switch
             {
                 (Display.None, _) => BoxLayout.ComputeHiddenLayout
-                    <LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<ComputedStyle>>
+                    <LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator, RefCoreStyle<StyleSet>>
                     (ref tree, node_id),
                 (Display.Flex, > 0) => BoxLayout.ComputeFlexBoxLayout<LayoutTree, UIElement, OrderedSet<UIElement>.Enumerator,
-                        RefCoreStyle<ComputedStyle>, RefFlexContainerStyle<ComputedStyle>, RefFlexItemStyle<ComputedStyle>>
+                        RefCoreStyle<StyleSet>, RefFlexContainerStyle<StyleSet>, RefFlexItemStyle<StyleSet>>
                     (ref tree, node_id, inputs),
                 (Display.Grid, > 0) => throw new NotImplementedException(),
                 (Display.Block, > 0) => throw new NotImplementedException(),
                 (_, <= 0) => BoxLayout.ComputeLeafLayout(
-                    inputs, new RefCoreStyle<ComputedStyle>(ref node_id.m_computed_style), ref tree, node_id,
+                    inputs, new RefCoreStyle<StyleSet>(ref node_id.m_style), ref tree, node_id,
                     static (node, known_dimensions, available_space) =>
                         known_dimensions.Or(new Size<float>(0f)) // todo
                 ),

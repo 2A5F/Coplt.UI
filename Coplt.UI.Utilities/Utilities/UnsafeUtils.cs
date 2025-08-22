@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Utilities;
 
-internal static class UnsafeUtils
+public static class UnsafeUtils
 {
     public static ulong EnumToULong<E>(E value) where E : struct, Enum => Unsafe.SizeOf<E>() switch
     {
