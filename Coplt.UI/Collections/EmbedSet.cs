@@ -50,7 +50,7 @@ public struct EmbedSet<T> : ICollection<T>
 
     #endregion
 
-    #region Constructors
+    #region Ctor
 
     public EmbedSet(int capacity)
     {
