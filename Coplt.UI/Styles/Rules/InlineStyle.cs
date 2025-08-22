@@ -2,9 +2,9 @@
 
 namespace Coplt.UI.Styles.Rules;
 
-internal record struct InlineStyle()
+internal class InlineStyle
 {
-    
+    internal StyleSheet m_sheet;
 }
 
 public ref struct InlineStyleAccess(UIElement Element)
