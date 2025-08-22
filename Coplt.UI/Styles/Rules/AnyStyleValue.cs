@@ -16,9 +16,6 @@ public partial struct AnyStyleValue
         float Fixed();
         float Percent();
         CalcId Calc();
-
-        // external index
-        int Color();
     }
 
     public static implicit operator AnyStyleValue(float value) => MakeFixed(value);

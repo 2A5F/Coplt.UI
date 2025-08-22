@@ -44,7 +44,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Style
 
-    public InlineStyleAccess Style => new(this);
+    public InlineStyleAccess InlineStyle => new(this);
 
     #endregion
 

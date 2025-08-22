@@ -9,7 +9,7 @@ internal struct StyleSheet
     #region Fields
 
     private EmbedMap<StylePropertyId, AnyStyleValue> m_values;
-    private EmbedList<Color> m_colors;
+    private EmbedMap<StylePropertyId, Color> m_colors;
     private bool m_has_background_mage;
     private UIImage m_background_mage;
     private bool m_has_box_shadows;
@@ -126,16 +126,7 @@ internal struct StyleSheet
     public void SetColor(StylePropertyId id, Color value)
     {
         if (!id.IsColor()) throw new InvalidOperationException($"{id} is not Color value");
-        ref var slot = ref m_values.GetValueRefOrUninitialized(id, out var exists);
-        if (!exists)
-        {
-            slot = AnyStyleValue.MakeColor(m_colors.Count);
-            m_colors.Add(value);
-        }
-        else
-        {
-            m_colors[slot.Color] = value;
-        }
+        m_colors[id] = value;
     }
 
     #endregion
@@ -381,9 +372,9 @@ internal struct StyleSheet
     public bool TryGetColor(StylePropertyId id, out Color value)
     {
         if (!id.IsColor()) throw new InvalidOperationException($"{id} is not Color value");
-        if (m_values.TryGet(id, out var v))
+        if (m_colors.TryGet(id, out var v))
         {
-            value = m_colors[v.Color];
+            value = v;
             return true;
         }
         value = default;
@@ -442,6 +433,45 @@ internal struct StyleSheet
     }
 
     #endregion
+
+    #endregion
+
+    #region Unset
+
+    public void Unset(StylePropertyId id)
+    {
+        switch (id)
+        {
+            case StylePropertyId.BackgroundImage:
+                m_has_background_mage = false;
+                m_background_mage = default;
+                break;
+            case StylePropertyId.BoxShadow:
+                m_has_box_shadows = false;
+                m_box_shadows = default;
+                break;
+            case StylePropertyId.BackDrop:
+                m_has_back_drop = false;
+                m_back_drop = default;
+                break;
+            case StylePropertyId.Filter:
+                m_has_filter = false;
+                m_filter = default;
+                break;
+            case StylePropertyId.BackgroundColor:
+            case StylePropertyId.BackgroundImageTint:
+            case StylePropertyId.BorderColorTop:
+            case StylePropertyId.BorderColorRight:
+            case StylePropertyId.BorderColorBottom:
+            case StylePropertyId.BorderColorLeft:
+            case StylePropertyId.TextColor:
+                m_colors.Remove(id);
+                break;
+            default:
+                m_values.Remove(id);
+                break;
+        }
+    }
 
     #endregion
 }

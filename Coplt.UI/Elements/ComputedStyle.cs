@@ -7,6 +7,12 @@ namespace Coplt.UI.Elements;
 [StructLayout(LayoutKind.Auto)]
 public record struct ComputedStyle() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
 {
+    #region Default
+
+    public static readonly ComputedStyle Default = new();
+
+    #endregion
+
     #region BoxLayout Style
 
     public Display Display { get; set; } = Display.Flex;
