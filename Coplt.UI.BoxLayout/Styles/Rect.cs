@@ -41,6 +41,27 @@ public static partial class BoxStyleExtensions
             self.Bottom.TryResolve(ctx, ref calc) ?? 0,
             self.Left.TryResolve(ctx, ref calc) ?? 0
         );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Rect<float> ResolveOrZero<TCalc>(this Rect<LengthPercentage> self, float? ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        => new(
+            self.Top.ResolveOrZero(ctx, ref calc),
+            self.Right.ResolveOrZero(ctx, ref calc),
+            self.Bottom.ResolveOrZero(ctx, ref calc),
+            self.Left.ResolveOrZero(ctx, ref calc)
+        );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Rect<float> ResolveOrZero<TCalc>(this Rect<LengthPercentageAuto> self, float? ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        => new(
+            self.Top.ResolveOrZero(ctx, ref calc),
+            self.Right.ResolveOrZero(ctx, ref calc),
+            self.Bottom.ResolveOrZero(ctx, ref calc),
+            self.Left.ResolveOrZero(ctx, ref calc)
+        );
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Rect<float> ResolveOrZero<T, TCalc>(this Rect<T> self, Size<float?> ctx, ref TCalc calc)
         where TCalc : ICalc, allows ref struct
@@ -50,6 +71,16 @@ public static partial class BoxStyleExtensions
             self.Right.TryResolve(ctx.Width, ref calc) ?? 0,
             self.Bottom.TryResolve(ctx.Height, ref calc) ?? 0,
             self.Left.TryResolve(ctx.Width, ref calc) ?? 0
+        );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Rect<float> ResolveOrZero<TCalc>(this Rect<LengthPercentage> self, Size<float?> ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        => new(
+            self.Top.ResolveOrZero(ctx.Height, ref calc),
+            self.Right.ResolveOrZero(ctx.Width, ref calc),
+            self.Bottom.ResolveOrZero(ctx.Height, ref calc),
+            self.Left.ResolveOrZero(ctx.Width, ref calc)
         );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

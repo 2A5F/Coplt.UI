@@ -17,19 +17,19 @@ public enum BoxGenerationMode : byte
     None,
 }
 
-public enum Position
+public enum Position : byte
 {
     Relative,
     Absolute,
 }
 
-public enum BoxSizing
+public enum BoxSizing : byte
 {
     BorderBox,
     ContentBox,
 }
 
-public enum Overflow
+public enum Overflow : byte
 {
     Visible,
     Clip,

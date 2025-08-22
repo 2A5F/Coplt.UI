@@ -2,8 +2,8 @@
 using System.Text;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Collections;
+using Coplt.UI.Styles.Rules;
 using Coplt.UI.Utilities;
-using Coplt.UI.Widgets;
 
 namespace Coplt.UI.Elements;
 
@@ -14,12 +14,15 @@ public sealed class UIElement : IEnumerable<UIElement>
     internal EmbedSet<(object, ulong)> m_tags;
     internal OrderedSet<UIElement> m_childs;
 
-    internal StyleSet m_computed_style = new();
+    internal ComputedStyle m_computed_style = new();
+    internal InlineStyle m_inline_style = new();
     internal LayoutCache m_cache;
     internal Layout m_unrounded_layout;
     internal Layout m_final_layout;
 
-    internal bool m_dirty;
+    internal bool m_layout_dirty;
+    internal bool m_render_dirty;
+    internal bool m_styles_dirty;
 
     #endregion
 
@@ -27,30 +30,55 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     public ulong Version { get; internal set; }
 
-    public UIPanel? Panel { get; internal set; }
     public UIDocument? Document { get; internal set; }
-    public AWidget? Widget { get; internal set; }
 
     public UIElement? Parent { get; internal set; }
 
     public string? Name { get; set; }
 
-    public ref readonly StyleSet ComputedStyle => ref m_computed_style;
+    public ref readonly ComputedStyle ComputedStyle => ref m_computed_style;
     public ref readonly Layout UnroundedLayout => ref m_unrounded_layout;
     public ref readonly Layout FinalLayout => ref m_final_layout;
 
     #endregion
 
+    #region Style
+
+    public InlineStyleAccess Style => new(this);
+
+    #endregion
+
     #region Dirty
 
-    public void MarkDirty()
+    internal void LayoutDirtyTouch(UIDocument document)
+    {
+        Document = document;
+        m_layout_dirty = false;
+    }
+
+    public void MarkLayoutDirty()
     {
         if (Document == null) return;
-        if (m_dirty) return;
-        m_dirty = true;
+        if (m_layout_dirty) return;
+        m_layout_dirty = true;
         Version++;
         m_cache.Clear();
-        Parent?.MarkDirty();
+        Parent?.MarkLayoutDirty();
+        MarkRenderDirty();
+    }
+
+    public void MarkRenderDirty()
+    {
+        if (Document == null) return;
+        if (m_render_dirty) return;
+        m_render_dirty = true;
+    }
+
+    public void MarkStylesDirty()
+    {
+        if (Document == null) return;
+        if (m_styles_dirty) return;
+        m_styles_dirty = true;
     }
 
     #endregion
@@ -62,25 +90,25 @@ public sealed class UIElement : IEnumerable<UIElement>
     public bool AddTag(string Tag)
     {
         var r = m_tags.Add((Tag, 0));
-        if (r) MarkDirty();
+        if (r) MarkStylesDirty();
         return r;
     }
     public bool AddTag<E>(E Tag) where E : struct, Enum
     {
         var r = m_tags.Add((typeof(E), UnsafeUtils.EnumToULong(Tag)));
-        if (r) MarkDirty();
+        if (r) MarkStylesDirty();
         return r;
     }
     public bool RemoveTag(string Tag)
     {
         var r = m_tags.Remove((Tag, 0));
-        if (r) MarkDirty();
+        if (r) MarkStylesDirty();
         return r;
     }
     public bool RemoveTag<E>(E Tag) where E : struct, Enum
     {
         var r = m_tags.Remove((typeof(E), UnsafeUtils.EnumToULong(Tag)));
-        if (r) MarkDirty();
+        if (r) MarkStylesDirty();
         return r;
     }
 
@@ -88,7 +116,7 @@ public sealed class UIElement : IEnumerable<UIElement>
     {
         if (m_tags.Count == 0) return;
         m_tags.Clear();
-        MarkDirty();
+        MarkStylesDirty();
     }
 
     #endregion
@@ -139,7 +167,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         child.Parent?.Remove(child);
         m_childs.Add(child);
         child.Parent = this;
-        MarkDirty();
+        MarkLayoutDirty();
     }
 
     public void Add(params ReadOnlySpan<UIElement> childs)
@@ -170,7 +198,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         child.Parent?.Remove(child);
         m_childs.AddFirst(child);
         child.Parent = this;
-        MarkDirty();
+        MarkLayoutDirty();
     }
 
     public void Prepend(params ReadOnlySpan<UIElement> childs)
@@ -198,8 +226,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         if (!m_childs.Remove(child)) return false;
         child.Parent = null;
         child.Document = null;
-        child.Panel = null;
-        MarkDirty();
+        MarkLayoutDirty();
         return true;
     }
 
@@ -214,10 +241,9 @@ public sealed class UIElement : IEnumerable<UIElement>
         {
             child.Parent = null;
             child.Document = null;
-            child.Panel = null;
         }
         m_childs.Clear();
-        MarkDirty();
+        MarkLayoutDirty();
     }
 
     #endregion

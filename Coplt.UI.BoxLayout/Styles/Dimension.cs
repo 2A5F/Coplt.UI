@@ -104,6 +104,17 @@ public readonly partial struct LengthPercentage : ITryResolve<float?>
         Tags.Calc => ctx is { } dim ? calc.Calc(Calc, dim) : null,
         _ => throw new ArgumentOutOfRangeException()
     };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ResolveOrZero<TCalc>(float? ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct => (Tag, ctx) switch
+    {
+        (Tags.Fixed, _) => Fixed,
+        (Tags.Percent, { } dim) => dim * Percent,
+        (Tags.Calc, { } dim) => calc.Calc(Calc, dim),
+        (Tags.Percent or Tags.Calc, null) => 0,
+        _ => throw new ArgumentOutOfRangeException()
+    };
 }
 
 [Union]
@@ -148,6 +159,18 @@ public readonly partial struct LengthPercentageAuto : ITryResolve<float?>
         Tags.Fixed => Fixed,
         Tags.Percent => ctx is { } dim ? dim * Percent : null,
         Tags.Calc => ctx is { } dim ? calc.Calc(Calc, dim) : null,
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ResolveOrZero<TCalc>(float? ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct => (Tag, ctx) switch
+    {
+        (Tags.Auto, _) => 0,
+        (Tags.Fixed, _) => Fixed,
+        (Tags.Percent, { } dim) => dim * Percent,
+        (Tags.Calc, { } dim) => calc.Calc(Calc, dim),
+        (Tags.Percent or Tags.Calc, null) => 0,
         _ => throw new ArgumentOutOfRangeException()
     };
 }

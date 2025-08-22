@@ -72,6 +72,14 @@ public static partial class BoxStyleExtensions
         );
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Size<float> ResolveOrZero<TCalc>(this Size<LengthPercentage> self, Size<float> ctx, ref TCalc calc)
+        where TCalc : ICalc, allows ref struct
+        => new(
+            self.Width.ResolveOrZero(ctx.Width, ref calc),
+            self.Height.ResolveOrZero(ctx.Height, ref calc)
+        );
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Size<float?> TryApplyAspectRatio(this Size<float?> self, float? AspectRatio)
         => AspectRatio is { } ratio
             ? self switch

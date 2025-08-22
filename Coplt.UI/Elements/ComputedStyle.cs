@@ -5,7 +5,7 @@ using Coplt.UI.Styles;
 namespace Coplt.UI.Elements;
 
 [StructLayout(LayoutKind.Auto)]
-public record struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
+public record struct ComputedStyle() : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
 {
     #region BoxLayout Style
 
@@ -24,6 +24,7 @@ public record struct StyleSet() : IBlockContainerStyle, IFlexContainerStyle, IFl
     public Rect<LengthPercentageAuto> Margin { get; set; } = new(LengthPercentageAuto.Zero);
     public Rect<LengthPercentage> Padding { get; set; } = new(LengthPercentage.Zero);
     public Rect<LengthPercentage> Border { get; set; } = new(LengthPercentage.Zero);
+
     public AlignItems? AlignItems { get; set; } = null;
 
     public AlignSelf? AlignSelf { get; set; } = null;
