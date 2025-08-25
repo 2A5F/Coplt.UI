@@ -1,12 +1,12 @@
 ﻿using System.Collections;
-using System.Text;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Collections;
 using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Elements;
 
-public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
+public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>> 
+    where TRd : new() where TEd : new()
 {
     #region Fields
 
@@ -18,8 +18,8 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
 
     internal CommonStyle m_common_style = new();
 
-    internal TRd m_r_data = default!;
-    internal TEd m_e_data = default!;
+    internal TRd m_r_data = new()!;
+    internal TEd m_e_data = new()!;
 
     internal OrderedSet<UIElement<TRd, TEd>> m_childs;
 

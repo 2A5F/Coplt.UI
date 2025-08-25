@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Coplt.UI.Rending.Gpu\Coplt.UI.Rending.Gpu.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Coplt.Dropping" Version="0.6.0" PrivateAssets="all"/>
+        <PackageReference Include="Silk.NET.Direct3D12" Version="2.22.0"/>
+    </ItemGroup>
+
+</Project>

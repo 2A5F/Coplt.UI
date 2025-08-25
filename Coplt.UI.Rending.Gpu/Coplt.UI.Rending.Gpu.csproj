@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Coplt.UI.Document\Coplt.UI.Document.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all"/>
+        <PackageReference Include="Coplt.Dropping" Version="0.6.0" PrivateAssets="all"/>
+    </ItemGroup>
+
+</Project>

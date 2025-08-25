@@ -22,7 +22,8 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
         for (int j = 0; j < 100; j++)
         {
             var doc = new UIDocument<object, object>();
-            var root = new UIElement<object, object> { Name = "Root" };
+            var root = doc.Root;
+            root.Name = "Root";
             Unsafe.AsRef(in root.CommonStyle).FlexDirection = FlexDirection.Row;
             Unsafe.AsRef(in root.CommonStyle).FlexWrap = FlexWrap.Wrap;
             for (int i = 0; i < 1000; i++)
@@ -32,7 +33,6 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
                     = new(Random.Shared.Next(10, 100).Fx(), 100.Fx());
                 root.Add(child);
             }
-            doc.SetRoot(root);
             document[j] = doc;
         }
     }

@@ -9,6 +9,7 @@ using Coplt.UI.Styles;
 namespace Coplt.UI.Elements;
 
 public class UIDocument<TRd, TEd>
+    where TRd : new() where TEd : new()
 {
     #region Fields
 
@@ -18,14 +19,16 @@ public class UIDocument<TRd, TEd>
 
     #region Root
 
-    public UIElement<TRd, TEd>? Root => m_root;
-
-    public void SetRoot(UIElement<TRd, TEd> root)
+    public UIElement<TRd, TEd> Root
     {
-        if (root.Document == this) return;
-        if (root.Document != null) root.Document.m_root = null;
-        root.Parent?.Remove(root);
-        m_root = root;
+        get => m_root ??= new();
+        set
+        {
+            if (value.Document == this) return;
+            if (value.Document != null) value.Document.m_root = null;
+            value.Parent?.Remove(value);
+            m_root = value;
+        }
     }
 
     #endregion
@@ -67,6 +70,7 @@ internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
         IRoundTree<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>,
         IPrintTree<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>,
         ICacheTree<UIElement<TRd, TEd>>
+    where TRd : new() where TEd : new()
 {
     public OrderedSet<UIElement<TRd, TEd>>.Enumerator ChildIds(UIElement<TRd, TEd> parent_node_id) =>
         parent_node_id.m_childs.GetEnumerator();

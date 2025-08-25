@@ -1,6 +1,6 @@
 ﻿namespace Coplt.UI.Styles;
 
-public record struct UIImage(object? Object, ulong Id)
+public record struct UIImage(object? Object)
 {
     public static UIImage None => default;
 }

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Coplt.UI.Rending.Gpu.D3d12\Coplt.UI.Rending.Gpu.D3d12.csproj"/>
+        <ProjectReference Include="..\..\Coplt.UI.Rending.Gpu\Coplt.UI.Rending.Gpu.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Coplt.Dropping" Version="0.6.0" PrivateAssets="all"/>
+    </ItemGroup>
+
+</Project>

@@ -19,6 +19,8 @@ public readonly partial struct Length : ITryResolve<float?>
 
     public static Length Zero => MakeFixed(0);
 
+    public static implicit operator Length(float self) => MakeFixed(self);
+    
     public static implicit operator AnyLength(Length self) => self.Tag switch
     {
         Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
@@ -70,6 +72,8 @@ public readonly partial struct LengthPercentage : ITryResolve<float?>
     }
 
     public static LengthPercentage Zero => MakeFixed(0);
+
+    public static implicit operator LengthPercentage(float self) => MakeFixed(self);
 
     public static implicit operator AnyLength(LengthPercentage self) => self.Tag switch
     {
@@ -133,6 +137,8 @@ public readonly partial struct LengthPercentageAuto : ITryResolve<float?>
 
     public static LengthPercentageAuto Auto = MakeAuto();
 
+    public static implicit operator LengthPercentageAuto(float self) => MakeFixed(self);
+
     public static implicit operator AnyLength(LengthPercentageAuto self) => self.Tag switch
     {
         Tags.Auto => AnyLength.MakeAuto(),
@@ -190,6 +196,8 @@ public readonly partial struct Dimension : ITryResolve<float?>
     public static Dimension Zero => MakeFixed(0);
 
     public static Dimension Auto = MakeAuto();
+
+    public static implicit operator Dimension(float self) => MakeFixed(self);
 
     public static implicit operator AnyLength(Dimension self) => self.Tag switch
     {
