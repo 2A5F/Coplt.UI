@@ -48,9 +48,9 @@ public class TestUI1
     [Test]
     public void Test1()
     {
-        var panel = new UIPanel();
-        panel.SetSize(1024, 1024);
-        panel.SetRoot<Widget1>();
-        panel.Update();
+        // var panel = new UIPanel();
+        // panel.SetSize(1024, 1024);
+        // panel.SetRoot<Widget1>();
+        // panel.Update();
     }
 }

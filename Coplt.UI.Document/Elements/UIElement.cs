@@ -6,7 +6,7 @@ using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Elements;
 
-public sealed class UIElement : IEnumerable<UIElement>
+public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
 {
     #region Fields
 
@@ -15,9 +15,13 @@ public sealed class UIElement : IEnumerable<UIElement>
     internal Layout m_final_layout;
     internal Layout m_unrounded_layout;
     internal LayoutCache m_cache;
-    internal StyleSet m_style = new();
 
-    internal OrderedSet<UIElement> m_childs;
+    internal CommonStyle m_common_style = new();
+
+    internal TRd m_r_data = default!;
+    internal TEd m_e_data = default!;
+
+    internal OrderedSet<UIElement<TRd, TEd>> m_childs;
 
     internal string? m_name;
     internal EmbedSet<(object, ulong)> m_tags;
@@ -28,9 +32,9 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     public ulong Version { get; internal set; }
 
-    public UIDocument? Document { get; internal set; }
+    public UIDocument<TRd, TEd>? Document { get; internal set; }
 
-    public UIElement? Parent { get; internal set; }
+    public UIElement<TRd, TEd>? Parent { get; internal set; }
 
     public string? Name
     {
@@ -42,11 +46,14 @@ public sealed class UIElement : IEnumerable<UIElement>
         }
     }
 
-    public StyleAccess Style => new(this);
+    public StyleAccess<TRd, TEd> Style => new(this);
 
-    public ref readonly StyleSet RawStyle => ref m_style;
+    public ref readonly CommonStyle CommonStyle => ref m_common_style;
     public ref readonly Layout UnroundedLayout => ref m_unrounded_layout;
     public ref readonly Layout FinalLayout => ref m_final_layout;
+
+    public ref readonly TRd RData => ref m_r_data;
+    public ref readonly TEd EData => ref m_e_data;
 
     #endregion
 
@@ -54,7 +61,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     public ref readonly DirtyFlags DirtyFlags => ref m_dirty;
 
-    internal void LayoutDirtyTouch(UIDocument document)
+    internal void LayoutDirtyTouch(UIDocument<TRd, TEd> document)
     {
         Document = document;
         m_dirty &= ~DirtyFlags.Layout;
@@ -135,13 +142,13 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Contains
 
-    public bool Contains(UIElement child) => m_childs.Contains(child);
+    public bool Contains(UIElement<TRd, TEd> child) => m_childs.Contains(child);
 
     #endregion
 
     #region Private
 
-    private void CheckCirRef(UIElement new_child)
+    private void CheckCirRef(UIElement<TRd, TEd> new_child)
     {
         for (var cur = Parent; cur != null; cur = cur.Parent)
         {
@@ -149,7 +156,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         }
     }
 
-    private void EnsureChildNoAdd(UIElement node, bool no_check = false)
+    private void EnsureChildNoAdd(UIElement<TRd, TEd> node, bool no_check = false)
     {
         if (node.Parent != this)
         {
@@ -163,7 +170,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Add
 
-    public void Add(UIElement child, bool no_check = false)
+    public void Add(UIElement<TRd, TEd> child, bool no_check = false)
     {
         if (child == this) throw new InvalidOperationException("Cannot add self as child.");
         if (child.Parent == this) return;
@@ -174,7 +181,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         MarkLayoutDirty();
     }
 
-    public void Add(params ReadOnlySpan<UIElement> childs)
+    public void Add(params ReadOnlySpan<UIElement<TRd, TEd>> childs)
     {
         foreach (var child in childs)
         {
@@ -182,7 +189,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         }
     }
 
-    public void Add(bool no_check, params ReadOnlySpan<UIElement> childs)
+    public void Add(bool no_check, params ReadOnlySpan<UIElement<TRd, TEd>> childs)
     {
         foreach (var child in childs)
         {
@@ -194,7 +201,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Prepend
 
-    public void Prepend(UIElement child, bool no_check = false)
+    public void Prepend(UIElement<TRd, TEd> child, bool no_check = false)
     {
         if (child == this) throw new InvalidOperationException("Cannot add self as child.");
         if (child.Parent == this) return;
@@ -205,7 +212,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         MarkLayoutDirty();
     }
 
-    public void Prepend(params ReadOnlySpan<UIElement> childs)
+    public void Prepend(params ReadOnlySpan<UIElement<TRd, TEd>> childs)
     {
         foreach (var child in childs)
         {
@@ -213,7 +220,7 @@ public sealed class UIElement : IEnumerable<UIElement>
         }
     }
 
-    public void Prepend(bool no_check, params ReadOnlySpan<UIElement> childs)
+    public void Prepend(bool no_check, params ReadOnlySpan<UIElement<TRd, TEd>> childs)
     {
         foreach (var child in childs)
         {
@@ -225,7 +232,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Remove
 
-    public bool Remove(UIElement child)
+    public bool Remove(UIElement<TRd, TEd> child)
     {
         if (!m_childs.Remove(child)) return false;
         child.Parent = null;
@@ -254,7 +261,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region SetNext
 
-    public void SetNext(UIElement child, UIElement next_child, bool no_check = false)
+    public void SetNext(UIElement<TRd, TEd> child, UIElement<TRd, TEd> next_child, bool no_check = false)
     {
         EnsureChildNoAdd(child);
         EnsureChildNoAdd(next_child);
@@ -265,7 +272,7 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region SetPrev
 
-    public void SetPrev(UIElement child, UIElement prev_child, bool no_check = false)
+    public void SetPrev(UIElement<TRd, TEd> child, UIElement<TRd, TEd> prev_child, bool no_check = false)
     {
         EnsureChildNoAdd(child);
         EnsureChildNoAdd(prev_child);
@@ -276,9 +283,10 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Enumerator
 
-    public OrderedSet<UIElement>.Enumerator GetEnumerator() => m_childs.GetEnumerator();
-    IEnumerator<UIElement> IEnumerable<UIElement>.GetEnumerator() => new OrderedSet<UIElement>.ClassEnumerator(ref m_childs);
-    IEnumerator IEnumerable.GetEnumerator() => new OrderedSet<UIElement>.ClassEnumerator(ref m_childs);
+    public OrderedSet<UIElement<TRd, TEd>>.Enumerator GetEnumerator() => m_childs.GetEnumerator();
+    IEnumerator<UIElement<TRd, TEd>> IEnumerable<UIElement<TRd, TEd>>.GetEnumerator() =>
+        new OrderedSet<UIElement<TRd, TEd>>.ClassEnumerator(ref m_childs);
+    IEnumerator IEnumerable.GetEnumerator() => new OrderedSet<UIElement<TRd, TEd>>.ClassEnumerator(ref m_childs);
 
     #endregion
 
@@ -286,8 +294,8 @@ public sealed class UIElement : IEnumerable<UIElement>
 
     #region Tree
 
-    public UIElement? After => Parent == null ? null : Parent.m_childs.TryGetNext(this, out var next) ? next : null;
-    public UIElement? Before => Parent == null ? null : Parent.m_childs.TryGetPrev(this, out var prev) ? prev : null;
+    public UIElement<TRd, TEd>? After => Parent == null ? null : Parent.m_childs.TryGetNext(this, out var next) ? next : null;
+    public UIElement<TRd, TEd>? Before => Parent == null ? null : Parent.m_childs.TryGetPrev(this, out var prev) ? prev : null;
 
     #endregion
 

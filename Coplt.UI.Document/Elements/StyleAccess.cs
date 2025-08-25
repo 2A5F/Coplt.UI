@@ -1,6 +1,6 @@
 ﻿namespace Coplt.UI.Elements;
 
-public readonly ref struct StyleAccess(UIElement Element)
+public readonly ref struct StyleAccess<TRd, TEd>(UIElement<TRd, TEd> Element)
 {
-    private readonly UIElement Element = Element;
+    public readonly UIElement<TRd, TEd> Element = Element;
 }

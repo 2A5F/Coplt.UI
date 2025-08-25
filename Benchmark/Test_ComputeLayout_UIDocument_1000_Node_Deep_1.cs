@@ -13,7 +13,7 @@ namespace Benchmark;
 [IterationCount(100)]
 public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
 {
-    private UIDocument[] document = new UIDocument[100];
+    private UIDocument<object, object>[] document = new UIDocument<object, object>[100];
     private int i;
 
     [GlobalSetup]
@@ -21,14 +21,14 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
     {
         for (int j = 0; j < 100; j++)
         {
-            var doc = new UIDocument();
-            var root = new UIElement { Name = "Root" };
-            Unsafe.AsRef(in root.RawStyle).FlexDirection = FlexDirection.Row;
-            Unsafe.AsRef(in root.RawStyle).FlexWrap = FlexWrap.Wrap;
+            var doc = new UIDocument<object, object>();
+            var root = new UIElement<object, object> { Name = "Root" };
+            Unsafe.AsRef(in root.CommonStyle).FlexDirection = FlexDirection.Row;
+            Unsafe.AsRef(in root.CommonStyle).FlexWrap = FlexWrap.Wrap;
             for (int i = 0; i < 1000; i++)
             {
-                var child = new UIElement { Name = $"Child{i}" };
-                Unsafe.AsRef(in child.RawStyle).Size
+                var child = new UIElement<object, object> { Name = $"Child{i}" };
+                Unsafe.AsRef(in child.CommonStyle).Size
                     = new(Random.Shared.Next(10, 100).Fx(), 100.Fx());
                 root.Add(child);
             }
