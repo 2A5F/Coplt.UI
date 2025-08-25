@@ -2,7 +2,7 @@
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
 
-namespace Coplt.UI.Rending.Gpu.D3d12.Utilities;
+namespace Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 
 internal static class Utils
 {

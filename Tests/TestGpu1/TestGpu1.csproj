@@ -10,8 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Coplt.UI.Rending.Gpu.D3d12\Coplt.UI.Rending.Gpu.D3d12.csproj"/>
-        <ProjectReference Include="..\..\Coplt.UI.Rending.Gpu\Coplt.UI.Rending.Gpu.csproj"/>
+        <ProjectReference Include="..\..\Coplt.UI.Rendering.Gpu.D3d12\Coplt.UI.Rendering.Gpu.D3d12.csproj" />
+        <ProjectReference Include="..\..\Coplt.UI.Rendering.Gpu\Coplt.UI.Rendering.Gpu.csproj" />
     </ItemGroup>
 
     <ItemGroup>

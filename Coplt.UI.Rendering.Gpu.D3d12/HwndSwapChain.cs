@@ -1,13 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
 using Coplt.Dropping;
 using Coplt.Mathematics;
-using Coplt.UI.Rending.Gpu.D3d12.Utilities;
-using Coplt.UI.Rending.Gpu.Utilities;
+using Coplt.UI.Rendering.Gpu.Utilities;
+using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
 using Silk.NET.DXGI;
 
-namespace Coplt.UI.Rending.Gpu.D3d12;
+namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
 public sealed unsafe partial class HwndSwapChain

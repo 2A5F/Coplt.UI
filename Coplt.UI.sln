@@ -14,13 +14,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI.Document", "Coplt.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI.Utilities", "Coplt.UI.Utilities\Coplt.UI.Utilities.csproj", "{DEFAD602-FE3A-4461-B5BE-470C18817F31}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI.Rending.Gpu", "Coplt.UI.Rending.Gpu\Coplt.UI.Rending.Gpu.csproj", "{A9DE4250-16B5-42ED-B502-006BABAE908A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI.Rendering.Gpu", "Coplt.UI.Rendering.Gpu\Coplt.UI.Rendering.Gpu.csproj", "{A9DE4250-16B5-42ED-B502-006BABAE908A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestGpu1", "Tests\TestGpu1\TestGpu1.csproj", "{12CB8A6C-0BA8-45D2-8571-F731BB5D98ED}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{53E3F113-9383-4B7C-A260-B2A6B21AFEC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI.Rending.Gpu.D3d12", "Coplt.UI.Rending.Gpu.D3d12\Coplt.UI.Rending.Gpu.D3d12.csproj", "{ED2A920D-F224-4702-9563-CE571DDADAEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Coplt.UI.Rendering.Gpu.D3d12", "Coplt.UI.Rendering.Gpu.D3d12\Coplt.UI.Rendering.Gpu.D3d12.csproj", "{ED2A920D-F224-4702-9563-CE571DDADAEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

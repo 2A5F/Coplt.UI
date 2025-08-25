@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace Coplt.UI.Rending.Gpu.Utilities;
+namespace Coplt.UI.Rendering.Gpu.Utilities;
 
 [InlineArray(3)]
 public struct FixedArray3<T>

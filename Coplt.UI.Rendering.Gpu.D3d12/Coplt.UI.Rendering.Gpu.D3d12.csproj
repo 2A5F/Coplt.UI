@@ -5,10 +5,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RootNamespace>Coplt.UI.Rending.Gpu.D3d12</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Coplt.UI.Rending.Gpu\Coplt.UI.Rending.Gpu.csproj"/>
+        <ProjectReference Include="..\Coplt.UI.Rendering.Gpu\Coplt.UI.Rendering.Gpu.csproj" />
     </ItemGroup>
 
     <ItemGroup>

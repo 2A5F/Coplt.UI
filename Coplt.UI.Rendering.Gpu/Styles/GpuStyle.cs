@@ -14,7 +14,7 @@ public record struct GpuStyle()
 
     #region Styles
 
-    // public int ZIndex { get; set; } = 0;
+    public int ZIndex { get; set; } = 0;
     public float Opaque { get; set; } = 1f;
 
     public BoxShadow BoxShadow { get; set; } = new(0.Fx(), 0.Fx(), Color.Transparent);

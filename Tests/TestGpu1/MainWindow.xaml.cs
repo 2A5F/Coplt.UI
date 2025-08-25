@@ -4,8 +4,9 @@ using System.Windows.Interop;
 using Coplt.Dropping;
 using Coplt.Mathematics;
 using Coplt.UI.Elements;
-using Coplt.UI.Rending.Gpu;
-using Coplt.UI.Rending.Gpu.D3d12;
+using Coplt.UI.Rendering;
+using Coplt.UI.Rendering.Gpu;
+using Coplt.UI.Rendering.Gpu.D3d12;
 using Coplt.UI.Styles;
 
 namespace TestGpu1;
@@ -89,6 +90,8 @@ public partial class MainWindow
 
                     document.ComputeLayout(new(swap_chain.Size.x, swap_chain.Size.y));
                     renderer.Update();
+
+                    renderer.Upload();
 
                     swap_chain.BarrierToRenderTarget();
                     context.ClearRenderTargetView(swap_chain.CurrentRtv, new float4(1, 1, 1, 1));
