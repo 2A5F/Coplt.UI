@@ -10,7 +10,7 @@ public interface ILayoutPartialTree<TNodeId, out TChildIter, out TCoreContainerS
 {
     public TCoreContainerStyle GetCoreContainerStyle(TNodeId node_id);
 
-    public void SetUnroundedLayout(TNodeId node_id, in Layout layout);
+    public void SetUnroundedLayout(TNodeId node_id, in UnroundedLayout layout);
 
     public LayoutOutput ComputeChildLayout(TNodeId node_id, LayoutInput inputs);
 

@@ -230,7 +230,7 @@ file static class FlexCompute
         foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
         {
             if (tree.GetFlexboxChildStyle(child).BoxGenerationMode != BoxGenerationMode.None) continue;
-            tree.SetUnroundedLayout(child, Layout.WithOrder(order++));
+            tree.SetUnroundedLayout(child, UnroundedLayout.WithOrder(order++));
             tree.PerformChildLayout(
                 child,
                 default,
@@ -2089,7 +2089,7 @@ file static class FlexCompute
 
         tree.SetUnroundedLayout(
             item_node,
-            new Layout
+            new UnroundedLayout
             {
                 Order = item.Order,
                 Location = location,

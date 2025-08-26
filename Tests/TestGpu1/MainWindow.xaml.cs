@@ -56,9 +56,16 @@ public partial class MainWindow
 
         var child = new UIElement<GpuRd, object> { Name = "Child1" };
         // todo style access
+        Unsafe.AsRef(in child.CommonStyle).JustifyContent = JustifyContent.Center;
         Unsafe.AsRef(in child.CommonStyle).Size = new(100, 100);
         Unsafe.AsRef(in Unsafe.AsRef(in child.RData).GpuStyle).BackgroundColor = Color.Lime;
         document.Root.Add(child);
+
+        var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
+        // todo style access
+        Unsafe.AsRef(in child2.CommonStyle).Size = new(50, 50);
+        Unsafe.AsRef(in Unsafe.AsRef(in child2.RData).GpuStyle).BackgroundColor = Color.Maroon;
+        child.Add(child2);
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -88,10 +95,12 @@ public partial class MainWindow
                         context.ReadyNextFrameNoWait();
                     }
 
-                    document.ComputeLayout(new(swap_chain.Size.x, swap_chain.Size.y));
-                    renderer.Update();
+                    var size = swap_chain.Size;
 
-                    renderer.Upload();
+                    var layout_changed = document.ComputeLayout(new(size.x, size.y));
+                    if (layout_changed) Console.WriteLine(document);
+
+                    renderer.Update(size.x, size.y);
 
                     swap_chain.BarrierToRenderTarget();
                     context.ClearRenderTargetView(swap_chain.CurrentRtv, new float4(1, 1, 1, 1));

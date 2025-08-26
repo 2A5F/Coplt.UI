@@ -22,7 +22,7 @@ public class Tests
         public NodeKind Kind;
         public BoxStyle Style;
         public Size<float> LeafSize;
-        public Layout UnroundedLayout;
+        public UnroundedLayout UnroundedLayout;
         public Layout FinalLayout;
 
         #region Ctor
@@ -94,7 +94,7 @@ public class Tests
         public RefCoreStyle<BoxStyle> GetCoreContainerStyle(Node node_id) => new(ref node_id.Style);
         public RefFlexContainerStyle<BoxStyle> GetFlexBoxContainerStyle(Node node_id) => new(ref node_id.Style);
         public RefFlexItemStyle<BoxStyle> GetFlexboxChildStyle(Node child_node_id) => new(ref child_node_id.Style);
-        public void SetUnroundedLayout(Node node_id, in Layout layout) => node_id.UnroundedLayout = layout;
+        public void SetUnroundedLayout(Node node_id, in UnroundedLayout layout) => node_id.UnroundedLayout = layout;
         public LayoutOutput ComputeChildLayout(Node node_id, LayoutInput inputs) => node_id.Kind switch
         {
             NodeKind.Flexbox => BoxLayout
@@ -117,7 +117,7 @@ public class Tests
 
         public ref readonly Layout GetFinalLayout(Node node_id) => ref node_id.FinalLayout;
 
-        public ref readonly Layout GetUnroundedLayout(Node node_id) => ref node_id.UnroundedLayout;
+        public ref readonly UnroundedLayout GetUnroundedLayout(Node node_id) => ref node_id.UnroundedLayout;
 
         public void SetFinalLayout(Node node_id, in Layout layout) => node_id.FinalLayout = layout;
     }

@@ -5,15 +5,19 @@ using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Elements;
 
-public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>> 
+public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
     where TRd : new() where TEd : new()
 {
     #region Fields
 
     internal DirtyFlags m_dirty;
 
+    internal ulong m_layout_version = ulong.MaxValue;
+    internal ulong m_visual_version = ulong.MaxValue;
+    internal ulong m_selector_version = ulong.MaxValue;
+
     internal Layout m_final_layout;
-    internal Layout m_unrounded_layout;
+    internal UnroundedLayout m_unrounded_layout;
     internal LayoutCache m_cache;
 
     internal CommonStyle m_common_style = new();
@@ -30,7 +34,9 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
 
     #region Props
 
-    public ulong Version { get; internal set; }
+    public ulong LayoutVersion => m_layout_version;
+    public ulong VisualVersion => m_visual_version;
+    public ulong SelectorVersion => m_selector_version;
 
     public UIDocument<TRd, TEd>? Document { get; internal set; }
 
@@ -49,7 +55,7 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
     public StyleAccess<TRd, TEd> Style => new(this);
 
     public ref readonly CommonStyle CommonStyle => ref m_common_style;
-    public ref readonly Layout UnroundedLayout => ref m_unrounded_layout;
+    public ref readonly UnroundedLayout UnroundedLayout => ref m_unrounded_layout;
     public ref readonly Layout FinalLayout => ref m_final_layout;
 
     public ref readonly TRd RData => ref m_r_data;
@@ -72,7 +78,7 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
         if (Document == null) return;
         if ((m_dirty & DirtyFlags.Layout) != 0) return;
         m_dirty |= DirtyFlags.Layout;
-        Version++;
+        m_layout_version++;
         m_cache.Clear();
         Parent?.MarkLayoutDirty();
         MarkVisualDirty();
@@ -83,6 +89,7 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
         if (Document == null) return;
         if ((m_dirty & DirtyFlags.Visual) != 0) return;
         m_dirty |= DirtyFlags.Visual;
+        m_visual_version++;
     }
 
     public void MarkSelectorDirty()
@@ -90,6 +97,7 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
         if (Document == null) return;
         if ((m_dirty & DirtyFlags.Selector) != 0) return;
         m_dirty |= DirtyFlags.Selector;
+        m_selector_version++;
     }
 
     #endregion

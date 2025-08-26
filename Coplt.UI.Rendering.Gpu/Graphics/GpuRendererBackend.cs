@@ -8,7 +8,9 @@ public abstract partial class GpuRendererBackend
     public abstract bool BindLess { get; }
     public abstract uint MaxNumImagesInBatch { get; }
 
-    public abstract GpuBuffer AllocBuffer(uint Size);
+    public abstract GpuBuffer RentBuffer(uint Size);
+
+    public abstract void ReturnBuffer(GpuBuffer Buffer);
 
     /// <param name="NumBatches"></param>
     /// <param name="BatchBuffer"></param>

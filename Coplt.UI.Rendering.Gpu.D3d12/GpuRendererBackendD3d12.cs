@@ -56,9 +56,14 @@ public partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #endregion
 
-    #region AllocBuffer
+    #region Buffer Pool
 
-    public override GpuBuffer AllocBuffer(uint Size)
+    public override GpuBuffer RentBuffer(uint Size)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public override void ReturnBuffer(GpuBuffer Buffer)
     {
         throw new NotImplementedException();
     }

@@ -95,7 +95,7 @@ public static partial class BoxLayout
 
             tree.SetUnroundedLayout(
                 root,
-                new Layout
+                new UnroundedLayout
                 {
                     Order = 0,
                     Location = default,
@@ -119,21 +119,23 @@ public static partial class BoxLayout
     public static void RoundLayout<TTree, TNodeId, TChildIter>(ref TTree tree, TNodeId node)
         where TTree : IRoundTree<TNodeId, TChildIter>, allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
-        => RoundLayout<TTree, TNodeId, TChildIter>(ref tree, node, 0, 0);
+        => RoundLayout<TTree, TNodeId, TChildIter>(ref tree, node, 0, 0, 0, 0);
 
     private static void RoundLayout<TTree, TNodeId, TChildIter>
-        (ref TTree tree, TNodeId node, float cumulative_x_, float cumulative_y_)
+        (ref TTree tree, TNodeId node, float cumulative_x_, float cumulative_y_, float base_x, float base_y)
         where TTree : IRoundTree<TNodeId, TChildIter>, allows ref struct
         where TChildIter : IIterator<TNodeId>, allows ref struct
     {
         var unrounded_layout = tree.GetUnroundedLayout(node);
-        var layout = unrounded_layout;
+        var layout = unrounded_layout.ToLayout();
 
         var cumulative_x = cumulative_x_ + unrounded_layout.Location.X;
         var cumulative_y = cumulative_y_ + unrounded_layout.Location.Y;
 
         layout.Location.X = MathF.Round(unrounded_layout.Location.X);
         layout.Location.Y = MathF.Round(unrounded_layout.Location.Y);
+        layout.RootLocation.X = base_x + layout.Location.X;
+        layout.RootLocation.Y = base_y + layout.Location.Y;
         layout.Size.Width = MathF.Round(cumulative_x + unrounded_layout.Size.Width) - MathF.Round(cumulative_x);
         layout.Size.Height = MathF.Round(cumulative_y + unrounded_layout.Size.Height) - MathF.Round(cumulative_y);
         layout.ScrollbarSize.Width = MathF.Round(unrounded_layout.ScrollbarSize.Width);
@@ -158,7 +160,10 @@ public static partial class BoxLayout
 
         foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
         {
-            RoundLayout<TTree, TNodeId, TChildIter>(ref tree, child, cumulative_x, cumulative_y);
+            RoundLayout<TTree, TNodeId, TChildIter>(
+                ref tree, child, cumulative_x, cumulative_y,
+                layout.RootLocation.X, layout.RootLocation.Y
+            );
         }
     }
 
@@ -205,7 +210,7 @@ public static partial class BoxLayout
     #endregion
 
     #region ComputeHiddenLayout
-    
+
     public static LayoutOutput ComputeHiddenLayout<TTree, TNodeId, TChildIter, TCoreContainerStyle>
         (ref TTree tree, TNodeId node)
         where TTree : ILayoutPartialTree<TNodeId, TChildIter, TCoreContainerStyle>, ICacheTree<TNodeId>, allows ref struct
@@ -213,16 +218,16 @@ public static partial class BoxLayout
         where TCoreContainerStyle : ICoreStyle, allows ref struct
     {
         tree.CacheClear(node);
-        tree.SetUnroundedLayout(node, Layout.WithOrder(0));
+        tree.SetUnroundedLayout(node, UnroundedLayout.WithOrder(0));
 
         foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
         {
             tree.ComputeChildLayout(child, LayoutInput.Hidden);
         }
-        
+
         return LayoutOutput.Hidden;
     }
-    
+
     #endregion
 }
 

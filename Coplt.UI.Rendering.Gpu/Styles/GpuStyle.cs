@@ -34,4 +34,18 @@ public record struct GpuStyle()
     public FilterFunc Filter { get; set; } = FilterFunc.None;
 
     #endregion
+
+    #region Props
+
+    public bool IsVisible =>
+        Opaque > 0 && (
+            (BackgroundImage != UIImage.None && BackgroundImageTint.a > 0)
+            || BackgroundColor.a > 0
+            || BorderColor.Top.a > 0
+            || BorderColor.Right.a > 0
+            || BorderColor.Bottom.a > 0
+            || BorderColor.Left.a > 0
+        );
+
+    #endregion
 }

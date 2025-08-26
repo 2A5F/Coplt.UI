@@ -42,7 +42,7 @@ public static class PrintTree
         var fork = has_sibling ? "├── " : "└── ";
         sb.Append($"{lines}{fork} ");
         tree.FormatDebugLabel(node_id, sb);
-        sb.Append($" {{ x: {layout.Location.X:0.####}, y: {layout.Location.Y:0.####}, w: {layout.Size.Width:0.####}, h: {layout.Size.Height:0.####}");
+        sb.Append($" {{ x: {layout.Location.X:0.####} ({layout.RootLocation.X:0.####}), y: {layout.Location.Y:0.####} ({layout.RootLocation.Y:0.####}), w: {layout.Size.Width:0.####}, h: {layout.Size.Height:0.####}");
         sb.Append($", content: (w: {layout.ContentSize.Width:0.####}, h: {layout.ContentSize.Height:0.####})");
         sb.Append($", border: (l: {layout.Border.Left}, r: {layout.Border.Right}, t: {layout.Border.Top}, b: {layout.Border.Bottom})");
         sb.Append($", padding: (l: {layout.Padding.Left}, r: {layout.Padding.Right}, t: {layout.Padding.Top}, b: {layout.Padding.Bottom}) }}");

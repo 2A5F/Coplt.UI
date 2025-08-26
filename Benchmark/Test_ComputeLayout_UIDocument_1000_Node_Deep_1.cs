@@ -40,7 +40,7 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
     [GlobalCleanup]
     public void Clean()
     {
-        Console.WriteLine($"Version: {document[0].Root!.Version}");
+        Console.WriteLine($"Version: {document[0].Root!.LayoutVersion}");
         Console.WriteLine(document[0]);
     }
 

@@ -1,19 +1,20 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Coplt.UI.Collections;
+using System.Runtime.InteropServices;
 using Coplt.UI.Rendering.Gpu.Graphics;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Rendering;
 
-public struct GpuRd()
+[StructLayout(LayoutKind.Auto)]
+public record struct GpuRd()
 {
     #region Fields
 
-    internal bool m_initialized;
     internal GpuStyle m_gpu_style = new();
 
-    internal EmbedList<BatchData> m_batch_data;
-    internal EmbedList<BoxData> m_box_data;
+    internal BoxData m_box_data;
+
+    internal ulong m_last_version;
 
     #endregion
 

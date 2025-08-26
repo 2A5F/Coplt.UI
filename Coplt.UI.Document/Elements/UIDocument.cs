@@ -14,6 +14,9 @@ public class UIDocument<TRd, TEd>
     #region Fields
 
     internal UIElement<TRd, TEd>? m_root;
+    
+    internal Size<AvailableSpace>? m_last_available_size;
+    internal ulong m_last_root_version;
 
     #endregion
 
@@ -28,6 +31,8 @@ public class UIDocument<TRd, TEd>
             if (value.Document != null) value.Document.m_root = null;
             value.Parent?.Remove(value);
             m_root = value;
+            m_last_available_size = null;
+            m_last_root_version = 0;
         }
     }
 
@@ -35,19 +40,20 @@ public class UIDocument<TRd, TEd>
 
     #region Compute
 
-    public void ComputeLayout(Size<AvailableSpace> available_space, bool use_rounding = true)
+    public bool ComputeLayout(Size<AvailableSpace> available_space)
     {
-        if (m_root == null) return;
+        var root = Root;
+        if (m_last_available_size == available_space && m_last_root_version == root.LayoutVersion) return false;
+        m_last_available_size = available_space;
+        m_last_root_version = root.LayoutVersion;
         LayoutTree<TRd, TEd> tree = new(this);
         BoxLayout.ComputeRootLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, RefCoreStyle<CommonStyle>>(
-            ref tree, m_root, available_space
+            ref tree, root, available_space
         );
-        if (use_rounding)
-        {
-            BoxLayout.RoundLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>(
-                ref tree, m_root
-            );
-        }
+        BoxLayout.RoundLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>(
+            ref tree, root
+        );
+        return true;
     }
 
     #endregion
@@ -83,7 +89,7 @@ internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
     public RefFlexContainerStyle<CommonStyle> GetFlexBoxContainerStyle(UIElement<TRd, TEd> node_id) => new(ref node_id.m_common_style);
     public RefFlexItemStyle<CommonStyle> GetFlexboxChildStyle(UIElement<TRd, TEd> child_node_id) => new(ref child_node_id.m_common_style);
 
-    public void SetUnroundedLayout(UIElement<TRd, TEd> node_id, in Layout layout) => node_id.m_unrounded_layout = layout;
+    public void SetUnroundedLayout(UIElement<TRd, TEd> node_id, in UnroundedLayout layout) => node_id.m_unrounded_layout = layout;
     public LayoutOutput ComputeChildLayout(UIElement<TRd, TEd> node_id, LayoutInput inputs)
     {
         if (inputs.RunMode == RunMode.PerformHiddenLayout)
@@ -112,7 +118,7 @@ internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
         );
     }
 
-    public ref readonly Layout GetUnroundedLayout(UIElement<TRd, TEd> node_id) => ref node_id.m_unrounded_layout;
+    public ref readonly UnroundedLayout GetUnroundedLayout(UIElement<TRd, TEd> node_id) => ref node_id.m_unrounded_layout;
     public void SetFinalLayout(UIElement<TRd, TEd> node_id, in Layout layout)
     {
         node_id.m_final_layout = layout;
