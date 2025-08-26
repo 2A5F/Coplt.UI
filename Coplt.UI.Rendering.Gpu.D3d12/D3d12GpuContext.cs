@@ -7,6 +7,7 @@ using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
 using Silk.NET.DXGI;
+using Feature = Silk.NET.Direct3D12.Feature;
 
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
@@ -54,6 +55,7 @@ public unsafe partial class D3d12GpuContext
     [Drop]
     internal FixedArray3<ComPtr<ID3D12CommandAllocator>> m_cmd_allocator;
     internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
+    internal ComPtr<ID3D12GraphicsCommandList7> m_command_list7;
 
     internal EventWaitHandle m_event;
     internal FixedArray3<ulong> m_fence_values = default;
@@ -76,8 +78,11 @@ public unsafe partial class D3d12GpuContext
 
     public ReadOnlySpan<ComPtr<ID3D12CommandAllocator>> CommandAllocator => m_cmd_allocator;
     public ref readonly ComPtr<ID3D12GraphicsCommandList> CommandList => ref m_command_list;
+    public ref readonly ComPtr<ID3D12GraphicsCommandList7> CommandList7 => ref m_command_list7;
 
     public int CurrentFrame => m_cur_frame;
+
+    public bool EnhancedBarriersSupported { get; }
 
     #endregion
 
@@ -165,6 +170,18 @@ public unsafe partial class D3d12GpuContext
 
         m_device.Handle->CreateCommandList(0, CommandListType.Direct, m_cmd_allocator[0], default(ComPtr<ID3D12PipelineState>), out m_command_list)
             .TryThrowHResult();
+        m_command_list.Handle->QueryInterface(out m_command_list7);
+
+        #endregion
+
+        #region Query Features
+
+        FeatureDataD3D12Options12 options12;
+        if (m_device.Handle->CheckFeatureSupport(Feature.D3D12Options16, &options12, (uint)sizeof(FeatureDataD3D12Options12))
+            .AsHResult().IsSuccess)
+        {
+            EnhancedBarriersSupported = options12.EnhancedBarriersSupported;
+        }
 
         #endregion
     }

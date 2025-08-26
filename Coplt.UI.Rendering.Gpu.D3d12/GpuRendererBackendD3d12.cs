@@ -16,9 +16,12 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     [Drop]
     internal ComPtr<ID3D12Device1> m_device;
     [Drop]
+    internal ComPtr<ID3D12Device10> m_device10;
+    [Drop]
     internal ComPtr<ID3D12CommandQueue> m_queue;
     [Drop]
     internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
+
     public bool UMA { get; }
     public bool CacheCoherentUMA { get; }
 
@@ -56,6 +59,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         m_device.AddRef();
         m_queue.AddRef();
         m_command_list.AddRef();
+
+        m_device.Handle->QueryInterface(out m_device10);
 
         FeatureDataArchitecture architecture;
         if (m_device.Handle->CheckFeatureSupport(Feature.Architecture, &architecture, (uint)sizeof(FeatureDataArchitecture))

@@ -21,11 +21,11 @@
     <Target Name="BuildShader" BeforeTargets="PrepareForBuild">
         <MakeDir Directories="$(IntermediateOutputPath).shaders"/>
 
-        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T vs_6_6 -E Vertex -Od -Zi -Qembed_debug -Fo $(IntermediateOutputPath).shaders/Box.Vertex.dxil -Fc $(IntermediateOutputPath).shaders/Box.Vertex.asm ./Shaders/Box.hlsl"/>
-        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T ps_6_6 -E Pixel -Od -Zi -Qembed_debug -Fo $(IntermediateOutputPath).shaders/Box.Pixel.dxil -Fc $(IntermediateOutputPath).shaders/Box.Pixel.asm ./Shaders/Box.hlsl"/>
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T vs_6_0 -E Vertex -Od -Zi -Qembed_debug -Fo $(IntermediateOutputPath).shaders/Box.Vertex.dxil -Fc $(IntermediateOutputPath).shaders/Box.Vertex.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' != 'Release' "/>
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T ps_6_0 -E Pixel -Od -Zi -Qembed_debug -Fo $(IntermediateOutputPath).shaders/Box.Pixel.dxil -Fc $(IntermediateOutputPath).shaders/Box.Pixel.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' != 'Release' "/>
 
-        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T vs_6_6 -E Vertex -O3 -Zs -Fo $(IntermediateOutputPath).shaders/Box.Vertex.dxil -Fc $(IntermediateOutputPath).shaders/Box.Vertex.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' == 'Release' "/>
-        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T ps_6_6 -E Pixel -O3 -Zs -Fo $(IntermediateOutputPath).shaders/Box.Pixel.dxil -Fc $(IntermediateOutputPath).shaders/Box.Pixel.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' == 'Release' "/>
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T vs_6_0 -E Vertex -O3 -Zs -Fo $(IntermediateOutputPath).shaders/Box.Vertex.dxil -Fc $(IntermediateOutputPath).shaders/Box.Vertex.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' == 'Release' "/>
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T ps_6_0 -E Pixel -O3 -Zs -Fo $(IntermediateOutputPath).shaders/Box.Pixel.dxil -Fc $(IntermediateOutputPath).shaders/Box.Pixel.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' == 'Release' "/>
 
         <ItemGroup>
             <ShaderOutputs Include="$(IntermediateOutputPath).shaders\**\*.dxil"/>
