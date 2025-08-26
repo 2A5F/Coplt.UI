@@ -9,12 +9,34 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Coplt.UI.Rendering.Gpu\Coplt.UI.Rendering.Gpu.csproj" />
+        <ProjectReference Include="..\Coplt.UI.Rendering.Gpu\Coplt.UI.Rendering.Gpu.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Coplt.Dropping" Version="0.6.0" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.Direct3D.DXC" Version="1.8.2505.32" GeneratePathProperty="true" ExcludeAssets="all"/>
         <PackageReference Include="Silk.NET.Direct3D12" Version="2.22.0"/>
     </ItemGroup>
+
+    <Target Name="BuildShader" BeforeTargets="PrepareForBuild">
+        <MakeDir Directories="$(IntermediateOutputPath).shaders"/>
+
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T vs_6_6 -E Vertex -Od -Zi -Qembed_debug -Fo $(IntermediateOutputPath).shaders/Box.Vertex.dxil -Fc $(IntermediateOutputPath).shaders/Box.Vertex.asm ./Shaders/Box.hlsl"/>
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T ps_6_6 -E Pixel -Od -Zi -Qembed_debug -Fo $(IntermediateOutputPath).shaders/Box.Pixel.dxil -Fc $(IntermediateOutputPath).shaders/Box.Pixel.asm ./Shaders/Box.hlsl"/>
+
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T vs_6_6 -E Vertex -O3 -Zs -Fo $(IntermediateOutputPath).shaders/Box.Vertex.dxil -Fc $(IntermediateOutputPath).shaders/Box.Vertex.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' == 'Release' "/>
+        <Exec Command="$(PkgMicrosoft_Direct3D_DXC)\build\native\bin\x64\dxc.exe -T ps_6_6 -E Pixel -O3 -Zs -Fo $(IntermediateOutputPath).shaders/Box.Pixel.dxil -Fc $(IntermediateOutputPath).shaders/Box.Pixel.asm ./Shaders/Box.hlsl" Condition=" '$(Configuration)' == 'Release' "/>
+
+        <ItemGroup>
+            <ShaderOutputs Include="$(IntermediateOutputPath).shaders\**\*.dxil"/>
+            <FileWrites Include="@(ShaderOutputs)"/>
+            <EmbeddedResource
+                    Condition="Exists('%(ShaderOutputs.RelativeDir)')"
+                    Include="@(ShaderOutputs->'%(RelativeDir)%(Filename)%(Extension)')"
+                    Link=".assets/$([MSBuild]::ValueOrDefault('%(ShaderOutputs.RelativeDir)','').SubString(13).SubString($(Configuration.Length)))%(ShaderOutputs.Filename)%(ShaderOutputs.Extension)"
+                    LogicalName="$([MSBuild]::ValueOrDefault('%(ShaderOutputs.RelativeDir)','').SubString(13).SubString($(Configuration.Length)).Replace('\','/'))%(ShaderOutputs.Filename)%(ShaderOutputs.Extension)"
+            />
+        </ItemGroup>
+    </Target>
 
 </Project>

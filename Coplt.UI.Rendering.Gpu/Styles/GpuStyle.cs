@@ -22,9 +22,10 @@ public record struct GpuStyle()
     public Color BackgroundColor { get; set; } = Color.Transparent;
     public UIImage BackgroundImage { get; set; } = UIImage.None;
     public Color BackgroundImageTint { get; set; } = Color.White;
+    public SamplerType BackgroundImageSampler { get; set; } = SamplerType.LinearClamp;
 
     public Rect<Color> BorderColor { get; set; } = new(Color.Transparent);
-    public Rect<float> BorderRadius { get; set; } = new(0);
+    public Corner<float> BorderRadius { get; set; } = new(0);
     public BorderRadiusMode BorderRadiusMode = BorderRadiusMode.Circle;
 
     public Color TextColor { get; set; } = Color.Black;

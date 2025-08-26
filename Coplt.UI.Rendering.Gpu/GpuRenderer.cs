@@ -64,11 +64,14 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
             rd.m_last_version = element.VisualVersion;
             changed = true;
             // todo gpu only
+            var flags = RenderFlags.None;
+            if (cs.BoxSizing is BoxSizing.ContentBox) flags |= RenderFlags.ContentBox;
             rd.m_box_data = new()
             {
                 TransformMatrix = float4x4.Identity,
                 LeftTopWidthHeight = new(fl.RootLocation.X, fl.RootLocation.Y, fl.Size.Width, fl.Size.Height),
                 BorderSize_TopRightBottomLeft = new(fl.Border.Top, fl.Border.Right, fl.Border.Bottom, fl.Border.Left),
+                BorderRound = new(rs.BorderRadius.BottomRight, rs.BorderRadius.TopRight, rs.BorderRadius.BottomLeft, rs.BorderRadius.TopLeft),
                 BackgroundColor = rs.BackgroundColor,
                 BackgroundImageTint = rs.BackgroundImageTint,
                 BorderColor_Top = rs.BorderColor.Top,
@@ -77,9 +80,10 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
                 BorderColor_Left = rs.BorderColor.Left,
                 Opaque = rs.Opaque,
                 Z = fl.Order, // todo calc z rs.ZIndex
-                BorderRadiusMode = BorderRadiusMode.Circle,
-                BoxSizing = cs.BoxSizing,
-                BackgroundImage = 0
+                Flags = flags,
+                BackgroundImageSampler = rs.BackgroundImageSampler,
+                BorderRadiusMode = rs.BorderRadiusMode,
+                BackgroundImage = 0, // todo image
             };
         }
         var sub_ctx = new UpdateCtx
