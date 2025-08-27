@@ -1,4 +1,5 @@
-﻿#include "./Sdf.hlsl"
+﻿#include "./Common.hlsl"
+#include "./Sdf.hlsl"
 
 float4 ApplyGamma(float4 color)
 {
@@ -12,14 +13,6 @@ float2 ScreenToClip(float2 pos, float4 size)
     float2 output = float2((pos.x * size.z) * 2.0 - 1.0, ((size.y - pos.y) * size.w) * 2.0 - 1.0);
     return output;
 }
-
-enum class SamplerType : uint
-{
-    LinearClamp,
-    LinearWrap,
-    PointClamp,
-    PointWrap,
-};
 
 enum class RenderFlags : uint
 {
@@ -56,8 +49,6 @@ cbuffer ViewData : register(b0, space0)
 }
 
 StructuredBuffer<BoxData> BoxDatas : register(t0, space0);
-Texture2D Images[] : register(t0, space1);
-SamplerState Samplers[] : register(s0, space2);
 
 struct Varying
 {

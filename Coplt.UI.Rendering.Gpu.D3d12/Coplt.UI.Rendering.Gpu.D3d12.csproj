@@ -18,6 +18,10 @@
         <PackageReference Include="Silk.NET.Direct3D12" Version="2.22.0"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ClCompile Include="Shaders\Common.hlsl" />
+    </ItemGroup>
+
     <Target Name="BuildShader" BeforeTargets="PrepareForBuild">
         <MakeDir Directories="$(IntermediateOutputPath).shaders"/>
 

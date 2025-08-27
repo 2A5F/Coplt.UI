@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
 
@@ -37,6 +38,16 @@ internal static class Utils
         var tcs = new TaskCompletionSource();
         ThreadPool.RegisterWaitForSingleObject(handle, static (tcs, _) => { ((TaskCompletionSource)tcs!).SetResult(); }, tcs, TimeSpan.MaxValue, true);
         return new(tcs.Task);
+    }
+
+    #endregion
+
+    #region GetManifestResourceSpan
+
+    public static unsafe ReadOnlySpan<byte> GetManifestResourceSpan(this Assembly asm, string name)
+    {
+        var stream = (UnmanagedMemoryStream)asm.GetManifestResourceStream(name)!;
+        return new(stream.PositionPointer, (int)stream.Length);
     }
 
     #endregion

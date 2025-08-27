@@ -3,12 +3,22 @@ using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 using Coplt.UI.Rendering.Gpu.Graphics;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
+using Silk.NET.DXGI;
+using Feature = Silk.NET.Direct3D12.Feature;
 
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
 public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 {
+    #region Silk
+
+#pragma warning disable CS0618
+    public D3D12 D3d12 { get; } = D3D12.GetApi();
+#pragma warning restore CS0618
+
+    #endregion
+
     #region Fields
 
     public D3d12GpuContext? Context { get; }
@@ -33,6 +43,9 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     public bool GPUUploadHeapSupported { get; }
 
+    public D3d12RootSignature RootSignature_Box { get; }
+    public D3d12GraphicsPipeline Pipeline_Box_NoDepth { get; }
+
     #endregion
 
     #region Ctor
@@ -52,6 +65,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         ComPtr<ID3D12GraphicsCommandList> List
     )
     {
+        #region Init
+
         m_device = Device;
         m_queue = Queue;
         m_command_list = List;
@@ -97,6 +112,59 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         {
             GPUUploadHeapSupported = options16.GPUUploadHeapSupported;
         }
+
+        #endregion
+
+        #region Create Pipline
+
+        var asm = typeof(GpuRendererBackendD3d12).Assembly;
+
+        {
+            var box_vertex = asm.GetManifestResourceSpan("shaders/Box.Vertex.dxil");
+            var box_pixel = asm.GetManifestResourceSpan("shaders/Box.Pixel.dxil");
+            RootSignature_Box = new D3d12RootSignature(this, [
+                // ViewData
+                new RootParameter
+                {
+                    ParameterType = RootParameterType.Type32BitConstants,
+                    ShaderVisibility = ShaderVisibility.All,
+                    Constants = new RootConstants
+                    {
+                        ShaderRegister = 0,
+                        RegisterSpace = 0,
+                        Num32BitValues = 5,
+                    },
+                },
+                // BoxDatas
+                new RootParameter
+                {
+                    ParameterType = RootParameterType.TypeSrv,
+                    ShaderVisibility = ShaderVisibility.All,
+                    Descriptor = new()
+                    {
+                        ShaderRegister = 0,
+                        RegisterSpace = 0,
+                    },
+                }
+            ]);
+            Pipeline_Box_NoDepth = new D3d12GraphicsPipeline(
+                this, RootSignature_Box,
+                box_vertex, box_pixel,
+                Format.FormatR8G8B8A8Unorm,
+                Format.FormatUnknown,
+                new()
+                {
+                    BlendEnable = true,
+                },
+                new()
+                {
+                    PInputElementDescs = null,
+                    NumElements = 0,
+                }
+            );
+        }
+
+        #endregion
     }
 
     #endregion
