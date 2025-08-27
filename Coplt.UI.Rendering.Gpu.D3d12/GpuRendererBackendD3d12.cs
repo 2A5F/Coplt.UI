@@ -1,4 +1,5 @@
-﻿using Coplt.Dropping;
+﻿using System.Collections.Concurrent;
+using Coplt.Dropping;
 using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 using Coplt.UI.Rendering.Gpu.Graphics;
 using Silk.NET.Core.Native;
@@ -32,6 +33,16 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     [Drop]
     internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
 
+    [Drop]
+    internal ComPtr<ID3D12DescriptorHeap> m_res_heap;
+
+    internal ConcurrentQueue<int> m_freed_res_id = new();
+    // internal int m_res_id_inc; // todo
+
+    #endregion
+
+    #region Query
+
     public bool UMA { get; }
     public bool CacheCoherentUMA { get; }
 
@@ -43,8 +54,13 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     public bool GPUUploadHeapSupported { get; }
 
+    #endregion
+
+    #region Shader
+
     public D3d12RootSignature RootSignature_Box { get; }
     public D3d12GraphicsPipeline Pipeline_Box_NoDepth { get; }
+    public D3d12GraphicsPipeline Pipeline_Box_Depth { get; }
 
     #endregion
 
@@ -76,6 +92,17 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         m_command_list.AddRef();
 
         m_device.Handle->QueryInterface(out m_device10);
+
+        m_device.Handle->CreateDescriptorHeap(new DescriptorHeapDesc
+        {
+            Type = DescriptorHeapType.CbvSrvUav,
+            NumDescriptors = 1_000_000,
+            Flags = DescriptorHeapFlags.ShaderVisible,
+        }, out m_res_heap).TryThrowHResult();
+
+        #endregion
+
+        #region Query
 
         FeatureDataArchitecture architecture;
         if (m_device.Handle->CheckFeatureSupport(Feature.Architecture, &architecture, (uint)sizeof(FeatureDataArchitecture))
@@ -115,13 +142,14 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #endregion
 
-        #region Create Pipline
+        #region Shader
 
         var asm = typeof(GpuRendererBackendD3d12).Assembly;
 
         {
             var box_vertex = asm.GetManifestResourceSpan("shaders/Box.Vertex.dxil");
             var box_pixel = asm.GetManifestResourceSpan("shaders/Box.Pixel.dxil");
+
             RootSignature_Box = new D3d12RootSignature(this, [
                 // ViewData
                 new RootParameter
@@ -147,6 +175,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                     },
                 }
             ]);
+
             Pipeline_Box_NoDepth = new D3d12GraphicsPipeline(
                 this, RootSignature_Box,
                 box_vertex, box_pixel,
@@ -155,6 +184,24 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 new()
                 {
                     BlendEnable = true,
+                },
+                new()
+                {
+                    PInputElementDescs = null,
+                    NumElements = 0,
+                }
+            );
+
+            Pipeline_Box_Depth = new D3d12GraphicsPipeline(
+                this, RootSignature_Box,
+                box_vertex, box_pixel,
+                Format.FormatR8G8B8A8Unorm,
+                Format.FormatD24UnormS8Uint,
+                new()
+                {
+                    BlendEnable = true,
+                    DepthEnable = true,
+                    DepthWrite = true,
                 },
                 new()
                 {

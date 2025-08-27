@@ -18,7 +18,7 @@ public record struct D3d12GraphicsPipelineDesc()
     public BlendOp AlphaBlendOp { get; set; } = BlendOp.Max;
     public ColorWriteEnable RenderTargetWriteMask { get; set; } = ColorWriteEnable.Red | ColorWriteEnable.Green | ColorWriteEnable.Blue;
     public CullMode CullMode { get; set; } = CullMode.None;
-    public bool DepthClipEnable { get; set; } = false;
+    public bool DepthClipEnable { get; set; } = true;
     public bool MultisampleEnable { get; set; } = false;
     public bool DepthEnable { get; set; } = false;
     public bool DepthWrite { get; set; } = false;
