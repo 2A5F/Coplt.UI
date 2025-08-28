@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using Coplt.UI.Document.Interfaces;
 using Coplt.UI.Elements;
 using Coplt.UI.Styles;
 
@@ -10,7 +11,7 @@ public class TestUIElement1
     [Test]
     public void Test1()
     {
-        var doc = new UIDocument<object, object>();
+        var doc = new UIDocument<NonRd, object>();
         var root = doc.Root;
         root.Name = "Root";
         Unsafe.AsRef(in root.CommonStyle).FlexDirection = FlexDirection.Row;
@@ -18,7 +19,7 @@ public class TestUIElement1
 
         for (var i = 0; i < 3; i++)
         {
-            var child = new UIElement<object, object> { Name = $"Child{i}" };
+            var child = new UIElement<NonRd, object> { Name = $"Child{i}" };
             root.Add(child);
             Unsafe.AsRef(in child.CommonStyle).Size
                 = new(5.Fx, 1.Fx);

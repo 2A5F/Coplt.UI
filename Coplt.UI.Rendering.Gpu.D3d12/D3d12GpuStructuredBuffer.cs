@@ -16,9 +16,10 @@ public sealed unsafe partial class D3d12GpuStructuredBuffer : GpuStructuredBuffe
     #endregion
 
     #region Props
+
     public ref readonly ComPtr<ID3D12Resource> Resource => ref Inner.Resource;
     public ref readonly ComPtr<ID3D12Resource2> Resource2 => ref Inner.Resource2;
-    public ref readonly void* MappedPtr => ref Inner.MappedPtr;
+    public override void* MappedPtr => Inner.MappedPtr;
 
     #endregion
 
@@ -27,6 +28,16 @@ public sealed unsafe partial class D3d12GpuStructuredBuffer : GpuStructuredBuffe
     public D3d12GpuStructuredBuffer(GpuRendererBackendD3d12 Backend, int Stride, int Count)
     {
         Inner = new(Backend, Stride, Count);
+    }
+
+    #endregion
+
+    #region MarkItemChanged
+
+    public override void MarkItemChanged(int index)
+    {
+        // nothing to do
+        // todo upload buffer use copy
     }
 
     #endregion
@@ -72,11 +83,16 @@ public sealed unsafe partial class D3d12GpuStructuredBufferInner
                 {
                     Type = Backend.GPUUploadHeapSupported ? HeapType.GpuUpload : HeapType.Upload,
                 },
-                HeapFlags.AllowOnlyBuffers,
+                HeapFlags.None,
                 new ResourceDesc1
                 {
                     Dimension = ResourceDimension.Buffer,
                     Width = (uint)(Stride * Count),
+                    Height = 1,
+                    DepthOrArraySize = 1,
+                    MipLevels = 1,
+                    SampleDesc = new(1, 0),
+                    Layout = TextureLayout.LayoutRowMajor,
                 },
                 BarrierLayout.Undefined,
                 null, default(ComPtr<ID3D12ProtectedResourceSession>),
@@ -91,10 +107,17 @@ public sealed unsafe partial class D3d12GpuStructuredBufferInner
                 new HeapProperties
                 {
                     Type = Backend.GPUUploadHeapSupported ? HeapType.GpuUpload : HeapType.Upload,
-                }, HeapFlags.AllowOnlyBuffers, new ResourceDesc
+                },
+                HeapFlags.None,
+                new ResourceDesc
                 {
                     Dimension = ResourceDimension.Buffer,
                     Width = (uint)(Stride * Count),
+                    Height = 1,
+                    DepthOrArraySize = 1,
+                    MipLevels = 1,
+                    SampleDesc = new(1, 0),
+                    Layout = TextureLayout.LayoutRowMajor,
                 }, ResourceStates.Common, null,
                 out m_resource
             ).TryThrowHResult();

@@ -1,17 +1,7 @@
 ﻿using Coplt.Mathematics;
-using Coplt.UI.Collections;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Rendering.Gpu.Graphics;
-
-public record struct Batch
-{
-    public EmbedList<object> m_nodes;
-    public uint Left;
-    public uint Top;
-    public uint Width;
-    public uint Height;
-}
 
 [Flags]
 public enum RenderFlags : uint

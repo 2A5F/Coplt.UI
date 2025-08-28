@@ -1,18 +1,21 @@
-﻿using System.Collections;
-using System.Text;
+﻿using System.Text;
+using Coplt.Dropping;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.BoxLayouts.Utilities;
 using Coplt.UI.Collections;
+using Coplt.UI.Document.Interfaces;
 using Coplt.UI.Layouts;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Elements;
 
-public class UIDocument<TRd, TEd>
-    where TRd : new() where TEd : new()
+[Dropping(Unmanaged = true)]
+public sealed partial class UIDocument<TRd, TEd>
+    where TRd : IRenderData, new() where TEd : new()
 {
     #region Fields
 
+    [Drop]
     internal UIElement<TRd, TEd>? m_root;
 
     internal Size<AvailableSpace>? m_last_available_size;
@@ -76,7 +79,7 @@ internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
         IRoundTree<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>,
         IPrintTree<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>,
         ICacheTree<UIElement<TRd, TEd>>
-    where TRd : new() where TEd : new()
+    where TRd : IRenderData, new() where TEd : new()
 {
     public OrderedSet<UIElement<TRd, TEd>>.Enumerator ChildIds(UIElement<TRd, TEd> parent_node_id) =>
         parent_node_id.m_childs.GetEnumerator();

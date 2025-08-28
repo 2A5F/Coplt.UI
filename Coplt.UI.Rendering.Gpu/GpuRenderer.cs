@@ -17,8 +17,8 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     [Drop]
     public GpuRendererBackend Backend { get; } = Backend;
     public UIDocument<GpuRd, TEd> Document { get; } = Document;
-
-    internal EmbedList<Batch> m_batches;
+    [Drop]
+    internal BoxDataSource BoxDataSource { get; } = new(Backend);
 
     #endregion
 
@@ -29,29 +29,9 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// <para><b>May need to be performed on the rendering thread, which is limited by the rendering backend</b></para>
     /// </summary>
     /// <returns>Is re-rendering required</returns>
-    public bool Update(uint Width, uint Height)
-    {
-        ref var batch = ref m_batches.UnsafeAdd();
-        batch = new()
-        {
-            Left = 0,
-            Top = 0,
-            Width = Width,
-            Height = Height,
-        };
-        var ctx = new UpdateCtx
-        {
-            Batch = ref batch,
-        };
-        return Update(Document.Root, ref ctx);
-    }
+    public bool Update(uint Width, uint Height) => Update(Document.Root);
 
-    private ref struct UpdateCtx
-    {
-        public ref Batch Batch;
-    }
-
-    private bool Update(UIElement<GpuRd, TEd> element, ref UpdateCtx ctx)
+    private bool Update(UIElement<GpuRd, TEd> element)
     {
         ref var rd = ref Unsafe.AsRef(in element.RData);
         ref readonly var fl = ref element.FinalLayout;
@@ -59,14 +39,14 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         ref readonly var rs = ref rd.GpuStyle;
         // todo overflow hide
         var changed = true;
-        if (rd.m_last_version != element.VisualVersion)
+        if (rd.m_last_version != element.VisualVersion || rd.m_box_data.IsNull)
         {
             rd.m_last_version = element.VisualVersion;
             changed = true;
-            // todo gpu only
+            if (rd.m_box_data.IsNull) rd.MakeBoxData(BoxDataSource);
             var flags = RenderFlags.None;
             if (cs.BoxSizing is BoxSizing.ContentBox) flags |= RenderFlags.ContentBox;
-            rd.m_box_data = new()
+            rd.m_box_data.Ref = new()
             {
                 TransformMatrix = float4x4.Identity,
                 LeftTopWidthHeight = new(fl.RootLocation.X, fl.RootLocation.Y, fl.Size.Width, fl.Size.Height),
@@ -85,14 +65,11 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
                 BorderRadiusMode = rs.BorderRadiusMode,
                 BackgroundImage = 0, // todo image
             };
+            rd.m_box_data.MarkItemChanged();
         }
-        var sub_ctx = new UpdateCtx
-        {
-            Batch = ref ctx.Batch,
-        };
         foreach (var child in element)
         {
-            Update(child, ref sub_ctx);
+            if (Update(child)) changed = true;
         }
         return changed;
     }
@@ -108,4 +85,57 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     public void Render() { }
 
     #endregion
+}
+
+[Dropping]
+internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
+{
+    internal const int BoxDataBufferSize = 1024;
+    internal EmbedList<GpuStructuredBuffer> m_buffers;
+    internal int m_current_buffer_offset = 0;
+    internal readonly Queue<BoxDataHandle> m_freed_queue = new();
+
+    [Drop]
+    private void DropBuffers()
+    {
+        foreach (ref var item in m_buffers)
+        {
+            item.Dispose();
+        }
+    }
+
+    internal unsafe BoxDataHandle RentBoxData()
+    {
+        if (m_freed_queue.TryDequeue(out var r)) return r;
+        if (m_buffers.Count == 0 || m_current_buffer_offset >= BoxDataBufferSize)
+        {
+            m_buffers.Add(Backend.AllocStructuredBuffer(sizeof(BoxData), BoxDataBufferSize));
+            m_current_buffer_offset = 0;
+        }
+        var buffer = m_buffers.Count - 1;
+        var index = m_current_buffer_offset++;
+        var ptr = &((BoxData*)m_buffers[buffer].MappedPtr)[index];
+        return new(buffer, index, ptr, this);
+    }
+
+    internal void ReturnBoxData(BoxDataHandle handle) => m_freed_queue.Enqueue(handle);
+}
+
+internal readonly unsafe struct BoxDataHandle(int Buffer, int Index, BoxData* Ptr, BoxDataSource? Source)
+{
+    public readonly int Buffer = Buffer;
+    public readonly int Index = Index;
+    public readonly BoxData* Ptr = Ptr;
+    public readonly BoxDataSource? Source = Source;
+
+    public ref BoxData Ref => ref *Ptr;
+
+    public GpuStructuredBuffer? GpuBuffer => Source?.m_buffers[Buffer];
+
+    public bool IsNull => Ptr == null || Source == null;
+
+    public void MarkItemChanged()
+    {
+        GpuBuffer?.MarkItemChanged(Index);
+    }
 }

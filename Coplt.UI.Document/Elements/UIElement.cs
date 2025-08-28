@@ -1,12 +1,15 @@
 ﻿using System.Collections;
+using Coplt.Dropping;
 using Coplt.UI.BoxLayouts;
 using Coplt.UI.Collections;
+using Coplt.UI.Document.Interfaces;
 using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Elements;
 
-public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
-    where TRd : new() where TEd : new()
+[Dropping]
+public sealed partial class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
+    where TRd : IRenderData, new() where TEd : new()
 {
     #region Fields
 
@@ -256,6 +259,7 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
         if (!m_childs.Remove(child)) return false;
         child.Parent = null;
         child.Document = null;
+        child.m_r_data.OnRemoveFromTree();
         MarkLayoutDirty();
         return true;
     }
@@ -315,6 +319,20 @@ public class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd>>
 
     public UIElement<TRd, TEd>? After => Parent == null ? null : Parent.m_childs.TryGetNext(this, out var next) ? next : null;
     public UIElement<TRd, TEd>? Before => Parent == null ? null : Parent.m_childs.TryGetPrev(this, out var prev) ? prev : null;
+
+    #endregion
+
+    #region Drop
+
+    [Drop]
+    private void Drop()
+    {
+        m_r_data.Dispose();
+        foreach (var child in m_childs)
+        {
+            child.Dispose();
+        }
+    }
 
     #endregion
 

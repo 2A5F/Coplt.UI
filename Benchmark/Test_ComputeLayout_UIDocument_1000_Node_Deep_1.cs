@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using BenchmarkDotNet.Jobs;
+using Coplt.UI.Document.Interfaces;
 using Coplt.UI.Elements;
 using Coplt.UI.Styles;
 
@@ -13,7 +14,7 @@ namespace Benchmark;
 [IterationCount(100)]
 public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
 {
-    private UIDocument<object, object>[] document = new UIDocument<object, object>[100];
+    private UIDocument<NonRd, object>[] document = new UIDocument<NonRd, object>[100];
     private int i;
 
     [GlobalSetup]
@@ -21,14 +22,14 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
     {
         for (int j = 0; j < 100; j++)
         {
-            var doc = new UIDocument<object, object>();
+            var doc = new UIDocument<NonRd, object>();
             var root = doc.Root;
             root.Name = "Root";
             Unsafe.AsRef(in root.CommonStyle).FlexDirection = FlexDirection.Row;
             Unsafe.AsRef(in root.CommonStyle).FlexWrap = FlexWrap.Wrap;
             for (int i = 0; i < 1000; i++)
             {
-                var child = new UIElement<object, object> { Name = $"Child{i}" };
+                var child = new UIElement<NonRd, object> { Name = $"Child{i}" };
                 Unsafe.AsRef(in child.CommonStyle).Size
                     = new(Random.Shared.Next(10, 100).Fx, 100.Fx);
                 root.Add(child);

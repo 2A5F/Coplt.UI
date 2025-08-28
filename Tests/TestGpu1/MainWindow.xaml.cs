@@ -14,6 +14,7 @@ namespace TestGpu1;
 [Dropping]
 public partial class MainWindow
 {
+    [Drop(Order = -1)]
     private readonly UIDocument<GpuRd, object> document = new();
     private readonly D3d12GpuContext context;
     [Drop(Order = 1)]

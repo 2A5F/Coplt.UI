@@ -5,13 +5,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Coplt.UI.BoxLayout\Coplt.UI.BoxLayout.csproj" />
-      <ProjectReference Include="..\Coplt.UI.Utilities\Coplt.UI.Utilities.csproj" />
+        <ProjectReference Include="..\Coplt.UI.BoxLayout\Coplt.UI.BoxLayout.csproj"/>
+        <ProjectReference Include="..\Coplt.UI.Utilities\Coplt.UI.Utilities.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Coplt.Mathematics" Version="0.16.0" />
-      <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all" />
+        <PackageReference Include="Coplt.Mathematics" Version="0.16.0"/>
+        <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all"/>
+        <PackageReference Include="Coplt.Dropping" Version="0.6.0" PrivateAssets="all"/>
     </ItemGroup>
 
 </Project>

@@ -1,17 +1,19 @@
 ﻿using System.Runtime.CompilerServices;
+using Coplt.UI.Document.Interfaces;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Elements;
 
 public readonly struct StyleAccess<TRd, TEd>(UIElement<TRd, TEd> Element)
-    where TRd : new() where TEd : new()
+    where TRd : IRenderData, new() where TEd : new()
 {
     public readonly UIElement<TRd, TEd> Element = Element;
 }
 
 public static class CommonStyleExtensions
 {
-    extension<TRd, TEd>(ref StyleAccess<TRd, TEd> access) where TRd : new() where TEd : new()
+    extension<TRd, TEd>(ref StyleAccess<TRd, TEd> access)
+        where TRd : IRenderData, new() where TEd : new()
     {
         private ref CommonStyle Style => ref Unsafe.AsRef(in access.Element.CommonStyle);
 
