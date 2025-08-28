@@ -1,10 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>13.0</LangVersion>
-        <Nullable>enable</Nullable>
-        <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</IsAotCompatible>
-        <TargetFramework>net9.0</TargetFramework>
+        <IsAotCompatible>true</IsAotCompatible>
         <Version>0.1.0</Version>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageProjectUrl>https://github.com/coplt/Coplt.UI</PackageProjectUrl>

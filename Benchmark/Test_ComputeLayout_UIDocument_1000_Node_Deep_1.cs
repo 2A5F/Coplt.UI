@@ -30,7 +30,7 @@ public class Test_ComputeLayout_UIDocument_1000_Node_Deep_1
             {
                 var child = new UIElement<object, object> { Name = $"Child{i}" };
                 Unsafe.AsRef(in child.CommonStyle).Size
-                    = new(Random.Shared.Next(10, 100).Fx(), 100.Fx());
+                    = new(Random.Shared.Next(10, 100).Fx, 100.Fx);
                 root.Add(child);
             }
             document[j] = doc;

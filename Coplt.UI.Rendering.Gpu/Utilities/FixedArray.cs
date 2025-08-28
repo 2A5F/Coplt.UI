@@ -14,11 +14,14 @@ public struct FixedArray3<T>
 
 public static class FixedArrays
 {
-    public static void Dispose<T>(this FixedArray3<T> array) where T : IDisposable
+    extension<T>(FixedArray3<T> array) where T : IDisposable
     {
-        foreach (var item in array)
+        public void Dispose()
         {
-            item.Dispose();
+            foreach (var item in array)
+            {
+                item.Dispose();
+            }
         }
     }
 }

@@ -21,7 +21,7 @@ public class TestUIElement1
             var child = new UIElement<object, object> { Name = $"Child{i}" };
             root.Add(child);
             Unsafe.AsRef(in child.CommonStyle).Size
-                = new(5.Fx(), 1.Fx());
+                = new(5.Fx, 1.Fx);
         }
 
         doc.ComputeLayout(new(10, AvailableSpace.MinContent));

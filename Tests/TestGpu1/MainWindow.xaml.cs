@@ -15,7 +15,6 @@ namespace TestGpu1;
 public partial class MainWindow
 {
     private readonly UIDocument<GpuRd, object> document = new();
-    [Drop(Order = 2)]
     private readonly D3d12GpuContext context;
     [Drop(Order = 1)]
     private readonly HwndSwapChain swap_chain;
@@ -24,9 +23,11 @@ public partial class MainWindow
 
     private bool runing = true;
 
+    private Thread? m_render_thread;
+
     static MainWindow()
     {
-        D3d12GpuContext.LoggerFunc = (Category, Severity, id, pDescription, pContext) =>
+        D3d12GpuContext.LoggerFunc = (_, _, _, pDescription, _) =>
         {
             unsafe
             {
@@ -49,28 +50,27 @@ public partial class MainWindow
         };
         renderer = new(new GpuRendererBackendD3d12(context), document);
 
-        // todo style access
-        Unsafe.AsRef(in document.Root.CommonStyle).Size = new(1.Pc(), 1.Pc());
-        Unsafe.AsRef(in document.Root.CommonStyle).JustifyContent = JustifyContent.Center;
-        Unsafe.AsRef(in document.Root.CommonStyle).AlignItems = AlignItems.Center;
+        document.Root.Style.Size = new(1.Pc, 1.Pc);
+        document.Root.Style.JustifyContent = JustifyContent.Center;
+        document.Root.Style.AlignItems = AlignItems.Center;
 
         var child = new UIElement<GpuRd, object> { Name = "Child1" };
-        // todo style access
-        Unsafe.AsRef(in child.CommonStyle).JustifyContent = JustifyContent.Center;
-        Unsafe.AsRef(in child.CommonStyle).Size = new(100, 100);
-        Unsafe.AsRef(in Unsafe.AsRef(in child.RData).GpuStyle).BackgroundColor = Color.Lime;
+        child.Style.JustifyContent = JustifyContent.Center;
+        child.Style.Size = new(100, 100);
+        child.Style.BackgroundColor = Color.Lime;
         document.Root.Add(child);
 
         var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
-        // todo style access
-        Unsafe.AsRef(in child2.CommonStyle).Size = new(50, 50);
-        Unsafe.AsRef(in Unsafe.AsRef(in child2.RData).GpuStyle).BackgroundColor = Color.Maroon;
+        child2.Style.Size = new(50, 50);
+        child2.Style.BackgroundColor = Color.Maroon;
         child.Add(child2);
     }
 
     private void OnClosed(object? sender, EventArgs e)
     {
         runing = false;
+        m_render_thread?.Join();
+        Dispose();
     }
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -81,7 +81,7 @@ public partial class MainWindow
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        new Thread(() =>
+        m_render_thread = new Thread(() =>
         {
             var first = true;
             try
@@ -116,6 +116,7 @@ public partial class MainWindow
                 Console.WriteLine(exception);
                 Application.Current.Shutdown();
             }
-        }).Start();
+        });
+        m_render_thread.Start();
     }
 }

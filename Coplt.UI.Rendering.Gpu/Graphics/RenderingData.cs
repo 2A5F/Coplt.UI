@@ -13,6 +13,7 @@ public record struct Batch
     public uint Height;
 }
 
+[Flags]
 public enum RenderFlags : uint
 {
     None = 0,

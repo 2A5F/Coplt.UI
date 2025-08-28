@@ -147,8 +147,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         var asm = typeof(GpuRendererBackendD3d12).Assembly;
 
         {
-            var box_vertex = asm.GetManifestResourceSpan("shaders/Box.Vertex.dxil");
-            var box_pixel = asm.GetManifestResourceSpan("shaders/Box.Pixel.dxil");
+            var box_vertex = asm.GetManifestResourceSpan(".shaders/Box.Vertex.dxil");
+            var box_pixel = asm.GetManifestResourceSpan(".shaders/Box.Pixel.dxil");
 
             RootSignature_Box = new D3d12RootSignature(this, [
                 // ViewData
@@ -223,23 +223,16 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #endregion
 
-    #region Buffer Pool
+    #region Buffer
 
-    public override GpuBuffer RentBuffer(uint Size)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void ReturnBuffer(GpuBuffer Buffer)
-    {
-        throw new NotImplementedException();
-    }
+    public override GpuStructuredBuffer AllocStructuredBuffer(int Stride, int Count) =>
+        new D3d12GpuStructuredBuffer(this, Stride, Count);
 
     #endregion
 
     #region DrawBatch
 
-    public override void DrawBatch(uint NumBatches, GpuBuffer BatchBuffer, ReadOnlySpan<GpuImage> Images)
+    public override void DrawBatch(uint NumBatches, GpuStructuredBuffer BatchBuffer, ReadOnlySpan<GpuImage> Images)
     {
         throw new NotImplementedException();
     }

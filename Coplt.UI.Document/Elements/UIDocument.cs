@@ -14,7 +14,7 @@ public class UIDocument<TRd, TEd>
     #region Fields
 
     internal UIElement<TRd, TEd>? m_root;
-    
+
     internal Size<AvailableSpace>? m_last_available_size;
     internal ulong m_last_root_version;
 
@@ -47,7 +47,7 @@ public class UIDocument<TRd, TEd>
         m_last_available_size = available_space;
         m_last_root_version = root.LayoutVersion;
         LayoutTree<TRd, TEd> tree = new(this);
-        BoxLayout.ComputeRootLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, RefCoreStyle<CommonStyle>>(
+        BoxLayout.ComputeRootLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, StyleRef>(
             ref tree, root, available_space
         );
         BoxLayout.RoundLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>(
@@ -72,7 +72,7 @@ public class UIDocument<TRd, TEd>
 
 internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
     : ILayoutFlexboxContainer<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator
-            , RefCoreStyle<CommonStyle>, RefFlexContainerStyle<CommonStyle>, RefFlexItemStyle<CommonStyle>>,
+            , StyleRef, StyleRef, StyleRef>,
         IRoundTree<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>,
         IPrintTree<UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>,
         ICacheTree<UIElement<TRd, TEd>>
@@ -85,31 +85,32 @@ internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
 
     public float Calc(CalcId id, float basis) => 0; // todo
 
-    public RefCoreStyle<CommonStyle> GetCoreContainerStyle(UIElement<TRd, TEd> node_id) => new(ref node_id.m_common_style);
-    public RefFlexContainerStyle<CommonStyle> GetFlexBoxContainerStyle(UIElement<TRd, TEd> node_id) => new(ref node_id.m_common_style);
-    public RefFlexItemStyle<CommonStyle> GetFlexboxChildStyle(UIElement<TRd, TEd> child_node_id) => new(ref child_node_id.m_common_style);
+    public StyleRef GetCoreContainerStyle(UIElement<TRd, TEd> node_id) => new(ref node_id.m_common_style);
+    public StyleRef GetFlexBoxContainerStyle(UIElement<TRd, TEd> node_id) => new(ref node_id.m_common_style);
+    public StyleRef GetFlexboxChildStyle(UIElement<TRd, TEd> child_node_id) => new(ref child_node_id.m_common_style);
 
     public void SetUnroundedLayout(UIElement<TRd, TEd> node_id, in UnroundedLayout layout) => node_id.m_unrounded_layout = layout;
     public LayoutOutput ComputeChildLayout(UIElement<TRd, TEd> node_id, LayoutInput inputs)
     {
         if (inputs.RunMode == RunMode.PerformHiddenLayout)
             return BoxLayout.ComputeHiddenLayout
-                <LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, RefCoreStyle<CommonStyle>>
+                <LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, StyleRef>
                 (ref this, node_id);
         return BoxLayout.ComputeCachedLayout(
             ref this, node_id, inputs,
-            static (ref LayoutTree<TRd, TEd> tree, UIElement<TRd, TEd> node_id, LayoutInput inputs) => (node_id.m_common_style.Display, node_id.Count) switch
+            static (ref tree, node_id, inputs) => (node_id.m_common_style.Display, node_id.Count) switch
             {
                 (Display.None, _) => BoxLayout.ComputeHiddenLayout
-                    <LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, RefCoreStyle<CommonStyle>>
+                    <LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, StyleRef>
                     (ref tree, node_id),
-                (Display.Flex, > 0) => BoxLayout.ComputeFlexBoxLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator,
-                        RefCoreStyle<CommonStyle>, RefFlexContainerStyle<CommonStyle>, RefFlexItemStyle<CommonStyle>>
-                    (ref tree, node_id, inputs),
+                (Display.Flex, > 0) => BoxLayout.ComputeFlexBoxLayout<
+                    LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator,
+                    StyleRef, StyleRef, StyleRef
+                >(ref tree, node_id, inputs),
                 (Display.Grid, > 0) => throw new NotImplementedException(),
                 (Display.Block, > 0) => throw new NotImplementedException(),
                 (_, <= 0) => BoxLayout.ComputeLeafLayout(
-                    inputs, new RefCoreStyle<CommonStyle>(ref node_id.m_common_style), ref tree, node_id,
+                    inputs, new StyleRef(ref node_id.m_common_style), ref tree, node_id,
                     static (node, known_dimensions, available_space) =>
                         known_dimensions.Or(new Size<float>(0f)) // todo
                 ),
@@ -137,4 +138,36 @@ internal struct LayoutTree<TRd, TEd>(UIDocument<TRd, TEd> document)
     ) => node_id.m_cache.Store(known_dimensions, available_space, run_mode, layout_output);
     public void CacheClear(UIElement<TRd, TEd> node_id)
         => node_id.m_cache.Clear();
+}
+
+internal ref struct StyleRef(ref readonly CommonStyle Target) : IBlockContainerStyle, IFlexContainerStyle, IFlexItemStyle
+{
+    public ref readonly CommonStyle Target = ref Target;
+
+    public BoxGenerationMode BoxGenerationMode => Target.Display == Display.None ? BoxGenerationMode.None : BoxGenerationMode.Normal;
+    public bool IsBlock => Target.Display == Display.Block;
+    public bool IsCompressibleReplaced => false;
+    public BoxSizing BoxSizing => Target.BoxSizing;
+    public Point<Overflow> Overflow => Target.Overflow;
+    public float ScrollbarWidth => 0;
+    public Position Position => Target.Position;
+    public Rect<LengthPercentageAuto> Inset => Target.Inset;
+    public Size<Dimension> Size => Target.Size;
+    public Size<Dimension> MinSize => Target.MinSize;
+    public Size<Dimension> MaxSize => Target.MaxSize;
+    public float? AspectRatio => Target.AspectRatio;
+    public Rect<LengthPercentageAuto> Margin => Target.Margin;
+    public Rect<LengthPercentage> Padding => Target.Padding;
+    public Rect<LengthPercentage> Border => Target.Border;
+    public TextAlign TextAlign => Target.TextAlign;
+    public FlexDirection FlexDirection => Target.FlexDirection;
+    public FlexWrap FlexWrap => Target.FlexWrap;
+    public Size<LengthPercentage> Gap => Target.Gap;
+    public AlignContent? AlignContent => Target.AlignContent;
+    public AlignItems? AlignItems => Target.AlignItems;
+    public JustifyContent? JustifyContent => Target.JustifyContent;
+    public Dimension FlexBias => Target.FlexBias;
+    public float FlexGrow => Target.FlexGrow;
+    public float FlexShrink => Target.FlexShrink;
+    public AlignSelf? AlignSelf => Target.AlignSelf;
 }

@@ -7,7 +7,33 @@ using Silk.NET.Direct3D12;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public sealed unsafe partial class D3d12GpuBuffer : GpuBuffer
+public sealed unsafe partial class D3d12GpuStructuredBuffer : GpuStructuredBuffer
+{
+    #region Fields
+
+    public readonly D3d12GpuStructuredBufferInner Inner;
+
+    #endregion
+
+    #region Props
+    public ref readonly ComPtr<ID3D12Resource> Resource => ref Inner.Resource;
+    public ref readonly ComPtr<ID3D12Resource2> Resource2 => ref Inner.Resource2;
+    public ref readonly void* MappedPtr => ref Inner.MappedPtr;
+
+    #endregion
+
+    #region Ctor
+
+    public D3d12GpuStructuredBuffer(GpuRendererBackendD3d12 Backend, int Stride, int Count)
+    {
+        Inner = new(Backend, Stride, Count);
+    }
+
+    #endregion
+}
+
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class D3d12GpuStructuredBufferInner
 {
     #region Fields
 
@@ -24,6 +50,8 @@ public sealed unsafe partial class D3d12GpuBuffer : GpuBuffer
 
     #region Props
 
+    public int Stride { get; }
+    public int Count { get; }
     public ref readonly ComPtr<ID3D12Resource> Resource => ref m_resource;
     public ref readonly ComPtr<ID3D12Resource2> Resource2 => ref m_resource2;
     public ref readonly void* MappedPtr => ref m_mapped_ptr;
@@ -32,9 +60,11 @@ public sealed unsafe partial class D3d12GpuBuffer : GpuBuffer
 
     #region Ctor
 
-    public D3d12GpuBuffer(GpuRendererBackendD3d12 Backend, ulong Size)
+    public D3d12GpuStructuredBufferInner(GpuRendererBackendD3d12 Backend, int Stride, int Count)
     {
         this.Backend = Backend;
+        this.Stride = Stride;
+        this.Count = Count;
         if (Backend.EnhancedBarriersSupported)
         {
             Backend.m_device10.Handle->CreateCommittedResource3(
@@ -46,7 +76,7 @@ public sealed unsafe partial class D3d12GpuBuffer : GpuBuffer
                 new ResourceDesc1
                 {
                     Dimension = ResourceDimension.Buffer,
-                    Width = Size,
+                    Width = (uint)(Stride * Count),
                 },
                 BarrierLayout.Undefined,
                 null, default(ComPtr<ID3D12ProtectedResourceSession>),
@@ -64,7 +94,7 @@ public sealed unsafe partial class D3d12GpuBuffer : GpuBuffer
                 }, HeapFlags.AllowOnlyBuffers, new ResourceDesc
                 {
                     Dimension = ResourceDimension.Buffer,
-                    Width = Size,
+                    Width = (uint)(Stride * Count),
                 }, ResourceStates.Common, null,
                 out m_resource
             ).TryThrowHResult();

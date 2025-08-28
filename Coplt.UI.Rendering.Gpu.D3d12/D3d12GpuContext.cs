@@ -229,6 +229,7 @@ public unsafe partial class D3d12GpuContext
 
     public ulong Signal()
     {
+        if (m_fence.Handle == null) return 0;
         var value = AllocSignal();
         m_queue.Signal(m_fence.Handle, value).TryThrowHResult();
         return value;
