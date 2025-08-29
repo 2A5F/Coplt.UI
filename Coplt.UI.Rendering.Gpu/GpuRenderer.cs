@@ -20,6 +20,9 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     [Drop]
     internal BoxDataSource BoxDataSource { get; } = new(Backend);
 
+
+    private float m_max_z;
+
     #endregion
 
     #region Update
@@ -29,7 +32,11 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// <para><b>May need to be performed on the rendering thread, which is limited by the rendering backend</b></para>
     /// </summary>
     /// <returns>Is re-rendering required</returns>
-    public bool Update() => Update(Document.Root);
+    public bool Update()
+    {
+        m_max_z = 0;
+        return Update(Document.Root);
+    }
 
     private bool Update(UIElement<GpuRd, TEd> element)
     {
@@ -46,6 +53,8 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
             if (rd.m_box_data.IsNull) rd.MakeBoxData(BoxDataSource);
             var flags = RenderFlags.None;
             if (cs.BoxSizing is BoxSizing.ContentBox) flags |= RenderFlags.ContentBox;
+            var z = fl.Order; // todo calc z rs.ZIndex
+            m_max_z = Math.Max(m_max_z, z);
             rd.m_box_data.Ref = new()
             {
                 TransformMatrix = float4x4.Identity,
@@ -59,7 +68,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
                 BorderColor_Bottom = rs.BorderColor.Bottom,
                 BorderColor_Left = rs.BorderColor.Left,
                 Opaque = rs.Opaque,
-                Z = fl.Order, // todo calc z rs.ZIndex
+                Z = z,
                 Flags = flags,
                 BackgroundImageSampler = rs.BackgroundImageSampler,
                 BorderRadiusMode = rs.BorderRadiusMode,
@@ -84,8 +93,10 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// </summary>
     public void Render(uint Width, uint Height)
     {
+        var far = Math.Max(1, m_max_z + float.Epsilon);
+        var vp = float4x4.Ortho(Width, Height, far, float.Epsilon);
         Backend.SetViewPort(0, 0, Width, Height);
-        Backend.DrawBox();
+        Backend.DrawBox(vp);
     }
 
     #endregion

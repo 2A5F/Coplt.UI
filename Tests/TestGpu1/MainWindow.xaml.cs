@@ -17,12 +17,11 @@ public partial class MainWindow
     [Drop(Order = -1)]
     private readonly UIDocument<GpuRd, object> document = new();
     private readonly D3d12GpuContext context;
-    [Drop(Order = 1)]
     private readonly HwndSwapChain swap_chain;
     [Drop(Order = 0)]
     private readonly GpuRenderer<object> renderer;
 
-    private bool runing = true;
+    private bool running = true;
 
     private Thread? m_render_thread;
 
@@ -49,7 +48,7 @@ public partial class MainWindow
         {
             VSync = true,
         };
-        renderer = new(new GpuRendererBackendD3d12(context), document);
+        renderer = new(new GpuRendererBackendD3d12(context, swap_chain), document);
 
         document.Root.Style.Size = new(1.Pc, 1.Pc);
         document.Root.Style.JustifyContent = JustifyContent.Center;
@@ -69,7 +68,7 @@ public partial class MainWindow
 
     private void OnClosed(object? sender, EventArgs e)
     {
-        runing = false;
+        running = false;
         m_render_thread?.Join();
         Dispose();
     }
@@ -87,7 +86,7 @@ public partial class MainWindow
             var first = true;
             try
             {
-                while (runing)
+                while (running)
                 {
                     if (first) first = false;
                     else
@@ -105,7 +104,7 @@ public partial class MainWindow
                     renderer.Update();
 
                     swap_chain.BarrierToRenderTarget();
-                    context.ClearRenderTargetView(swap_chain.CurrentRtv, new float4(1, 1, 1, 1));
+                    context.ClearRenderTargetView(swap_chain.Rtv, new float4(1, 1, 1, 1));
                     renderer.Render(size.x, size.y);
                     swap_chain.BarrierToPresent();
 

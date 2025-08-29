@@ -54,6 +54,7 @@ struct Box_Varying
 {
     float4 PositionCS : SV_Position;
     float2 UV: UV;
+    nointerpolation uint BorderColor: BorderColor;
     nointerpolation uint iid: iid;
 };
 
@@ -62,6 +63,7 @@ struct Box_Attrs
     uint iid: SV_InstanceID;
     float2 Position : Position;
     float2 UV: UV;
+    uint BorderColor: BorderColor;
 };
 
 [Shader("vertex")]
@@ -71,7 +73,8 @@ Box_Varying Box_Vertex(Box_Attrs input)
 
     Box_Varying output;
     output.iid = input.iid;
-    output.PositionCS = mul(VP, float4(input.Position, 0, 1));
+    output.BorderColor = input.BorderColor;
+    output.PositionCS = mul(VP, float4(input.Position, 0.5, 1));
     output.UV = input.UV;
 
     return output;

@@ -10,7 +10,7 @@ using Silk.NET.DXGI;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public sealed unsafe partial class HwndSwapChain
+public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
 {
     #region Consts
 
@@ -20,6 +20,9 @@ public sealed unsafe partial class HwndSwapChain
 
     #region Filds
 
+    [Drop]
+    internal ComPtr<ID3D12Device1> m_device;
+    
     [Drop]
     internal ComPtr<IDXGISwapChain3> m_swap_chain;
     [Drop]
@@ -44,7 +47,7 @@ public sealed unsafe partial class HwndSwapChain
 
     public D3d12GpuContext Context { get; }
 
-    public Format Format { get; } = Format.FormatB8G8R8A8Unorm;
+    public override Format Format { get; } = Format.FormatB8G8R8A8Unorm;
     public bool VSync { get; set; } = false;
 
     public uint2 Size => m_cur_size;
@@ -61,6 +64,9 @@ public sealed unsafe partial class HwndSwapChain
     public HwndSwapChain(D3d12GpuContext Context, IntPtr Hwnd, uint2 Size)
     {
         this.Context = Context;
+
+        Context.m_device.Handle->AddRef();
+        m_device = Context.m_device;
 
         m_new_size = m_cur_size = Size;
 
@@ -145,7 +151,7 @@ public sealed unsafe partial class HwndSwapChain
 
     #region Render
 
-    public CpuDescriptorHandle CurrentRtv
+    public override CpuDescriptorHandle Rtv
     {
         get
         {
