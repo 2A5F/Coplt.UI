@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
@@ -53,8 +54,10 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     internal ConcurrentQueue<int> m_freed_res_id = new();
     // internal int m_res_id_inc; // todo
 
+    [Drop]
     internal readonly D3d12RecyclablePool<RecyclablePack> m_pack_pool;
-    internal RecyclablePack m_pack;
+    [Drop]
+    internal RecyclablePack? m_pack;
 
     #endregion
 
@@ -75,15 +78,40 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region RecyclablePack
 
-    internal sealed class RecyclablePack(D3d12RecyclablePool<RecyclablePack> Pool, GpuRendererBackendD3d12 Backend)
+    [Dropping(Unmanaged = true)]
+    internal sealed partial class RecyclablePack(D3d12RecyclablePool<RecyclablePack> Pool, GpuRendererBackendD3d12 Backend)
         : AD3d12Recyclable<RecyclablePack>(Pool)
     {
+        [Drop]
         public D3d12FrameUploadPool FrameUploadBuffer { get; } = new(Backend);
+        [Drop]
+        public D3d12GpuRenderTarget? MsaaRt { get; set; }
 
-        protected override unsafe RecyclablePack Recycle()
+        protected override RecyclablePack Recycle()
         {
             FrameUploadBuffer.Reset();
             return this;
+        }
+
+        public D3d12GpuRenderTarget GetMsaaRt()
+        {
+            var rt = Backend.RenderTarget;
+            var width = rt.Width;
+            var height = rt.Height;
+            if (MsaaRt == null) goto Create;
+            if (
+                MsaaRt.Width != width
+                || MsaaRt.Height != height
+                || MsaaRt.ClearBackgroundColor.HasValue != Backend.ClearBackgroundColor.HasValue
+                || !MsaaRt.ClearBackgroundColor.GetValueOrDefault().rgba.Equals(Backend.ClearBackgroundColor.GetValueOrDefault().rgba)
+            )
+            {
+                MsaaRt.Dispose();
+                goto Create;
+            }
+            return MsaaRt;
+            Create:
+            return MsaaRt = new D3d12GpuRenderTarget(Backend, rt.Format, width, height, 4, 0, Backend.ClearBackgroundColor);
         }
     }
 
@@ -284,6 +312,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 Format.FormatUnknown,
                 new()
                 {
+                    MultisampleEnable = true,
+                    SampleDesc = new(4, 0),
                     BlendEnable = true,
                 },
                 input_layout
@@ -296,6 +326,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 Format.FormatD24UnormS8Uint,
                 new()
                 {
+                    MultisampleEnable = true,
+                    SampleDesc = new(4, 0),
                     BlendEnable = true,
                     DepthEnable = true,
                     DepthWrite = true,
@@ -335,8 +367,209 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     public override void EndFrame()
     {
+        Debug.Assert(m_pack != null);
+
+        if (m_pack.MsaaRt != null)
+        {
+            var rt = m_pack.MsaaRt;
+            var dst = RenderTarget;
+
+            #region Barrier Before Resolve
+
+            {
+                if (EnhancedBarriersSupported)
+                {
+                    var barriers = stackalloc TextureBarrier[2]
+                    {
+                        new()
+                        {
+                            SyncBefore = BarrierSync.None,
+                            SyncAfter = BarrierSync.Resolve,
+                            AccessBefore = BarrierAccess.NoAccess,
+                            AccessAfter = BarrierAccess.ResolveDest,
+                            LayoutBefore = BarrierLayout.Present,
+                            LayoutAfter = BarrierLayout.ResolveDest,
+                            PResource = dst.Resource,
+                            Subresources = new()
+                            {
+                                IndexOrFirstMipLevel = 0,
+                                NumMipLevels = 1,
+                                FirstArraySlice = 0,
+                                NumArraySlices = 1,
+                                FirstPlane = 0,
+                                NumPlanes = 1,
+                            },
+                            Flags = TextureBarrierFlags.None,
+                        },
+                        new()
+                        {
+                            SyncBefore = BarrierSync.RenderTarget,
+                            SyncAfter = BarrierSync.Resolve,
+                            AccessBefore = BarrierAccess.RenderTarget,
+                            AccessAfter = BarrierAccess.ResolveSource,
+                            LayoutBefore = BarrierLayout.RenderTarget,
+                            LayoutAfter = BarrierLayout.ResolveSource,
+                            PResource = rt.Resource,
+                            Subresources = new()
+                            {
+                                IndexOrFirstMipLevel = 0,
+                                NumMipLevels = 1,
+                                FirstArraySlice = 0,
+                                NumArraySlices = 1,
+                                FirstPlane = 0,
+                                NumPlanes = 1,
+                            },
+                            Flags = TextureBarrierFlags.None,
+                        },
+                    };
+                    m_command_list7.Handle->Barrier(1, new BarrierGroup
+                    {
+                        Type = BarrierType.Texture,
+                        NumBarriers = 2,
+                        PTextureBarriers = barriers,
+                    });
+                }
+                else
+                {
+                    var barriers = stackalloc ResourceBarrier[2]
+                    {
+                        new()
+                        {
+                            Type = ResourceBarrierType.Transition,
+                            Flags = ResourceBarrierFlags.None,
+                            Transition = new()
+                            {
+                                PResource = dst.Resource,
+                                Subresource = 0,
+                                StateBefore = ResourceStates.Present,
+                                StateAfter = ResourceStates.ResolveDest,
+                            },
+                        },
+                        new()
+                        {
+                            Type = ResourceBarrierType.Transition,
+                            Flags = ResourceBarrierFlags.None,
+                            Transition = new()
+                            {
+                                PResource = rt.Resource,
+                                Subresource = 0,
+                                StateBefore = ResourceStates.RenderTarget,
+                                StateAfter = ResourceStates.ResolveSource,
+                            },
+                        }
+                    };
+                    m_command_list.Handle->ResourceBarrier(2, barriers);
+                }
+            }
+
+            #endregion
+
+            m_command_list.Handle->ResolveSubresource(dst.Resource, 0, rt.Resource, 0, dst.Format);
+
+            #region Barrier After Resolve
+
+            {
+                if (EnhancedBarriersSupported)
+                {
+                    var barriers = stackalloc TextureBarrier[2]
+                    {
+                        new()
+                        {
+                            SyncBefore = BarrierSync.Resolve,
+                            SyncAfter = BarrierSync.None,
+                            AccessBefore = BarrierAccess.ResolveDest,
+                            AccessAfter = BarrierAccess.NoAccess,
+                            LayoutBefore = BarrierLayout.ResolveDest,
+                            LayoutAfter = BarrierLayout.Present,
+                            PResource = dst.Resource,
+                            Subresources = new()
+                            {
+                                IndexOrFirstMipLevel = 0,
+                                NumMipLevels = 1,
+                                FirstArraySlice = 0,
+                                NumArraySlices = 1,
+                                FirstPlane = 0,
+                                NumPlanes = 1,
+                            },
+                            Flags = TextureBarrierFlags.None,
+                        },
+                        new()
+                        {
+                            SyncBefore = BarrierSync.Resolve,
+                            SyncAfter = BarrierSync.None,
+                            AccessBefore = BarrierAccess.ResolveSource,
+                            AccessAfter = BarrierAccess.NoAccess,
+                            LayoutBefore = BarrierLayout.ResolveSource,
+                            LayoutAfter = BarrierLayout.RenderTarget,
+                            PResource = rt.Resource,
+                            Subresources = new()
+                            {
+                                IndexOrFirstMipLevel = 0,
+                                NumMipLevels = 1,
+                                FirstArraySlice = 0,
+                                NumArraySlices = 1,
+                                FirstPlane = 0,
+                                NumPlanes = 1,
+                            },
+                            Flags = TextureBarrierFlags.None,
+                        },
+                    };
+                    m_command_list7.Handle->Barrier(1, new BarrierGroup
+                    {
+                        Type = BarrierType.Texture,
+                        NumBarriers = 2,
+                        PTextureBarriers = barriers,
+                    });
+                }
+                else
+                {
+                    var barriers = stackalloc ResourceBarrier[2]
+                    {
+                        new()
+                        {
+                            Type = ResourceBarrierType.Transition,
+                            Flags = ResourceBarrierFlags.None,
+                            Transition = new()
+                            {
+                                PResource = dst.Resource,
+                                Subresource = 0,
+                                StateBefore = ResourceStates.ResolveDest,
+                                StateAfter = ResourceStates.Present,
+                            },
+                        },
+                        new()
+                        {
+                            Type = ResourceBarrierType.Transition,
+                            Flags = ResourceBarrierFlags.None,
+                            Transition = new()
+                            {
+                                PResource = rt.Resource,
+                                Subresource = 0,
+                                StateBefore = ResourceStates.ResolveSource,
+                                StateAfter = ResourceStates.RenderTarget,
+                            },
+                        }
+                    };
+                    m_command_list.Handle->ResourceBarrier(2, barriers);
+                }
+            }
+
+            #endregion
+        }
+
         m_pack_pool.Return(m_pack);
         m_pack = null!;
+    }
+
+    #endregion
+
+    #region ClearBackground
+
+    public override void ClearBackground(Color color)
+    {
+        Debug.Assert(m_pack != null);
+        var rt = m_pack.GetMsaaRt();
+        m_command_list.Handle->ClearRenderTargetView(rt.Rtv, (float*)&color, 0, null);
     }
 
     #endregion
@@ -363,6 +596,9 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     public override void DrawBox(in float4x4 VP)
     {
+        Debug.Assert(m_pack != null);
+        var rt = m_pack.GetMsaaRt();
+
         m_command_list.Handle->SetGraphicsRootSignature(RootSignature_Box.m_root_signature);
         m_command_list.Handle->SetGraphicsRootDescriptorTable(0, m_res_heap_start_G);
         m_command_list.Handle->SetPipelineState(Pipeline_Box_NoDepth.m_pipeline);
@@ -378,7 +614,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
             SizeInBytes = (uint)m_mesh_box.Size,
             StrideInBytes = Meshes.Box.Stirde,
         });
-        m_command_list.Handle->OMSetRenderTargets(1, RenderTarget.Rtv, false, null);
+        m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
         m_command_list.Handle->DrawInstanced(Meshes.Box.Count, 1, 0, 0);
     }
 

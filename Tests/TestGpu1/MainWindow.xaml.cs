@@ -48,7 +48,10 @@ public partial class MainWindow
         {
             VSync = true,
         };
-        renderer = new(new GpuRendererBackendD3d12(context, swap_chain), document);
+        renderer = new(new GpuRendererBackendD3d12(context, swap_chain), document)
+        {
+            ClearBackgroundColor = Color.White,
+        };
 
         document.Root.Style.Size = new(1.Pc, 1.Pc);
         document.Root.Style.JustifyContent = JustifyContent.Center;
@@ -103,10 +106,7 @@ public partial class MainWindow
                     renderer.BeginFrame();
                     renderer.Update();
 
-                    swap_chain.BarrierToRenderTarget();
-                    context.ClearRenderTargetView(swap_chain.Rtv, new float4(1, 1, 1, 1));
                     renderer.Render(size.x, size.y);
-                    swap_chain.BarrierToPresent();
 
                     renderer.EndFrame();
                     context.SubmitNotEnd();

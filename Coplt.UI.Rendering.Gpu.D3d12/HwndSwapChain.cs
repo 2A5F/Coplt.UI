@@ -22,7 +22,7 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
 
     [Drop]
     internal ComPtr<ID3D12Device1> m_device;
-    
+
     [Drop]
     internal ComPtr<IDXGISwapChain3> m_swap_chain;
     [Drop]
@@ -51,6 +51,9 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
     public bool VSync { get; set; } = false;
 
     public uint2 Size => m_cur_size;
+
+    public override uint Width => m_cur_size.x;
+    public override uint Height => m_cur_size.y;
 
     public ref readonly ComPtr<IDXGISwapChain3> SwapChain3 => ref m_swap_chain;
     public ref readonly ComPtr<ID3D12DescriptorHeap> RtvHeap => ref m_rtv_heap;
@@ -160,7 +163,7 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
         }
     }
 
-    public ref readonly ComPtr<ID3D12Resource> Resource => ref m_buffers[m_frame_index];
+    public override ref readonly ComPtr<ID3D12Resource> Resource => ref m_buffers[m_frame_index];
 
     public ID3D12Resource* Raw => Resource.Handle;
     public ID3D12Resource* Ptr => Resource.Handle;
@@ -254,108 +257,6 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
     {
         using var _ = m_lock.EnterScope();
         WaitAll_InLock();
-    }
-
-    #endregion
-
-    #region Barrier
-
-    public void BarrierToRenderTarget()
-    {
-        if (Context.EnhancedBarriersSupported)
-        {
-            TextureBarrier barrier = new()
-            {
-                SyncBefore = BarrierSync.None,
-                SyncAfter = BarrierSync.RenderTarget,
-                AccessBefore = BarrierAccess.NoAccess,
-                AccessAfter = BarrierAccess.RenderTarget,
-                LayoutBefore = BarrierLayout.Present,
-                LayoutAfter = BarrierLayout.RenderTarget,
-                PResource = Resource,
-                Subresources = new()
-                {
-                    IndexOrFirstMipLevel = 0,
-                    NumMipLevels = 1,
-                    FirstArraySlice = 0,
-                    NumArraySlices = 1,
-                    FirstPlane = 0,
-                    NumPlanes = 1,
-                },
-                Flags = TextureBarrierFlags.None,
-            };
-            Context.m_command_list7.Handle->Barrier(1, new BarrierGroup
-            {
-                Type = BarrierType.Texture,
-                NumBarriers = 1,
-                PTextureBarriers = &barrier,
-            });
-        }
-        else
-        {
-            ResourceBarrier barrier = new()
-            {
-                Type = ResourceBarrierType.Transition,
-                Flags = ResourceBarrierFlags.None,
-                Transition = new()
-                {
-                    PResource = Resource,
-                    Subresource = 0,
-                    StateBefore = ResourceStates.Present,
-                    StateAfter = ResourceStates.RenderTarget,
-                },
-            };
-            Context.m_command_list.Handle->ResourceBarrier(1, barrier);
-        }
-    }
-
-    public void BarrierToPresent()
-    {
-        if (Context.EnhancedBarriersSupported)
-        {
-            TextureBarrier barrier = new()
-            {
-                SyncBefore = BarrierSync.RenderTarget,
-                SyncAfter = BarrierSync.None,
-                AccessBefore = BarrierAccess.RenderTarget,
-                AccessAfter = BarrierAccess.NoAccess,
-                LayoutBefore = BarrierLayout.RenderTarget,
-                LayoutAfter = BarrierLayout.Present,
-                PResource = Resource,
-                Subresources = new()
-                {
-                    IndexOrFirstMipLevel = 0,
-                    NumMipLevels = 1,
-                    FirstArraySlice = 0,
-                    NumArraySlices = 1,
-                    FirstPlane = 0,
-                    NumPlanes = 1,
-                },
-                Flags = TextureBarrierFlags.None,
-            };
-            Context.m_command_list7.Handle->Barrier(1, new BarrierGroup
-            {
-                Type = BarrierType.Texture,
-                NumBarriers = 1,
-                PTextureBarriers = &barrier,
-            });
-        }
-        else
-        {
-            ResourceBarrier barrier = new()
-            {
-                Type = ResourceBarrierType.Transition,
-                Flags = ResourceBarrierFlags.None,
-                Transition = new()
-                {
-                    PResource = Resource,
-                    Subresource = 0,
-                    StateBefore = ResourceStates.RenderTarget,
-                    StateAfter = ResourceStates.Present,
-                },
-            };
-            Context.m_command_list.Handle->ResourceBarrier(1, barrier);
-        }
     }
 
     #endregion

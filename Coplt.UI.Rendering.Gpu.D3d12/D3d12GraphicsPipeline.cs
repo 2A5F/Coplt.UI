@@ -34,6 +34,7 @@ public record struct D3d12GraphicsPipelineDesc()
     public StencilOp BackDepthFailOp { get; set; } = StencilOp.Keep;
     public StencilOp BackPassOp { get; set; } = StencilOp.Keep;
     public ComparisonFunc BackFunc { get; set; } = ComparisonFunc.Always;
+    public SampleDesc SampleDesc { get; set; } = new(1, 0);
 }
 
 [Dropping]
@@ -154,7 +155,7 @@ public sealed unsafe partial class D3d12GraphicsPipeline
                     Element0 = RtvFormat,
                 },
                 DSVFormat = DsvFormat,
-                SampleDesc = new(1, 0),
+                SampleDesc = Desc.SampleDesc,
             }, out m_pipeline).TryThrowHResult();
         }
     }

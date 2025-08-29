@@ -6,6 +6,8 @@ namespace Coplt.UI.Rendering.Gpu.Graphics;
 [Dropping]
 public abstract partial class GpuRendererBackend
 {
+    public Color? ClearBackgroundColor { get; set; }
+    
     public abstract bool BindLess { get; }
     public abstract uint MaxNumImagesInBatch { get; }
 
@@ -14,6 +16,8 @@ public abstract partial class GpuRendererBackend
     public abstract void BeginFrame();
 
     public abstract void EndFrame();
+    
+    public abstract void ClearBackground(Color color);
 
     public abstract void SetViewPort(uint Left, uint Top, uint Width, uint Height);
 

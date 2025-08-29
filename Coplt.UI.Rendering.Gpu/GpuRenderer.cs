@@ -20,6 +20,11 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     [Drop]
     internal BoxDataSource BoxDataSource { get; } = new(Backend);
 
+    public Color? ClearBackgroundColor
+    {
+        get => Backend.ClearBackgroundColor;
+        set => Backend.ClearBackgroundColor = value;
+    }
 
     private float m_max_z;
 
@@ -93,6 +98,8 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// </summary>
     public void Render(uint Width, uint Height)
     {
+        if (ClearBackgroundColor.HasValue) Backend.ClearBackground(ClearBackgroundColor.Value);
+
         var far = Math.Max(1, m_max_z + float.Epsilon);
         var vp = float4x4.Ortho(Width, Height, far, float.Epsilon);
         Backend.SetViewPort(0, 0, Width, Height);
