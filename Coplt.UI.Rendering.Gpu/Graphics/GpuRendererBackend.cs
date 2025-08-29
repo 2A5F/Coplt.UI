@@ -8,14 +8,15 @@ public abstract partial class GpuRendererBackend
     public abstract bool BindLess { get; }
     public abstract uint MaxNumImagesInBatch { get; }
 
-    public abstract GpuStructuredBuffer AllocStructuredBuffer(int Stride, int Count);
+    public abstract GpuUploadList AllocUploadList(int Stride, int Count);
 
-    /// <param name="NumBatches"></param>
-    /// <param name="BatchBuffer"></param>
-    /// <param name="Images">Empty [] when <see cref="BindLess"/> is ture</param>
-    public abstract void DrawBatch(
-        uint NumBatches,
-        GpuStructuredBuffer BatchBuffer,
-        ReadOnlySpan<GpuImage> Images
+    public abstract void BeginFrame();
+
+    public abstract void EndFrame();
+
+    public abstract void SetViewPort(uint Left, uint Top, uint Width, uint Height);
+
+    public abstract void DrawBox(
+        // todo
     );
 }

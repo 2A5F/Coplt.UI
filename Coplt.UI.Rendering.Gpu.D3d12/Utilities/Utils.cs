@@ -51,4 +51,12 @@ internal static class Utils
     }
 
     #endregion
+
+    #region AlignUp
+
+    public static uint AlignUp(this uint value, uint alignment) => (value + alignment - 1) & ~(alignment - 1);
+
+    public static ulong AlignUp(this ulong value, ulong alignment) => (value + alignment - 1) & ~(alignment - 1);
+
+    #endregion
 }

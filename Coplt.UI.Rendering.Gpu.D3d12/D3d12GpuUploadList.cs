@@ -7,11 +7,11 @@ using Silk.NET.Direct3D12;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public sealed unsafe partial class D3d12GpuStructuredBuffer : GpuStructuredBuffer
+public sealed unsafe partial class D3d12GpuUploadList : GpuUploadList
 {
     #region Fields
 
-    public readonly D3d12GpuStructuredBufferInner Inner;
+    public readonly D3d12GpuUploadListInner Inner;
 
     #endregion
 
@@ -25,7 +25,7 @@ public sealed unsafe partial class D3d12GpuStructuredBuffer : GpuStructuredBuffe
 
     #region Ctor
 
-    public D3d12GpuStructuredBuffer(GpuRendererBackendD3d12 Backend, int Stride, int Count)
+    public D3d12GpuUploadList(GpuRendererBackendD3d12 Backend, int Stride, int Count)
     {
         Inner = new(Backend, Stride, Count);
     }
@@ -44,7 +44,7 @@ public sealed unsafe partial class D3d12GpuStructuredBuffer : GpuStructuredBuffe
 }
 
 [Dropping(Unmanaged = true)]
-public sealed unsafe partial class D3d12GpuStructuredBufferInner
+public sealed unsafe partial class D3d12GpuUploadListInner
 {
     #region Fields
 
@@ -71,7 +71,7 @@ public sealed unsafe partial class D3d12GpuStructuredBufferInner
 
     #region Ctor
 
-    public D3d12GpuStructuredBufferInner(GpuRendererBackendD3d12 Backend, int Stride, int Count)
+    public D3d12GpuUploadListInner(GpuRendererBackendD3d12 Backend, int Stride, int Count)
     {
         this.Backend = Backend;
         this.Stride = Stride;
@@ -118,7 +118,9 @@ public sealed unsafe partial class D3d12GpuStructuredBufferInner
                     MipLevels = 1,
                     SampleDesc = new(1, 0),
                     Layout = TextureLayout.LayoutRowMajor,
-                }, ResourceStates.Common, null,
+                }, 
+                ResourceStates.Common, 
+                null,
                 out m_resource
             ).TryThrowHResult();
             m_resource.Handle->QueryInterface(out m_resource2);

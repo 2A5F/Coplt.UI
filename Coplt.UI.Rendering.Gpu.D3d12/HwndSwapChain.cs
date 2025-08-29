@@ -42,7 +42,6 @@ public sealed unsafe partial class HwndSwapChain
 
     #region Props
 
-    [Drop]
     public D3d12GpuContext Context { get; }
 
     public Format Format { get; } = Format.FormatB8G8R8A8Unorm;

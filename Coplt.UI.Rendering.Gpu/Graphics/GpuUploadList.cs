@@ -3,7 +3,7 @@
 namespace Coplt.UI.Rendering.Gpu.Graphics;
 
 [Dropping]
-public abstract partial class GpuStructuredBuffer
+public abstract partial class GpuUploadList
 {
     public int Stride { get; protected set; }
     public int Count { get; protected set; }

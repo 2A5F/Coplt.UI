@@ -1,10 +1,13 @@
 ﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 using Coplt.UI.Rendering.Gpu.Graphics;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
 using Silk.NET.DXGI;
+using Silk.NET.Maths;
 using Feature = Silk.NET.Direct3D12.Feature;
 
 namespace Coplt.UI.Rendering.Gpu.D3d12;
@@ -22,22 +25,30 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region Fields
 
+    [Drop(Order = 0)]
     public D3d12GpuContext? Context { get; }
 
-    [Drop]
-    internal ComPtr<ID3D12Device1> m_device;
-    [Drop]
-    internal ComPtr<ID3D12Device10> m_device10;
-    [Drop]
-    internal ComPtr<ID3D12CommandQueue> m_queue;
-    [Drop]
-    internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
+    public ID3d12RecyclablePoolSource RecyclablePoolSource { get; }
 
-    [Drop]
+    [Drop(Order = 3)]
+    internal ComPtr<ID3D12Device1> m_device;
+    [Drop(Order = 3)]
+    internal ComPtr<ID3D12Device10> m_device10;
+    [Drop(Order = 2)]
+    internal ComPtr<ID3D12CommandQueue> m_queue;
+    [Drop(Order = 0)]
+    internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
+    [Drop(Order = 0)]
+    internal ComPtr<ID3D12GraphicsCommandList7> m_command_list7;
+
+    [Drop(Order = 1)]
     internal ComPtr<ID3D12DescriptorHeap> m_res_heap;
 
     internal ConcurrentQueue<int> m_freed_res_id = new();
     // internal int m_res_id_inc; // todo
+
+    internal readonly D3d12RecyclablePool<RecyclablePack> m_pack_pool;
+    internal RecyclablePack m_pack;
 
     #endregion
 
@@ -56,6 +67,29 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #endregion
 
+    #region RecyclablePack
+
+    internal sealed class RecyclablePack(D3d12RecyclablePool<RecyclablePack> Pool, GpuRendererBackendD3d12 Backend)
+        : AD3d12Recyclable<RecyclablePack>(Pool)
+    {
+        public D3d12FrameUploadPool FrameUploadBuffer { get; } = new(Backend);
+
+        protected override unsafe RecyclablePack Recycle()
+        {
+            FrameUploadBuffer.Reset();
+            return this;
+        }
+    }
+
+    #endregion
+
+    #region BoxMesh
+
+    [Drop(Order = 3)]
+    internal D3d12GpuBuffer m_box_mesh;
+
+    #endregion
+
     #region Shader
 
     public D3d12RootSignature RootSignature_Box { get; }
@@ -66,8 +100,9 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region Ctor
 
+    /// <param name="Context">Context's dispose will be called</param>
     public GpuRendererBackendD3d12(D3d12GpuContext Context)
-        : this(Context.m_device, Context.m_queue, Context.m_command_list)
+        : this(Context.m_device, Context.m_queue, Context.m_command_list, Context, Context.DebugEnabled)
     {
         this.Context = Context;
     }
@@ -78,18 +113,25 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     public GpuRendererBackendD3d12(
         ComPtr<ID3D12Device1> Device,
         ComPtr<ID3D12CommandQueue> Queue,
-        ComPtr<ID3D12GraphicsCommandList> List
+        ComPtr<ID3D12GraphicsCommandList> List,
+        ID3d12RecyclablePoolSource RecyclablePoolSource,
+        bool DebugEnabled = false
     )
     {
         #region Init
 
-        m_device = Device;
-        m_queue = Queue;
-        m_command_list = List;
+        this.RecyclablePoolSource = RecyclablePoolSource;
+        this.DebugEnabled = DebugEnabled;
 
-        m_device.AddRef();
-        m_queue.AddRef();
-        m_command_list.AddRef();
+        Device.AddRef();
+        m_device = Device;
+
+        Queue.AddRef();
+        m_queue = Queue;
+
+        List.AddRef();
+        m_command_list = List;
+        List.Handle->QueryInterface(out m_command_list7);
 
         m_device.Handle->QueryInterface(out m_device10);
 
@@ -142,6 +184,26 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #endregion
 
+        #region Pools
+
+        m_pack_pool = new(RecyclablePoolSource);
+        m_pack = new(m_pack_pool, this);
+
+        #endregion
+
+        #region Mesh
+
+        m_box_mesh = D3d12GpuBuffer.Upload(this, MemoryMarshal.AsBytes(D3d12Meshes.Box));
+
+        if (!GPUUploadHeapSupported)
+        {
+            D3d12GpuBuffer.BatchBarrier_CopyDst_To_Mesh(this,
+                m_box_mesh
+            );
+        }
+
+        #endregion
+
         #region Shader
 
         var asm = typeof(GpuRendererBackendD3d12).Assembly;
@@ -160,21 +222,39 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                     {
                         ShaderRegister = 0,
                         RegisterSpace = 0,
-                        Num32BitValues = 5,
+                        Num32BitValues = 20,
                     },
                 },
-                // BoxDatas
-                new RootParameter
-                {
-                    ParameterType = RootParameterType.TypeSrv,
-                    ShaderVisibility = ShaderVisibility.All,
-                    Descriptor = new()
-                    {
-                        ShaderRegister = 0,
-                        RegisterSpace = 0,
-                    },
-                }
             ]);
+
+            var input_element = stackalloc InputElementDesc[2]
+            {
+                new()
+                {
+                    SemanticName = (byte*)Unsafe.AsPointer(in "Position"u8[0]),
+                    SemanticIndex = 0,
+                    Format = Format.FormatR32G32Float,
+                    InputSlot = 0,
+                    AlignedByteOffset = uint.MaxValue,
+                    InputSlotClass = InputClassification.PerVertexData,
+                    InstanceDataStepRate = 0,
+                },
+                new()
+                {
+                    SemanticName = (byte*)Unsafe.AsPointer(in "UV"u8[0]),
+                    SemanticIndex = 0,
+                    Format = Format.FormatR32G32Float,
+                    InputSlot = 0,
+                    AlignedByteOffset = uint.MaxValue,
+                    InputSlotClass = InputClassification.PerVertexData,
+                    InstanceDataStepRate = 0,
+                },
+            };
+            var input_layout = new InputLayoutDesc
+            {
+                PInputElementDescs = input_element,
+                NumElements = 2,
+            };
 
             Pipeline_Box_NoDepth = new D3d12GraphicsPipeline(
                 this, RootSignature_Box,
@@ -185,11 +265,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 {
                     BlendEnable = true,
                 },
-                new()
-                {
-                    PInputElementDescs = null,
-                    NumElements = 0,
-                }
+                input_layout
             );
 
             Pipeline_Box_Depth = new D3d12GraphicsPipeline(
@@ -203,11 +279,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                     DepthEnable = true,
                     DepthWrite = true,
                 },
-                new()
-                {
-                    PInputElementDescs = null,
-                    NumElements = 0,
-                }
+                input_layout
             );
         }
 
@@ -221,20 +293,54 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     public override bool BindLess => true;
     public override uint MaxNumImagesInBatch => uint.MaxValue;
 
+    public bool DebugEnabled { get; }
+
     #endregion
 
     #region Buffer
 
-    public override GpuStructuredBuffer AllocStructuredBuffer(int Stride, int Count) =>
-        new D3d12GpuStructuredBuffer(this, Stride, Count);
+    public override GpuUploadList AllocUploadList(int Stride, int Count) =>
+        new D3d12GpuUploadList(this, Stride, Count);
 
     #endregion
 
-    #region DrawBatch
+    #region Frame
 
-    public override void DrawBatch(uint NumBatches, GpuStructuredBuffer BatchBuffer, ReadOnlySpan<GpuImage> Images)
+    public override void BeginFrame()
     {
-        throw new NotImplementedException();
+        m_pack = m_pack_pool.Rent() ?? new(m_pack_pool, this);
+        m_command_list.Handle->SetDescriptorHeaps(1, m_res_heap);
+    }
+
+    public override void EndFrame()
+    {
+        m_pack_pool.Return(m_pack);
+        m_pack = null!;
+    }
+
+    #endregion
+
+    #region SetViewPort
+
+    private Viewport m_cur_viewport;
+
+    public override void SetViewPort(uint Left, uint Top, uint Width, uint Height)
+    {
+        m_command_list.Handle->RSSetViewports(1, m_cur_viewport = new Viewport(Left, Top, Width, Height, 0, 1));
+        m_command_list.Handle->RSSetScissorRects(1, new Box2D<int>((int)Left, (int)Top, (int)(Width + Left), (int)(Height + Top)));
+    }
+
+    #endregion
+
+    #region Draw
+
+    public override void DrawBox()
+    {
+        m_command_list.Handle->SetGraphicsRootSignature(RootSignature_Box.m_root_signature);
+        m_command_list.Handle->SetPipelineState(Pipeline_Box_NoDepth.m_pipeline);
+        // m_command_list.Handle->Set
+
+        // m_command_list.Handle
     }
 
     #endregion

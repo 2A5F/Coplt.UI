@@ -101,13 +101,15 @@ public partial class MainWindow
                     var layout_changed = document.ComputeLayout(new(size.x, size.y));
                     if (layout_changed) Console.WriteLine(document);
 
-                    renderer.Update(size.x, size.y);
+                    renderer.BeginFrame();
+                    renderer.Update();
 
                     swap_chain.BarrierToRenderTarget();
                     context.ClearRenderTargetView(swap_chain.CurrentRtv, new float4(1, 1, 1, 1));
-                    renderer.Render();
+                    renderer.Render(size.x, size.y);
                     swap_chain.BarrierToPresent();
 
+                    renderer.EndFrame();
                     context.SubmitNotEnd();
                     swap_chain.PresentNoWait();
                 }

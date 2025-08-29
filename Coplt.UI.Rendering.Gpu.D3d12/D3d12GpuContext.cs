@@ -12,7 +12,7 @@ using Feature = Silk.NET.Direct3D12.Feature;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public unsafe partial class D3d12GpuContext
+public unsafe partial class D3d12GpuContext : ID3d12RecyclablePoolSource
 {
     #region Consts
 
@@ -54,7 +54,9 @@ public unsafe partial class D3d12GpuContext
 
     [Drop]
     internal FixedArray3<ComPtr<ID3D12CommandAllocator>> m_cmd_allocator;
+    [Drop]
     internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
+    [Drop]
     internal ComPtr<ID3D12GraphicsCommandList7> m_command_list7;
 
     internal EventWaitHandle m_event;
@@ -62,6 +64,9 @@ public unsafe partial class D3d12GpuContext
     internal ulong fence_value;
     internal int m_cur_frame;
     internal uint m_callback_cookie;
+
+    private readonly Queue<ID3d12Recyclable> m_recycle_queue = new();
+    private readonly Lock m_recycle_lock = new();
 
     #endregion
 
@@ -205,7 +210,7 @@ public unsafe partial class D3d12GpuContext
         {
             LoggerFunc?.Invoke(Category, Severity, id, (IntPtr)pDescription, (IntPtr)pContext);
         }
-        catch (Exception e)
+        catch
         {
             // ignored
         }
@@ -275,6 +280,7 @@ public unsafe partial class D3d12GpuContext
         Wait(value, m_event);
         m_cmd_allocator[m_cur_frame].Handle->Reset().TryThrowHResult();
         m_command_list.Handle->Reset(m_cmd_allocator[m_cur_frame].Handle, null).TryThrowHResult();
+        Recycle();
     }
 
     public void ReadyNextFrameNoWait()
@@ -283,6 +289,30 @@ public unsafe partial class D3d12GpuContext
         if (m_cur_frame >= FrameCount) m_cur_frame = 0;
         m_cmd_allocator[m_cur_frame].Handle->Reset().TryThrowHResult();
         m_command_list.Handle->Reset(m_cmd_allocator[m_cur_frame].Handle, null).TryThrowHResult();
+        Recycle();
+    }
+
+    #endregion
+
+    #region Recycle
+
+    public void RegRecycle(ID3d12Recyclable item)
+    {
+        using var _ = m_recycle_lock.EnterScope();
+        m_recycle_queue.Enqueue(item);
+    }
+
+    private void Recycle()
+    {
+        using var _ = m_recycle_lock.EnterScope();
+        re:
+        if (m_recycle_queue.TryPeek(out var item))
+        {
+            if (item.CurrentFrame != m_cur_frame) return;
+            item.Recycle();
+            m_recycle_queue.Dequeue();
+            goto re;
+        }
     }
 
     #endregion

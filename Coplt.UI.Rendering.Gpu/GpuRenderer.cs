@@ -29,7 +29,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// <para><b>May need to be performed on the rendering thread, which is limited by the rendering backend</b></para>
     /// </summary>
     /// <returns>Is re-rendering required</returns>
-    public bool Update(uint Width, uint Height) => Update(Document.Root);
+    public bool Update() => Update(Document.Root);
 
     private bool Update(UIElement<GpuRd, TEd> element)
     {
@@ -82,7 +82,19 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// Actual rendering.
     /// <para><b>May need to be performed on the rendering thread, which is limited by the rendering backend</b></para>
     /// </summary>
-    public void Render() { }
+    public void Render(uint Width, uint Height)
+    {
+        Backend.SetViewPort(0, 0, Width, Height);
+        Backend.DrawBox();
+    }
+
+    #endregion
+
+    #region Frame
+
+    public void BeginFrame() => Backend.BeginFrame();
+
+    public void EndFrame() => Backend.EndFrame();
 
     #endregion
 }
@@ -91,7 +103,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
 {
     internal const int BoxDataBufferSize = 1024;
-    internal EmbedList<GpuStructuredBuffer> m_buffers;
+    internal EmbedList<GpuUploadList> m_buffers;
     internal int m_current_buffer_offset = 0;
     internal readonly Queue<BoxDataHandle> m_freed_queue = new();
 
@@ -109,7 +121,7 @@ internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
         if (m_freed_queue.TryDequeue(out var r)) return r;
         if (m_buffers.Count == 0 || m_current_buffer_offset >= BoxDataBufferSize)
         {
-            m_buffers.Add(Backend.AllocStructuredBuffer(sizeof(BoxData), BoxDataBufferSize));
+            m_buffers.Add(Backend.AllocUploadList(sizeof(BoxData), BoxDataBufferSize));
             m_current_buffer_offset = 0;
         }
         var buffer = m_buffers.Count - 1;
@@ -130,7 +142,7 @@ internal readonly unsafe struct BoxDataHandle(int Buffer, int Index, BoxData* Pt
 
     public ref BoxData Ref => ref *Ptr;
 
-    public GpuStructuredBuffer? GpuBuffer => Source?.m_buffers[Buffer];
+    public GpuUploadList? GpuBuffer => Source?.m_buffers[Buffer];
 
     public bool IsNull => Ptr == null || Source == null;
 
