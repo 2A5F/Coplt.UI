@@ -50,9 +50,10 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     internal ComPtr<ID3D12DescriptorHeap> m_res_heap;
     internal GpuDescriptorHandle m_res_heap_start_G;
     internal CpuDescriptorHandle m_res_heap_start_C;
+    internal uint m_res_heap_stride;
 
-    internal ConcurrentQueue<int> m_freed_res_id = new();
-    // internal int m_res_id_inc; // todo
+    internal ConcurrentQueue<D3d12DescId> m_freed_res_id = new();
+    internal uint m_res_id_inc; // never zero
 
     [Drop]
     internal readonly D3d12RecyclablePool<RecyclablePack> m_pack_pool;
@@ -180,6 +181,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         }, out m_res_heap).TryThrowHResult();
         m_res_heap_start_G = m_res_heap.Handle->GetGPUDescriptorHandleForHeapStart();
         m_res_heap_start_C = m_res_heap.Handle->GetCPUDescriptorHandleForHeapStart();
+        m_res_heap_stride = m_device.Handle->GetDescriptorHandleIncrementSize(DescriptorHeapType.CbvSrvUav);
 
         #endregion
 
@@ -255,13 +257,23 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 // ViewData
                 new RootParameter
                 {
-                    ParameterType = RootParameterType.Type32BitConstants,
+                    ParameterType = RootParameterType.TypeCbv,
                     ShaderVisibility = ShaderVisibility.All,
-                    Constants = new RootConstants
+                    Descriptor = new()
                     {
                         ShaderRegister = 0,
                         RegisterSpace = 0,
-                        Num32BitValues = 20,
+                    },
+                },
+                // Batches
+                new RootParameter
+                {
+                    ParameterType = RootParameterType.TypeSrv,
+                    ShaderVisibility = ShaderVisibility.All,
+                    Descriptor = new()
+                    {
+                        ShaderRegister = 0,
+                        RegisterSpace = 10,
                     },
                 },
             ]);
@@ -341,6 +353,28 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #endregion
 
+    #region DescHeap
+
+    private D3d12DescId RentDescId()
+    {
+        if (m_freed_res_id.TryDequeue(out var id)) return id;
+        return new(Interlocked.Increment(ref m_res_id_inc)); // never zero
+    }
+
+    public void ReturnDescId(D3d12DescId Id)
+    {
+        m_freed_res_id.Enqueue(Id);
+    }
+
+    public D3d12DescId CreateSrv(ID3D12Resource* Resource, in ShaderResourceViewDesc Desc)
+    {
+        var id = RentDescId();
+        m_device.Handle->CreateShaderResourceView(Resource, Desc, new(m_res_heap_start_C.Ptr + id.Id * m_res_heap_stride));
+        return id;
+    }
+
+    #endregion
+
     #region Backend
 
     public override bool BindLess => true;
@@ -352,7 +386,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region Buffer
 
-    public override GpuUploadList AllocUploadList(int Stride, int Count) =>
+    public override GpuUploadList AllocUploadList(uint Stride, uint Count) =>
         new D3d12GpuUploadList(this, Stride, Count);
 
     #endregion
@@ -576,46 +610,49 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region SetViewPort
 
-    private Viewport m_cur_viewport;
-
-    public override void SetViewPort(uint Left, uint Top, uint Width, uint Height)
+    private record struct ViewData
     {
-        m_command_list.Handle->RSSetViewports(1, m_cur_viewport = new Viewport(Left, Top, Width, Height, 0, 1));
+        public float4 ViewSize;
+        public float4x4 VP;
+    }
+
+    private UploadRange<ViewData> m_cur_view_data;
+
+    public override void SetViewPort(uint Left, uint Top, uint Width, uint Height, float MaxZ)
+    {
+        Debug.Assert(m_pack != null);
+
+        m_command_list.Handle->RSSetViewports(1, new Viewport(Left, Top + Height, Width, -Height, 0, 1));
         m_command_list.Handle->RSSetScissorRects(1, new Box2D<int>((int)Left, (int)Top, (int)(Width + Left), (int)(Height + Top)));
+        var far = Math.Max(1, MaxZ + 1);
+        var vp = float4x4.Ortho(Width, Height, far, float.Epsilon);
+        vp = math.mul(vp, float4x4.Translate(new float3(-Width, -Height, 0) * 0.5f));
+        m_cur_view_data = m_pack.FrameUploadBuffer.Alloc(new ViewData
+        {
+            ViewSize = new(Width, Height, 1f / Width, 1f / Height),
+            VP = vp,
+        });
     }
 
     #endregion
 
     #region Draw
 
-    private struct ViewData
-    {
-        public float4 ViewSize;
-        public float4x4 VP;
-    }
-
-    public override void DrawBox(in float4x4 VP)
+    public override void DrawBox(ReadOnlySpan<BatchData> Batches)
     {
         Debug.Assert(m_pack != null);
         var rt = m_pack.GetMsaaRt();
 
+        var batches = m_pack.FrameUploadBuffer.Alloc(Batches);
+
         m_command_list.Handle->SetGraphicsRootSignature(RootSignature_Box.m_root_signature);
         m_command_list.Handle->SetGraphicsRootDescriptorTable(0, m_res_heap_start_G);
         m_command_list.Handle->SetPipelineState(Pipeline_Box_NoDepth.m_pipeline);
-        m_command_list.Handle->SetGraphicsRoot32BitConstants(1, 20, new ViewData
-        {
-            ViewSize = new(m_cur_viewport.Width, m_cur_viewport.Height, 1 / m_cur_viewport.Width, 1 / m_cur_viewport.Height),
-            VP = VP,
-        }, 0);
+        m_command_list.Handle->SetGraphicsRootConstantBufferView(1, m_cur_view_data.GpuVPtr);
+        m_command_list.Handle->SetGraphicsRootShaderResourceView(2, batches.GpuVPtr);
         m_command_list.Handle->IASetPrimitiveTopology(D3DPrimitiveTopology.D3DPrimitiveTopologyTrianglelist);
-        m_command_list.Handle->IASetVertexBuffers(0, 1, new VertexBufferView
-        {
-            BufferLocation = m_mesh_box.GpuVPtr,
-            SizeInBytes = (uint)m_mesh_box.Size,
-            StrideInBytes = Meshes.Box.Stirde,
-        });
         m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
-        m_command_list.Handle->DrawInstanced(Meshes.Box.Count, 1, 0, 0);
+        m_command_list.Handle->DrawInstanced(3, 1, 0, 0);
     }
 
     #endregion

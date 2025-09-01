@@ -60,12 +60,12 @@ public partial class MainWindow
         var child = new UIElement<GpuRd, object> { Name = "Child1" };
         child.Style.JustifyContent = JustifyContent.Center;
         child.Style.Size = new(100, 100);
-        child.Style.BackgroundColor = Color.Lime;
+        child.Style.BackgroundColor = Color.White;
         document.Root.Add(child);
 
         var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
         child2.Style.Size = new(50, 50);
-        child2.Style.BackgroundColor = Color.Maroon;
+        child2.Style.BackgroundColor = Color.White;
         child.Add(child2);
     }
 

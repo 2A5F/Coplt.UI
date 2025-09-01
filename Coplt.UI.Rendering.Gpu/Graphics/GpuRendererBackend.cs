@@ -7,22 +7,19 @@ namespace Coplt.UI.Rendering.Gpu.Graphics;
 public abstract partial class GpuRendererBackend
 {
     public Color? ClearBackgroundColor { get; set; }
-    
+
     public abstract bool BindLess { get; }
     public abstract uint MaxNumImagesInBatch { get; }
 
-    public abstract GpuUploadList AllocUploadList(int Stride, int Count);
+    public abstract GpuUploadList AllocUploadList(uint Stride, uint Count);
 
     public abstract void BeginFrame();
 
     public abstract void EndFrame();
-    
+
     public abstract void ClearBackground(Color color);
 
-    public abstract void SetViewPort(uint Left, uint Top, uint Width, uint Height);
+    public abstract void SetViewPort(uint Left, uint Top, uint Width, uint Height, float MaxZ);
 
-    public abstract void DrawBox(
-        in float4x4 VP
-        // todo
-    );
+    public abstract void DrawBox(ReadOnlySpan<BatchData> Batches);
 }

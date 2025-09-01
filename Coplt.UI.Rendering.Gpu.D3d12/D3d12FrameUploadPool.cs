@@ -16,6 +16,12 @@ public sealed unsafe partial class D3d12FrameUploadPool(GpuRendererBackendD3d12 
 
     #endregion
 
+    #region Static
+
+    private static int m_debug_id_inc;
+
+    #endregion
+
     #region Types
 
     [Dropping]
@@ -109,7 +115,7 @@ public sealed unsafe partial class D3d12FrameUploadPool(GpuRendererBackendD3d12 
             item = ref CollectionsMarshal.AsSpan(m_buffers)[0];
             item.Offset = Size;
             CurrentUsedMemory += Size;
-            if (Backend.DebugEnabled) item.Buffer.Resource.Handle->SetName("FrameUploadBuffer 0");
+            if (Backend.DebugEnabled) item.Buffer.Resource.Handle->SetName($"FrameUploadBuffer {m_debug_id_inc++}");
             return UploadRange.Create(in item, 0, Size);
         }
         else
@@ -135,7 +141,7 @@ public sealed unsafe partial class D3d12FrameUploadPool(GpuRendererBackendD3d12 
                 var next_size = Math.Max(Size.up2pow2(), item.Buffer.Size * 2);
                 m_buffers.Add(DoAlloc(next_size));
                 item = ref CollectionsMarshal.AsSpan(m_buffers)[0];
-                if (Backend.DebugEnabled) item.Buffer.Resource.Handle->SetName($"FrameUploadBuffer {i}");
+                if (Backend.DebugEnabled) item.Buffer.Resource.Handle->SetName($"FrameUploadBuffer {m_debug_id_inc++}");
                 item.Offset = Size;
                 CurrentUsedMemory += Size;
                 return UploadRange.Create(in item, 0, Size);

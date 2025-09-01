@@ -100,10 +100,33 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     {
         if (ClearBackgroundColor.HasValue) Backend.ClearBackground(ClearBackgroundColor.Value);
 
-        var far = Math.Max(1, m_max_z + float.Epsilon);
-        var vp = float4x4.Ortho(Width, Height, far, float.Epsilon);
-        Backend.SetViewPort(0, 0, Width, Height);
-        Backend.DrawBox(vp);
+        Backend.SetViewPort(0, 0, Width, Height, m_max_z);
+        Render(Document.Root);
+    }
+
+    // todo batch
+    private void Render(UIElement<GpuRd, TEd> element)
+    {
+        ref var rd = ref Unsafe.AsRef(in element.RData);
+        ref readonly var fl = ref element.FinalLayout;
+        ref readonly var cs = ref element.CommonStyle;
+        ref readonly var rs = ref rd.GpuStyle;
+
+        if (rs.IsVisible)
+        {
+            Backend.DrawBox([
+                new BatchData
+                {
+                    Buffer = rd.m_box_data.GpuBuffer!.GpuDescId,
+                    Index = rd.m_box_data.Index,
+                }
+            ]);
+        }
+
+        foreach (var child in element)
+        {
+            Render(child);
+        }
     }
 
     #endregion
@@ -120,9 +143,9 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 [Dropping]
 internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
 {
-    internal const int BoxDataBufferSize = 1024;
+    internal const uint BoxDataBufferSize = 1024;
     internal EmbedList<GpuUploadList> m_buffers;
-    internal int m_current_buffer_offset = 0;
+    internal uint m_current_buffer_offset = 0;
     internal readonly Queue<BoxDataHandle> m_freed_queue = new();
 
     [Drop]
@@ -139,28 +162,28 @@ internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
         if (m_freed_queue.TryDequeue(out var r)) return r;
         if (m_buffers.Count == 0 || m_current_buffer_offset >= BoxDataBufferSize)
         {
-            m_buffers.Add(Backend.AllocUploadList(sizeof(BoxData), BoxDataBufferSize));
+            m_buffers.Add(Backend.AllocUploadList((uint)sizeof(BoxData), BoxDataBufferSize));
             m_current_buffer_offset = 0;
         }
         var buffer = m_buffers.Count - 1;
         var index = m_current_buffer_offset++;
         var ptr = &((BoxData*)m_buffers[buffer].MappedPtr)[index];
-        return new(buffer, index, ptr, this);
+        return new((uint)buffer, index, ptr, this);
     }
 
     internal void ReturnBoxData(BoxDataHandle handle) => m_freed_queue.Enqueue(handle);
 }
 
-internal readonly unsafe struct BoxDataHandle(int Buffer, int Index, BoxData* Ptr, BoxDataSource? Source)
+internal readonly unsafe struct BoxDataHandle(uint Buffer, uint Index, BoxData* Ptr, BoxDataSource? Source)
 {
-    public readonly int Buffer = Buffer;
-    public readonly int Index = Index;
+    public readonly uint Buffer = Buffer;
+    public readonly uint Index = Index;
     public readonly BoxData* Ptr = Ptr;
     public readonly BoxDataSource? Source = Source;
 
     public ref BoxData Ref => ref *Ptr;
 
-    public GpuUploadList? GpuBuffer => Source?.m_buffers[Buffer];
+    public GpuUploadList? GpuBuffer => Source?.m_buffers[(int)Buffer];
 
     public bool IsNull => Ptr == null || Source == null;
 

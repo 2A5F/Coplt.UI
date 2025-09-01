@@ -32,3 +32,9 @@ public record struct BoxData
     public BorderRadiusMode BorderRadiusMode;
     public uint BackgroundImage;
 }
+
+public record struct BatchData
+{
+    public uint Buffer;
+    public uint Index;
+}

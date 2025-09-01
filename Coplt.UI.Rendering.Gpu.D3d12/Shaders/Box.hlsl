@@ -54,28 +54,71 @@ struct Box_Varying
 {
     float4 PositionCS : SV_Position;
     float2 UV: UV;
-    nointerpolation uint BorderColor: BorderColor;
+    // nointerpolation uint BorderColor: BorderColor;
     nointerpolation uint iid: iid;
+    nointerpolation uint BatchBuffer: BatchBuffer;
+    nointerpolation uint BatchIndex: BatchIndex;
 };
 
 struct Box_Attrs
 {
     uint iid: SV_InstanceID;
-    float2 Position : Position;
-    float2 UV: UV;
-    uint BorderColor: BorderColor;
+    uint vid: SV_VertexID;
 };
+
+struct Vertex
+{
+    float2 pos;
+};
+
+struct BatchData
+{
+    uint Buffer;
+    uint Index;
+};
+
+StructuredBuffer<BatchData> Batches : register(t0, space10);
+
+StructuredBuffer<BoxData> BoxDataBuffers[] : register(t0, space1);
 
 [Shader("vertex")]
 Box_Varying Box_Vertex(Box_Attrs input)
 {
-    // BoxData data = BoxDatas.Load(input.iid);
+    BatchData batch = Batches.Load(input.iid);
+    StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[batch.Buffer];
+    BoxData data = BoxDatas[batch.Index];
 
-    Box_Varying output;
+    float4 border_size = data.BorderSize_TopRightBottomLeft;
+    float b_t = border_size.x;
+    float b_r = border_size.y;
+    float b_b = border_size.z;
+    float b_l = border_size.w;
+    float2x4 bs_sel = {
+        b_l, b_t,
+        b_r, b_t,
+        b_l, b_b,
+        b_r, b_b,
+    };
+
+    static const float2 pos_m[] = {
+        // top
+        float2(1, 1),
+        float2(1.0, 0.0),
+        float2(0.0, 0.0),
+    };
+
+    float2 pos = pos_m[input.vid];
+
+    pos *= 100;
+
+    Box_Varying output = (Box_Varying)0;
     output.iid = input.iid;
-    output.BorderColor = input.BorderColor;
-    output.PositionCS = mul(VP, float4(input.Position, 0.5, 1));
-    output.UV = input.UV;
+    output.BatchBuffer = batch.Buffer;
+    output.BatchIndex = batch.Index;
+    output.PositionCS = mul(VP, float4(pos, 0.5, 1));
+    // output.BorderColor = input.BorderColor;
+    // output.PositionCS = mul(VP, mul(mat, float4(input.Position, 0.5, 1)));
+    // output.UV = input.UV;
 
     return output;
 }
@@ -83,10 +126,10 @@ Box_Varying Box_Vertex(Box_Attrs input)
 [Shader("pixel")]
 float4 Box_Pixel(Box_Varying input) : SV_Target
 {
-    // BoxData data = BoxDatas.Load(input.iid);
+    StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[input.BatchBuffer];
+    BoxData data = BoxDatas[input.BatchIndex];
 
-    return float4(0.7, 0.5, 0.5, 1);
-    // return data.BackgroundColor;
+    return float4(0.75, 0.5, 0.5, 1) * data.BackgroundColor;
 }
 
 // old

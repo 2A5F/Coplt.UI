@@ -113,7 +113,7 @@ public sealed unsafe partial class D3d12GpuBuffer
         else
         {
             D3d12GpuBuffer buffer = new(Backend, (uint)data.Length, UseGpuUpload: false);
-            var tmp = Backend.m_pack.FrameUploadBuffer.Alloc(data, Align: 512);
+            var tmp = Backend.m_pack!.FrameUploadBuffer.Alloc(data, Align: 512);
             Backend.m_command_list.Handle->CopyBufferRegion(buffer.m_resource, 0, tmp.Resource, 0, (uint)data.Length);
             return buffer;
         }

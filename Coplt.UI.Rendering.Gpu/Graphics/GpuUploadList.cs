@@ -10,5 +10,7 @@ public abstract partial class GpuUploadList
 
     public abstract unsafe void* MappedPtr { get; }
 
-    public abstract void MarkItemChanged(int index);
+    public abstract void MarkItemChanged(uint index);
+    
+    public abstract uint GpuDescId { get; }
 }

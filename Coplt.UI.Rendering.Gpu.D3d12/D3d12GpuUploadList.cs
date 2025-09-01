@@ -3,6 +3,7 @@ using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 using Coplt.UI.Rendering.Gpu.Graphics;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
+using Silk.NET.DXGI;
 
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
@@ -25,7 +26,7 @@ public sealed unsafe partial class D3d12GpuUploadList : GpuUploadList
 
     #region Ctor
 
-    public D3d12GpuUploadList(GpuRendererBackendD3d12 Backend, int Stride, int Count)
+    public D3d12GpuUploadList(GpuRendererBackendD3d12 Backend, uint Stride, uint Count)
     {
         Inner = new(Backend, Stride, Count);
     }
@@ -34,11 +35,13 @@ public sealed unsafe partial class D3d12GpuUploadList : GpuUploadList
 
     #region MarkItemChanged
 
-    public override void MarkItemChanged(int index)
+    public override void MarkItemChanged(uint index)
     {
         // nothing to do
         // todo upload buffer use copy
     }
+
+    public override uint GpuDescId => Inner.SrvId.Id;
 
     #endregion
 }
@@ -57,12 +60,16 @@ public sealed unsafe partial class D3d12GpuUploadListInner
 
     internal readonly void* m_mapped_ptr;
 
+    private D3d12DescId m_srv_id;
+
+    public ref readonly D3d12DescId SrvId => ref m_srv_id;
+
     #endregion
 
     #region Props
 
-    public int Stride { get; }
-    public int Count { get; }
+    public uint Stride { get; }
+    public uint Count { get; }
     public ref readonly ComPtr<ID3D12Resource> Resource => ref m_resource;
     public ref readonly ComPtr<ID3D12Resource2> Resource2 => ref m_resource2;
     public ref readonly void* MappedPtr => ref m_mapped_ptr;
@@ -71,7 +78,7 @@ public sealed unsafe partial class D3d12GpuUploadListInner
 
     #region Ctor
 
-    public D3d12GpuUploadListInner(GpuRendererBackendD3d12 Backend, int Stride, int Count)
+    public D3d12GpuUploadListInner(GpuRendererBackendD3d12 Backend, uint Stride, uint Count)
     {
         this.Backend = Backend;
         this.Stride = Stride;
@@ -118,14 +125,40 @@ public sealed unsafe partial class D3d12GpuUploadListInner
                     MipLevels = 1,
                     SampleDesc = new(1, 0),
                     Layout = TextureLayout.LayoutRowMajor,
-                }, 
-                ResourceStates.Common, 
+                },
+                ResourceStates.Common,
                 null,
                 out m_resource
             ).TryThrowHResult();
             m_resource.Handle->QueryInterface(out m_resource2);
         }
         m_resource.Handle->Map(0, null, ref m_mapped_ptr).TryThrowHResult();
+
+        m_srv_id = Backend.CreateSrv(m_resource, new ShaderResourceViewDesc
+        {
+            Format = Format.FormatUnknown,
+            ViewDimension = SrvDimension.Buffer,
+            Shader4ComponentMapping = 0x1688,
+            Buffer = new BufferSrv
+            {
+                FirstElement = 0,
+                NumElements = Count,
+                StructureByteStride = Stride,
+                Flags = BufferSrvFlags.None,
+            },
+        });
+    }
+
+    #endregion
+
+    #region Drop
+
+    [Drop]
+    private void Drop()
+    {
+        if (m_srv_id.Id == 0) return;
+        Backend.ReturnDescId(m_srv_id);
+        m_srv_id = default;
     }
 
     #endregion
