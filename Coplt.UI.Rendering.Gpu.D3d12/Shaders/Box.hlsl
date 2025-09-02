@@ -54,7 +54,8 @@ struct Box_Varying
 {
     float4 PositionCS : SV_Position;
     float2 UV: UV;
-    // nointerpolation uint BorderColor: BorderColor;
+    float2 LocalPosition: LocalPosition;
+    nointerpolation uint BorderIndex: BorderIndex;
     nointerpolation uint iid: iid;
     nointerpolation uint BatchBuffer: BatchBuffer;
     nointerpolation uint BatchIndex: BatchIndex;
@@ -85,40 +86,196 @@ StructuredBuffer<BoxData> BoxDataBuffers[] : register(t0, space1);
 Box_Varying Box_Vertex(Box_Attrs input)
 {
     BatchData batch = Batches.Load(input.iid);
-    StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[batch.Buffer];
+    StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[NonUniformResourceIndex(batch.Buffer)];
     BoxData data = BoxDatas[batch.Index];
-
-    float4 border_size = data.BorderSize_TopRightBottomLeft;
-    float b_t = border_size.x;
-    float b_r = border_size.y;
-    float b_b = border_size.z;
-    float b_l = border_size.w;
-    float2x4 bs_sel = {
-        b_l, b_t,
-        b_r, b_t,
-        b_l, b_b,
-        b_r, b_b,
-    };
-
-    static const float2 pos_m[] = {
-        // top
-        float2(1, 1),
-        float2(1.0, 0.0),
-        float2(0.0, 0.0),
-    };
-
-    float2 pos = pos_m[input.vid];
-
-    pos *= 100;
 
     Box_Varying output = (Box_Varying)0;
     output.iid = input.iid;
     output.BatchBuffer = batch.Buffer;
     output.BatchIndex = batch.Index;
-    output.PositionCS = mul(VP, float4(pos, 0.5, 1));
-    // output.BorderColor = input.BorderColor;
-    // output.PositionCS = mul(VP, mul(mat, float4(input.Position, 0.5, 1)));
-    // output.UV = input.UV;
+
+    float4 LeftTopWidthHeight = abs(data.LeftTopWidthHeight);
+    float2 offset = LeftTopWidthHeight.xy;
+    float2 size = LeftTopWidthHeight.zw;
+    float2 half_size = size * 0.5f;
+    float4 border_size = abs(data.BorderSize_TopRightBottomLeft);
+    float2 inner_size = abs(size - (border_size.yx + border_size.wz));
+
+    float4 bc_t = data.BorderColor_Top;
+    float4 bc_r = data.BorderColor_Right;
+    float4 bc_b = data.BorderColor_Bottom;
+    float4 bc_l = data.BorderColor_Left;
+
+    bool has_any_border = any(border_size > 0) && any(float4(bc_t.a, bc_r.a, bc_b.a, bc_l.a) != 0);
+
+    float2 pos;
+    uint border_index;
+
+    if (has_any_border)
+    {
+        float b_t = border_size.x;
+        float b_r = border_size.y;
+        float b_b = border_size.z;
+        float b_l = border_size.w;
+
+        float2 bp_lt = float2(b_l, b_t);
+        float2 bp_rt = float2(size.x - b_r, b_t);
+        float2 bp_lb = float2(b_l, size.y - b_b);
+        float2 bp_rb = size - float2(b_r, b_b);
+
+        {
+            bool same_dir = size.y > size.x == inner_size.y > size.x;
+            float2 size_base = size.y == size.x ? inner_size : size;
+            bool dir_v = same_dir ? size_base.y > size_base.x : size_base.x >= size_base.y;
+
+            // calc border line
+            Line2d border_line;
+            {
+                Ray2d ray_b, ray_c;
+                Ray2d ray_a = ray2d_to(0, bp_lt);
+                Ray2d ray_d = ray2d_to(size, bp_rb);
+                {
+                    Ray2d ray_t0 = ray2d_to(float2(size.x, 0), bp_rt);
+                    Ray2d ray_t1 = ray2d_to(float2(0, size.y), bp_lb);
+                    if (dir_v)
+                    {
+                        ray_b = ray_t0;
+                        ray_c = ray_t1;
+                    }
+                    else
+                    {
+                        ray_b = ray_t1;
+                        ray_c = ray_t0;
+                    }
+                }
+                intersect(ray_a, ray_b, border_line.start);
+                intersect(ray_c, ray_d, border_line.end);
+            }
+
+            if (dir_v)
+            {
+                float2 pos_arr[] =
+                {
+                    // t
+                    border_line.start,
+                    float2(0, 0),
+                    float2(size.x, 0),
+
+                    // r
+                    float2(size.x, 0),
+                    size,
+                    border_line.start,
+
+                    border_line.start,
+                    size,
+                    border_line.end,
+
+                    // b
+                    border_line.end,
+                    size,
+                    float2(0, size.y),
+
+                    // l
+                    float2(0, size.y),
+                    float2(0, 0),
+                    border_line.end,
+
+                    border_line.end,
+                    float2(0, 0),
+                    border_line.start,
+                };
+                uint border_index_arr[] =
+                {
+                    // t
+                    0, 0, 0,
+                    // r
+                    1, 1, 1, 1, 1, 1,
+                    // b,
+                    2, 2, 2,
+                    // l
+                    3, 3, 3, 3, 3, 3,
+                };
+                pos = pos_arr[input.vid];
+                border_index = border_index_arr[input.vid];
+            }
+            else
+            {
+                float2 pos_arr[] =
+                {
+                    // t
+                    float2(0, 0),
+                    float2(size.x, 0),
+                    border_line.start,
+
+                    border_line.start,
+                    float2(size.x, 0),
+                    border_line.end,
+
+                    // r
+                    border_line.end,
+                    float2(size.x, 0),
+                    size,
+
+                    // b
+                    size,
+                    float2(0, size.y),
+                    border_line.end,
+
+                    border_line.end,
+                    float2(0, size.y),
+                    border_line.start,
+
+                    // l
+                    border_line.start,
+                    float2(0, size.y),
+                    float2(0, 0),
+                };
+                uint border_index_arr[] =
+                {
+                    // t
+                    0, 0, 0, 0, 0, 0,
+                    // r
+                    1, 1, 1,
+                    // b,
+                    2, 2, 2, 2, 2, 2,
+                    // l
+                    3, 3, 3,
+                };
+                pos = pos_arr[input.vid];
+                border_index = border_index_arr[input.vid];
+            }
+        }
+    }
+    else
+    {
+        static const float2 pos_m[] = {
+            // top
+            float2(1, 1),
+            float2(1.0, 0.0),
+            float2(0.0, 0.0),
+        };
+
+        pos = pos_m[input.vid];
+        pos *= 100;
+    }
+
+    float4x4 transform = {
+        float4(1, 0, 0, 0),
+        float4(0, 1, 0, 0),
+        float4(0, 0, 1, 0),
+        float4(offset, 0, 1),
+    };
+
+    float2 uv = pos / size;
+    float4 p4 = float4(pos, 0.5 + data.Z, 1);
+    // p4 = mul(transform, p4);
+    // p4 = mul(data.TransformMatrix, p4);
+    p4 = mul(VP, p4);
+
+    output.PositionCS = p4;
+    output.UV = uv;
+    output.LocalPosition = pos;
+    output.BorderIndex = border_index;
 
     return output;
 }
@@ -126,10 +283,19 @@ Box_Varying Box_Vertex(Box_Attrs input)
 [Shader("pixel")]
 float4 Box_Pixel(Box_Varying input) : SV_Target
 {
-    StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[input.BatchBuffer];
+    StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[NonUniformResourceIndex(input.BatchBuffer)];
     BoxData data = BoxDatas[input.BatchIndex];
 
-    return float4(0.75, 0.5, 0.5, 1) * data.BackgroundColor;
+    float4 border_color_arr[] =
+    {
+        data.BorderColor_Top,
+        data.BorderColor_Right,
+        data.BorderColor_Bottom,
+        data.BorderColor_Left,
+    };
+    float4 color_color = border_color_arr[input.BorderIndex];
+
+    return color_color;
 }
 
 // old

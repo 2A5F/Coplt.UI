@@ -16,6 +16,8 @@ public record struct Rect<T>(T Top, T Right, T Bottom, T Left)
     public Rect(T All) : this(All, All, All, All) { }
     public Rect(T Top, T LeftRight, T Bottom) : this(Top, LeftRight, Bottom, LeftRight) { }
     public Rect(T TopBottom, T LeftRight) : this(TopBottom, LeftRight, TopBottom, LeftRight) { }
+
+    public static implicit operator Rect<T>(T value) => new(value);
 }
 
 public static partial class BoxStyleExtensions

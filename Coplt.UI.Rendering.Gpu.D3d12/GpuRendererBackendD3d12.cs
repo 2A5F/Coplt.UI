@@ -652,7 +652,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         m_command_list.Handle->SetGraphicsRootShaderResourceView(2, batches.GpuVPtr);
         m_command_list.Handle->IASetPrimitiveTopology(D3DPrimitiveTopology.D3DPrimitiveTopologyTrianglelist);
         m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
-        m_command_list.Handle->DrawInstanced(3, 1, 0, 0);
+        m_command_list.Handle->DrawInstanced(18, 1, 0, 0);
     }
 
     #endregion

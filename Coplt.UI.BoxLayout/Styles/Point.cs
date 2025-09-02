@@ -9,6 +9,8 @@ public record struct Point<T>(T X, T Y)
     public T Y = Y;
 
     public Point(T All) : this(All, All) { }
+
+    public static implicit operator Point<T>(T value) => new(value);
 }
 
 public static partial class BoxStyleExtensions

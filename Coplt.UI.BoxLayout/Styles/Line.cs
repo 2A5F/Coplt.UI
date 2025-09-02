@@ -6,4 +6,6 @@ public record struct Line<T>(T Start, T End)
     public T End = End;
 
     public Line(T All) : this(All, All) { }
+
+    public static implicit operator Line<T>(T value) => new(value);
 }

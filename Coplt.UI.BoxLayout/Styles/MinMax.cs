@@ -6,6 +6,8 @@ public record struct MinMax<T>(T Min, T Max)
     public T Max = Max;
 
     public MinMax(T All) : this(All, All) { }
+
+    public static implicit operator MinMax<T>(T value) => new(value);
 }
 
 public record struct MinMax<TMin, TMax>(TMin Min, TMax Max)

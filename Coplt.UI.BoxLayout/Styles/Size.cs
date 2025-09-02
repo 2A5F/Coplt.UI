@@ -10,6 +10,8 @@ public record struct Size<T>(T Width, T Height)
     public T Height = Height;
 
     public Size(T All) : this(All, All) { }
+
+    public static implicit operator Size<T>(T value) => new(value);
 }
 
 public static class Size
