@@ -50,12 +50,19 @@ cbuffer ViewData : register(b0, space0)
 
 // StructuredBuffer<BoxData> BoxDatas : register(t0, space0);
 
+enum class Box_Varying_Flags : uint
+{
+    None,
+    HasAnyBorder,
+};
+
 struct Box_Varying
 {
     float4 PositionCS : SV_Position;
     float2 UV: UV;
     float2 LocalPosition: LocalPosition;
     nointerpolation uint BorderIndex: BorderIndex;
+    nointerpolation Box_Varying_Flags Flags: Flags;
     nointerpolation uint iid: iid;
     nointerpolation uint BatchBuffer: BatchBuffer;
     nointerpolation uint BatchIndex: BatchIndex;
@@ -106,6 +113,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
     float4 bc_b = data.BorderColor_Bottom;
     float4 bc_l = data.BorderColor_Left;
 
+    Box_Varying_Flags flags = Box_Varying_Flags::None;
     bool has_any_border = any(border_size > 0) && any(float4(bc_t.a, bc_r.a, bc_b.a, bc_l.a) != 0);
 
     float2 pos;
@@ -113,6 +121,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
 
     if (has_any_border)
     {
+        AddFlag(flags, Box_Varying_Flags::HasAnyBorder);
         float b_t = border_size.x;
         float b_r = border_size.y;
         float b_b = border_size.z;
@@ -260,22 +269,24 @@ Box_Varying Box_Vertex(Box_Attrs input)
     }
 
     float4x4 transform = {
-        float4(1, 0, 0, 0),
-        float4(0, 1, 0, 0),
-        float4(0, 0, 1, 0),
-        float4(offset, 0, 1),
+        1, 0, 0, offset.x,
+        0, 1, 0, offset.y,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
     };
 
     float2 uv = pos / size;
-    float4 p4 = float4(pos, 0.5 + data.Z, 1);
-    // p4 = mul(transform, p4);
-    // p4 = mul(data.TransformMatrix, p4);
+    float4 p4 = float4(pos, 0, 1);
+    p4 = mul(transform, p4);
+    p4 = mul(data.TransformMatrix, p4);
+    p4.z = 0.5 + data.Z;
     p4 = mul(VP, p4);
 
     output.PositionCS = p4;
     output.UV = uv;
     output.LocalPosition = pos;
     output.BorderIndex = border_index;
+    output.Flags = flags;
 
     return output;
 }
@@ -286,16 +297,20 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
     StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[NonUniformResourceIndex(input.BatchBuffer)];
     BoxData data = BoxDatas[input.BatchIndex];
 
-    float4 border_color_arr[] =
+    float4 color = data.BackgroundColor;
+    if (HasFlag(input.Flags, Box_Varying_Flags::HasAnyBorder))
     {
-        data.BorderColor_Top,
-        data.BorderColor_Right,
-        data.BorderColor_Bottom,
-        data.BorderColor_Left,
-    };
-    float4 color_color = border_color_arr[input.BorderIndex];
+        float4 border_color_arr[] =
+        {
+            data.BorderColor_Top,
+            data.BorderColor_Right,
+            data.BorderColor_Bottom,
+            data.BorderColor_Left,
+        };
+        color = border_color_arr[input.BorderIndex];
+    }
 
-    return color_color;
+    return color;
 }
 
 // old

@@ -13,6 +13,18 @@ enum class SamplerType : uint
 Texture2D Images[] : register(t0, space1);
 SamplerState Samplers[] : register(s0, space2);
 
+template <typename Enum>
+void AddFlag(inout Enum value, Enum flag)
+{
+    value = (Enum)((uint)value | (uint)flag);
+}
+
+template <typename Enum>
+bool HasFlag(Enum value, Enum flag)
+{
+    return ((uint)value & (uint)flag) == (uint)flag;
+}
+
 float cross(float2 a, float2 b)
 {
     return a.x * b.y - a.y * b.x;
@@ -57,7 +69,7 @@ Ray2d ray2d_to(float2 origin, float2 to)
 bool intersect(Ray2d a, Ray2d b, out float2 hit)
 {
     float d = cross(a.direction, b.direction);
-    
+
     float2 diff = b.origin - a.origin;
     float t = cross(diff, b.direction) / d;
 

@@ -54,6 +54,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         if (rd.m_last_version != element.VisualVersion || rd.m_box_data.IsNull)
         {
             rd.m_last_version = element.VisualVersion;
+            element.LayoutVisualTouch();
             changed = true;
             if (rd.m_box_data.IsNull) rd.MakeBoxData(BoxDataSource);
             var flags = RenderFlags.None;

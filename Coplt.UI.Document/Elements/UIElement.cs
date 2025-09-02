@@ -81,10 +81,16 @@ public sealed partial class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd
 
     public ref readonly DirtyFlags DirtyFlags => ref m_dirty;
 
-    internal void LayoutDirtyTouch(UIDocument<TRd, TEd> document)
+    public void LayoutDirtyTouch(UIDocument<TRd, TEd> document)
     {
         Document = document;
         m_dirty &= ~DirtyFlags.Layout;
+        MarkVisualDirty();
+    }
+
+    public void LayoutVisualTouch()
+    {
+        m_dirty &= ~DirtyFlags.Visual;
     }
 
     public void MarkLayoutDirty()
