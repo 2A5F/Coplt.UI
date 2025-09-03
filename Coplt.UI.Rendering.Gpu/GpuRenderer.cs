@@ -39,7 +39,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// <returns>Is re-rendering required</returns>
     public bool Update()
     {
-        m_max_z = 0;
+        m_max_z = 1;
         return Update(Document.Root);
     }
 
@@ -59,8 +59,6 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
             if (rd.m_box_data.IsNull) rd.MakeBoxData(BoxDataSource);
             var flags = RenderFlags.None;
             if (cs.BoxSizing is BoxSizing.ContentBox) flags |= RenderFlags.ContentBox;
-            var z = fl.Order; // todo calc z rs.ZIndex
-            m_max_z = Math.Max(m_max_z, z);
             rd.m_box_data.Ref = new()
             {
                 TransformMatrix = float4x4.Identity,
@@ -74,7 +72,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
                 BorderColor_Bottom = rs.BorderColor.Bottom,
                 BorderColor_Left = rs.BorderColor.Left,
                 Opaque = rs.Opaque,
-                Z = z,
+                Z = 1, // todo calc z or remove z
                 Flags = flags,
                 BackgroundImageSampler = rs.BackgroundImageSampler,
                 BorderRadiusMode = rs.BorderRadiusMode,

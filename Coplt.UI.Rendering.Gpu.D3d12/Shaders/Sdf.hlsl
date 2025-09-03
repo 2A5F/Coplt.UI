@@ -168,24 +168,25 @@ float TRoundBoxAA(float2 pos, float4 radius, SdRoundBoxType type, AA_t aa)
     // box coordinates
     float2 q = abs(p) - b + r.x;
     // distance to sides
-    if (min(q.x, q.y) < 0.0)
-    {
-        if (max(abs(q.x), abs(q.y)) < 2)
-        {
-            float sum = 0;
-            for (uint i = 0; i < 8; i++)
-            {
-                float2 offset = hammersley_8[i] * aa.scale();
-                float2 lq = q + offset;
-                sum += max(lq.x, lq.y) - r.x <= 0;
-            }
-            return sum / 8;
-        }
-        else
-        {
-            return max(q.x, q.y) - r.x <= 0;
-        }
-    }
+    if (min(q.x, q.y) < 0.0) return 1;
+    // if (min(q.x, q.y) < 0.0)
+    // {
+    //     if (max(abs(q.x), abs(q.y)) < 2)
+    //     {
+    //         float sum = 0;
+    //         for (uint i = 0; i < 8; i++)
+    //         {
+    //             float2 offset = hammersley_8[i] * aa.scale();
+    //             float2 lq = q + offset;
+    //             sum += max(lq.x, lq.y) - r.x <= 0;
+    //         }
+    //         return sum / 8;
+    //     }
+    //     else
+    //     {
+    //         return max(q.x, q.y) - r.x <= 0;
+    //     }
+    // }
     // rotate 45 degrees, offset by r and scale by r*sqrt(0.5) to canonical corner coordinates
     float2 uv = float2(abs(q.x - q.y), q.x + q.y - r.x) / r.x;
     // compute distance to corner shape

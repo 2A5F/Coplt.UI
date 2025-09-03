@@ -35,6 +35,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     [Drop(Order = -1)]
     public D3d12RenderTarget RenderTarget { get; }
 
+    internal readonly uint SamplerCount;
+
     [Drop(Order = 3)]
     internal ComPtr<ID3D12Device1> m_device;
     [Drop(Order = 3)]
@@ -112,7 +114,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
             }
             return MsaaRt;
             Create:
-            return MsaaRt = new D3d12GpuRenderTarget(Backend, rt.Format, width, height, 4, 0, Backend.ClearBackgroundColor);
+            return MsaaRt = new D3d12GpuRenderTarget(Backend, rt.Format, width, height, Backend.SamplerCount, 0, Backend.ClearBackgroundColor);
         }
     }
 
@@ -186,6 +188,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         #endregion
 
         #region Query
+
+        SamplerCount = QueryMassCount();
 
         FeatureDataArchitecture architecture;
         if (m_device.Handle->CheckFeatureSupport(Feature.Architecture, &architecture, (uint)sizeof(FeatureDataArchitecture))
@@ -325,7 +329,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 new()
                 {
                     MultisampleEnable = true,
-                    SampleDesc = new(4, 0),
+                    SampleDesc = new(SamplerCount, 0),
                     BlendEnable = true,
                 },
                 input_layout
@@ -339,7 +343,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
                 new()
                 {
                     MultisampleEnable = true,
-                    SampleDesc = new(4, 0),
+                    SampleDesc = new(SamplerCount, 0),
                     BlendEnable = true,
                     DepthEnable = true,
                     DepthWrite = true,
@@ -349,6 +353,22 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         }
 
         #endregion
+    }
+
+    private uint QueryMassCount(uint max = 8)
+    {
+        FeatureDataMultisampleQualityLevels msaa_quality;
+        msaa_quality.Format = RenderTarget.Format;
+        for (var i = max; i > 0; i /= 2)
+        {
+            msaa_quality.SampleCount = i;
+            if (m_device.Handle->CheckFeatureSupport(Feature.MultisampleQualityLevels, &msaa_quality, (uint)sizeof(FeatureDataMultisampleQualityLevels))
+                .AsHResult().IsSuccess)
+            {
+                return i;
+            }
+        }
+        return 0;
     }
 
     #endregion
@@ -652,7 +672,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         m_command_list.Handle->SetGraphicsRootShaderResourceView(2, batches.GpuVPtr);
         m_command_list.Handle->IASetPrimitiveTopology(D3DPrimitiveTopology.D3DPrimitiveTopologyTrianglelist);
         m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
-        m_command_list.Handle->DrawInstanced(18, 1, 0, 0);
+        m_command_list.Handle->DrawInstanced(42, 1, 0, 0);
     }
 
     #endregion

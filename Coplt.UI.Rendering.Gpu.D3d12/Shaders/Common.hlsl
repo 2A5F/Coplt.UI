@@ -25,6 +25,12 @@ bool HasFlag(Enum value, Enum flag)
     return ((uint)value & (uint)flag) == (uint)flag;
 }
 
+template <typename Enum>
+Enum And(Enum A, Enum B)
+{
+    return (Enum)((uint)A & (uint)B);
+}
+
 float cross(float2 a, float2 b)
 {
     return a.x * b.y - a.y * b.x;

@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Coplt.Mathematics" Version="0.16.0" />
+      <PackageReference Include="Coplt.Mathematics" Version="0.17.0" />
       <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all" />
     </ItemGroup>
 

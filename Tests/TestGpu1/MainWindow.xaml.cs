@@ -60,15 +60,30 @@ public partial class MainWindow
         var child = new UIElement<GpuRd, object> { Name = "Child1" };
         child.Style.JustifyContent = JustifyContent.Center;
         child.Style.Size = new(100, 100);
-        child.Style.BackgroundColor = Color.Green;
+        child.Style.BackgroundColor = Color.Gray;
         child.Style.Border = new(10, 20, 30, 40);
-        child.Style.BorderColor = new(Color.Aqua, Color.Yellow, Color.Purple, Color.Maroon);
+        child.Style.BorderColor = new(
+            new Color(0.95f, 0.5f, 0.5f, 0),
+            new Color(0.5f, 0.95f, 0.5f, 0.5f),
+            new Color(0.5f, 0.5f, 0.95f, 0.5f),
+            new Color(0.95f, 0.95f, 0.5f, 0.5f)
+        );
+        child.Style.BorderRadius = 100;
+        child.Style.BorderRadiusMode = BorderRadiusMode.Cosine;
         document.Root.Add(child);
 
         var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
-        child2.Style.Size = new(50, 50);
-        // child2.Style.BackgroundColor = Color.White;
-        child.Add(child2);
+        child2.Style.Size = new(200, 100);
+        child2.Style.Border = new(10, 20, 30, 40);
+        child2.Style.BorderColor = new(
+            new Color(0.95f, 0.5f, 0.5f, 1f),
+            new Color(0.5f, 0.95f, 0.5f, 0.5f),
+            new Color(0.5f, 0.5f, 0.95f, 0.5f),
+            new Color(0.95f, 0.95f, 0.5f, 0.5f)
+        );
+        child2.Style.BorderRadius = 100;
+        child2.Style.BorderRadiusMode = BorderRadiusMode.Cosine;
+        document.Root.Add(child2);
     }
 
     private void OnClosed(object? sender, EventArgs e)
