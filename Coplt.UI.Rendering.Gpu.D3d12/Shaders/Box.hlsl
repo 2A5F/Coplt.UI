@@ -132,32 +132,29 @@ Box_Varying Box_Vertex(Box_Attrs input)
         float2 bp_rb = size - float2(b_r, b_b);
 
         {
-            bool same_dir = size.y > size.x == inner_size.y > size.x;
-            float2 size_base = size.y == size.x ? inner_size : size;
-            bool dir_v = same_dir ? size_base.y > size_base.x : size_base.x >= size_base.y;
+            Line2d border_line;
+            bool dir_v;
 
             // calc border line
-            Line2d border_line;
             {
-                Ray2d ray_b, ray_c;
-                Ray2d ray_a = ray2d_to(0, bp_lt);
-                Ray2d ray_d = ray2d_to(size, bp_rb);
-                {
-                    Ray2d ray_t0 = ray2d_to(float2(size.x, 0), bp_rt);
-                    Ray2d ray_t1 = ray2d_to(float2(0, size.y), bp_lb);
-                    if (dir_v)
-                    {
-                        ray_b = ray_t0;
-                        ray_c = ray_t1;
-                    }
-                    else
-                    {
-                        ray_b = ray_t1;
-                        ray_c = ray_t0;
-                    }
-                }
-                intersect(ray_a, ray_b, border_line.start);
-                intersect(ray_c, ray_d, border_line.end);
+                Ray2d ray_lt = ray2d_to(0, bp_lt);
+                Ray2d ray_rb = ray2d_to(size, bp_rb);
+                Ray2d ray_rt = ray2d_to(float2(size.x, 0), bp_rt);
+                Ray2d ray_lb = ray2d_to(float2(0, size.y), bp_lb);
+
+                float2 hit_lt_rt, hit_lb_rb, hit_lt_lb, hit_rt_rb;
+                intersect(ray_lt, ray_rt, hit_lt_rt);
+                intersect(ray_lb, ray_rb, hit_lb_rb);
+                intersect(ray_lt, ray_lb, hit_lt_lb);
+                intersect(ray_rt, ray_rb, hit_rt_rb);
+
+                float diff_lt_rt = dir_diff(hit_lt_rt);
+                float diff_lb_rb = dir_diff(hit_lb_rb);
+                
+                dir_v = diff_lt_rt > diff_lb_rb;
+
+                border_line.start = dir_v ? hit_lt_rt : hit_lt_lb;
+                border_line.end = dir_v ? hit_lb_rb : hit_rt_rb;
             }
 
             float2 pos_src[] =

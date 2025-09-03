@@ -84,4 +84,9 @@ bool intersect(Ray2d a, Ray2d b, out float2 hit)
     return abs(d) >= 1e-8;
 }
 
+float dir_diff(float2 dir)
+{
+    return abs(dir.x) - abs(dir.y);
+}
+
 #endif

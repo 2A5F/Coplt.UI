@@ -56,24 +56,28 @@ public partial class MainWindow
         document.Root.Style.Size = new(1.Pc, 1.Pc);
         document.Root.Style.JustifyContent = JustifyContent.Center;
         document.Root.Style.AlignItems = AlignItems.Center;
+        document.Root.Style.FlexDirection = FlexDirection.Row;
+        document.Root.Style.FlexWrap = FlexWrap.Wrap;
 
         var child = new UIElement<GpuRd, object> { Name = "Child1" };
         child.Style.JustifyContent = JustifyContent.Center;
-        child.Style.Size = new(100, 100);
-        child.Style.BackgroundColor = Color.Gray;
+        child.Style.Size = new(200, 200);
+        // child.Style.Size = new(1.Pc, 1.Pc);
+        // child.Style.BackgroundColor = Color.Gray;
+        child.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
         child.Style.Border = new(10, 20, 30, 40);
         child.Style.BorderColor = new(
-            new Color(0.95f, 0.5f, 0.5f, 0),
+            new Color(0.95f, 0.5f, 0.5f, 0.5f),
             new Color(0.5f, 0.95f, 0.5f, 0.5f),
             new Color(0.5f, 0.5f, 0.95f, 0.5f),
             new Color(0.95f, 0.95f, 0.5f, 0.5f)
         );
         child.Style.BorderRadius = 100;
-        child.Style.BorderRadiusMode = BorderRadiusMode.Cosine;
+        child.Style.BorderRadiusMode = BorderRadiusMode.Circle;
         document.Root.Add(child);
 
         var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
-        child2.Style.Size = new(200, 100);
+        child2.Style.Size = new(500, 300);
         child2.Style.Border = new(10, 20, 30, 40);
         child2.Style.BorderColor = new(
             new Color(0.95f, 0.5f, 0.5f, 1f),
@@ -81,8 +85,9 @@ public partial class MainWindow
             new Color(0.5f, 0.5f, 0.95f, 0.5f),
             new Color(0.95f, 0.95f, 0.5f, 0.5f)
         );
+        // child2.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
         child2.Style.BorderRadius = 100;
-        child2.Style.BorderRadiusMode = BorderRadiusMode.Cosine;
+        child2.Style.BorderRadiusMode = BorderRadiusMode.Circle;
         document.Root.Add(child2);
     }
 
