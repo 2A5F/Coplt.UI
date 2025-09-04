@@ -46,7 +46,8 @@ public interface IGridItemStyle : ICoreStyle
     public AlignSelf? AlignSelf => BoxStyle.Default.AlignSelf;
     public JustifySelf? JustifySelf => BoxStyle.Default.JustifySelf;
 
-    public Line<GridPlacement> GridPlacement(AbsoluteAxis axis) => axis switch {
+    public Line<GridPlacement> GridPlacement(AbsoluteAxis axis) => axis switch
+    {
         AbsoluteAxis.Horizontal => GridColumn,
         AbsoluteAxis.Vertical => GridRow,
         _ => throw new ArgumentOutOfRangeException(nameof(axis), axis, null)
@@ -92,7 +93,7 @@ public readonly record struct GridLine(short Value)
     public static implicit operator GridLine(short value) => new(value);
 }
 
-[Union]
+[Union2]
 public readonly partial struct OriginZeroGridPlacement
 {
     [UnionTemplate]
@@ -102,11 +103,9 @@ public readonly partial struct OriginZeroGridPlacement
         OriginZeroLine Line();
         ushort Span();
     }
-
-    public static OriginZeroGridPlacement Auto = MakeAuto();
 }
 
-[Union]
+[Union2]
 public readonly partial struct GridPlacement
 {
     [UnionTemplate]
@@ -116,11 +115,9 @@ public readonly partial struct GridPlacement
         GridLine Line();
         ushort Span();
     }
-
-    public static GridPlacement Auto = MakeAuto();
 }
 
-[Union]
+[Union2]
 public readonly partial struct MaxTrackSizingFunction
 {
     [UnionTemplate]
@@ -137,53 +134,49 @@ public readonly partial struct MaxTrackSizingFunction
         CalcId Calc();
     }
 
-    public static MaxTrackSizingFunction Zero => MakeFixed(0);
-
-    public static MaxTrackSizingFunction Auto = MakeAuto();
-    public static MaxTrackSizingFunction MinContent = MakeMinContent();
-    public static MaxTrackSizingFunction MaxContent = MakeMaxContent();
+    public static MaxTrackSizingFunction Zero => MaxTrackSizingFunction.Fixed(0);
 
     public static MaxTrackSizingFunction FitContent(LengthPercentage lp) => lp.Tag switch
     {
-        LengthPercentage.Tags.Fixed => MakeFitContentFixed(lp.Fixed),
-        LengthPercentage.Tags.Percent => MakeFitContentPercent(lp.Percent),
-        LengthPercentage.Tags.Calc => MakeCalc(lp.Calc),
+        LengthPercentage.Tags.Fixed => MaxTrackSizingFunction.FitContentFixed(lp.Fixed),
+        LengthPercentage.Tags.Percent => MaxTrackSizingFunction.FitContentPercent(lp.Percent),
+        LengthPercentage.Tags.Calc => MaxTrackSizingFunction.Calc(lp.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator AnyLength(MaxTrackSizingFunction self) => self.Tag switch
     {
-        Tags.Auto => AnyLength.MakeAuto(),
-        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
-        Tags.Percent => AnyLength.MakePercent(self.Percent),
-        Tags.Calc => AnyLength.MakeCalc(self.Calc),
-        Tags.Fr => AnyLength.MakeFr(self.Fr),
+        Tags.Auto => AnyLength.Auto,
+        Tags.Fixed => AnyLength.Fixed(self.Fixed),
+        Tags.Percent => AnyLength.Percent(self.Percent),
+        Tags.Calc => AnyLength.Calc(self.Calc),
+        Tags.Fr => AnyLength.Fr(self.Fr),
         Tags.MinContent => AnyLength.MinContent,
         Tags.MaxContent => AnyLength.MaxContent,
-        Tags.FitContentFixed => AnyLength.MakeFitContentFixed(self.FitContentFixed),
-        Tags.FitContentPercent => AnyLength.MakeFitContentPercent(self.FitContentPercent),
+        Tags.FitContentFixed => AnyLength.FitContentFixed(self.FitContentFixed),
+        Tags.FitContentPercent => AnyLength.FitContentPercent(self.FitContentPercent),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator MaxTrackSizingFunction(LengthPercentage self) => self.Tag switch
     {
-        LengthPercentage.Tags.Fixed => MakeFixed(self.Fixed),
-        LengthPercentage.Tags.Percent => MakePercent(self.Percent),
-        LengthPercentage.Tags.Calc => MakeCalc(self.Calc),
+        LengthPercentage.Tags.Fixed => MaxTrackSizingFunction.Fixed(self.Fixed),
+        LengthPercentage.Tags.Percent => MaxTrackSizingFunction.Percent(self.Percent),
+        LengthPercentage.Tags.Calc => MaxTrackSizingFunction.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator MaxTrackSizingFunction(LengthPercentageAuto self) => self.Tag switch
     {
-        LengthPercentageAuto.Tags.Auto => Auto,
-        LengthPercentageAuto.Tags.Fixed => MakeFixed(self.Fixed),
-        LengthPercentageAuto.Tags.Percent => MakePercent(self.Percent),
-        LengthPercentageAuto.Tags.Calc => MakeCalc(self.Calc),
+        LengthPercentageAuto.Tags.Auto => MaxTrackSizingFunction.Auto,
+        LengthPercentageAuto.Tags.Fixed => MaxTrackSizingFunction.Fixed(self.Fixed),
+        LengthPercentageAuto.Tags.Percent => MaxTrackSizingFunction.Percent(self.Percent),
+        LengthPercentageAuto.Tags.Calc => MaxTrackSizingFunction.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 }
 
-[Union]
+[Union2]
 public readonly partial struct MinTrackSizingFunction
 {
     [UnionTemplate]
@@ -198,19 +191,15 @@ public readonly partial struct MinTrackSizingFunction
         CalcId Calc();
     }
 
-    public static MinTrackSizingFunction Zero => MakeFixed(0);
-
-    public static MinTrackSizingFunction Auto = MakeAuto();
-    public static MinTrackSizingFunction MinContent = MakeMinContent();
-    public static MinTrackSizingFunction MaxContent = MakeMaxContent();
+    public static MinTrackSizingFunction Zero => MinTrackSizingFunction.Fixed(0);
 
     public static implicit operator AnyLength(MinTrackSizingFunction self) => self.Tag switch
     {
-        Tags.Auto => AnyLength.MakeAuto(),
-        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
-        Tags.Percent => AnyLength.MakePercent(self.Percent),
-        Tags.Calc => AnyLength.MakeCalc(self.Calc),
-        Tags.Fr => AnyLength.MakeFr(self.Fr),
+        Tags.Auto => AnyLength.Auto,
+        Tags.Fixed => AnyLength.Fixed(self.Fixed),
+        Tags.Percent => AnyLength.Percent(self.Percent),
+        Tags.Calc => AnyLength.Calc(self.Calc),
+        Tags.Fr => AnyLength.Fr(self.Fr),
         Tags.MinContent => AnyLength.MinContent,
         Tags.MaxContent => AnyLength.MaxContent,
         _ => throw new ArgumentOutOfRangeException()
@@ -218,23 +207,23 @@ public readonly partial struct MinTrackSizingFunction
 
     public static implicit operator MinTrackSizingFunction(LengthPercentage self) => self.Tag switch
     {
-        LengthPercentage.Tags.Fixed => MakeFixed(self.Fixed),
-        LengthPercentage.Tags.Percent => MakePercent(self.Percent),
-        LengthPercentage.Tags.Calc => MakeCalc(self.Calc),
+        LengthPercentage.Tags.Fixed => MinTrackSizingFunction.Fixed(self.Fixed),
+        LengthPercentage.Tags.Percent => MinTrackSizingFunction.Percent(self.Percent),
+        LengthPercentage.Tags.Calc => MinTrackSizingFunction.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator MinTrackSizingFunction(LengthPercentageAuto self) => self.Tag switch
     {
-        LengthPercentageAuto.Tags.Auto => Auto,
-        LengthPercentageAuto.Tags.Fixed => MakeFixed(self.Fixed),
-        LengthPercentageAuto.Tags.Percent => MakePercent(self.Percent),
-        LengthPercentageAuto.Tags.Calc => MakeCalc(self.Calc),
+        LengthPercentageAuto.Tags.Auto => MinTrackSizingFunction.Auto,
+        LengthPercentageAuto.Tags.Fixed => MinTrackSizingFunction.Fixed(self.Fixed),
+        LengthPercentageAuto.Tags.Percent => MinTrackSizingFunction.Percent(self.Percent),
+        LengthPercentageAuto.Tags.Calc => MinTrackSizingFunction.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 }
 
-[Union]
+[Union2]
 public readonly partial struct GridTrackRepetition
 {
     [UnionTemplate]
@@ -260,7 +249,7 @@ public record struct NonRepeatedTrackSizingFunction(MinTrackSizingFunction Min, 
         new(MinTrackSizingFunction.Auto, MaxTrackSizingFunction.FitContent(lp));
 }
 
-[Union]
+[Union2]
 public readonly partial struct TrackSizingFunction<TList>
     where TList : IAsReadOnlySpan<NonRepeatedTrackSizingFunction>
 {
@@ -271,14 +260,21 @@ public readonly partial struct TrackSizingFunction<TList>
         void Repeat(GridTrackRepetition Repetition, TList Tracks);
     }
 
-    public static TrackSizingFunction<TList> Zero = MakeSingle(NonRepeatedTrackSizingFunction.Zero);
+    public static TrackSizingFunction<TList> Zero = TrackSizingFunction<TList>.Single(NonRepeatedTrackSizingFunction.Zero);
 
-    public static TrackSizingFunction<TList> Auto = MakeSingle(NonRepeatedTrackSizingFunction.Auto);
-    public static TrackSizingFunction<TList> MinContent = MakeSingle(NonRepeatedTrackSizingFunction.MinContent);
-    public static TrackSizingFunction<TList> MaxContent = MakeSingle(NonRepeatedTrackSizingFunction.MaxContent);
+    public static TrackSizingFunction<TList> Auto = TrackSizingFunction<TList>.Single(NonRepeatedTrackSizingFunction.Auto);
+    public static TrackSizingFunction<TList> MinContent = TrackSizingFunction<TList>.Single(NonRepeatedTrackSizingFunction.MinContent);
+    public static TrackSizingFunction<TList> MaxContent = TrackSizingFunction<TList>.Single(NonRepeatedTrackSizingFunction.MaxContent);
+}
 
-    public static TrackSizingFunction<TList> MakeFitContent(LengthPercentage lp) =>
-        MakeSingle(NonRepeatedTrackSizingFunction.FitContent(lp));
+public static partial class TrackSizingFunctionExtensions
+{
+    extension<TList>(global::Coplt.UI.Styles.TrackSizingFunction<TList>)
+        where TList : global::Coplt.UI.BoxLayouts.Utilities.IAsReadOnlySpan<global::Coplt.UI.Styles.NonRepeatedTrackSizingFunction>
+    {
+        public static TrackSizingFunction<TList> FitContent(LengthPercentage lp) =>
+            TrackSizingFunction<TList>.Single(NonRepeatedTrackSizingFunction.FitContent(lp));
+    }
 }
 
 public readonly record struct GridVec<T>(List<T> List) : IAsReadOnlySpan<T>

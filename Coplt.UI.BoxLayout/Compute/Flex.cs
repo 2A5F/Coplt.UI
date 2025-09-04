@@ -505,13 +505,13 @@ file static class FlexCompute
     )
     {
         var width = known_dimensions.Width is { } node_width
-            ? AvailableSpace.MakeDefinite(node_width - constants.ContentBoxInset.HorizontalAxisSum())
+            ? AvailableSpace.Definite(node_width - constants.ContentBoxInset.HorizontalAxisSum())
             : outer_available_space.Width
                 .TrySub(constants.Margin.HorizontalAxisSum())
                 .TrySub(constants.ContentBoxInset.HorizontalAxisSum());
 
         var height = known_dimensions.Height is { } node_height
-            ? AvailableSpace.MakeDefinite(node_height - constants.ContentBoxInset.VerticalAxisSum())
+            ? AvailableSpace.Definite(node_height - constants.ContentBoxInset.VerticalAxisSum())
             : outer_available_space.Height
                 .TrySub(constants.Margin.VerticalAxisSum())
                 .TrySub(constants.ContentBoxInset.VerticalAxisSum());
@@ -575,13 +575,13 @@ file static class FlexCompute
             {
                 cross_axis_available_space = available_space.Cross(dir) switch
                 {
-                    { Tag: AvailableSpace.Tags.Definite, Definite: var definite } => AvailableSpace.MakeDefinite(
+                    { Tag: AvailableSpace.Tags.Definite, Definite: var definite } => AvailableSpace.Definite(
                         (cross_axis_parent_size ?? definite).TryClamp(child_min_cross, child_max_cross)
                     ),
                     { Tag: AvailableSpace.Tags.MinContent } =>
-                        child_min_cross is { } min ? AvailableSpace.MakeDefinite(min) : AvailableSpace.MinContent,
+                        child_min_cross is { } min ? AvailableSpace.Definite(min) : AvailableSpace.MinContent,
                     { Tag: AvailableSpace.Tags.MaxContent } =>
-                        child_max_cross is { } max ? AvailableSpace.MakeDefinite(max) : AvailableSpace.MaxContent,
+                        child_max_cross is { } max ? AvailableSpace.Definite(max) : AvailableSpace.MaxContent,
                     _ => throw new UnreachableException(),
                 };
             }
@@ -764,7 +764,7 @@ file static class FlexCompute
     {
         if (!constants.IsWrap) goto ret_all;
         var main_axis_available_space = constants.MaxSize.Main(constants.Direction) is { } MaxSize
-            ? AvailableSpace.MakeDefinite(
+            ? AvailableSpace.Definite(
                 (available_space
                     .Main(constants.Direction)
                     .TryGet() ?? MaxSize)
@@ -1361,7 +1361,7 @@ file static class FlexCompute
         {
             var padding_border_sum = (child.Padding.Add(child.Border)).CrossAxisSum(dir);
 
-            var child_known_main = AvailableSpace.MakeDefinite(constants.ContainerSize.Main(dir));
+            var child_known_main = AvailableSpace.Definite(constants.ContainerSize.Main(dir));
 
             var child_cross = child.Size.Cross(dir)
                 .TryClamp(child.MinSize.Cross(dir), child.MaxSize.Cross(dir))
@@ -2046,7 +2046,7 @@ file static class FlexCompute
             item_node,
             item.TargetSize.MapNullable(),
             node_inner_size,
-            container_size.Map(AvailableSpace.MakeDefinite),
+            container_size.Map(AvailableSpaceExtensions.Definite),
             SizingMode.ContentSize,
             default
         );
@@ -2200,8 +2200,8 @@ file static class FlexCompute
                 known_dimensions,
                 constants.NodeInnerSize,
                 new(
-                    AvailableSpace.MakeDefinite(container_width.TryClamp(min_size.Width, max_size.Width)),
-                    AvailableSpace.MakeDefinite(container_height.TryClamp(min_size.Height, max_size.Height))
+                    AvailableSpace.Definite(container_width.TryClamp(min_size.Width, max_size.Width)),
+                    AvailableSpace.Definite(container_height.TryClamp(min_size.Height, max_size.Height))
                 ),
                 SizingMode.InherentSize,
                 default

@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Styles;
 
-[Union]
+[Union2]
 public readonly partial struct AnyLength
 {
     [UnionTemplate]
@@ -19,9 +19,5 @@ public readonly partial struct AnyLength
         CalcId Calc();
     }
 
-    public static AnyLength Zero => MakeFixed(0);
-
-    public static AnyLength Auto = MakeAuto();
-    public static AnyLength MinContent = MakeMinContent();
-    public static AnyLength MaxContent = MakeMaxContent();
+    public static AnyLength Zero => AnyLength.Fixed(0);
 }

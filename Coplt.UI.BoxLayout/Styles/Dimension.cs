@@ -6,7 +6,7 @@ using Coplt.Union;
 
 namespace Coplt.UI.Styles;
 
-[Union]
+[Union2]
 public readonly partial struct Length : ITryResolve<float?>
 {
     [UnionTemplate]
@@ -17,35 +17,35 @@ public readonly partial struct Length : ITryResolve<float?>
         CalcId Calc();
     }
 
-    public static Length Zero => MakeFixed(0);
+    public static Length Zero => Length.Fixed(0);
 
-    public static implicit operator Length(float self) => MakeFixed(self);
-    
+    public static implicit operator Length(float self) => Length.Fixed(self);
+
     public static implicit operator AnyLength(Length self) => self.Tag switch
     {
-        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
-        Tags.Calc => AnyLength.MakeCalc(self.Calc),
+        Tags.Fixed => AnyLength.Fixed(self.Fixed),
+        Tags.Calc => AnyLength.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator LengthPercentage(Length self) => self.Tag switch
     {
-        Tags.Fixed => LengthPercentage.MakeFixed(self.Fixed),
-        Tags.Calc => LengthPercentage.MakeCalc(self.Calc),
+        Tags.Fixed => LengthPercentage.Fixed(self.Fixed),
+        Tags.Calc => LengthPercentage.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator LengthPercentageAuto(Length self) => self.Tag switch
     {
-        Tags.Fixed => LengthPercentageAuto.MakeFixed(self.Fixed),
-        Tags.Calc => LengthPercentageAuto.MakeCalc(self.Calc),
+        Tags.Fixed => LengthPercentageAuto.Fixed(self.Fixed),
+        Tags.Calc => LengthPercentageAuto.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator Dimension(Length self) => self.Tag switch
     {
-        Tags.Fixed => Dimension.MakeFixed(self.Fixed),
-        Tags.Calc => Dimension.MakeCalc(self.Calc),
+        Tags.Fixed => Dimension.Fixed(self.Fixed),
+        Tags.Calc => Dimension.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
@@ -59,7 +59,7 @@ public readonly partial struct Length : ITryResolve<float?>
     };
 }
 
-[Union]
+[Union2]
 public readonly partial struct LengthPercentage : ITryResolve<float?>
 {
     [UnionTemplate]
@@ -71,31 +71,31 @@ public readonly partial struct LengthPercentage : ITryResolve<float?>
         CalcId Calc();
     }
 
-    public static LengthPercentage Zero => MakeFixed(0);
+    public static LengthPercentage Zero => LengthPercentage.Fixed(0);
 
-    public static implicit operator LengthPercentage(float self) => MakeFixed(self);
+    public static implicit operator LengthPercentage(float self) => LengthPercentage.Fixed(self);
 
     public static implicit operator AnyLength(LengthPercentage self) => self.Tag switch
     {
-        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
-        Tags.Percent => AnyLength.MakePercent(self.Percent),
-        Tags.Calc => AnyLength.MakeCalc(self.Calc),
+        Tags.Fixed => AnyLength.Fixed(self.Fixed),
+        Tags.Percent => AnyLength.Percent(self.Percent),
+        Tags.Calc => AnyLength.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator LengthPercentageAuto(LengthPercentage self) => self.Tag switch
     {
-        Tags.Fixed => LengthPercentageAuto.MakeFixed(self.Fixed),
-        Tags.Percent => LengthPercentageAuto.MakePercent(self.Percent),
-        Tags.Calc => LengthPercentageAuto.MakeCalc(self.Calc),
+        Tags.Fixed => LengthPercentageAuto.Fixed(self.Fixed),
+        Tags.Percent => LengthPercentageAuto.Percent(self.Percent),
+        Tags.Calc => LengthPercentageAuto.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static implicit operator Dimension(LengthPercentage self) => self.Tag switch
     {
-        Tags.Fixed => Dimension.MakeFixed(self.Fixed),
-        Tags.Percent => Dimension.MakePercent(self.Percent),
-        Tags.Calc => Dimension.MakeCalc(self.Calc),
+        Tags.Fixed => Dimension.Fixed(self.Fixed),
+        Tags.Percent => Dimension.Percent(self.Percent),
+        Tags.Calc => Dimension.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
@@ -121,7 +121,7 @@ public readonly partial struct LengthPercentage : ITryResolve<float?>
     };
 }
 
-[Union]
+[Union2]
 public readonly partial struct LengthPercentageAuto : ITryResolve<float?>
 {
     [UnionTemplate]
@@ -133,27 +133,25 @@ public readonly partial struct LengthPercentageAuto : ITryResolve<float?>
         CalcId Calc();
     }
 
-    public static LengthPercentageAuto Zero => MakeFixed(0);
+    public static LengthPercentageAuto Zero => LengthPercentageAuto.Fixed(0);
 
-    public static LengthPercentageAuto Auto = MakeAuto();
-
-    public static implicit operator LengthPercentageAuto(float self) => MakeFixed(self);
+    public static implicit operator LengthPercentageAuto(float self) => LengthPercentageAuto.Fixed(self);
 
     public static implicit operator AnyLength(LengthPercentageAuto self) => self.Tag switch
     {
-        Tags.Auto => AnyLength.MakeAuto(),
-        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
-        Tags.Percent => AnyLength.MakePercent(self.Percent),
-        Tags.Calc => AnyLength.MakeCalc(self.Calc),
+        Tags.Auto => AnyLength.Auto,
+        Tags.Fixed => AnyLength.Fixed(self.Fixed),
+        Tags.Percent => AnyLength.Percent(self.Percent),
+        Tags.Calc => AnyLength.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static explicit operator Dimension(LengthPercentageAuto self) => self.Tag switch
     {
-        Tags.Auto => Dimension.MakeAuto(),
-        Tags.Fixed => Dimension.MakeFixed(self.Fixed),
-        Tags.Percent => Dimension.MakePercent(self.Percent),
-        Tags.Calc => Dimension.MakeCalc(self.Calc),
+        Tags.Auto => Dimension.Auto,
+        Tags.Fixed => Dimension.Fixed(self.Fixed),
+        Tags.Percent => Dimension.Percent(self.Percent),
+        Tags.Calc => Dimension.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
@@ -181,7 +179,7 @@ public readonly partial struct LengthPercentageAuto : ITryResolve<float?>
     };
 }
 
-[Union]
+[Union2]
 public readonly partial struct Dimension : ITryResolve<float?>
 {
     [UnionTemplate]
@@ -193,27 +191,25 @@ public readonly partial struct Dimension : ITryResolve<float?>
         CalcId Calc();
     }
 
-    public static Dimension Zero => MakeFixed(0);
+    public static Dimension Zero => Dimension.Fixed(0);
 
-    public static Dimension Auto = MakeAuto();
-
-    public static implicit operator Dimension(float self) => MakeFixed(self);
+    public static implicit operator Dimension(float self) => Dimension.Fixed(self);
 
     public static implicit operator AnyLength(Dimension self) => self.Tag switch
     {
-        Tags.Auto => AnyLength.MakeAuto(),
-        Tags.Fixed => AnyLength.MakeFixed(self.Fixed),
-        Tags.Percent => AnyLength.MakePercent(self.Percent),
-        Tags.Calc => AnyLength.MakeCalc(self.Calc),
+        Tags.Auto => AnyLength.Auto,
+        Tags.Fixed => AnyLength.Fixed(self.Fixed),
+        Tags.Percent => AnyLength.Percent(self.Percent),
+        Tags.Calc => AnyLength.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 
     public static explicit operator LengthPercentageAuto(Dimension self) => self.Tag switch
     {
-        Tags.Auto => LengthPercentageAuto.MakeAuto(),
-        Tags.Fixed => LengthPercentageAuto.MakeFixed(self.Fixed),
-        Tags.Percent => LengthPercentageAuto.MakePercent(self.Percent),
-        Tags.Calc => LengthPercentageAuto.MakeCalc(self.Calc),
+        Tags.Auto => LengthPercentageAuto.Auto,
+        Tags.Fixed => LengthPercentageAuto.Fixed(self.Fixed),
+        Tags.Percent => LengthPercentageAuto.Percent(self.Percent),
+        Tags.Calc => LengthPercentageAuto.Calc(self.Calc),
         _ => throw new ArgumentOutOfRangeException()
     };
 

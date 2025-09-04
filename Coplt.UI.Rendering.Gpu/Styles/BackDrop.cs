@@ -3,7 +3,7 @@ using Coplt.Union;
 
 namespace Coplt.UI.Styles;
 
-[Union]
+[Union2]
 public partial struct FilterFunc
 {
     [UnionTemplate]
@@ -14,6 +14,4 @@ public partial struct FilterFunc
         void DropShadow(Point<Length> Offset, Length Blur, Color Color);
         void Custom(object? Object, ulong Id);
     }
-
-    public static readonly FilterFunc None = MakeNone();
 }

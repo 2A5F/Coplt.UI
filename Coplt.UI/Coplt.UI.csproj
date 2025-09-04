@@ -11,7 +11,7 @@
 
     <ItemGroup>
       <PackageReference Include="Coplt.Mathematics" Version="0.17.0" />
-      <PackageReference Include="Coplt.Union" Version="0.18.0" PrivateAssets="all" />
+      <PackageReference Include="Coplt.Union" Version="0.19.1" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>

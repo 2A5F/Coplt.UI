@@ -9,7 +9,7 @@ namespace Coplt.UI.Styles;
 /// The amount of space available to a node in a given axis<br/>
 /// https://www.w3.org/TR/css-sizing-3/#available
 /// </summary>
-[Union]
+[Union2]
 public readonly partial struct AvailableSpace
 {
     [UnionTemplate]
@@ -20,9 +20,6 @@ public readonly partial struct AvailableSpace
         void MinContent();
         void MaxContent();
     }
-
-    public static readonly AvailableSpace MinContent = MakeMinContent();
-    public static readonly AvailableSpace MaxContent = MakeMaxContent();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float? TryGet() => Tag is Tags.Definite ? Definite : null;
@@ -49,11 +46,12 @@ public readonly partial struct AvailableSpace
         _ => false,
     };
 
-    public static implicit operator AvailableSpace(float value) => MakeDefinite(value);
+    public static implicit operator AvailableSpace(float value) => AvailableSpace.Definite(value);
 
-    public static implicit operator AvailableSpace(float? value) => value.HasValue ? MakeDefinite(value.Value) : MaxContent;
+    public static implicit operator AvailableSpace(float? value)
+        => value.HasValue ? AvailableSpace.Definite(value.Value) : AvailableSpace.MaxContent;
 
-    public static AvailableSpace From(float value) => MakeDefinite(value);
+    public static AvailableSpace From(float value) => AvailableSpace.Definite(value);
 }
 
 public static partial class BoxStyleExtensions
@@ -66,42 +64,42 @@ public static partial class BoxStyleExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace TrySet(this AvailableSpace self, float? value)
-        => value is { } v ? AvailableSpace.MakeDefinite(v) : self;
+        => value is { } v ? AvailableSpace.Definite(v) : self;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace TrySub(this AvailableSpace self, float other) => self.Tag switch
     {
-        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(self.Definite - other),
+        AvailableSpace.Tags.Definite => AvailableSpace.Definite(self.Definite - other),
         _ => self,
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace TryMin(this AvailableSpace self, float other) => self.Tag switch
     {
-        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(Math.Min(self.Definite, other)),
+        AvailableSpace.Tags.Definite => AvailableSpace.Definite(Math.Min(self.Definite, other)),
         _ => self,
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace TryMax(this AvailableSpace self, float other) => self.Tag switch
     {
-        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(Math.Max(self.Definite, other)),
+        AvailableSpace.Tags.Definite => AvailableSpace.Definite(Math.Max(self.Definite, other)),
         _ => self,
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace TryClamp(this AvailableSpace self, float? min, float? max) => (self.Tag, min, max) switch
     {
-        (AvailableSpace.Tags.Definite, { } Min, { } Max) => AvailableSpace.MakeDefinite(Math.Clamp(self.Definite, Min, Max)),
-        (AvailableSpace.Tags.Definite, null, { } Max) => AvailableSpace.MakeDefinite(Math.Min(self.Definite, Max)),
-        (AvailableSpace.Tags.Definite, { } Min, null) => AvailableSpace.MakeDefinite(Math.Max(self.Definite, Min)),
+        (AvailableSpace.Tags.Definite, { } Min, { } Max) => AvailableSpace.Definite(Math.Clamp(self.Definite, Min, Max)),
+        (AvailableSpace.Tags.Definite, null, { } Max) => AvailableSpace.Definite(Math.Min(self.Definite, Max)),
+        (AvailableSpace.Tags.Definite, { } Min, null) => AvailableSpace.Definite(Math.Max(self.Definite, Min)),
         _ => self,
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static AvailableSpace MapDefiniteValue(this AvailableSpace self, Func<float, float> f) => self.Tag switch
     {
-        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(f(self.Definite)),
+        AvailableSpace.Tags.Definite => AvailableSpace.Definite(f(self.Definite)),
         _ => self,
     };
 
@@ -109,7 +107,7 @@ public static partial class BoxStyleExtensions
     public static AvailableSpace MapDefiniteValue<Arg>(this AvailableSpace self, Arg arg, Func<Arg, float, float> f)
         where Arg : allows ref struct => self.Tag switch
     {
-        AvailableSpace.Tags.Definite => AvailableSpace.MakeDefinite(f(arg, self.Definite)),
+        AvailableSpace.Tags.Definite => AvailableSpace.Definite(f(arg, self.Definite)),
         _ => self,
     };
 }
