@@ -31,6 +31,11 @@ Enum And(Enum A, Enum B)
     return (Enum)((uint)A & (uint)B);
 }
 
+uint csum(uint4 a)
+{
+    return a.x + a.y + a.z + a.w;
+}
+
 float cross(float2 a, float2 b)
 {
     return a.x * b.y - a.y * b.x;

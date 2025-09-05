@@ -3,7 +3,7 @@
     <PropertyGroup>
         <IsAotCompatible>true</IsAotCompatible>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <NoWarn>CS9193;CS9192</NoWarn>
+        <NoWarn>CS9193;CS9192;CS9195</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

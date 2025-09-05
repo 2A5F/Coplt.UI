@@ -113,19 +113,84 @@ Box_Varying Box_Vertex(Box_Attrs input)
     float4 bc_l = data.BorderColor[3];
 
     Box_Varying_Flags flags = Box_Varying_Flags::None;
-    bool has_any_border = any(border_size > 0) && any(float4(bc_t.a, bc_r.a, bc_b.a, bc_l.a) != 0);
+    bool4 border_cond = border_size > 0 & float4(bc_t.a, bc_r.a, bc_b.a, bc_l.a) != 0;
+    uint4 border_mask = border_cond * 0xFFFFFFFF;
+    int border_count = csum(border_cond);
+
+    float b_t = border_size.x;
+    float b_r = border_size.y;
+    float b_b = border_size.z;
+    float b_l = border_size.w;
 
     float2 pos;
     uint border_index;
 
-    if (has_any_border)
-    {
-        AddFlag(flags, Box_Varying_Flags::HasAnyBorder);
-        float b_t = border_size.x;
-        float b_r = border_size.y;
-        float b_b = border_size.z;
-        float b_l = border_size.w;
+    AddFlag(flags, border_count > 0 ? Box_Varying_Flags::HasAnyBorder : Box_Varying_Flags::None);
 
+    if (border_count == 0)
+    {
+        if (input.vid >= 6) return output;
+
+        float2 pos_src[] =
+        {
+            /*  0 */ float2(0, 0),
+            /*  1 */ float2(size.x, 0),
+            /*  2 */ float2(0, size.y),
+            /*  3 */ size,
+        };
+
+        static const uint index_arr[] = {
+            0, 1, 3,
+            3, 2, 0,
+        };
+
+        pos = pos_src[index_arr[input.vid]];
+        border_index = 0;
+    }
+    else if (border_count == 1)
+    {
+        if (input.vid >= 12) return output;
+        border_index = csum(border_mask & uint4(0, 1, 2, 3));
+
+        float4 border_select[] =
+        {
+            /* t */ float4(0, b_t, size.x, b_t),
+            /* r */ float4(size.x - b_r, 0, size.x - b_r, size.y),
+            /* b */ float4(0, size.y - b_b, size.x, size.y - b_b),
+            /* l */ float4(b_l, 0, b_l, size.y),
+        };
+        float4 border_pos_2 = border_select[border_index];
+        float2 pos_src[] =
+        {
+            /*  0 */ border_pos_2.xy,
+            /*  1 */ border_pos_2.zw,
+            /*  2 */ float2(0, 0),
+            /*  3 */ float2(size.x, 0),
+            /*  4 */ float2(0, size.y),
+            /*  5 */ size,
+        };
+
+        static const uint index_arr[] = {
+            // t
+            0, 2, 3, /**/ 3, 1, 0,
+            0, 1, 5, /**/ 5, 4, 0,
+            // r
+            0, 3, 5, /**/ 5, 1, 0,
+            0, 1, 4, /**/ 4, 2, 0,
+            // b
+            0, 1, 5, /**/ 5, 4, 0,
+            0, 2, 3, /**/ 3, 1, 0,
+            // l
+            0, 1, 4, /**/ 4, 2, 0,
+            0, 3, 5, /**/ 5, 1, 0,
+        };
+
+        pos = pos_src[index_arr[border_index * 12 + input.vid]];
+
+        AddFlag(flags, input.vid < 6 ? Box_Varying_Flags::None : Box_Varying_Flags::IsContent);
+    }
+    else
+    {
         float2 bp_lt = float2(b_l, b_t);
         float2 bp_rt = float2(size.x - b_r, b_t);
         float2 bp_lb = float2(b_l, size.y - b_b);
@@ -150,7 +215,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
 
                 float diff_lt_rt = dir_diff(hit_lt_rt);
                 float diff_lb_rb = dir_diff(hit_lb_rb);
-                
+
                 dir_v = diff_lt_rt > diff_lb_rb;
 
                 border_line.start = dir_v ? hit_lt_rt : hit_lt_lb;
@@ -288,18 +353,6 @@ Box_Varying Box_Vertex(Box_Attrs input)
 
             AddFlag(flags, input.vid < 18 ? Box_Varying_Flags::IsContent : Box_Varying_Flags::None);
         }
-    }
-    else
-    {
-        // todo
-        static const float2 pos_m[] = {
-            float2(1, 1),
-            float2(1.0, 0.0),
-            float2(0.0, 0.0),
-        };
-
-        pos = pos_m[input.vid];
-        pos *= 100;
     }
 
     float4x4 transform = {
