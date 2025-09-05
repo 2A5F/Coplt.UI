@@ -236,120 +236,85 @@ Box_Varying Box_Vertex(Box_Attrs input)
                 /*  9 */ size,
             };
 
-            if (dir_v)
+            static const uint index_arr[] =
             {
-                static const uint index_arr[] =
-                {
-                    // it
-                    4, 0, 1,
+                // dir_h
+                // it
+                0, 1, 4, /**/ 4, 1, 5,
+                // ir
+                5, 1, 3,
+                // ib
+                3, 2, 5, /**/ 5, 2, 4,
+                // il
+                4, 2, 0,
+                // ot
+                0, 6, 1, /**/ 1, 6, 7,
+                // or,
+                7, 9, 1, /**/ 1, 9, 3,
+                // ob,
+                3, 9, 2, /**/ 2, 9, 8,
+                // ol,
+                8, 6, 2, /**/ 2, 6, 0,
 
-                    // ir
-                    1, 3, 4,
-                    4, 3, 5,
-
-                    // ib
-                    5, 3, 2,
-
-                    // il
-                    2, 0, 5,
-                    5, 0, 4,
-
-                    // ot
-                    0, 6, 1,
-                    1, 6, 7,
-
-                    // or,
-                    7, 9, 1,
-                    1, 9, 3,
-
-                    // ob,
-                    3, 9, 2,
-                    2, 9, 8,
-
-                    // ol,
-                    8, 6, 2,
-                    2, 6, 0,
-                };
-                static const uint border_index_arr[] =
-                {
-                    // it
-                    0, 0, 0,
-                    // ir
-                    1, 1, 1, 1, 1, 1,
-                    // ib,
-                    2, 2, 2,
-                    // il
-                    3, 3, 3, 3, 3, 3,
-
-                    // ot
-                    0, 0, 0, 0, 0, 0,
-                    // or
-                    1, 1, 1, 1, 1, 1,
-                    // ob
-                    2, 2, 2, 2, 2, 2,
-                    // ol
-                    3, 3, 3, 3, 3, 3,
-                };
-                pos = pos_src[index_arr[input.vid]];
-                border_index = border_index_arr[input.vid];
-            }
-            else
+                // dir_v
+                // it
+                4, 0, 1,
+                // ir
+                1, 3, 4, /**/ 4, 3, 5,
+                // ib
+                5, 3, 2,
+                // il
+                2, 0, 5, /**/ 5, 0, 4,
+                // ot
+                0, 6, 1, /**/ 1, 6, 7,
+                // or,
+                7, 9, 1, /**/ 1, 9, 3,
+                // ob,
+                3, 9, 2, /**/ 2, 9, 8,
+                // ol,
+                8, 6, 2, /**/ 2, 6, 0,
+            };
+            static const uint border_index_arr[] =
             {
-                static const uint index_arr[] =
-                {
-                    // it
-                    0, 1, 4,
-                    4, 1, 5,
+                // dir_h
+                // it
+                0, 0, 0, /**/ 0, 0, 0,
+                // ir
+                1, 1, 1,
+                // ib,
+                2, 2, 2, /**/ 2, 2, 2,
+                // il
+                3, 3, 3,
+                // ot
+                0, 0, 0, /**/ 0, 0, 0,
+                // or
+                1, 1, 1, /**/ 1, 1, 1,
+                // ob
+                2, 2, 2, /**/ 2, 2, 2,
+                // ol
+                3, 3, 3, /**/ 3, 3, 3,
 
-                    // ir
-                    5, 1, 3,
+                // dir_v
+                // it
+                0, 0, 0,
+                // ir
+                1, 1, 1, /**/ 1, 1, 1,
+                // ib,
+                2, 2, 2,
+                // il
+                3, 3, 3, /**/ 3, 3, 3,
+                // ot
+                0, 0, 0, /**/ 0, 0, 0,
+                // or
+                1, 1, 1, /**/ 1, 1, 1,
+                // ob
+                2, 2, 2, /**/ 2, 2, 2,
+                // ol
+                3, 3, 3, /**/ 3, 3, 3,
+            };
 
-                    // ib
-                    3, 2, 5,
-                    5, 2, 4,
-
-                    // il
-                    4, 2, 0,
-
-                    // ot
-                    0, 6, 1,
-                    1, 6, 7,
-
-                    // or,
-                    7, 9, 1,
-                    1, 9, 3,
-
-                    // ob,
-                    3, 9, 2,
-                    2, 9, 8,
-
-                    // ol,
-                    8, 6, 2,
-                    2, 6, 0,
-                };
-                static const uint border_index_arr[] =
-                {
-                    // it
-                    0, 0, 0, 0, 0, 0,
-                    // ir
-                    1, 1, 1,
-                    // ib,
-                    2, 2, 2, 2, 2, 2,
-                    // il
-                    3, 3, 3,
-
-                    // ot
-                    0, 0, 0, 0, 0, 0,
-                    // or
-                    1, 1, 1, 1, 1, 1,
-                    // ob
-                    2, 2, 2, 2, 2, 2,
-                    // ol
-                    3, 3, 3, 3, 3, 3,
-                };
-                pos = pos_src[index_arr[input.vid]];
-                border_index = border_index_arr[input.vid];
-            }
+            pos = pos_src[index_arr[dir_v * 42 + input.vid]];
+            border_index = border_index_arr[dir_v * 42 + input.vid];
 
             AddFlag(flags, input.vid < 18 ? Box_Varying_Flags::IsContent : Box_Varying_Flags::None);
         }
