@@ -88,6 +88,269 @@ StructuredBuffer<BatchData> Batches : register(t0, space10);
 
 StructuredBuffer<BoxData> BoxDataBuffers[] : register(t0, space1);
 
+void Box_Mesh_Rect(
+    in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
+    float2 size
+)
+{
+    float2 pos_src[] =
+    {
+        /*  0 */ float2(0, 0),
+        /*  1 */ float2(size.x, 0),
+        /*  2 */ float2(0, size.y),
+        /*  3 */ size,
+    };
+
+    static const uint index_arr[] = {
+        0, 1, 3,
+        3, 2, 0,
+    };
+
+    pos = pos_src[index_arr[input.vid]];
+    border_index = 0;
+}
+
+void Box_Mesh_SingleSide(
+    in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
+    float2 size, float b_t, float b_r, float b_b, float b_l, uint4 border_mask
+)
+{
+    border_index = csum(border_mask & uint4(0, 1, 2, 3));
+
+    float4 border_select[] =
+    {
+        /* t */ float4(0, b_t, size.x, b_t),
+        /* r */ float4(size.x - b_r, 0, size.x - b_r, size.y),
+        /* b */ float4(0, size.y - b_b, size.x, size.y - b_b),
+        /* l */ float4(b_l, 0, b_l, size.y),
+    };
+    float4 border_pos_2 = border_select[border_index];
+    float2 pos_src[] =
+    {
+        /*  0 */ border_pos_2.xy,
+        /*  1 */ border_pos_2.zw,
+        /*  2 */ float2(0, 0),
+        /*  3 */ float2(size.x, 0),
+        /*  4 */ float2(0, size.y),
+        /*  5 */ size,
+    };
+
+    static const uint index_arr[] = {
+        // t
+        0, 2, 3, /**/ 3, 1, 0,
+        0, 1, 5, /**/ 5, 4, 0,
+        // r
+        0, 3, 5, /**/ 5, 1, 0,
+        0, 1, 4, /**/ 4, 2, 0,
+        // b
+        0, 1, 5, /**/ 5, 4, 0,
+        0, 2, 3, /**/ 3, 1, 0,
+        // l
+        0, 1, 4, /**/ 4, 2, 0,
+        0, 3, 5, /**/ 5, 1, 0,
+    };
+
+    pos = pos_src[index_arr[border_index * 12 + input.vid]];
+
+    AddFlag(flags, input.vid < 6 ? Box_Varying_Flags::None : Box_Varying_Flags::IsContent);
+}
+
+void Box_Mesh_DoubleSide(
+    in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
+    float2 size, float b_t, float b_r, float b_b, float b_l, uint4 border_mask,
+    float2 inner_size, float2 inner_offset
+)
+{
+    float2 half_inner_size = inner_size * 0.5f;
+    float2 inner_center = inner_offset + half_inner_size;
+
+    bool dir_v = all(border_mask.xz);
+    uint4 border_index_source = border_mask & uint4(0, 1, 2, 3);
+    uint border_index_a = csum(border_index_source.xy);
+    uint border_index_b = csum(border_index_source.zw);
+    border_index = input.vid < 12 ? border_index_a : border_index_b;
+
+    float4 border_select[] =
+    {
+        /* t */ float4(0, b_t, size.x, b_t),
+        /* r */ float4(size.x - b_r, 0, size.x - b_r, size.y),
+        /* b */ float4(0, size.y - b_b, size.x, size.y - b_b),
+        /* l */ float4(b_l, 0, b_l, size.y),
+    };
+    float4 border_pos_2_a = border_select[border_index_a];
+    float4 border_pos_2_b = border_select[border_index_b];
+
+    float2 pos_src[] =
+    {
+        /*  0 */ border_pos_2_a.xy,
+        /*  1 */ border_pos_2_a.zw,
+        /*  2 */ border_pos_2_b.xy,
+        /*  3 */ border_pos_2_b.zw,
+        /*  4 */ float2(0, 0),
+        /*  5 */ float2(size.x, 0),
+        /*  6 */ float2(0, size.y),
+        /*  7 */ size,
+        /*  8 */ dir_v ? float2(0, inner_center.y) : float2(inner_center.x, 0),
+        /*  9 */ dir_v ? float2(size.x, inner_center.y) : float2(inner_center.x, size.y),
+    };
+    static const uint index_arr[] =
+    {
+        // h
+        // r
+        0, 5, 7, /**/ 7, 1, 0,
+        0, 1, 9, /**/ 9, 8, 0,
+        // l
+        3, 6, 4, /**/ 4, 2, 3,
+        3, 2, 8, /**/ 8, 9, 3,
+
+        // v
+        // t
+        0, 4, 5, /**/ 5, 1, 0,
+        0, 1, 9, /**/ 9, 8, 0,
+        // b
+        3, 7, 6, /**/ 6, 2, 3,
+        3, 2, 8, /**/ 8, 9, 3,
+    };
+
+    pos = pos_src[index_arr[dir_v * 24 + input.vid]];
+    uint local_vid = input.vid % 12;
+    AddFlag(flags, local_vid < 6 ? Box_Varying_Flags::None : Box_Varying_Flags::IsContent);
+}
+
+void Box_Mesh_Complex(
+    in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
+    float2 size, float b_t, float b_r, float b_b, float b_l
+)
+{
+    float2 bp_lt = float2(b_l, b_t);
+    float2 bp_rt = float2(size.x - b_r, b_t);
+    float2 bp_lb = float2(b_l, size.y - b_b);
+    float2 bp_rb = size - float2(b_r, b_b);
+
+    {
+        Line2d border_line;
+        bool dir_v;
+
+        // calc border line
+        {
+            Ray2d ray_lt = ray2d_to(0, bp_lt);
+            Ray2d ray_rb = ray2d_to(size, bp_rb);
+            Ray2d ray_rt = ray2d_to(float2(size.x, 0), bp_rt);
+            Ray2d ray_lb = ray2d_to(float2(0, size.y), bp_lb);
+
+            float2 hit_lt_rt, hit_lb_rb, hit_lt_lb, hit_rt_rb;
+            intersect(ray_lt, ray_rt, hit_lt_rt);
+            intersect(ray_lb, ray_rb, hit_lb_rb);
+            intersect(ray_lt, ray_lb, hit_lt_lb);
+            intersect(ray_rt, ray_rb, hit_rt_rb);
+
+            float diff_lt_rt = dir_diff(hit_lt_rt);
+            float diff_lb_rb = dir_diff(hit_lb_rb);
+
+            dir_v = diff_lt_rt > diff_lb_rb;
+
+            border_line.start = dir_v ? hit_lt_rt : hit_lt_lb;
+            border_line.end = dir_v ? hit_lb_rb : hit_rt_rb;
+        }
+
+        float2 pos_src[] =
+        {
+            /*  0 */ bp_lt,
+            /*  1 */ bp_rt,
+            /*  2 */ bp_lb,
+            /*  3 */ bp_rb,
+            /*  4 */ border_line.start,
+            /*  5 */ border_line.end,
+            /*  6 */ float2(0, 0),
+            /*  7 */ float2(size.x, 0),
+            /*  8 */ float2(0, size.y),
+            /*  9 */ size,
+        };
+
+        static const uint index_arr[] =
+        {
+            // dir_h
+            // it
+            0, 1, 4, /**/ 4, 1, 5,
+            // ir
+            5, 1, 3,
+            // ib
+            3, 2, 5, /**/ 5, 2, 4,
+            // il
+            4, 2, 0,
+            // ot
+            0, 6, 1, /**/ 1, 6, 7,
+            // or,
+            7, 9, 1, /**/ 1, 9, 3,
+            // ob,
+            3, 9, 2, /**/ 2, 9, 8,
+            // ol,
+            8, 6, 2, /**/ 2, 6, 0,
+
+            // dir_v
+            // it
+            4, 0, 1,
+            // ir
+            1, 3, 4, /**/ 4, 3, 5,
+            // ib
+            5, 3, 2,
+            // il
+            2, 0, 5, /**/ 5, 0, 4,
+            // ot
+            0, 6, 1, /**/ 1, 6, 7,
+            // or,
+            7, 9, 1, /**/ 1, 9, 3,
+            // ob,
+            3, 9, 2, /**/ 2, 9, 8,
+            // ol,
+            8, 6, 2, /**/ 2, 6, 0,
+        };
+        static const uint border_index_arr[] =
+        {
+            // dir_h
+            // it
+            0, 0, 0, /**/ 0, 0, 0,
+            // ir
+            1, 1, 1,
+            // ib,
+            2, 2, 2, /**/ 2, 2, 2,
+            // il
+            3, 3, 3,
+            // ot
+            0, 0, 0, /**/ 0, 0, 0,
+            // or
+            1, 1, 1, /**/ 1, 1, 1,
+            // ob
+            2, 2, 2, /**/ 2, 2, 2,
+            // ol
+            3, 3, 3, /**/ 3, 3, 3,
+
+            // dir_v
+            // it
+            0, 0, 0,
+            // ir
+            1, 1, 1, /**/ 1, 1, 1,
+            // ib,
+            2, 2, 2,
+            // il
+            3, 3, 3, /**/ 3, 3, 3,
+            // ot
+            0, 0, 0, /**/ 0, 0, 0,
+            // or
+            1, 1, 1, /**/ 1, 1, 1,
+            // ob
+            2, 2, 2, /**/ 2, 2, 2,
+            // ol
+            3, 3, 3, /**/ 3, 3, 3,
+        };
+
+        pos = pos_src[index_arr[dir_v * 42 + input.vid]];
+        border_index = border_index_arr[dir_v * 42 + input.vid];
+
+        AddFlag(flags, input.vid < 18 ? Box_Varying_Flags::IsContent : Box_Varying_Flags::None);
+    }
+}
+
 [Shader("vertex")]
 Box_Varying Box_Vertex(Box_Attrs input)
 {
@@ -103,9 +366,9 @@ Box_Varying Box_Vertex(Box_Attrs input)
     float4 LeftTopWidthHeight = abs(data.LeftTopWidthHeight);
     float2 offset = LeftTopWidthHeight.xy;
     float2 size = LeftTopWidthHeight.zw;
-    float2 half_size = size * 0.5f;
     float4 border_size = abs(data.BorderSize_TopRightBottomLeft);
     float2 inner_size = abs(size - (border_size.yx + border_size.wz));
+    float2 inner_offset = border_size.wx;
 
     float4 bc_t = data.BorderColor[0];
     float4 bc_r = data.BorderColor[1];
@@ -122,202 +385,51 @@ Box_Varying Box_Vertex(Box_Attrs input)
     float b_b = border_size.z;
     float b_l = border_size.w;
 
-    float2 pos;
-    uint border_index;
+    float2 pos = 0;
+    uint border_index = 0;
+
+    bool is_single_dir = all(border_cond == bool4(true, false, true, false)) || all(
+        border_cond == bool4(false, true, false, true));
 
     AddFlag(flags, border_count > 0 ? Box_Varying_Flags::HasAnyBorder : Box_Varying_Flags::None);
 
-    if (border_count == 0)
+    switch (border_count)
     {
+    case 0:
         if (input.vid >= 6) return output;
-
-        float2 pos_src[] =
-        {
-            /*  0 */ float2(0, 0),
-            /*  1 */ float2(size.x, 0),
-            /*  2 */ float2(0, size.y),
-            /*  3 */ size,
-        };
-
-        static const uint index_arr[] = {
-            0, 1, 3,
-            3, 2, 0,
-        };
-
-        pos = pos_src[index_arr[input.vid]];
-        border_index = 0;
-    }
-    else if (border_count == 1)
-    {
+        Box_Mesh_Rect(
+            input, pos, border_index, flags,
+            size
+        );
+        break;
+    case 1:
         if (input.vid >= 12) return output;
-        border_index = csum(border_mask & uint4(0, 1, 2, 3));
-
-        float4 border_select[] =
+        Box_Mesh_SingleSide(
+            input, pos, border_index, flags,
+            size, b_t, b_r, b_b, b_l, border_mask
+        );
+        break;
+    case 2:
+        if (is_single_dir)
         {
-            /* t */ float4(0, b_t, size.x, b_t),
-            /* r */ float4(size.x - b_r, 0, size.x - b_r, size.y),
-            /* b */ float4(0, size.y - b_b, size.x, size.y - b_b),
-            /* l */ float4(b_l, 0, b_l, size.y),
-        };
-        float4 border_pos_2 = border_select[border_index];
-        float2 pos_src[] =
-        {
-            /*  0 */ border_pos_2.xy,
-            /*  1 */ border_pos_2.zw,
-            /*  2 */ float2(0, 0),
-            /*  3 */ float2(size.x, 0),
-            /*  4 */ float2(0, size.y),
-            /*  5 */ size,
-        };
-
-        static const uint index_arr[] = {
-            // t
-            0, 2, 3, /**/ 3, 1, 0,
-            0, 1, 5, /**/ 5, 4, 0,
-            // r
-            0, 3, 5, /**/ 5, 1, 0,
-            0, 1, 4, /**/ 4, 2, 0,
-            // b
-            0, 1, 5, /**/ 5, 4, 0,
-            0, 2, 3, /**/ 3, 1, 0,
-            // l
-            0, 1, 4, /**/ 4, 2, 0,
-            0, 3, 5, /**/ 5, 1, 0,
-        };
-
-        pos = pos_src[index_arr[border_index * 12 + input.vid]];
-
-        AddFlag(flags, input.vid < 6 ? Box_Varying_Flags::None : Box_Varying_Flags::IsContent);
-    }
-    else
-    {
-        float2 bp_lt = float2(b_l, b_t);
-        float2 bp_rt = float2(size.x - b_r, b_t);
-        float2 bp_lb = float2(b_l, size.y - b_b);
-        float2 bp_rb = size - float2(b_r, b_b);
-
-        {
-            Line2d border_line;
-            bool dir_v;
-
-            // calc border line
-            {
-                Ray2d ray_lt = ray2d_to(0, bp_lt);
-                Ray2d ray_rb = ray2d_to(size, bp_rb);
-                Ray2d ray_rt = ray2d_to(float2(size.x, 0), bp_rt);
-                Ray2d ray_lb = ray2d_to(float2(0, size.y), bp_lb);
-
-                float2 hit_lt_rt, hit_lb_rb, hit_lt_lb, hit_rt_rb;
-                intersect(ray_lt, ray_rt, hit_lt_rt);
-                intersect(ray_lb, ray_rb, hit_lb_rb);
-                intersect(ray_lt, ray_lb, hit_lt_lb);
-                intersect(ray_rt, ray_rb, hit_rt_rb);
-
-                float diff_lt_rt = dir_diff(hit_lt_rt);
-                float diff_lb_rb = dir_diff(hit_lb_rb);
-
-                dir_v = diff_lt_rt > diff_lb_rb;
-
-                border_line.start = dir_v ? hit_lt_rt : hit_lt_lb;
-                border_line.end = dir_v ? hit_lb_rb : hit_rt_rb;
-            }
-
-            float2 pos_src[] =
-            {
-                /*  0 */ bp_lt,
-                /*  1 */ bp_rt,
-                /*  2 */ bp_lb,
-                /*  3 */ bp_rb,
-                /*  4 */ border_line.start,
-                /*  5 */ border_line.end,
-                /*  6 */ float2(0, 0),
-                /*  7 */ float2(size.x, 0),
-                /*  8 */ float2(0, size.y),
-                /*  9 */ size,
-            };
-
-            static const uint index_arr[] =
-            {
-                // dir_h
-                // it
-                0, 1, 4, /**/ 4, 1, 5,
-                // ir
-                5, 1, 3,
-                // ib
-                3, 2, 5, /**/ 5, 2, 4,
-                // il
-                4, 2, 0,
-                // ot
-                0, 6, 1, /**/ 1, 6, 7,
-                // or,
-                7, 9, 1, /**/ 1, 9, 3,
-                // ob,
-                3, 9, 2, /**/ 2, 9, 8,
-                // ol,
-                8, 6, 2, /**/ 2, 6, 0,
-
-                // dir_v
-                // it
-                4, 0, 1,
-                // ir
-                1, 3, 4, /**/ 4, 3, 5,
-                // ib
-                5, 3, 2,
-                // il
-                2, 0, 5, /**/ 5, 0, 4,
-                // ot
-                0, 6, 1, /**/ 1, 6, 7,
-                // or,
-                7, 9, 1, /**/ 1, 9, 3,
-                // ob,
-                3, 9, 2, /**/ 2, 9, 8,
-                // ol,
-                8, 6, 2, /**/ 2, 6, 0,
-            };
-            static const uint border_index_arr[] =
-            {
-                // dir_h
-                // it
-                0, 0, 0, /**/ 0, 0, 0,
-                // ir
-                1, 1, 1,
-                // ib,
-                2, 2, 2, /**/ 2, 2, 2,
-                // il
-                3, 3, 3,
-                // ot
-                0, 0, 0, /**/ 0, 0, 0,
-                // or
-                1, 1, 1, /**/ 1, 1, 1,
-                // ob
-                2, 2, 2, /**/ 2, 2, 2,
-                // ol
-                3, 3, 3, /**/ 3, 3, 3,
-
-                // dir_v
-                // it
-                0, 0, 0,
-                // ir
-                1, 1, 1, /**/ 1, 1, 1,
-                // ib,
-                2, 2, 2,
-                // il
-                3, 3, 3, /**/ 3, 3, 3,
-                // ot
-                0, 0, 0, /**/ 0, 0, 0,
-                // or
-                1, 1, 1, /**/ 1, 1, 1,
-                // ob
-                2, 2, 2, /**/ 2, 2, 2,
-                // ol
-                3, 3, 3, /**/ 3, 3, 3,
-            };
-
-            pos = pos_src[index_arr[dir_v * 42 + input.vid]];
-            border_index = border_index_arr[dir_v * 42 + input.vid];
-
-            AddFlag(flags, input.vid < 18 ? Box_Varying_Flags::IsContent : Box_Varying_Flags::None);
+            if (input.vid >= 24) return output;
+            Box_Mesh_DoubleSide(
+                input, pos, border_index, flags,
+                size, b_t, b_r, b_b, b_l, border_mask,
+                inner_size, inner_offset
+            );
+            break;
         }
+        Box_Mesh_Complex(
+            input, pos, border_index, flags,
+            size, b_t, b_r, b_b, b_l
+        );
+        break;
+    default:
+        Box_Mesh_Complex(
+            input, pos, border_index, flags,
+            size, b_t, b_r, b_b, b_l
+        );
     }
 
     float4x4 transform = {

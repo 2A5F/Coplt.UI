@@ -65,7 +65,7 @@ public partial class MainWindow
         // child.Style.Size = new(1.Pc, 1.Pc);
         // child.Style.BackgroundColor = Color.Gray;
         child.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
-        child.Style.Border = new(10, 20, 30, 40);
+        child.Style.Border = new(30, 0, 30, 0);
         child.Style.BorderColor = new(
             new Color(0.95f, 0.5f, 0.5f, 0.5f),
             new Color(0.5f, 0.95f, 0.5f, 0.5f),
@@ -76,19 +76,19 @@ public partial class MainWindow
         child.Style.BorderRadiusMode = BorderRadiusMode.Cosine;
         document.Root.Add(child);
 
-        var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
-        child2.Style.Size = new(500, 300);
-        child2.Style.Border = new(10, 20, 30, 40);
-        child2.Style.BorderColor = new(
-            new Color(0.95f, 0.5f, 0.5f, 1f),
-            new Color(0.5f, 0.95f, 0.5f, 0.5f),
-            new Color(0.5f, 0.5f, 0.95f, 0.5f),
-            new Color(0.95f, 0.95f, 0.5f, 0.5f)
-        );
-        // child2.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
-        child2.Style.BorderRadius = 100;
-        child2.Style.BorderRadiusMode = BorderRadiusMode.Circle;
-        document.Root.Add(child2);
+        // var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
+        // child2.Style.Size = new(500, 300);
+        // child2.Style.Border = new(10, 20, 30, 40);
+        // child2.Style.BorderColor = new(
+        //     new Color(0.95f, 0.5f, 0.5f, 1f),
+        //     new Color(0.5f, 0.95f, 0.5f, 0.5f),
+        //     new Color(0.5f, 0.5f, 0.95f, 0.5f),
+        //     new Color(0.95f, 0.95f, 0.5f, 0.5f)
+        // );
+        // // child2.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
+        // child2.Style.BorderRadius = 100;
+        // child2.Style.BorderRadiusMode = BorderRadiusMode.Circle;
+        // document.Root.Add(child2);
     }
 
     private void OnClosed(object? sender, EventArgs e)
