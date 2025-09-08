@@ -61,11 +61,11 @@ public partial class MainWindow
 
         var child = new UIElement<GpuRd, object> { Name = "Child1" };
         child.Style.JustifyContent = JustifyContent.Center;
-        child.Style.Size = new(200, 200);
+        child.Style.Size = new(220, 200);
         // child.Style.Size = new(1.Pc, 1.Pc);
         // child.Style.BackgroundColor = Color.Gray;
         child.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
-        child.Style.Border = new(30, 0, 30, 0);
+        child.Style.Border = new(0, 30, 60, 30);
         child.Style.BorderColor = new(
             new Color(0.95f, 0.5f, 0.5f, 0.5f),
             new Color(0.5f, 0.95f, 0.5f, 0.5f),

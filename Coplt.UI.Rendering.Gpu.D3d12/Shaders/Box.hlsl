@@ -217,6 +217,107 @@ void Box_Mesh_DoubleSide(
     AddFlag(flags, local_vid < 6 ? Box_Varying_Flags::None : Box_Varying_Flags::IsContent);
 }
 
+void Box_Mesh_ThreeSide(
+    in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
+    float2 size, float b_t, float b_r, float b_b, float b_l, uint4 border_mask,
+    float2 inner_size, float2 inner_offset
+)
+{
+    uint side_index = csum((~border_mask) & uint4(0, 1, 2, 3));
+    static const float4 side_line_arr[] =
+    {
+        /* t */ float4(0, 0, 1, 0),
+        /* r */ float4(1, 0, 1, 1),
+        /* b */ float4(0, 1, 1, 1),
+        /* l */ float4(0, 0, 0, 1),
+    };
+    float4 side_line = side_line_arr[side_index] * float4(size, size);
+    Ray2d ray_side = ray2d_to(side_line.xy, side_line.zw);
+
+    float2 bp_lt = float2(b_l, b_t);
+    float2 bp_rt = float2(size.x - b_r, b_t);
+    float2 bp_lb = float2(b_l, size.y - b_b);
+    float2 bp_rb = size - float2(b_r, b_b);
+
+    Ray2d ray_arr[] =
+    {
+        /* 0 lt */ ray2d_to(0, bp_lt),
+        /* 1 rb */ ray2d_to(size, bp_rb),
+        /* 2 rt */ ray2d_to(float2(size.x, 0), bp_rt),
+        /* 3 lb */ ray2d_to(float2(0, size.y), bp_lb),
+    };
+    static const uint2 ray_index_arr[] =
+    {
+        /* t */ uint2(3, 1),
+        /* r */ uint2(0, 3),
+        /* b */ uint2(0, 2),
+        /* l */ uint2(1, 2),
+    };
+    uint2 ray_index = ray_index_arr[side_index];
+    float2 hit_a, hit_b;
+    intersect(ray_arr[ray_index.x], ray_side, hit_a);
+    intersect(ray_arr[ray_index.y], ray_side, hit_b);
+
+    float2 pos_src[] =
+    {
+        /*  0 */ bp_lt,
+        /*  1 */ bp_rt,
+        /*  2 */ bp_lb,
+        /*  3 */ bp_rb,
+        /*  4 */ hit_a,
+        /*  5 */ hit_b,
+        /*  6 */ float2(0, 0),
+        /*  7 */ float2(size.x, 0),
+        /*  8 */ float2(0, size.y),
+        /*  9 */ size,
+    };
+
+    static const uint index_arr[] =
+    {
+        // side t
+        // l
+        2, 8, 6, /**/ 6, 0, 2, /**/ 2, 0, 4,
+        // b
+        4, 5, 3, /**/ 3, 9, 8, /**/ 8, 2, 3, /**/ 3, 2, 4,
+        // r
+        5, 1, 3, /**/ 3, 1, 7, /**/ 7, 9, 3,
+    };
+
+    static const uint border_index_arr[] =
+    {
+        // side t
+        // l
+        3, 3, 3, /**/ 3, 3, 3, /**/ 3, 3, 3,
+        // b,
+        2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2,
+        // r
+        1, 1, 1, /**/ 1, 1, 1, /**/ 1, 1, 1,
+    };
+
+    static const uint flags_arr[] =
+    {
+        // side t
+        // l
+        0, 0, 0, /**/ 0, 0, 0, /**/ 2, 2, 2,
+        // b,
+        2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0, /**/ 2, 2, 2,
+        // r
+        2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0,
+    };
+
+
+    if (input.vid >= 30)
+    {
+        pos = 0;
+        border_index = 0;
+        return;
+    }
+
+    pos = pos_src[index_arr[input.vid]];
+    border_index = border_index_arr[input.vid];
+    AddFlag(flags, (Box_Varying_Flags)flags_arr[input.vid]);
+}
+
 void Box_Mesh_Complex(
     in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
     float2 size, float b_t, float b_r, float b_b, float b_l
@@ -420,12 +521,21 @@ Box_Varying Box_Vertex(Box_Attrs input)
             );
             break;
         }
+        if (input.vid >= 42) return output;
         Box_Mesh_Complex(
             input, pos, border_index, flags,
             size, b_t, b_r, b_b, b_l
         );
         break;
+    case 3:
+        Box_Mesh_ThreeSide(
+            input, pos, border_index, flags,
+            size, b_t, b_r, b_b, b_l, border_mask,
+            inner_size, inner_offset
+        );
+        break;
     default:
+        if (input.vid >= 42) return output;
         Box_Mesh_Complex(
             input, pos, border_index, flags,
             size, b_t, b_r, b_b, b_l
@@ -501,6 +611,9 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
     float4 border_radius = clamp(data.BorderRound, 0, min_half_size);
     bool has_border_radius = any(border_radius > 0);
 
+    uint2 quadrant2 = uint2(input.UV.x < 0.5f, input.UV.y > 0.5f) * 2 + uint2(1, 0);
+    bool same_quadrant = any(input.BorderIndex == quadrant2);
+
     if (has_border_radius)
     {
         AA_t aa = BuildAA(size);
@@ -522,7 +635,7 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
                     AA_t iaa = BuildAA(b_size);
                     float b_t = TRoundBoxAA(b_uv, inner_border_radius, data.BorderRadiusMode, iaa);
                     float3 bg = color.a == 0 ? border_color.rgb : color.rgb;
-                    float3 bc = border_color.a == 0 ? color.rgb : border_color.rgb;
+                    float3 bc = same_quadrant ? border_color.a == 0 ? color.rgb : border_color.rgb : color.rgb;
                     float3 col = lerp(bc, bg, b_t);
                     float a = lerp(border_color.a, color.a, b_t);
                     color = float4(col.rgb, a);
@@ -546,5 +659,5 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
         }
     }
 
-    return color;
+    return color + float4(same_quadrant * 0.01f, 0, 0, 0);
 }
