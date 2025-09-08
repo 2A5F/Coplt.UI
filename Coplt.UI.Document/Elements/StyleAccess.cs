@@ -4,325 +4,319 @@ using Coplt.UI.Styles;
 
 namespace Coplt.UI.Elements;
 
-public readonly struct StyleAccess<TRd, TEd>(UIElement<TRd, TEd> Element)
-    where TRd : IRenderData, new() where TEd : new()
-{
-    public readonly UIElement<TRd, TEd> Element = Element;
-}
-
 public static class CommonStyleExtensions
 {
-    extension<TRd, TEd>(ref StyleAccess<TRd, TEd> access)
+    extension<TRd, TEd>(UIElement<TRd, TEd> element)
         where TRd : IRenderData, new() where TEd : new()
     {
-        private ref CommonStyle Style => ref Unsafe.AsRef(in access.Element.CommonStyle);
+        private ref CommonStyle RefStyle => ref Unsafe.AsRef(in element.CommonStyle);
 
         // todo set mark dirty
 
         public Display Display
         {
-            get => access.Style.Display;
-            set => access.Style.Display = value;
+            get => element.RefStyle.Display;
+            set => element.RefStyle.Display = value;
         }
 
         public BoxSizing BoxSizing
         {
-            get => access.Style.BoxSizing;
-            set => access.Style.BoxSizing = value;
+            get => element.RefStyle.BoxSizing;
+            set => element.RefStyle.BoxSizing = value;
         }
 
         public Point<Overflow> Overflow
         {
-            get => access.Style.Overflow;
-            set => access.Style.Overflow = value;
+            get => element.RefStyle.Overflow;
+            set => element.RefStyle.Overflow = value;
         }
 
         public Overflow OverflowX
         {
-            get => access.Style.Overflow.X;
-            set => access.Style.Overflow.X = value;
+            get => element.RefStyle.Overflow.X;
+            set => element.RefStyle.Overflow.X = value;
         }
 
         public Overflow OverflowY
         {
-            get => access.Style.Overflow.Y;
-            set => access.Style.Overflow.Y = value;
+            get => element.RefStyle.Overflow.Y;
+            set => element.RefStyle.Overflow.Y = value;
         }
 
         public Position Position
         {
-            get => access.Style.Position;
-            set => access.Style.Position = value;
+            get => element.RefStyle.Position;
+            set => element.RefStyle.Position = value;
         }
 
         public Rect<LengthPercentageAuto> Inset
         {
-            get => access.Style.Inset;
-            set => access.Style.Inset = value;
+            get => element.RefStyle.Inset;
+            set => element.RefStyle.Inset = value;
         }
 
         public LengthPercentageAuto Top
         {
-            get => access.Style.Inset.Top;
-            set => access.Style.Inset.Top = value;
+            get => element.RefStyle.Inset.Top;
+            set => element.RefStyle.Inset.Top = value;
         }
 
         public LengthPercentageAuto Right
         {
-            get => access.Style.Inset.Right;
-            set => access.Style.Inset.Right = value;
+            get => element.RefStyle.Inset.Right;
+            set => element.RefStyle.Inset.Right = value;
         }
 
         public LengthPercentageAuto Bottom
         {
-            get => access.Style.Inset.Bottom;
-            set => access.Style.Inset.Bottom = value;
+            get => element.RefStyle.Inset.Bottom;
+            set => element.RefStyle.Inset.Bottom = value;
         }
 
         public LengthPercentageAuto Left
         {
-            get => access.Style.Inset.Left;
-            set => access.Style.Inset.Left = value;
+            get => element.RefStyle.Inset.Left;
+            set => element.RefStyle.Inset.Left = value;
         }
 
         public Size<Dimension> Size
         {
-            get => access.Style.Size;
-            set => access.Style.Size = value;
+            get => element.RefStyle.Size;
+            set => element.RefStyle.Size = value;
         }
 
         public Dimension Width
         {
-            get => access.Style.Size.Width;
-            set => access.Style.Size.Width = value;
+            get => element.RefStyle.Size.Width;
+            set => element.RefStyle.Size.Width = value;
         }
 
         public Dimension Height
         {
-            get => access.Style.Size.Height;
-            set => access.Style.Size.Height = value;
+            get => element.RefStyle.Size.Height;
+            set => element.RefStyle.Size.Height = value;
         }
 
         public Size<Dimension> MinSize
         {
-            get => access.Style.MinSize;
-            set => access.Style.MinSize = value;
+            get => element.RefStyle.MinSize;
+            set => element.RefStyle.MinSize = value;
         }
 
         public Dimension MinWidth
         {
-            get => access.Style.MinSize.Width;
-            set => access.Style.MinSize.Width = value;
+            get => element.RefStyle.MinSize.Width;
+            set => element.RefStyle.MinSize.Width = value;
         }
 
         public Dimension MinHeight
         {
-            get => access.Style.MinSize.Height;
-            set => access.Style.MinSize.Height = value;
+            get => element.RefStyle.MinSize.Height;
+            set => element.RefStyle.MinSize.Height = value;
         }
 
         public Size<Dimension> MaxSize
         {
-            get => access.Style.MaxSize;
-            set => access.Style.MaxSize = value;
+            get => element.RefStyle.MaxSize;
+            set => element.RefStyle.MaxSize = value;
         }
 
         public Dimension MaxWidth
         {
-            get => access.Style.MaxSize.Width;
-            set => access.Style.MaxSize.Width = value;
+            get => element.RefStyle.MaxSize.Width;
+            set => element.RefStyle.MaxSize.Width = value;
         }
 
         public Dimension MaxHeight
         {
-            get => access.Style.MaxSize.Height;
-            set => access.Style.MaxSize.Height = value;
+            get => element.RefStyle.MaxSize.Height;
+            set => element.RefStyle.MaxSize.Height = value;
         }
 
         public float? AspectRatio
         {
-            get => access.Style.AspectRatio;
-            set => access.Style.AspectRatio = value;
+            get => element.RefStyle.AspectRatio;
+            set => element.RefStyle.AspectRatio = value;
         }
 
         public Rect<LengthPercentageAuto> Margin
         {
-            get => access.Style.Margin;
-            set => access.Style.Margin = value;
+            get => element.RefStyle.Margin;
+            set => element.RefStyle.Margin = value;
         }
 
         public LengthPercentageAuto MarginTop
         {
-            get => access.Style.Margin.Top;
-            set => access.Style.Margin.Top = value;
+            get => element.RefStyle.Margin.Top;
+            set => element.RefStyle.Margin.Top = value;
         }
 
         public LengthPercentageAuto MarginRight
         {
-            get => access.Style.Margin.Right;
-            set => access.Style.Margin.Right = value;
+            get => element.RefStyle.Margin.Right;
+            set => element.RefStyle.Margin.Right = value;
         }
 
         public LengthPercentageAuto MarginBottom
         {
-            get => access.Style.Margin.Bottom;
-            set => access.Style.Margin.Bottom = value;
+            get => element.RefStyle.Margin.Bottom;
+            set => element.RefStyle.Margin.Bottom = value;
         }
 
         public LengthPercentageAuto MarginLeft
         {
-            get => access.Style.Margin.Left;
-            set => access.Style.Margin.Left = value;
+            get => element.RefStyle.Margin.Left;
+            set => element.RefStyle.Margin.Left = value;
         }
 
         public Rect<LengthPercentage> Padding
         {
-            get => access.Style.Padding;
-            set => access.Style.Padding = value;
+            get => element.RefStyle.Padding;
+            set => element.RefStyle.Padding = value;
         }
 
         public LengthPercentage PaddingTop
         {
-            get => access.Style.Padding.Top;
-            set => access.Style.Padding.Top = value;
+            get => element.RefStyle.Padding.Top;
+            set => element.RefStyle.Padding.Top = value;
         }
 
         public LengthPercentage PaddingRight
         {
-            get => access.Style.Padding.Right;
-            set => access.Style.Padding.Right = value;
+            get => element.RefStyle.Padding.Right;
+            set => element.RefStyle.Padding.Right = value;
         }
 
         public LengthPercentage PaddingBottom
         {
-            get => access.Style.Padding.Bottom;
-            set => access.Style.Padding.Bottom = value;
+            get => element.RefStyle.Padding.Bottom;
+            set => element.RefStyle.Padding.Bottom = value;
         }
 
         public LengthPercentage PaddingLeft
         {
-            get => access.Style.Padding.Left;
-            set => access.Style.Padding.Left = value;
+            get => element.RefStyle.Padding.Left;
+            set => element.RefStyle.Padding.Left = value;
         }
 
         public Rect<LengthPercentage> Border
         {
-            get => access.Style.Border;
-            set => access.Style.Border = value;
+            get => element.RefStyle.Border;
+            set => element.RefStyle.Border = value;
         }
 
         public LengthPercentage BorderTop
         {
-            get => access.Style.Border.Top;
-            set => access.Style.Border.Top = value;
+            get => element.RefStyle.Border.Top;
+            set => element.RefStyle.Border.Top = value;
         }
 
         public LengthPercentage BorderRight
         {
-            get => access.Style.Border.Right;
-            set => access.Style.Border.Right = value;
+            get => element.RefStyle.Border.Right;
+            set => element.RefStyle.Border.Right = value;
         }
 
         public LengthPercentage BorderBottom
         {
-            get => access.Style.Border.Bottom;
-            set => access.Style.Border.Bottom = value;
+            get => element.RefStyle.Border.Bottom;
+            set => element.RefStyle.Border.Bottom = value;
         }
 
         public LengthPercentage BorderLeft
         {
-            get => access.Style.Border.Left;
-            set => access.Style.Border.Left = value;
+            get => element.RefStyle.Border.Left;
+            set => element.RefStyle.Border.Left = value;
         }
 
         public AlignItems? AlignItems
         {
-            get => access.Style.AlignItems;
-            set => access.Style.AlignItems = value;
+            get => element.RefStyle.AlignItems;
+            set => element.RefStyle.AlignItems = value;
         }
 
         public AlignSelf? AlignSelf
         {
-            get => access.Style.AlignSelf;
-            set => access.Style.AlignSelf = value;
+            get => element.RefStyle.AlignSelf;
+            set => element.RefStyle.AlignSelf = value;
         }
 
         public JustifyItems? JustifyItems
         {
-            get => access.Style.JustifyItems;
-            set => access.Style.JustifyItems = value;
+            get => element.RefStyle.JustifyItems;
+            set => element.RefStyle.JustifyItems = value;
         }
 
         public JustifySelf? JustifySelf
         {
-            get => access.Style.JustifySelf;
-            set => access.Style.JustifySelf = value;
+            get => element.RefStyle.JustifySelf;
+            set => element.RefStyle.JustifySelf = value;
         }
 
         public AlignContent? AlignContent
         {
-            get => access.Style.AlignContent;
-            set => access.Style.AlignContent = value;
+            get => element.RefStyle.AlignContent;
+            set => element.RefStyle.AlignContent = value;
         }
 
         public JustifyContent? JustifyContent
         {
-            get => access.Style.JustifyContent;
-            set => access.Style.JustifyContent = value;
+            get => element.RefStyle.JustifyContent;
+            set => element.RefStyle.JustifyContent = value;
         }
 
         public Size<LengthPercentage> Gap
         {
-            get => access.Style.Gap;
-            set => access.Style.Gap = value;
+            get => element.RefStyle.Gap;
+            set => element.RefStyle.Gap = value;
         }
 
         public LengthPercentage GapX
         {
-            get => access.Style.Gap.Width;
-            set => access.Style.Gap.Width = value;
+            get => element.RefStyle.Gap.Width;
+            set => element.RefStyle.Gap.Width = value;
         }
 
         public LengthPercentage GapY
         {
-            get => access.Style.Gap.Height;
-            set => access.Style.Gap.Height = value;
+            get => element.RefStyle.Gap.Height;
+            set => element.RefStyle.Gap.Height = value;
         }
 
         public TextAlign TextAlign
         {
-            get => access.Style.TextAlign;
-            set => access.Style.TextAlign = value;
+            get => element.RefStyle.TextAlign;
+            set => element.RefStyle.TextAlign = value;
         }
 
         public FlexDirection FlexDirection
         {
-            get => access.Style.FlexDirection;
-            set => access.Style.FlexDirection = value;
+            get => element.RefStyle.FlexDirection;
+            set => element.RefStyle.FlexDirection = value;
         }
 
         public FlexWrap FlexWrap
         {
-            get => access.Style.FlexWrap;
-            set => access.Style.FlexWrap = value;
+            get => element.RefStyle.FlexWrap;
+            set => element.RefStyle.FlexWrap = value;
         }
 
         public Dimension FlexBias
         {
-            get => access.Style.FlexBias;
-            set => access.Style.FlexBias = value;
+            get => element.RefStyle.FlexBias;
+            set => element.RefStyle.FlexBias = value;
         }
 
         public float FlexGrow
         {
-            get => access.Style.FlexGrow;
-            set => access.Style.FlexGrow = value;
+            get => element.RefStyle.FlexGrow;
+            set => element.RefStyle.FlexGrow = value;
         }
 
         public float FlexShrink
         {
-            get => access.Style.FlexShrink;
-            set => access.Style.FlexShrink = value;
+            get => element.RefStyle.FlexShrink;
+            set => element.RefStyle.FlexShrink = value;
         }
     }
 }

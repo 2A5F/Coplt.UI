@@ -53,41 +53,48 @@ public partial class MainWindow
             ClearBackgroundColor = Color.White,
         };
 
-        document.Root.Style.Size = new(1.Pc, 1.Pc);
-        document.Root.Style.JustifyContent = JustifyContent.Center;
-        document.Root.Style.AlignItems = AlignItems.Center;
-        document.Root.Style.FlexDirection = FlexDirection.Row;
-        document.Root.Style.FlexWrap = FlexWrap.Wrap;
+        document.Root.Size = new(1.Pc, 1.Pc);
+        document.Root.JustifyContent = JustifyContent.Center;
+        document.Root.AlignItems = AlignItems.Center;
+        document.Root.FlexDirection = FlexDirection.Row;
+        document.Root.FlexWrap = FlexWrap.Wrap;
 
-        var child = new UIElement<GpuRd, object> { Name = "Child1" };
-        child.Style.JustifyContent = JustifyContent.Center;
-        child.Style.Size = new(220, 200);
-        // child.Style.Size = new(1.Pc, 1.Pc);
-        // child.Style.BackgroundColor = Color.Gray;
-        child.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
-        child.Style.Border = new(30, 60, 30, 0);
-        child.Style.BorderColor = new(
-            new Color(0.95f, 0.5f, 0.5f, 0.5f),
-            new Color(0.5f, 0.95f, 0.5f, 0.5f),
-            new Color(0.5f, 0.5f, 0.95f, 0.5f),
-            new Color(0.95f, 0.95f, 0.5f, 0.5f)
-        );
-        child.Style.BorderRadius = 100;
-        child.Style.BorderRadiusMode = BorderRadiusMode.Cosine;
+        var child = new UIElement<GpuRd, object>
+        {
+            Name = "Child1",
+            JustifyContent = JustifyContent.Center,
+            BoxSizing = BoxSizing.ContentBox,
+            Size = new(220, 200),
+            // Size = new(1.Pc, 1.Pc),
+            // BackgroundColor = Color.Gray,
+            BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f),
+            Border = new(0, 30, 60, 30),
+            BorderColor = new(
+                new Color(0.95f, 0.5f, 0.5f, 0.5f),
+                new Color(0.5f, 0.95f, 0.5f, 0.5f),
+                new Color(0.5f, 0.5f, 0.95f, 0.5f),
+                new Color(0.95f, 0.95f, 0.5f, 0.5f)
+            ),
+            BorderRadius = 100,
+            BorderRadiusMode = BorderRadiusMode.Cosine,
+        };
         document.Root.Add(child);
 
-        // var child2 = new UIElement<GpuRd, object> { Name = "Child2" };
-        // child2.Style.Size = new(500, 300);
-        // child2.Style.Border = new(10, 20, 30, 40);
-        // child2.Style.BorderColor = new(
-        //     new Color(0.95f, 0.5f, 0.5f, 1f),
-        //     new Color(0.5f, 0.95f, 0.5f, 0.5f),
-        //     new Color(0.5f, 0.5f, 0.95f, 0.5f),
-        //     new Color(0.95f, 0.95f, 0.5f, 0.5f)
-        // );
-        // // child2.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
-        // child2.Style.BorderRadius = 100;
-        // child2.Style.BorderRadiusMode = BorderRadiusMode.Circle;
+        // var child2 = new UIElement<GpuRd, object>
+        // {
+        //     Name = "Child2",
+        //     Size = new(500, 300),
+        //     Border = new(10, 20, 30, 40),
+        //     BorderColor = new(
+        //         new Color(0.95f, 0.5f, 0.5f, 1f),
+        //         new Color(0.5f, 0.95f, 0.5f, 0.5f),
+        //         new Color(0.5f, 0.5f, 0.95f, 0.5f),
+        //         new Color(0.95f, 0.95f, 0.5f, 0.5f)
+        //     ),
+        //     // BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f),
+        //     BorderRadius = 100,
+        //     BorderRadiusMode = BorderRadiusMode.Circle,
+        // };
         // document.Root.Add(child2);
     }
 

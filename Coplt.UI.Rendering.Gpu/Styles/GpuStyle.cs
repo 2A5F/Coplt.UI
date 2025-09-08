@@ -56,94 +56,94 @@ public record struct GpuStyle()
 
 public static class GpuStyleExtensions
 {
-    extension<TEd>(ref StyleAccess<GpuRd, TEd> access) where TEd : new()
+    extension<TEd>(UIElement<GpuRd, TEd> element) where TEd : new()
     {
-        private ref GpuStyle Style => ref Unsafe.AsRef(in access.Element.RData.m_gpu_style);
+        private ref GpuStyle RefStyle => ref Unsafe.AsRef(in element.RData.m_gpu_style);
 
         // todo set mark dirty
 
         public int ZIndex
         {
-            get => access.Style.ZIndex;
-            set => access.Style.ZIndex = value;
+            get => element.RefStyle.ZIndex;
+            set => element.RefStyle.ZIndex = value;
         }
 
         public float Opaque
         {
-            get => access.Style.Opaque;
-            set => access.Style.Opaque = value;
+            get => element.RefStyle.Opaque;
+            set => element.RefStyle.Opaque = value;
         }
 
         public BoxShadow BoxShadow
         {
-            get => access.Style.BoxShadow;
-            set => access.Style.BoxShadow = value;
+            get => element.RefStyle.BoxShadow;
+            set => element.RefStyle.BoxShadow = value;
         }
 
         public Color BackgroundColor
         {
-            get => access.Style.BackgroundColor;
-            set => access.Style.BackgroundColor = value;
+            get => element.RefStyle.BackgroundColor;
+            set => element.RefStyle.BackgroundColor = value;
         }
 
         public UIImage BackgroundImage
         {
-            get => access.Style.BackgroundImage;
-            set => access.Style.BackgroundImage = value;
+            get => element.RefStyle.BackgroundImage;
+            set => element.RefStyle.BackgroundImage = value;
         }
 
         public Color BackgroundImageTint
         {
-            get => access.Style.BackgroundImageTint;
-            set => access.Style.BackgroundImageTint = value;
+            get => element.RefStyle.BackgroundImageTint;
+            set => element.RefStyle.BackgroundImageTint = value;
         }
 
         public SamplerType BackgroundImageSampler
         {
-            get => access.Style.BackgroundImageSampler;
-            set => access.Style.BackgroundImageSampler = value;
+            get => element.RefStyle.BackgroundImageSampler;
+            set => element.RefStyle.BackgroundImageSampler = value;
         }
 
         public Rect<Color> BorderColor
         {
-            get => access.Style.BorderColor;
-            set => access.Style.BorderColor = value;
+            get => element.RefStyle.BorderColor;
+            set => element.RefStyle.BorderColor = value;
         }
 
         public Corner<float> BorderRadius
         {
-            get => access.Style.BorderRadius;
-            set => access.Style.BorderRadius = value;
+            get => element.RefStyle.BorderRadius;
+            set => element.RefStyle.BorderRadius = value;
         }
 
         public BorderRadiusMode BorderRadiusMode
         {
-            get => access.Style.BorderRadiusMode;
-            set => access.Style.BorderRadiusMode = value;
+            get => element.RefStyle.BorderRadiusMode;
+            set => element.RefStyle.BorderRadiusMode = value;
         }
 
         public Color TextColor
         {
-            get => access.Style.TextColor;
-            set => access.Style.TextColor = value;
+            get => element.RefStyle.TextColor;
+            set => element.RefStyle.TextColor = value;
         }
 
         public Length TextSize
         {
-            get => access.Style.TextSize;
-            set => access.Style.TextSize = value;
+            get => element.RefStyle.TextSize;
+            set => element.RefStyle.TextSize = value;
         }
 
         public FilterFunc BackDrop
         {
-            get => access.Style.BackDrop;
-            set => access.Style.BackDrop = value;
+            get => element.RefStyle.BackDrop;
+            set => element.RefStyle.BackDrop = value;
         }
 
         public FilterFunc Filter
         {
-            get => access.Style.Filter;
-            set => access.Style.Filter = value;
+            get => element.RefStyle.Filter;
+            set => element.RefStyle.Filter = value;
         }
     }
 }

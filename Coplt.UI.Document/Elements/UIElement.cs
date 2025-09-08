@@ -33,8 +33,6 @@ public sealed partial class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd
     internal string? m_name;
     internal EmbedSet<(object, ulong)> m_tags;
 
-    private StyleAccess<TRd, TEd> m_style_access;
-
     #endregion
 
     #region Props
@@ -57,23 +55,12 @@ public sealed partial class UIElement<TRd, TEd> : IEnumerable<UIElement<TRd, TEd
         }
     }
 
-    public ref StyleAccess<TRd, TEd> Style => ref m_style_access;
-
     public ref readonly CommonStyle CommonStyle => ref m_common_style;
     public ref readonly UnroundedLayout UnroundedLayout => ref m_unrounded_layout;
     public ref readonly Layout FinalLayout => ref m_final_layout;
 
     public ref readonly TRd RData => ref m_r_data;
     public ref readonly TEd EData => ref m_e_data;
-
-    #endregion
-
-    #region Ctor
-
-    public UIElement()
-    {
-        m_style_access = new(this);
-    }
 
     #endregion
 
