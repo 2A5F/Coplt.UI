@@ -65,7 +65,7 @@ public partial class MainWindow
         // child.Style.Size = new(1.Pc, 1.Pc);
         // child.Style.BackgroundColor = Color.Gray;
         child.Style.BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f);
-        child.Style.Border = new(30, 0, 30, 60);
+        child.Style.Border = new(30, 60, 30, 0);
         child.Style.BorderColor = new(
             new Color(0.95f, 0.5f, 0.5f, 0.5f),
             new Color(0.5f, 0.95f, 0.5f, 0.5f),
