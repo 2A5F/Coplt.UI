@@ -53,6 +53,7 @@ enum class Box_Varying_Flags : uint
     None,
     HasAnyBorder = 1 << 0,
     IsContent = 1 << 1,
+    MixBorder = 1 << 2,
 };
 
 struct Box_Varying
@@ -61,6 +62,7 @@ struct Box_Varying
     float2 UV: UV;
     float2 LocalPosition: LocalPosition;
     nointerpolation uint BorderIndex: BorderIndex;
+    nointerpolation uint BorderIndex2: BorderIndex2;
     nointerpolation Box_Varying_Flags Flags: Flags;
     nointerpolation uint iid: iid;
     nointerpolation uint BatchBuffer: BatchBuffer;
@@ -220,7 +222,7 @@ void Box_Mesh_DoubleSide(
 void Box_Mesh_ThreeSide(
     in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
     float2 size, float b_t, float b_r, float b_b, float b_l, uint4 border_mask,
-    float2 inner_size, float2 inner_offset
+    out uint border_index2
 )
 {
     uint side_index = csum((~border_mask) & uint4(0, 1, 2, 3));
@@ -254,9 +256,13 @@ void Box_Mesh_ThreeSide(
         /* l */ uint2(1, 2),
     };
     uint2 ray_index = ray_index_arr[side_index];
-    float2 hit_a, hit_b;
-    intersect(ray_arr[ray_index.x], ray_side, hit_a);
-    intersect(ray_arr[ray_index.y], ray_side, hit_b);
+    Ray2d ray_a = ray_arr[ray_index.x], ray_b = ray_arr[ray_index.y];
+    float2 hit_a, hit_b, hit_ab;
+    intersect(ray_a, ray_side, hit_a);
+    intersect(ray_b, ray_side, hit_b);
+    bool intersected = intersect(ray_a, ray_b, hit_ab);
+
+    hit_b = intersected ? hit_ab : hit_b;
 
     float2 pos_src[] =
     {
@@ -305,6 +311,17 @@ void Box_Mesh_ThreeSide(
         1, 7, 9, /**/ 9, 3, 1, /**/ 1, 3, 4, /**/ 4, 3, 5,
         // b
         5, 3, 2, /**/ 2, 3, 8, /**/ 8, 3, 9,
+
+
+        // cross t
+        // inner
+        0, 1, 5, /**/ 5, 1, 3, /**/ 3, 2, 5, /**/ 5, 2, 0,
+        // l
+        0, 2, 6, /**/ 6, 2, 8,
+        // b
+        8, 2, 9, /**/ 9, 2, 3,
+        // r
+        3, 1, 9, /**/ 9, 1, 7,
     };
 
     static const uint border_index_arr[] =
@@ -340,6 +357,28 @@ void Box_Mesh_ThreeSide(
         1, 1, 1, /**/ 1, 1, 1, /**/ 1, 1, 1, /**/ 1, 1, 1,
         // b
         2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2,
+
+
+        // cross t
+        1, 1, 1, /**/ 1, 1, 1, /**/ 2, 2, 2, /**/ 3, 3, 3,
+        // l
+        3, 3, 3, /**/ 3, 3, 3,
+        // b
+        2, 2, 2, /**/ 2, 2, 2,
+        // r
+        1, 1, 1, /**/ 1, 1, 1,
+    };
+
+    static const uint border_index2_arr[] =
+    {
+        // cross t
+        3, 3, 3, /**/ 1, 1, 1, /**/ 2, 2, 2, /**/ 3, 3, 3,
+        // l
+        3, 3, 3, /**/ 3, 3, 3,
+        // b
+        2, 2, 2, /**/ 2, 2, 2,
+        // r
+        1, 1, 1, /**/ 1, 1, 1,
     };
 
     static const uint flags_arr[] =
@@ -375,13 +414,26 @@ void Box_Mesh_ThreeSide(
         0, 0, 0, /**/ 0, 0, 0, /**/ 2, 2, 2, /**/ 2, 2, 2,
         // b
         2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0,
+
+
+        // cross t
+        2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2,
+        // l
+        0, 0, 0, /**/ 0, 0, 0,
+        // b
+        0, 0, 0, /**/ 0, 0, 0,
+        // r
+        0, 0, 0, /**/ 0, 0, 0,
     };
 
-    uint index_offset = side_index * 30;
+    uint index_offset = side_index * 30 + intersected * 120;
+    uint index_offset2 = side_index * 30;
 
     pos = pos_src[index_arr[input.vid + index_offset]];
     border_index = border_index_arr[input.vid + index_offset];
+    border_index2 = border_index2_arr[input.vid + index_offset2];
     AddFlag(flags, (Box_Varying_Flags)flags_arr[input.vid + index_offset]);
+    AddFlag(flags, intersected ? Box_Varying_Flags::MixBorder : Box_Varying_Flags::None);
 }
 
 void Box_Mesh_Complex(
@@ -553,7 +605,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
     float b_l = border_size.w;
 
     float2 pos = 0;
-    uint border_index = 0;
+    uint border_index = 0, border_index2 = 0;
 
     bool is_single_dir = all(border_cond == bool4(true, false, true, false)) || all(
         border_cond == bool4(false, true, false, true));
@@ -598,7 +650,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
         Box_Mesh_ThreeSide(
             input, pos, border_index, flags,
             size, b_t, b_r, b_b, b_l, border_mask,
-            inner_size, inner_offset
+            border_index2
         );
         break;
     default:
@@ -627,6 +679,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
     output.UV = uv;
     output.LocalPosition = pos;
     output.BorderIndex = border_index;
+    output.BorderIndex2 = border_index2;
     output.Flags = flags;
 
     return output;
@@ -669,17 +722,19 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
     StructuredBuffer<BoxData> BoxDatas = BoxDataBuffers[NonUniformResourceIndex(input.BatchBuffer)];
     BoxData data = BoxDatas[input.BatchIndex];
 
+    uint2 quadrant2 = uint2(input.UV.x < 0.5f, input.UV.y > 0.5f) * 2 + uint2(1, 0);
+    bool same_quadrant1 = any(input.BorderIndex == quadrant2);
+    bool same_quadrant2 = any(input.BorderIndex2 == quadrant2) && HasFlag(input.Flags, Box_Varying_Flags::MixBorder);
+    bool same_quadrant = same_quadrant1 || same_quadrant2;
+
     float2 size = data.LeftTopWidthHeight.zw;
     float2 half_size = size * 0.5f;
     float min_half_size = min(size.x, size.y);
     float4 color = data.BackgroundColor;
-    float4 border_color = data.BorderColor[input.BorderIndex];
+    float4 border_color = data.BorderColor[same_quadrant1 ? input.BorderIndex : input.BorderIndex2];
 
     float4 border_radius = clamp(data.BorderRound, 0, min_half_size);
     bool has_border_radius = any(border_radius > 0);
-
-    uint2 quadrant2 = uint2(input.UV.x < 0.5f, input.UV.y > 0.5f) * 2 + uint2(1, 0);
-    bool same_quadrant = any(input.BorderIndex == quadrant2);
 
     if (has_border_radius)
     {

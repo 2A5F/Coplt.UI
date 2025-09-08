@@ -63,12 +63,11 @@ public partial class MainWindow
         {
             Name = "Child1",
             JustifyContent = JustifyContent.Center,
-            BoxSizing = BoxSizing.ContentBox,
             Size = new(220, 200),
             // Size = new(1.Pc, 1.Pc),
             // BackgroundColor = Color.Gray,
             BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f),
-            Border = new(0, 30, 60, 30),
+            Border = new(0, 30, 30, 30),
             BorderColor = new(
                 new Color(0.95f, 0.5f, 0.5f, 0.5f),
                 new Color(0.5f, 0.95f, 0.5f, 0.5f),
