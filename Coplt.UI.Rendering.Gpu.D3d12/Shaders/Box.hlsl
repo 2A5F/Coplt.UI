@@ -249,7 +249,7 @@ void Box_Mesh_ThreeSide(
     static const uint2 ray_index_arr[] =
     {
         /* t */ uint2(3, 1),
-        /* r */ uint2(0, 3),
+        /* r */ uint2(3, 0),
         /* b */ uint2(0, 2),
         /* l */ uint2(1, 2),
     };
@@ -281,6 +281,14 @@ void Box_Mesh_ThreeSide(
         4, 5, 3, /**/ 3, 9, 8, /**/ 8, 2, 3, /**/ 3, 2, 4,
         // r
         5, 1, 3, /**/ 3, 1, 7, /**/ 7, 9, 3,
+
+        // side r
+        // b
+        5, 3, 2, /**/ 2, 3, 9, /**/ 9, 8, 2,
+        // l,
+        2, 8, 6, /**/ 6, 0, 2, /**/ 2, 0, 5, /**/ 5, 0, 4,
+        // t
+        4, 0, 1, /**/ 1, 0, 7, /**/ 7, 0, 6,
     };
 
     static const uint border_index_arr[] =
@@ -292,6 +300,14 @@ void Box_Mesh_ThreeSide(
         2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2,
         // r
         1, 1, 1, /**/ 1, 1, 1, /**/ 1, 1, 1,
+
+        // side r
+        // b
+        2, 2, 2, /**/ 2, 2, 2, /**/ 2, 2, 2,
+        // l,
+        3, 3, 3, /**/ 3, 3, 3, /**/ 3, 3, 3, /**/ 3, 3, 3,
+        // t
+        0, 0, 0, /**/ 0, 0, 0, /**/ 0, 0, 0,
     };
 
     static const uint flags_arr[] =
@@ -303,19 +319,22 @@ void Box_Mesh_ThreeSide(
         2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0, /**/ 2, 2, 2,
         // r
         2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0,
+
+        // side r
+        // b
+        2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0,
+        // l,
+        0, 0, 0, /**/ 0, 0, 0, /**/ 2, 2, 2, /**/ 2, 2, 2,
+        // t
+        2, 2, 2, /**/ 0, 0, 0, /**/ 0, 0, 0,
+
     };
 
+    uint index_offset = side_index * 30;
 
-    if (input.vid >= 30)
-    {
-        pos = 0;
-        border_index = 0;
-        return;
-    }
-
-    pos = pos_src[index_arr[input.vid]];
-    border_index = border_index_arr[input.vid];
-    AddFlag(flags, (Box_Varying_Flags)flags_arr[input.vid]);
+    pos = pos_src[index_arr[input.vid + index_offset]];
+    border_index = border_index_arr[input.vid + index_offset];
+    AddFlag(flags, (Box_Varying_Flags)flags_arr[input.vid + index_offset]);
 }
 
 void Box_Mesh_Complex(
@@ -528,6 +547,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
         );
         break;
     case 3:
+        if (input.vid >= 30) return output;
         Box_Mesh_ThreeSide(
             input, pos, border_index, flags,
             size, b_t, b_r, b_b, b_l, border_mask,
