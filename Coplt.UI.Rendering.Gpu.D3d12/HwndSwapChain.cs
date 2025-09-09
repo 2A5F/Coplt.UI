@@ -96,7 +96,7 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
             SampleDesc = { Count = 1, Quality = 0 },
             BufferUsage = DXGI.UsageRenderTargetOutput | DXGI.UsageShaderInput,
             BufferCount = FrameCount,
-            Scaling = Scaling.Stretch,
+            Scaling = Scaling.None,
             SwapEffect = SwapEffect.FlipDiscard,
             AlphaMode = AlphaMode.Unspecified,
             Flags = 0

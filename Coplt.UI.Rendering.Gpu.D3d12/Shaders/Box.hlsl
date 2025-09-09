@@ -560,7 +560,7 @@ void Box_Mesh_ThreeSide(
     AddFlag(flags, intersected ? Box_Varying_Flags::MixBorder : Box_Varying_Flags::None);
 }
 
-void Box_Mesh_Complex(
+void Box_Mesh_FourSide(
     in Box_Attrs input, out float2 pos, out uint border_index, inout Box_Varying_Flags flags,
     float2 size, float b_t, float b_r, float b_b, float b_l
 )
@@ -764,7 +764,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
             break;
         }
         if (input.vid >= 42) return output;
-        Box_Mesh_Complex(
+        Box_Mesh_FourSide(
             input, pos, border_index, flags,
             size, b_t, b_r, b_b, b_l
         );
@@ -779,7 +779,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
         break;
     default:
         if (input.vid >= 42) return output;
-        Box_Mesh_Complex(
+        Box_Mesh_FourSide(
             input, pos, border_index, flags,
             size, b_t, b_r, b_b, b_l
         );
