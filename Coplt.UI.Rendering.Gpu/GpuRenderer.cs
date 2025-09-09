@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.Mathematics;
 using Coplt.UI.Collections;
@@ -27,6 +28,12 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     }
 
     private float m_max_z;
+
+    private List<UIElement<GpuRd, TEd>> m_tmp_next_elements = new();
+    private List<UIElement<GpuRd, TEd>> m_tmp_next_elements_back = new();
+    private List<BatchData> m_tmp_batch_data = new();
+
+    private void SwapTmpNextElements() => (m_tmp_next_elements, m_tmp_next_elements_back) = (m_tmp_next_elements_back, m_tmp_next_elements);
 
     #endregion
 
@@ -100,7 +107,28 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         if (ClearBackgroundColor.HasValue) Backend.ClearBackground(ClearBackgroundColor.Value);
 
         Backend.SetViewPort(0, 0, Width, Height, m_max_z);
-        Render(Document.Root);
+
+        m_tmp_next_elements_back.Clear();
+        m_tmp_next_elements_back.Add(Document.Root);
+        for (; m_tmp_next_elements_back.Count > 0; SwapTmpNextElements())
+        {
+            m_tmp_next_elements.Clear();
+            foreach (var parent in m_tmp_next_elements_back)
+            {
+                foreach (var element in parent)
+                {
+                    Render(element);
+                }
+            }
+            if (m_tmp_batch_data.Count > 0)
+            {
+                Backend.DrawBox(m_tmp_batch_data.Span);
+                m_tmp_batch_data.Clear();
+            }
+        }
+
+        m_tmp_next_elements.Clear();
+        m_tmp_next_elements_back.Clear();
     }
 
     // todo batch
@@ -113,19 +141,14 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 
         if (rs.IsVisible)
         {
-            Backend.DrawBox([
-                new BatchData
-                {
-                    Buffer = rd.m_box_data.GpuBuffer!.GpuDescId,
-                    Index = rd.m_box_data.Index,
-                }
-            ]);
+            m_tmp_batch_data.Add(new BatchData
+            {
+                Buffer = rd.m_box_data.GpuBuffer!.GpuDescId,
+                Index = rd.m_box_data.Index,
+            });
         }
 
-        foreach (var child in element)
-        {
-            Render(child);
-        }
+        if (element.Count != 0) m_tmp_next_elements.Add(element);
     }
 
     #endregion

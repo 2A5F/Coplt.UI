@@ -660,6 +660,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     public override void DrawBox(ReadOnlySpan<BatchData> Batches)
     {
+        if (Batches.IsEmpty) return;
+
         Debug.Assert(m_pack != null);
         var rt = m_pack.GetMsaaRt();
 
@@ -672,7 +674,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         m_command_list.Handle->SetGraphicsRootShaderResourceView(2, batches.GpuVPtr);
         m_command_list.Handle->IASetPrimitiveTopology(D3DPrimitiveTopology.D3DPrimitiveTopologyTrianglelist);
         m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
-        m_command_list.Handle->DrawInstanced(42, 1, 0, 0);
+        m_command_list.Handle->DrawInstanced(42, (uint)batches.Count, 0, 0);
     }
 
     #endregion

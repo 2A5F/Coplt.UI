@@ -68,35 +68,44 @@ public partial class MainWindow
             Size = new(220, 200),
             // Size = new(1.Pc, 1.Pc),
             // BackgroundColor = Color.Gray,
-            BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 1f),
-            Border = new(30, 30, 30, 30),
-            BorderColor = new(
-                new Color(0.95f, 0.5f, 0.5f, 1f),
-                new Color(0.5f, 0.95f, 0.5f, 1f),
-                new Color(0.5f, 0.5f, 0.95f, 1f),
-                new Color(0.95f, 0.95f, 0.5f, 1f)
-            ),
+            BackgroundColor = new Color(0.95f, 0.5f, 0.5f, 1f),
+            // BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 1f),
+            // Border = new(30, 30, 30, 30),
+            // BorderColor = new(
+            //     new Color(0.95f, 0.5f, 0.5f, 1f),
+            //     new Color(0.5f, 0.95f, 0.5f, 1f),
+            //     new Color(0.5f, 0.5f, 0.95f, 1f),
+            //     new Color(0.95f, 0.95f, 0.5f, 1f)
+            // ),
             BorderRadius = 100,
             BorderRadiusMode = BorderRadiusMode.Cosine,
         };
         document.Root.Add(child);
 
-        // var child2 = new UIElement<GpuRd, object>
-        // {
-        //     Name = "Child2",
-        //     Size = new(500, 300),
-        //     Border = new(10, 20, 30, 40),
-        //     BorderColor = new(
-        //         new Color(0.95f, 0.5f, 0.5f, 1f),
-        //         new Color(0.5f, 0.95f, 0.5f, 0.5f),
-        //         new Color(0.5f, 0.5f, 0.95f, 0.5f),
-        //         new Color(0.95f, 0.95f, 0.5f, 0.5f)
-        //     ),
-        //     // BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f),
-        //     BorderRadius = 100,
-        //     BorderRadiusMode = BorderRadiusMode.Circle,
-        // };
-        // document.Root.Add(child2);
+        var child2 = new UIElement<GpuRd, object>
+        {
+            Name = "Child2",
+            Size = new(100, 100),
+            // Border = new(5, 8, 15, 20),
+            // BorderColor = new(
+            //     new Color(0.95f, 0.5f, 0.5f, 0.5f),
+            //     new Color(0.5f, 0.95f, 0.5f, 0.5f),
+            //     new Color(0.5f, 0.5f, 0.95f, 0.5f),
+            //     new Color(0.95f, 0.95f, 0.5f, 0.5f)
+            // ),
+            BackgroundColor = new Color(1f, 1f, 1f, 0.5f),
+            BorderRadius = 30,
+            BorderRadiusMode = BorderRadiusMode.Cosine,
+        };
+        child.Add(child2);
+
+        var child3 = new UIElement<GpuRd, object>
+        {
+            Name = "Child3",
+            Size = new(20, 20),
+            BackgroundColor = new Color(0.5f, 0.5f, 0.95f, 1f),
+        };
+        document.Root.Add(child3);
     }
 
     private void OnClosed(object? sender, EventArgs e)
