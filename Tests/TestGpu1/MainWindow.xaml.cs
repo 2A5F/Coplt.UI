@@ -67,7 +67,7 @@ public partial class MainWindow
             // Size = new(1.Pc, 1.Pc),
             // BackgroundColor = Color.Gray,
             BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f),
-            Border = new(0, 30, 30, 30),
+            Border = new(30, 30, 30, 0),
             BorderColor = new(
                 new Color(0.95f, 0.5f, 0.5f, 0.5f),
                 new Color(0.5f, 0.95f, 0.5f, 0.5f),
