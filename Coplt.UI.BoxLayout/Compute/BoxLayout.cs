@@ -167,6 +167,32 @@ public static partial class BoxLayout
         }
     }
 
+    public static void NoRoundLayout<TTree, TNodeId, TChildIter>(ref TTree tree, TNodeId node)
+        where TTree : IRoundTree<TNodeId, TChildIter>, allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+        => NoRoundLayout<TTree, TNodeId, TChildIter>(ref tree, node, 0, 0);
+
+    private static void NoRoundLayout<TTree, TNodeId, TChildIter>
+        (ref TTree tree, TNodeId node, float base_x, float base_y)
+        where TTree : IRoundTree<TNodeId, TChildIter>, allows ref struct
+        where TChildIter : IIterator<TNodeId>, allows ref struct
+    {
+        var unrounded_layout = tree.GetUnroundedLayout(node);
+        var layout = unrounded_layout.ToLayout();
+
+        layout.RootLocation.X = base_x + layout.Location.X;
+        layout.RootLocation.Y = base_y + layout.Location.Y;
+
+        tree.SetFinalLayout(node, layout);
+
+        foreach (var child in tree.ChildIds(node).AsEnumerable<TChildIter, TNodeId>())
+        {
+            NoRoundLayout<TTree, TNodeId, TChildIter>(
+                ref tree, child, layout.RootLocation.X, layout.RootLocation.Y
+            );
+        }
+    }
+
     #endregion
 
     #region ComputeCachedLayout

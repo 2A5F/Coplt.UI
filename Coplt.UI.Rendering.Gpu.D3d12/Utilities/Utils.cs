@@ -2,6 +2,7 @@
 using System.Reflection;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
+using Silk.NET.DXGI;
 
 namespace Coplt.UI.Rendering.Gpu.D3d12.Utilities;
 
@@ -57,6 +58,25 @@ internal static class Utils
     public static uint AlignUp(this uint value, uint alignment) => (value + alignment - 1) & ~(alignment - 1);
 
     public static ulong AlignUp(this ulong value, ulong alignment) => (value + alignment - 1) & ~(alignment - 1);
+
+    #endregion
+
+    #region Format Utils
+
+    extension(Format Format)
+    {
+        public Format ToSrgb => Format switch
+        {
+            Format.FormatR8G8B8A8Unorm => Format.FormatR8G8B8A8UnormSrgb,
+            Format.FormatBC1Unorm => Format.FormatBC1UnormSrgb,
+            Format.FormatBC2Unorm => Format.FormatBC2UnormSrgb,
+            Format.FormatBC3Unorm => Format.FormatBC3UnormSrgb,
+            Format.FormatB8G8R8A8Unorm => Format.FormatB8G8R8A8UnormSrgb,
+            Format.FormatB8G8R8X8Unorm => Format.FormatB8G8R8X8UnormSrgb,
+            Format.FormatBC7Unorm => Format.FormatBC7UnormSrgb,
+            _ => Format
+        };
+    }
 
     #endregion
 }

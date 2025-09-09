@@ -43,7 +43,7 @@ public sealed partial class UIDocument<TRd, TEd>
 
     #region Compute
 
-    public bool ComputeLayout(Size<AvailableSpace> available_space)
+    public bool ComputeLayout(Size<AvailableSpace> available_space, bool round = true)
     {
         var root = Root;
         if (m_last_available_size == available_space && m_last_root_version == root.LayoutVersion) return false;
@@ -53,9 +53,18 @@ public sealed partial class UIDocument<TRd, TEd>
         BoxLayout.ComputeRootLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator, StyleRef>(
             ref tree, root, available_space
         );
-        BoxLayout.RoundLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>(
-            ref tree, root
-        );
+        if (round)
+        {
+            BoxLayout.RoundLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>(
+                ref tree, root
+            );
+        }
+        else
+        {
+            BoxLayout.NoRoundLayout<LayoutTree<TRd, TEd>, UIElement<TRd, TEd>, OrderedSet<UIElement<TRd, TEd>>.Enumerator>(
+                ref tree, root
+            );
+        }
         return true;
     }
 

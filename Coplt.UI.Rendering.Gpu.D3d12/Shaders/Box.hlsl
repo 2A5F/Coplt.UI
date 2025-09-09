@@ -905,5 +905,5 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
         }
     }
 
-    return color + float4(same_quadrant * 0.01f, 0, 0, 0);
+    return color;
 }

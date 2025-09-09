@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using Coplt.Dropping;
@@ -23,6 +24,7 @@ public partial class MainWindow
 
     private bool running = true;
 
+    private IntPtr Hwnd;
     private Thread? m_render_thread;
 
     static MainWindow()
@@ -44,7 +46,7 @@ public partial class MainWindow
         var is_debug = Environment.GetCommandLineArgs().Contains("-D");
 
         context = new(is_debug);
-        swap_chain = new(context, new WindowInteropHelper(this).EnsureHandle(), new((uint)Width, (uint)Height))
+        swap_chain = new(context, Hwnd = new WindowInteropHelper(this).EnsureHandle(), new((uint)Width, (uint)Height))
         {
             VSync = true,
         };
@@ -66,13 +68,13 @@ public partial class MainWindow
             Size = new(220, 200),
             // Size = new(1.Pc, 1.Pc),
             // BackgroundColor = Color.Gray,
-            BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 0.5f),
-            Border = new(30, 30, 30, 0),
+            BackgroundColor = new Color(0.75f, 0.75f, 0.75f, 1f),
+            Border = new(30, 30, 30, 30),
             BorderColor = new(
-                new Color(0.95f, 0.5f, 0.5f, 0.5f),
-                new Color(0.5f, 0.95f, 0.5f, 0.5f),
-                new Color(0.5f, 0.5f, 0.95f, 0.5f),
-                new Color(0.95f, 0.95f, 0.5f, 0.5f)
+                new Color(0.95f, 0.5f, 0.5f, 1f),
+                new Color(0.5f, 0.95f, 0.5f, 1f),
+                new Color(0.5f, 0.5f, 0.95f, 1f),
+                new Color(0.95f, 0.95f, 0.5f, 1f)
             ),
             BorderRadius = 100,
             BorderRadiusMode = BorderRadiusMode.Cosine,
@@ -106,8 +108,8 @@ public partial class MainWindow
 
     private void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        var size = Target.RenderSize;
-        swap_chain.OnResize(new((uint)size.Width, (uint)size.Height));
+        var size = new uint2((uint)Target.RenderSize.Width, (uint)Target.RenderSize.Height);
+        swap_chain.OnResize(size);
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
