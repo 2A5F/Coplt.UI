@@ -92,6 +92,32 @@ public struct EmbedList<T> : IList<T>, IReadOnlyList<T>
         Capacity = GetNewCapacity(capacity);
     }
 
+    private void GrowForInsertion(int indexToInsert, int insertionCount = 1)
+    {
+        Debug.Assert(insertionCount > 0);
+
+        var requiredCapacity = checked(m_size + insertionCount);
+        var newCapacity = GetNewCapacity(requiredCapacity);
+
+        // Inline and adapt logic from set_Capacity
+
+        T[] newItems = new T[newCapacity];
+        if (m_items != null)
+        {
+            if (indexToInsert != 0)
+            {
+                Array.Copy(m_items, newItems, length: indexToInsert);
+            }
+
+            if (m_size != indexToInsert)
+            {
+                Array.Copy(m_items, indexToInsert, newItems, indexToInsert + insertionCount, m_size - indexToInsert);
+            }
+        }
+
+        m_items = newItems;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetNewCapacity(int capacity)
     {
@@ -168,7 +194,11 @@ public struct EmbedList<T> : IList<T>, IReadOnlyList<T>
 
     public void Insert(int index, T item)
     {
-        throw new NotImplementedException();
+        if ((uint)index > (uint)m_size) throw new ArgumentOutOfRangeException();
+        if (m_items == null || m_size == m_items.Length) GrowForInsertion(index, 1);
+        else if (index < m_size) Array.Copy(m_items, index, m_items, index + 1, m_size - index);
+        m_items![index] = item;
+        m_size++;
     }
 
     #endregion

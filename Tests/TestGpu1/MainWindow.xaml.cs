@@ -128,27 +128,32 @@ public partial class MainWindow
             var first = true;
             try
             {
+                var last_frame = 0;
+                var max_frame = HwndSwapChain.FrameCount;
                 while (running)
                 {
+                    var is_first = first;
                     if (first) first = false;
-                    else
-                    {
-                        swap_chain.WaitFrameReady();
-                        context.ReadyNextFrameNoWait();
-                    }
+                    else swap_chain.WaitFrameReady();
 
                     var size = swap_chain.Size;
 
                     var layout_changed = document.ComputeLayout(new(size.x, size.y));
                     if (layout_changed) Console.WriteLine(document);
 
-                    renderer.BeginFrame();
-                    renderer.Update();
+                    var need_re_render = renderer.Update(size.x, size.y, layout_changed);
 
-                    renderer.Render(size.x, size.y);
+                    if (need_re_render) last_frame = 0;
+                    if (last_frame < max_frame)
+                    {
+                        last_frame++;
+                        if (!is_first) context.ReadyNextFrameNoWait();
+                        renderer.BeginFrame();
+                        renderer.Render();
+                        renderer.EndFrame();
+                        context.SubmitNotEnd();
+                    }
 
-                    renderer.EndFrame();
-                    context.SubmitNotEnd();
                     swap_chain.PresentNoWait();
                 }
             }

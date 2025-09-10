@@ -129,8 +129,13 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region Shader
 
+    [Drop(Order = 3)]
     public D3d12RootSignature RootSignature_Box { get; }
+    [Drop(Order = 3)]
+    public D3d12CommandSignature CommandSignature_Box { get; }
+    [Drop(Order = 3)]
     public D3d12GraphicsPipeline Pipeline_Box_NoDepth { get; }
+    [Drop(Order = 3)]
     public D3d12GraphicsPipeline Pipeline_Box_Depth { get; }
 
     #endregion
@@ -249,6 +254,62 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #endregion
 
+        #region RootSignature
+
+        RootSignature_Box = new D3d12RootSignature(this, [
+            // ViewData
+            new RootParameter
+            {
+                ParameterType = RootParameterType.TypeCbv,
+                ShaderVisibility = ShaderVisibility.All,
+                Descriptor = new()
+                {
+                    ShaderRegister = 0,
+                    RegisterSpace = 0,
+                },
+            },
+            // Batches
+            new RootParameter
+            {
+                ParameterType = RootParameterType.TypeSrv,
+                ShaderVisibility = ShaderVisibility.All,
+                Descriptor = new()
+                {
+                    ShaderRegister = 0,
+                    RegisterSpace = 10,
+                },
+            },
+        ]);
+
+        #endregion
+
+        #region CommandSignature
+
+        CommandSignature_Box = new D3d12CommandSignature(this, RootSignature_Box, (uint)sizeof(DrawCommand_Box), [
+            new()
+            {
+                Type = IndirectArgumentType.ConstantBufferView,
+                ConstantBufferView = new()
+                {
+                    RootParameterIndex = 1,
+                },
+            },
+            new()
+            {
+                Type = IndirectArgumentType.ShaderResourceView,
+                ShaderResourceView = new()
+                {
+                    RootParameterIndex = 2,
+                },
+            },
+            new()
+            {
+                Type = IndirectArgumentType.Draw,
+            },
+        ]);
+
+        #endregion
+
         #region Shader
 
         var asm = typeof(GpuRendererBackendD3d12).Assembly;
@@ -256,31 +317,6 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         {
             var box_vertex = asm.GetManifestResourceSpan(".shaders/Box.Vertex.dxil");
             var box_pixel = asm.GetManifestResourceSpan(".shaders/Box.Pixel.dxil");
-
-            RootSignature_Box = new D3d12RootSignature(this, [
-                // ViewData
-                new RootParameter
-                {
-                    ParameterType = RootParameterType.TypeCbv,
-                    ShaderVisibility = ShaderVisibility.All,
-                    Descriptor = new()
-                    {
-                        ShaderRegister = 0,
-                        RegisterSpace = 0,
-                    },
-                },
-                // Batches
-                new RootParameter
-                {
-                    ParameterType = RootParameterType.TypeSrv,
-                    ShaderVisibility = ShaderVisibility.All,
-                    Descriptor = new()
-                    {
-                        ShaderRegister = 0,
-                        RegisterSpace = 10,
-                    },
-                },
-            ]);
 
             var input_element = stackalloc InputElementDesc[3]
             {
@@ -665,7 +701,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         Debug.Assert(m_pack != null);
         var rt = m_pack.GetMsaaRt();
 
-        var batches = m_pack.FrameUploadBuffer.Alloc(Batches);
+        var batches = m_pack.FrameUploadBuffer.Alloc(Batches, (uint)sizeof(BatchData));
 
         m_command_list.Handle->SetGraphicsRootSignature(RootSignature_Box.m_root_signature);
         m_command_list.Handle->SetGraphicsRootDescriptorTable(0, m_res_heap_start_G);

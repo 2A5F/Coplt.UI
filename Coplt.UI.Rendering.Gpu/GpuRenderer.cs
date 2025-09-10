@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.Mathematics;
@@ -35,6 +36,9 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 
     private void SwapTmpNextElements() => (m_tmp_next_elements, m_tmp_next_elements_back) = (m_tmp_next_elements_back, m_tmp_next_elements);
 
+    private uint m_width;
+    private uint m_height;
+
     #endregion
 
     #region Update
@@ -44,20 +48,25 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// <para><b>May need to be performed on the rendering thread, which is limited by the rendering backend</b></para>
     /// </summary>
     /// <returns>Is re-rendering required</returns>
-    public bool Update()
+    public bool Update(uint Width, uint Height, bool LayoutChanged)
     {
+        Debug.Assert((m_width == Width && m_height == Height) || LayoutChanged,
+            "When the view size changes, the layout must also change");
+        m_width = Width;
+        m_height = Height;
         m_max_z = 1;
-        return Update(Document.Root);
+        var changed = UpdateOn(Document.Root) || LayoutChanged;
+        if (LayoutChanged) Record();
+        return changed;
     }
 
-    private bool Update(UIElement<GpuRd, TEd> element)
+    private bool UpdateOn(UIElement<GpuRd, TEd> element)
     {
         ref var rd = ref Unsafe.AsRef(in element.RData);
         ref readonly var fl = ref element.FinalLayout;
         ref readonly var cs = ref element.CommonStyle;
         ref readonly var rs = ref rd.GpuStyle;
-        // todo overflow hide
-        var changed = true;
+        var changed = false;
         if (rd.m_last_version != element.VisualVersion || rd.m_box_data.IsNull)
         {
             rd.m_last_version = element.VisualVersion;
@@ -79,7 +88,6 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
                 BorderColor_Bottom = rs.BorderColor.Bottom,
                 BorderColor_Left = rs.BorderColor.Left,
                 Opaque = rs.Opaque,
-                Z = 1, // todo calc z or remove z
                 Flags = flags,
                 BackgroundImageSampler = rs.BackgroundImageSampler,
                 BorderRadiusMode = rs.BorderRadiusMode,
@@ -89,9 +97,132 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         }
         foreach (var child in element)
         {
-            if (Update(child)) changed = true;
+            if (UpdateOn(child)) changed = true;
         }
         return changed;
+    }
+
+    #endregion
+
+    #region Record
+
+    private RecordContext m_record_context = new();
+
+    private void Record()
+    {
+        if (m_width == 0 || m_height == 0) return;
+        m_record_context.Record(Document.Root);
+    }
+
+    private struct RecordContext()
+    {
+        #region Fields
+
+        private GpuCommandRecorder Recorder = null!; // todo
+
+        private EmbedList<GpuRenderLayer> m_layers;
+
+        private EmbedList<UIElement<GpuRd, TEd>> m_cur_elements;
+        private EmbedList<UIElement<GpuRd, TEd>> m_next_elements;
+
+        private GpuRenderLayer? m_cur_layer_opaque; // todo pool
+        private GpuRenderLayer? m_cur_layer_alpha; // todo pool
+
+        private int m_clip_layer_start = 0;
+
+        #endregion
+
+        #region Swap
+
+        private void SwapElements() => (m_cur_elements, m_next_elements) = (m_next_elements, m_cur_elements);
+
+        #endregion
+
+        #region AllocLayer
+
+        private GpuRenderLayer GetOrAllocLayer(GpuRenderLayerType type) => type switch
+        {
+            GpuRenderLayerType.Opaque => m_cur_layer_opaque ??= AllocLayer(type, false),
+            GpuRenderLayerType.Alpha => m_cur_layer_alpha ??= AllocLayer(type, false),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+
+        private GpuRenderLayer AllocLayer(GpuRenderLayerType type, bool clip)
+        {
+            // todo pool
+            GpuRenderLayer layer = new()
+            {
+                Type = type,
+                ScissorRect = default,
+                Clip = clip,
+            };
+            if (type is GpuRenderLayerType.Opaque) m_layers.Insert(m_clip_layer_start, layer);
+            else m_layers.Add(layer);
+            return layer;
+        }
+
+        #endregion
+
+        #region Reset
+
+        private void Reset()
+        {
+            m_cur_layer_opaque = null; // todo pool
+            m_cur_layer_alpha = null; // todo pool
+            m_clip_layer_start = 0;
+            m_layers.Clear();
+            m_cur_elements.Clear();
+            m_next_elements.Clear();
+        }
+
+        #endregion
+
+        #region Record
+
+        // Breadth-first traversal batching
+        public void Record(UIElement<GpuRd, TEd> root)
+        {
+            Reset();
+            RecordOn(root);
+            SwapElements();
+            for (; m_cur_elements.Count > 0; m_cur_elements.Clear(), SwapElements())
+            {
+                // Each alpha layer needs to be blended
+                m_cur_layer_alpha = null; // todo pool
+                foreach (var parent in m_cur_elements)
+                {
+                    foreach (var element in parent)
+                    {
+                        RecordOn(element);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region RecordOn
+
+        private void RecordOn(UIElement<GpuRd, TEd> element)
+        {
+            ref var rd = ref Unsafe.AsRef(in element.RData);
+            ref readonly var fl = ref element.FinalLayout;
+            ref readonly var cs = ref element.CommonStyle;
+            ref readonly var rs = ref rd.GpuStyle;
+
+            // todo clip; 需要裁剪时，不直接添加到 m_next_elements，单独维护裁剪层
+            if (element.Count > 0) m_next_elements.Add(element);
+
+            if (!rs.IsVisible) return;
+            var layer = GetOrAllocLayer(rs.IsOpaque ? GpuRenderLayerType.Opaque : GpuRenderLayerType.Alpha);
+            layer.AddItem(new BatchData
+            {
+                Buffer = rd.m_box_data.GpuBuffer!.GpuDescId,
+                Index = rd.m_box_data.Index,
+            });
+        }
+
+        #endregion
     }
 
     #endregion
@@ -102,11 +233,12 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     /// Actual rendering.
     /// <para><b>May need to be performed on the rendering thread, which is limited by the rendering backend</b></para>
     /// </summary>
-    public void Render(uint Width, uint Height)
+    public void Render()
     {
+        if (m_width == 0 || m_height == 0) return;
         if (ClearBackgroundColor.HasValue) Backend.ClearBackground(ClearBackgroundColor.Value);
 
-        Backend.SetViewPort(0, 0, Width, Height, m_max_z);
+        Backend.SetViewPort(0, 0, m_width, m_height, m_max_z);
 
         m_tmp_next_elements_back.Clear();
         m_tmp_next_elements_back.Add(Document.Root);

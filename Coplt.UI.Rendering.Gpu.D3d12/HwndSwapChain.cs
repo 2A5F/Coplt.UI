@@ -54,6 +54,8 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
 
     public override uint Width => m_cur_size.x;
     public override uint Height => m_cur_size.y;
+    
+    public uint2 NewSize => m_new_size;
 
     public ref readonly ComPtr<IDXGISwapChain3> SwapChain3 => ref m_swap_chain;
     public ref readonly ComPtr<ID3D12DescriptorHeap> RtvHeap => ref m_rtv_heap;

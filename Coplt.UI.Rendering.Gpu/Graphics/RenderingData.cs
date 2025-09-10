@@ -26,7 +26,6 @@ public record struct BoxData
     public float4 BorderColor_Bottom;
     public float4 BorderColor_Left;
     public float Opaque;
-    public float Z;
     public RenderFlags Flags;
     public SamplerType BackgroundImageSampler;
     public BorderRadiusMode BorderRadiusMode;

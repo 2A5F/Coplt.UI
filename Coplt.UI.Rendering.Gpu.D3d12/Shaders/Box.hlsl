@@ -32,7 +32,6 @@ struct BoxData
     // t r b l
     float4 BorderColor[4];
     float Opaque;
-    float Z;
     RenderFlags Flags;
     SamplerType BackgroundImageSampler;
     SdRoundBoxType BorderRadiusMode;
@@ -796,7 +795,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
     float4 p4 = float4(pos, 0, 1);
     p4 = mul(transform, p4);
     p4 = mul(data.TransformMatrix, p4);
-    p4.z = 0.5 + data.Z;
+    p4.z = 0.5; // todo z
     p4 = mul(VP, p4);
 
     output.PositionCS = p4;
@@ -904,6 +903,8 @@ float4 Box_Pixel(Box_Varying input) : SV_Target
             color = border_color;
         }
     }
+
+    color.a *= data.Opaque;
 
     return color;
 }
