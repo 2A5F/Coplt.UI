@@ -32,7 +32,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 
     private List<UIElement<GpuRd, TEd>> m_tmp_next_elements = new();
     private List<UIElement<GpuRd, TEd>> m_tmp_next_elements_back = new();
-    private List<BatchData> m_tmp_batch_data = new();
+    private List<BoxDataHandleData> m_tmp_batch_data = new();
 
     private void SwapTmpNextElements() => (m_tmp_next_elements, m_tmp_next_elements_back) = (m_tmp_next_elements_back, m_tmp_next_elements);
 
@@ -56,7 +56,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         m_height = Height;
         m_max_z = 1;
         var changed = UpdateOn(Document.Root) || LayoutChanged;
-        if (LayoutChanged) Record();
+        // if (LayoutChanged) Record();
         return changed;
     }
 
@@ -67,6 +67,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         ref readonly var cs = ref element.CommonStyle;
         ref readonly var rs = ref rd.GpuStyle;
         var changed = false;
+        // todo if not visible , return box data to pool
         if (rd.m_last_version != element.VisualVersion || rd.m_box_data.IsNull)
         {
             rd.m_last_version = element.VisualVersion;
@@ -75,7 +76,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
             if (rd.m_box_data.IsNull) rd.MakeBoxData(BoxDataSource);
             var flags = RenderFlags.None;
             if (cs.BoxSizing is BoxSizing.ContentBox) flags |= RenderFlags.ContentBox;
-            rd.m_box_data.Ref = new()
+            rd.m_box_data.Update(new()
             {
                 TransformMatrix = float4x4.Identity,
                 LeftTopWidthHeight = new(fl.RootLocation.X, fl.RootLocation.Y, fl.Size.Width, fl.Size.Height),
@@ -92,8 +93,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
                 BackgroundImageSampler = rs.BackgroundImageSampler,
                 BorderRadiusMode = rs.BorderRadiusMode,
                 BackgroundImage = 0, // todo image
-            };
-            rd.m_box_data.MarkItemChanged();
+            });
         }
         foreach (var child in element)
         {
@@ -215,11 +215,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 
             if (!rs.IsVisible) return;
             var layer = GetOrAllocLayer(rs.IsOpaque ? GpuRenderLayerType.Opaque : GpuRenderLayerType.Alpha);
-            layer.AddItem(new BatchData
-            {
-                Buffer = rd.m_box_data.GpuBuffer!.GpuDescId,
-                Index = rd.m_box_data.Index,
-            });
+            layer.AddItem(rd.m_box_data.Data);
         }
 
         #endregion
@@ -273,11 +269,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 
         if (rs.IsVisible)
         {
-            m_tmp_batch_data.Add(new BatchData
-            {
-                Buffer = rd.m_box_data.GpuBuffer!.GpuDescId,
-                Index = rd.m_box_data.Index,
-            });
+            m_tmp_batch_data.Add(rd.m_box_data.Data);
         }
 
         if (element.Count != 0) m_tmp_next_elements.Add(element);
@@ -300,7 +292,8 @@ internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
     internal const uint BoxDataBufferSize = 1024;
     internal EmbedList<GpuUploadList> m_buffers;
     internal uint m_current_buffer_offset = 0;
-    internal readonly Queue<BoxDataHandle> m_freed_queue = new();
+    internal readonly Queue<int> m_slot_freed_queue = new();
+    internal EmbedList<BoxDataHandleSlot> m_slots;
 
     [Drop]
     private void DropBuffers()
@@ -311,9 +304,13 @@ internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
         }
     }
 
-    internal unsafe BoxDataHandle RentBoxData()
+    internal unsafe int RentSlot()
     {
-        if (m_freed_queue.TryDequeue(out var r)) return r;
+        if (m_slot_freed_queue.TryPeek(out var r) && Backend.CurrentFrame - m_slots[r].RemovedFrame >= GpuRendererBackend.FrameCount)
+        {
+            m_slot_freed_queue.Dequeue();
+            return r;
+        }
         if (m_buffers.Count == 0 || m_current_buffer_offset >= BoxDataBufferSize)
         {
             m_buffers.Add(Backend.AllocUploadList((uint)sizeof(BoxData), BoxDataBufferSize));
@@ -321,28 +318,67 @@ internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
         }
         var buffer = m_buffers.Count - 1;
         var index = m_current_buffer_offset++;
-        var ptr = &((BoxData*)m_buffers[buffer].MappedPtr)[index];
-        return new((uint)buffer, index, ptr, this);
+        var handle = m_slots.Count;
+        m_slots.Add(new((uint)buffer, index, 0));
+        return handle;
     }
 
-    internal void ReturnBoxData(BoxDataHandle handle) => m_freed_queue.Enqueue(handle);
+    internal void ReturnSlot(int Index)
+    {
+        ref var slot = ref m_slots[Index];
+        slot.RemovedFrame = Backend.CurrentFrame;
+        m_slot_freed_queue.Enqueue(Index);
+    }
 }
 
-internal readonly unsafe struct BoxDataHandle(uint Buffer, uint Index, BoxData* Ptr, BoxDataSource? Source)
+internal record struct BoxDataHandleSlot(uint Buffer, uint Index, ulong RemovedFrame)
 {
     public readonly uint Buffer = Buffer;
     public readonly uint Index = Index;
-    public readonly BoxData* Ptr = Ptr;
+    public ulong RemovedFrame = RemovedFrame;
+}
+
+public record struct BoxDataHandleData(uint Buffer, uint Index)
+{
+    public uint Buffer = Buffer;
+    public uint Index = Index;
+}
+
+internal unsafe struct BoxDataHandle(BoxDataSource? Source)
+{
     public readonly BoxDataSource? Source = Source;
+    public int Handle { get; private set; } = -1;
 
-    public ref BoxData Ref => ref *Ptr;
+    internal ref readonly BoxDataHandleSlot Slot => ref Source!.m_slots[Handle];
 
-    public GpuUploadList? GpuBuffer => Source?.m_buffers[(int)Buffer];
-
-    public bool IsNull => Ptr == null || Source == null;
-
-    public void MarkItemChanged()
+    public BoxDataHandleData Data
     {
-        GpuBuffer?.MarkItemChanged(Index);
+        get
+        {
+            var slot = Slot;
+            var buffer = Source!.m_buffers[(int)slot.Buffer];
+            return new(buffer.GpuDescId, slot.Index);
+        }
+    }
+
+    public bool IsNull => Source == null;
+
+    public void Update(BoxData data)
+    {
+        var old_handle = Handle;
+        Handle = Source!.RentSlot();
+        if (old_handle >= 0) Source!.ReturnSlot(old_handle);
+        var slot = Slot;
+        var buffer = Source!.m_buffers[(int)slot.Buffer];
+        var ptr = &((BoxData*)buffer.MappedPtr)[slot.Index];
+        *ptr = data;
+        buffer.MarkItemChanged(slot.Index);
+    }
+
+    public void Dispose()
+    {
+        if (Source == null) return;
+        if (Handle >= 0) Source.ReturnSlot(Handle);
+        this = new(null);
     }
 }

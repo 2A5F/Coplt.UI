@@ -16,6 +16,7 @@ public partial record struct GpuRd() : IRenderData
 
     internal GpuStyle m_gpu_style = new();
 
+    [Drop]
     internal BoxDataHandle m_box_data;
 
     internal ulong m_last_version;
@@ -33,7 +34,7 @@ public partial record struct GpuRd() : IRenderData
 
     public void OnRemoveFromTree()
     {
-        ReturnBoxData();
+        m_box_data.Dispose();
     }
 
     #endregion
@@ -42,15 +43,7 @@ public partial record struct GpuRd() : IRenderData
 
     internal void MakeBoxData(BoxDataSource BoxDataSource)
     {
-        m_box_data = BoxDataSource.RentBoxData();
-    }
-
-    [Drop]
-    private void ReturnBoxData()
-    {
-        if (m_box_data.IsNull) return;
-        m_box_data.Source?.ReturnBoxData(m_box_data);
-        m_box_data = default;
+        m_box_data = new(BoxDataSource);
     }
 
     #endregion

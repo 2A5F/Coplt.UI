@@ -4,6 +4,7 @@ using Coplt.Dropping;
 using Coplt.Mathematics;
 using Coplt.UI.Rendering.Gpu.Utilities;
 using Coplt.UI.Rendering.Gpu.D3d12.Utilities;
+using Coplt.UI.Rendering.Gpu.Graphics;
 using Silk.NET.Core.Native;
 using Silk.NET.Direct3D12;
 using Silk.NET.DXGI;
@@ -16,7 +17,7 @@ public unsafe partial class D3d12GpuContext : ID3d12RecyclablePoolSource
 {
     #region Consts
 
-    public const uint FrameCount = 3;
+    public const uint FrameCount = GpuRendererBackend.FrameCount;
 
     #endregion
 

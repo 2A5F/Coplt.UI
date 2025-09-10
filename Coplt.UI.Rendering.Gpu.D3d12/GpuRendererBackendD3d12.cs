@@ -62,6 +62,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     [Drop]
     internal RecyclablePack? m_pack;
 
+    internal ulong m_current_frame;
+
     #endregion
 
     #region Query
@@ -436,6 +438,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     public override bool BindLess => true;
     public override uint MaxNumImagesInBatch => uint.MaxValue;
 
+    public override ulong CurrentFrame => m_current_frame;
+
     public bool DebugEnabled { get; }
 
     #endregion
@@ -649,6 +653,8 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         m_pack_pool.Return(m_pack);
         m_pack = null!;
+
+        m_current_frame++;
     }
 
     #endregion
@@ -694,14 +700,14 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region Draw
 
-    public override void DrawBox(ReadOnlySpan<BatchData> Batches)
+    public override void DrawBox(ReadOnlySpan<BoxDataHandleData> Batches)
     {
         if (Batches.IsEmpty) return;
 
         Debug.Assert(m_pack != null);
         var rt = m_pack.GetMsaaRt();
 
-        var batches = m_pack.FrameUploadBuffer.Alloc(Batches, (uint)sizeof(BatchData));
+        var batches = m_pack.FrameUploadBuffer.Alloc(Batches, (uint)sizeof(BoxDataHandleData));
 
         m_command_list.Handle->SetGraphicsRootSignature(RootSignature_Box.m_root_signature);
         m_command_list.Handle->SetGraphicsRootDescriptorTable(0, m_res_heap_start_G);

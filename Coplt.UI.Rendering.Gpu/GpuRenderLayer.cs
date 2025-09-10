@@ -11,9 +11,9 @@ internal record GpuRenderLayer
     public uint4 ScissorRect;
     public bool Clip;
 
-    internal EmbedList<BatchData> m_items;
+    internal EmbedList<BoxDataHandleData> m_items;
 
-    public void AddItem(BatchData item)
+    public void AddItem(BoxDataHandleData item)
     {
         m_items.Add(item);
     }
