@@ -19,6 +19,8 @@ public abstract partial class GpuRendererBackend
 
     public abstract GpuUploadList AllocUploadList(uint Stride, uint Count);
 
+    public abstract GpuCommandRecorder CreateCommandRecorder();
+
     public abstract void BeginFrame();
 
     public abstract void EndFrame();

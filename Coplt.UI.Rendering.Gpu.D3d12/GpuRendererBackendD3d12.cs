@@ -478,6 +478,12 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #endregion
 
+    #region CreateCommandRecorder
+
+    public override GpuCommandRecorder CreateCommandRecorder() => new D3d12CommandRecorder(this);
+
+    #endregion
+
     #region Frame
 
     public override void BeginFrame()

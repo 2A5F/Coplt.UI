@@ -185,8 +185,8 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
 {
     #region Fields
 
-    // [Drop]
-    private GpuCommandRecorder Recorder = null!; // todo
+    [Drop]
+    private readonly GpuCommandRecorder Recorder = Backend.CreateCommandRecorder();
 
     [Drop]
     private readonly GpuRenderLayerPool m_layer_pool = new(Backend);
