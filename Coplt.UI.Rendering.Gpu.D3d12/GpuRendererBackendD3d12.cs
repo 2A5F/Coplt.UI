@@ -239,7 +239,6 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         #region Pools
 
         m_pack_pool = new(RecyclablePoolSource);
-        m_pack = new(m_pack_pool, this);
 
         #endregion
 
@@ -287,7 +286,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #region CommandSignature
 
-        CommandSignature_Box = new D3d12CommandSignature(this, RootSignature_Box, (uint)sizeof(DrawCommand_Box), [
+        CommandSignature_Box = new D3d12CommandSignature(this, RootSignature_Box, (uint)sizeof(D3d12DrawCommand_Box), [
             new()
             {
                 Type = IndirectArgumentType.ConstantBufferView,
@@ -441,6 +440,34 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     public override ulong CurrentFrame => m_current_frame;
 
     public bool DebugEnabled { get; }
+
+    #endregion
+
+    #region CalcVertexCount
+
+    public override uint CalcVertexCount(in BoxData data)
+    {
+        var border_size = abs(data.BorderSize_TopRightBottomLeft);
+        var bc_t = data.BorderColor_Top;
+        var bc_r = data.BorderColor_Bottom;
+        var bc_b = data.BorderColor_Right;
+        var bc_l = data.BorderColor_Bottom;
+        var border_cond = border_size > 0 & float4(bc_t.a, bc_r.a, bc_b.a, bc_l.a) != 0;
+        var border_count = csum(border_cond.asu());
+
+        var is_single_dir =
+            all(border_cond == b32v4(true, false, true, false))
+            || all(border_cond == b32v4(false, true, false, true));
+
+        return border_count switch
+        {
+            0 => 6,
+            1 => 12,
+            2 => is_single_dir ? 24u : 42,
+            3 => 30,
+            _ => 42,
+        };
+    }
 
     #endregion
 

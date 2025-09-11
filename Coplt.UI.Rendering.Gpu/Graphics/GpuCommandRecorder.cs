@@ -1,6 +1,9 @@
-﻿namespace Coplt.UI.Rendering.Gpu.Graphics;
+﻿using Coplt.Dropping;
 
-public abstract class GpuCommandRecorder
+namespace Coplt.UI.Rendering.Gpu.Graphics;
+
+[Dropping(Unmanaged = true)]
+public abstract partial class GpuCommandRecorder
 {
     
 }

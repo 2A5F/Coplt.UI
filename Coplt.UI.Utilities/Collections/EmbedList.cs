@@ -188,6 +188,11 @@ public struct EmbedList<T> : IList<T>, IReadOnlyList<T>
         }
     }
 
+    public void UnsafeClear()
+    {
+        m_size = 0;
+    }
+
     #endregion
 
     #region Insert

@@ -7,6 +7,8 @@ namespace Coplt.UI.Rendering.Gpu;
 [Dropping]
 internal sealed partial class BoxDataSource(GpuRendererBackend Backend)
 {
+    public GpuRendererBackend Backend { get; } = Backend;
+
     internal const uint BoxDataBufferSize = 1024;
     internal EmbedList<GpuUploadList> m_buffers;
     internal uint m_current_buffer_offset = 0;
@@ -66,6 +68,7 @@ internal unsafe struct BoxDataHandle(BoxDataSource? Source)
 {
     public readonly BoxDataSource? Source = Source;
     public int Handle { get; private set; } = -1;
+    public uint VertexCount { get; private set; }
 
     internal ref readonly BoxDataHandleSlot Slot => ref Source!.m_slots[Handle];
 
@@ -81,11 +84,12 @@ internal unsafe struct BoxDataHandle(BoxDataSource? Source)
 
     public bool IsNull => Source == null;
 
-    public void Update(BoxData data)
+    public void Update(in BoxData data)
     {
         var old_handle = Handle;
         Handle = Source!.RentSlot();
         if (old_handle >= 0) Source!.ReturnSlot(old_handle);
+        VertexCount = Source.Backend.CalcVertexCount(in data);
         var slot = Slot;
         var buffer = Source!.m_buffers[(int)slot.Buffer];
         var ptr = &((BoxData*)buffer.MappedPtr)[slot.Index];
@@ -100,4 +104,3 @@ internal unsafe struct BoxDataHandle(BoxDataSource? Source)
         this = new(null);
     }
 }
-       

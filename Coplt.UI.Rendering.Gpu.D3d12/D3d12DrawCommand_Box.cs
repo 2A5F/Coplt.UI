@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
-public struct DrawCommand_Box
+public struct D3d12DrawCommand_Box
 {
     public ConstantBufferViewDesc ViewData;
     public ulong Batches;

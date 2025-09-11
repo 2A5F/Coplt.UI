@@ -15,6 +15,8 @@ public abstract partial class GpuRendererBackend
 
     public abstract ulong CurrentFrame { get; }
 
+    public abstract uint CalcVertexCount(in BoxData data);
+
     public abstract GpuUploadList AllocUploadList(uint Stride, uint Count);
 
     public abstract void BeginFrame();

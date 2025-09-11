@@ -752,6 +752,7 @@ Box_Varying Box_Vertex(Box_Attrs input)
         );
         break;
     case 2:
+        // todo rewrite
         if (is_single_dir)
         {
             if (input.vid >= 24) return output;

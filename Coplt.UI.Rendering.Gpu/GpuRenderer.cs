@@ -16,7 +16,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 {
     #region Fields
 
-    [Drop]
+    [Drop(Order = 10)]
     public GpuRendererBackend Backend { get; } = Backend;
     public UIDocument<GpuRd, TEd> Document { get; } = Document;
     [Drop]
@@ -56,7 +56,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         m_height = Height;
         m_max_z = 1;
         var changed = UpdateOn(Document.Root) || LayoutChanged;
-        // if (LayoutChanged) Record();
+        if (LayoutChanged) Record();
         return changed;
     }
 
@@ -106,119 +106,13 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
 
     #region Record
 
-    private RecordContext m_record_context = new();
+    [Drop]
+    private RecordContext<TEd> m_record_context = new(Backend);
 
     private void Record()
     {
         if (m_width == 0 || m_height == 0) return;
         m_record_context.Record(Document.Root);
-    }
-
-    private struct RecordContext()
-    {
-        #region Fields
-
-        private GpuCommandRecorder Recorder = null!; // todo
-
-        private EmbedList<GpuRenderLayer> m_layers;
-
-        private EmbedList<UIElement<GpuRd, TEd>> m_cur_elements;
-        private EmbedList<UIElement<GpuRd, TEd>> m_next_elements;
-
-        private GpuRenderLayer? m_cur_layer_opaque; // todo pool
-        private GpuRenderLayer? m_cur_layer_alpha; // todo pool
-
-        private int m_clip_layer_start = 0;
-
-        #endregion
-
-        #region Swap
-
-        private void SwapElements() => (m_cur_elements, m_next_elements) = (m_next_elements, m_cur_elements);
-
-        #endregion
-
-        #region AllocLayer
-
-        private GpuRenderLayer GetOrAllocLayer(GpuRenderLayerType type) => type switch
-        {
-            GpuRenderLayerType.Opaque => m_cur_layer_opaque ??= AllocLayer(type, false),
-            GpuRenderLayerType.Alpha => m_cur_layer_alpha ??= AllocLayer(type, false),
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-        };
-
-        private GpuRenderLayer AllocLayer(GpuRenderLayerType type, bool clip)
-        {
-            // todo pool
-            GpuRenderLayer layer = new()
-            {
-                Type = type,
-                ScissorRect = default,
-                Clip = clip,
-            };
-            if (type is GpuRenderLayerType.Opaque) m_layers.Insert(m_clip_layer_start, layer);
-            else m_layers.Add(layer);
-            return layer;
-        }
-
-        #endregion
-
-        #region Reset
-
-        private void Reset()
-        {
-            m_cur_layer_opaque = null; // todo pool
-            m_cur_layer_alpha = null; // todo pool
-            m_clip_layer_start = 0;
-            m_layers.Clear();
-            m_cur_elements.Clear();
-            m_next_elements.Clear();
-        }
-
-        #endregion
-
-        #region Record
-
-        // Breadth-first traversal batching
-        public void Record(UIElement<GpuRd, TEd> root)
-        {
-            Reset();
-            RecordOn(root);
-            SwapElements();
-            for (; m_cur_elements.Count > 0; m_cur_elements.Clear(), SwapElements())
-            {
-                // Each alpha layer needs to be blended
-                m_cur_layer_alpha = null; // todo pool
-                foreach (var parent in m_cur_elements)
-                {
-                    foreach (var element in parent)
-                    {
-                        RecordOn(element);
-                    }
-                }
-            }
-        }
-
-        #endregion
-
-        #region RecordOn
-
-        private void RecordOn(UIElement<GpuRd, TEd> element)
-        {
-            ref var rd = ref Unsafe.AsRef(in element.RData);
-            ref readonly var fl = ref element.FinalLayout;
-            ref readonly var cs = ref element.CommonStyle;
-            ref readonly var rs = ref rd.GpuStyle;
-
-            // todo clip; 需要裁剪时，不直接添加到 m_next_elements，单独维护裁剪层
-            if (element.Count > 0) m_next_elements.Add(element);
-
-            if (!rs.IsVisible) return;
-            var layer = GetOrAllocLayer(rs.IsOpaque ? GpuRenderLayerType.Opaque : GpuRenderLayerType.Alpha);
-            layer.AddItem(rd.m_box_data.Data);
-        }
-
-        #endregion
     }
 
     #endregion
@@ -282,6 +176,123 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     public void BeginFrame() => Backend.BeginFrame();
 
     public void EndFrame() => Backend.EndFrame();
+
+    #endregion
+}
+
+[Dropping(Unmanaged = true)]
+internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd : new()
+{
+    #region Fields
+
+    // [Drop]
+    private GpuCommandRecorder Recorder = null!; // todo
+
+    [Drop]
+    private readonly GpuRenderLayerPool m_layer_pool = new(Backend);
+    private EmbedList<GpuRenderLayer> m_layers;
+
+    private EmbedList<UIElement<GpuRd, TEd>> m_cur_elements;
+    private EmbedList<UIElement<GpuRd, TEd>> m_next_elements;
+
+    private GpuRenderLayer? m_cur_layer_opaque;
+    private GpuRenderLayer? m_cur_layer_alpha;
+
+    private int m_clip_layer_start = 0;
+
+    #endregion
+
+    #region Swap
+
+    private void SwapElements() => (m_cur_elements, m_next_elements) = (m_next_elements, m_cur_elements);
+
+    #endregion
+
+    #region AllocLayer
+
+    private GpuRenderLayer GetOrAllocLayer(GpuRenderLayerType type) => type switch
+    {
+        GpuRenderLayerType.Opaque => m_cur_layer_opaque ??= AllocLayer(type, false),
+        GpuRenderLayerType.Alpha => m_cur_layer_alpha ??= AllocLayer(type, false),
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+    };
+
+    private GpuRenderLayer AllocLayer(GpuRenderLayerType type, bool clip)
+    {
+        var layer = m_layer_pool.RentLayer();
+        layer.Type = type;
+        layer.ScissorRect = default;
+        layer.Clip = clip;
+        if (type is GpuRenderLayerType.Opaque) m_layers.Insert(m_clip_layer_start, layer);
+        else m_layers.Add(layer);
+        return layer;
+    }
+
+    #endregion
+
+    #region Reset
+
+    private void ClearLayer()
+    {
+        foreach (ref var layer in m_layers)
+        {
+            m_layer_pool.ReturnLayer(ref layer!);
+        }
+        m_layers.UnsafeClear();
+    }
+
+    private void Reset()
+    {
+        m_cur_layer_opaque = null!;
+        m_cur_layer_alpha = null!;
+        m_clip_layer_start = 0;
+        ClearLayer();
+        m_cur_elements.Clear();
+        m_next_elements.Clear();
+    }
+
+    #endregion
+
+    #region Record
+
+    // Breadth-first traversal batching
+    public void Record(UIElement<GpuRd, TEd> root)
+    {
+        Reset();
+        RecordOn(root);
+        SwapElements();
+        for (; m_cur_elements.Count > 0; m_cur_elements.Clear(), SwapElements())
+        {
+            // Each alpha layer needs to be blended
+            m_cur_layer_alpha = null;
+            foreach (var parent in m_cur_elements)
+            {
+                foreach (var element in parent)
+                {
+                    RecordOn(element);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region RecordOn
+
+    private void RecordOn(UIElement<GpuRd, TEd> element)
+    {
+        ref var rd = ref Unsafe.AsRef(in element.RData);
+        ref readonly var fl = ref element.FinalLayout;
+        ref readonly var cs = ref element.CommonStyle;
+        ref readonly var rs = ref rd.GpuStyle;
+
+        // todo clip; 需要裁剪时，不直接添加到 m_next_elements，单独维护裁剪层
+        if (element.Count > 0) m_next_elements.Add(element);
+
+        if (!rs.IsVisible) return;
+        var layer = GetOrAllocLayer(rs.IsOpaque ? GpuRenderLayerType.Opaque : GpuRenderLayerType.Alpha);
+        layer.AddItem(in rd.m_box_data);
+    }
 
     #endregion
 }

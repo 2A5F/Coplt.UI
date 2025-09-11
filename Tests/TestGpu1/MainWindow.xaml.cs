@@ -160,7 +160,7 @@ public partial class MainWindow
             catch (Exception exception)
             {
                 Console.WriteLine(exception);
-                Application.Current.Shutdown();
+                Application.Current.Dispatcher.InvokeShutdown();
             }
         });
         m_render_thread.Start();
