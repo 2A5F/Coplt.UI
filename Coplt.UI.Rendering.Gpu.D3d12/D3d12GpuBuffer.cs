@@ -10,7 +10,7 @@ public sealed unsafe partial class D3d12GpuBuffer
 {
     #region Fields
 
-    public readonly GpuRendererBackendD3d12 Backend;
+    public readonly D3d12RendererBackend Backend;
 
     [Drop]
     internal ComPtr<ID3D12Resource> m_resource;
@@ -35,7 +35,7 @@ public sealed unsafe partial class D3d12GpuBuffer
 
     #region Ctor
 
-    public D3d12GpuBuffer(GpuRendererBackendD3d12 Backend, ulong Size, bool UseGpuUpload = false)
+    public D3d12GpuBuffer(D3d12RendererBackend Backend, ulong Size, bool UseGpuUpload = false)
     {
         this.Backend = Backend;
         this.Size = Size;
@@ -101,7 +101,7 @@ public sealed unsafe partial class D3d12GpuBuffer
 
     #region Upload
 
-    public static D3d12GpuBuffer Upload(GpuRendererBackendD3d12 Backend, ReadOnlySpan<byte> data)
+    public static D3d12GpuBuffer Upload(D3d12RendererBackend Backend, ReadOnlySpan<byte> data)
     {
         if (Backend.GPUUploadHeapSupported)
         {
@@ -147,7 +147,7 @@ public sealed unsafe partial class D3d12GpuBuffer
         Size = Size,
     };
 
-    public static void BatchBarrier_CopyDst_To_Mesh(GpuRendererBackendD3d12 Backend, params ReadOnlySpan<D3d12GpuBuffer> buffers)
+    public static void BatchBarrier_CopyDst_To_Mesh(D3d12RendererBackend Backend, params ReadOnlySpan<D3d12GpuBuffer> buffers)
     {
         if (Backend.EnhancedBarriersSupported)
         {

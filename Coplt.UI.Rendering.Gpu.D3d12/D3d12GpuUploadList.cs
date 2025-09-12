@@ -21,12 +21,13 @@ public sealed unsafe partial class D3d12GpuUploadList : GpuUploadList
     public ref readonly ComPtr<ID3D12Resource> Resource => ref Inner.Resource;
     public ref readonly ComPtr<ID3D12Resource2> Resource2 => ref Inner.Resource2;
     public override void* MappedPtr => Inner.MappedPtr;
+    public ref readonly ulong GpuVPtr => ref Inner.GpuVPtr;
 
     #endregion
 
     #region Ctor
 
-    public D3d12GpuUploadList(GpuRendererBackendD3d12 Backend, uint Stride, uint Count)
+    public D3d12GpuUploadList(D3d12RendererBackend Backend, uint Stride, uint Count)
     {
         Inner = new(Backend, Stride, Count);
     }
@@ -51,7 +52,7 @@ public sealed unsafe partial class D3d12GpuUploadListInner
 {
     #region Fields
 
-    public readonly GpuRendererBackendD3d12 Backend;
+    public readonly D3d12RendererBackend Backend;
 
     [Drop]
     internal ComPtr<ID3D12Resource> m_resource;
@@ -60,9 +61,9 @@ public sealed unsafe partial class D3d12GpuUploadListInner
 
     internal readonly void* m_mapped_ptr;
 
-    private D3d12DescId m_srv_id;
+    internal readonly ulong m_gpu_v_ptr;
 
-    public ref readonly D3d12DescId SrvId => ref m_srv_id;
+    private D3d12DescId m_srv_id;
 
     #endregion
 
@@ -73,12 +74,14 @@ public sealed unsafe partial class D3d12GpuUploadListInner
     public ref readonly ComPtr<ID3D12Resource> Resource => ref m_resource;
     public ref readonly ComPtr<ID3D12Resource2> Resource2 => ref m_resource2;
     public ref readonly void* MappedPtr => ref m_mapped_ptr;
+    public ref readonly D3d12DescId SrvId => ref m_srv_id;
+    public ref readonly ulong GpuVPtr => ref m_gpu_v_ptr;
 
     #endregion
 
     #region Ctor
 
-    public D3d12GpuUploadListInner(GpuRendererBackendD3d12 Backend, uint Stride, uint Count)
+    public D3d12GpuUploadListInner(D3d12RendererBackend Backend, uint Stride, uint Count)
     {
         this.Backend = Backend;
         this.Stride = Stride;
@@ -133,7 +136,7 @@ public sealed unsafe partial class D3d12GpuUploadListInner
             m_resource.Handle->QueryInterface(out m_resource2);
         }
         m_resource.Handle->Map(0, null, ref m_mapped_ptr).TryThrowHResult();
-
+        m_gpu_v_ptr = m_resource.Handle->GetGPUVirtualAddress();
         m_srv_id = Backend.CreateSrv(m_resource, new ShaderResourceViewDesc
         {
             Format = Format.FormatUnknown,

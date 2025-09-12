@@ -3,19 +3,25 @@ using System.Runtime.CompilerServices;
 
 namespace Coplt.UI.Rendering.Gpu.Utilities;
 
-[InlineArray(3)]
-public struct FixedArray3<T>
+public static class InlineArrayExtensions
 {
-    private T _;
-
-    [UnscopedRef]
-    public Span<T> AsSpan => this;
-}
-
-public static class FixedArrays
-{
-    extension<T>(FixedArray3<T> array) where T : IDisposable
+    extension<T>(ref InlineArray3<T> array) where T : IDisposable
     {
+        public Span<T> AsSpan => array;
+
+        public void Dispose()
+        {
+            foreach (var item in array)
+            {
+                item.Dispose();
+            }
+        }
+    }
+
+    extension<T>(ref InlineArray4<T> array) where T : IDisposable
+    {
+        public Span<T> AsSpan => array;
+
         public void Dispose()
         {
             foreach (var item in array)

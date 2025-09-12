@@ -57,8 +57,7 @@ public record struct GpuStyle()
         && BorderColor.Top.a is >= 1 or 0
         && BorderColor.Right.a is >= 1 or 0
         && BorderColor.Bottom.a is >= 1 or 0
-        && BorderColor.Left.a is >= 1 or 0
-        && BorderRadius is { TopLeft: 0, TopRight: 0, BottomLeft: 0, BottomRight: 0 };
+        && BorderColor.Left.a is >= 1 or 0;
 
     #endregion
 }

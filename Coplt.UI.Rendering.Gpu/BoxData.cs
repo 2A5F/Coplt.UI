@@ -64,9 +64,15 @@ public record struct BoxDataHandleData(uint Buffer, uint Index)
     public uint Index = Index;
 }
 
-internal unsafe struct BoxDataHandle(BoxDataSource? Source)
+public unsafe struct BoxDataHandle
 {
-    public readonly BoxDataSource? Source = Source;
+    internal readonly BoxDataSource? Source;
+
+    internal BoxDataHandle(BoxDataSource? source)
+    {
+        Source = source;
+    }
+
     public int Handle { get; private set; } = -1;
     public uint VertexCount { get; private set; }
 

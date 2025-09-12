@@ -42,7 +42,7 @@ public sealed unsafe partial class D3d12GraphicsPipeline
 {
     #region Fields
 
-    public GpuRendererBackendD3d12 Backend { get; }
+    public D3d12RendererBackend Backend { get; }
     public D3d12RootSignature RootSignature { get; }
 
     [Drop]
@@ -59,7 +59,7 @@ public sealed unsafe partial class D3d12GraphicsPipeline
     #region Ctor
 
     public D3d12GraphicsPipeline(
-        GpuRendererBackendD3d12 Backend,
+        D3d12RendererBackend Backend,
         D3d12RootSignature RootSignature,
         ReadOnlySpan<byte> VertexShader,
         ReadOnlySpan<byte> PixelShader,

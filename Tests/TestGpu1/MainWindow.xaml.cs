@@ -18,7 +18,7 @@ public partial class MainWindow
     [Drop(Order = -1)]
     private readonly UIDocument<GpuRd, object> document = new();
     private readonly D3d12GpuContext context;
-    private readonly HwndSwapChain swap_chain;
+    private readonly D3d12HwndSwapChain swap_chain;
     [Drop(Order = 0)]
     private readonly GpuRenderer<object> renderer;
 
@@ -50,7 +50,7 @@ public partial class MainWindow
         {
             VSync = true,
         };
-        renderer = new(new GpuRendererBackendD3d12(context, swap_chain), document)
+        renderer = new(new D3d12RendererBackend(context, swap_chain), document)
         {
             ClearBackgroundColor = Color.White,
         };
@@ -129,7 +129,7 @@ public partial class MainWindow
             try
             {
                 var last_frame = 0;
-                var max_frame = HwndSwapChain.FrameCount;
+                var max_frame = D3d12HwndSwapChain.FrameCount;
                 while (running)
                 {
                     var is_first = first;

@@ -10,7 +10,7 @@ public sealed unsafe partial class D3d12GpuUploadBuffer
 {
     #region Fields
 
-    public readonly GpuRendererBackendD3d12 Backend;
+    public readonly D3d12RendererBackend Backend;
 
     [Drop]
     internal ComPtr<ID3D12Resource> m_resource;
@@ -36,7 +36,7 @@ public sealed unsafe partial class D3d12GpuUploadBuffer
 
     #region Ctor
 
-    public D3d12GpuUploadBuffer(GpuRendererBackendD3d12 Backend, ulong Size, bool AllowGpuUpload = true)
+    public D3d12GpuUploadBuffer(D3d12RendererBackend Backend, ulong Size, bool AllowGpuUpload = true)
     {
         this.Backend = Backend;
         this.Size = Size;

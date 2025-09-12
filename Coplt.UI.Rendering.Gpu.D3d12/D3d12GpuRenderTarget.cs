@@ -12,7 +12,7 @@ public sealed unsafe partial class D3d12GpuRenderTarget : D3d12RenderTarget
 {
     #region Fields
 
-    public GpuRendererBackendD3d12 Backend { get; }
+    public D3d12RendererBackend Backend { get; }
 
     [Drop]
     internal ComPtr<ID3D12Resource> m_resource;
@@ -40,7 +40,7 @@ public sealed unsafe partial class D3d12GpuRenderTarget : D3d12RenderTarget
     #region Ctor
 
     public D3d12GpuRenderTarget(
-        GpuRendererBackendD3d12 Backend,
+        D3d12RendererBackend Backend,
         Format Format, uint Width, uint Height, uint SampleCount = 1, uint SampleQuality = 0, Color? ClearBackgroundColor = null
     )
     {

@@ -11,7 +11,7 @@ using Silk.NET.DXGI;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
+public sealed unsafe partial class D3d12HwndSwapChain : D3d12RenderTarget
 {
     #region Consts
 
@@ -30,8 +30,8 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
     internal ComPtr<ID3D12DescriptorHeap> m_rtv_heap;
 
     [Drop]
-    internal FixedArray3<ComPtr<ID3D12Resource>> m_buffers;
-    internal FixedArray3<ulong> m_fence_values;
+    internal InlineArray3<ComPtr<ID3D12Resource>> m_buffers;
+    internal InlineArray3<ulong> m_fence_values;
 
     internal int m_frame_index;
     internal readonly uint rtv_descriptor_size;
@@ -67,7 +67,7 @@ public sealed unsafe partial class HwndSwapChain : D3d12RenderTarget
 
     #region Ctor
 
-    public HwndSwapChain(D3d12GpuContext Context, IntPtr Hwnd, uint2 Size)
+    public D3d12HwndSwapChain(D3d12GpuContext Context, IntPtr Hwnd, uint2 Size)
     {
         this.Context = Context;
 

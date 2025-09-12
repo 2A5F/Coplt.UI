@@ -64,7 +64,7 @@ public sealed unsafe partial class D3d12RootSignature
 
     #region Fields
 
-    public GpuRendererBackendD3d12 Backend { get; }
+    public D3d12RendererBackend Backend { get; }
 
     [Drop]
     internal ComPtr<ID3D12RootSignature> m_root_signature;
@@ -80,7 +80,7 @@ public sealed unsafe partial class D3d12RootSignature
     #region Ctor
 
     public D3d12RootSignature(
-        GpuRendererBackendD3d12 Backend,
+        D3d12RendererBackend Backend,
         ReadOnlySpan<RootParameter> Params
     )
     {

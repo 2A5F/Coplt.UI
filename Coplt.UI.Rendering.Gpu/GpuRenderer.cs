@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.Mathematics;
 using Coplt.UI.Collections;
@@ -29,12 +28,6 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     }
 
     private float m_max_z;
-
-    private List<UIElement<GpuRd, TEd>> m_tmp_next_elements = new();
-    private List<UIElement<GpuRd, TEd>> m_tmp_next_elements_back = new();
-    private List<BoxDataHandleData> m_tmp_batch_data = new();
-
-    private void SwapTmpNextElements() => (m_tmp_next_elements, m_tmp_next_elements_back) = (m_tmp_next_elements_back, m_tmp_next_elements);
 
     private uint m_width;
     private uint m_height;
@@ -112,7 +105,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
     private void Record()
     {
         if (m_width == 0 || m_height == 0) return;
-        m_record_context.Record(Document.Root);
+        m_record_context.Record(Document.Root, m_width, m_height, m_max_z);
     }
 
     #endregion
@@ -129,44 +122,7 @@ public sealed partial class GpuRenderer<TEd>(GpuRendererBackend Backend, UIDocum
         if (ClearBackgroundColor.HasValue) Backend.ClearBackground(ClearBackgroundColor.Value);
 
         Backend.SetViewPort(0, 0, m_width, m_height, m_max_z);
-
-        m_tmp_next_elements_back.Clear();
-        m_tmp_next_elements_back.Add(Document.Root);
-        for (; m_tmp_next_elements_back.Count > 0; SwapTmpNextElements())
-        {
-            m_tmp_next_elements.Clear();
-            foreach (var parent in m_tmp_next_elements_back)
-            {
-                foreach (var element in parent)
-                {
-                    Render(element);
-                }
-            }
-            if (m_tmp_batch_data.Count > 0)
-            {
-                Backend.DrawBox(m_tmp_batch_data.Span);
-                m_tmp_batch_data.Clear();
-            }
-        }
-
-        m_tmp_next_elements.Clear();
-        m_tmp_next_elements_back.Clear();
-    }
-
-    // todo batch
-    private void Render(UIElement<GpuRd, TEd> element)
-    {
-        ref var rd = ref Unsafe.AsRef(in element.RData);
-        ref readonly var fl = ref element.FinalLayout;
-        ref readonly var cs = ref element.CommonStyle;
-        ref readonly var rs = ref rd.GpuStyle;
-
-        if (rs.IsVisible)
-        {
-            m_tmp_batch_data.Add(rd.m_box_data.Data);
-        }
-
-        if (element.Count != 0) m_tmp_next_elements.Add(element);
+        m_record_context.Render();
     }
 
     #endregion
@@ -186,10 +142,7 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
     #region Fields
 
     [Drop]
-    private readonly GpuCommandRecorder Recorder = Backend.CreateCommandRecorder();
-
-    [Drop]
-    private readonly GpuRenderLayerPool m_layer_pool = new(Backend);
+    private readonly GpuRenderLayerManager m_layer_manager = Backend.CreateRenderLayerPool();
     private EmbedList<GpuRenderLayer> m_layers;
 
     private EmbedList<UIElement<GpuRd, TEd>> m_cur_elements;
@@ -219,10 +172,10 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
 
     private GpuRenderLayer AllocLayer(GpuRenderLayerType type, bool clip)
     {
-        var layer = m_layer_pool.RentLayer();
-        layer.Type = type;
-        layer.ScissorRect = default;
-        layer.Clip = clip;
+        var layer = m_layer_manager.RentLayer();
+        layer.Data.Type = type;
+        layer.Data.ScissorRect = default;
+        layer.Data.Clip = clip;
         if (type is GpuRenderLayerType.Opaque) m_layers.Insert(m_clip_layer_start, layer);
         else m_layers.Add(layer);
         return layer;
@@ -236,12 +189,12 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
     {
         foreach (ref var layer in m_layers)
         {
-            m_layer_pool.ReturnLayer(ref layer!);
+            m_layer_manager.ReturnLayer(ref layer!);
         }
         m_layers.UnsafeClear();
     }
 
-    private void Reset()
+    private void Reset(uint Width, uint Height, float MaxZ)
     {
         m_cur_layer_opaque = null!;
         m_cur_layer_alpha = null!;
@@ -249,6 +202,7 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
         ClearLayer();
         m_cur_elements.Clear();
         m_next_elements.Clear();
+        m_layer_manager.Reset(Width, Height, MaxZ);
     }
 
     #endregion
@@ -256,9 +210,9 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
     #region Record
 
     // Breadth-first traversal batching
-    public void Record(UIElement<GpuRd, TEd> root)
+    public void Record(UIElement<GpuRd, TEd> root, uint Width, uint Height, float MaxZ)
     {
-        Reset();
+        Reset(Width, Height, MaxZ);
         RecordOn(root);
         SwapElements();
         for (; m_cur_elements.Count > 0; m_cur_elements.Clear(), SwapElements())
@@ -273,6 +227,7 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
                 }
             }
         }
+        m_layer_manager.Record(m_layers.AsSpan);
     }
 
     #endregion
@@ -292,6 +247,15 @@ internal partial struct RecordContext<TEd>(GpuRendererBackend Backend) where TEd
         if (!rs.IsVisible) return;
         var layer = GetOrAllocLayer(rs.IsOpaque ? GpuRenderLayerType.Opaque : GpuRenderLayerType.Alpha);
         layer.AddItem(in rd.m_box_data);
+    }
+
+    #endregion
+
+    #region Render
+
+    public void Render()
+    {
+        m_layer_manager.Render(m_layers.AsSpan);
     }
 
     #endregion

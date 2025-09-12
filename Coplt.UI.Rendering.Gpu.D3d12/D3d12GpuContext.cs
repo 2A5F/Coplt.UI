@@ -54,14 +54,14 @@ public unsafe partial class D3d12GpuContext : ID3d12RecyclablePoolSource
     internal ComPtr<ID3D12Fence> m_fence;
 
     [Drop]
-    internal FixedArray3<ComPtr<ID3D12CommandAllocator>> m_cmd_allocator;
+    internal InlineArray3<ComPtr<ID3D12CommandAllocator>> m_cmd_allocator;
     [Drop]
     internal ComPtr<ID3D12GraphicsCommandList> m_command_list;
     [Drop]
     internal ComPtr<ID3D12GraphicsCommandList7> m_command_list7;
 
     internal EventWaitHandle m_event;
-    internal FixedArray3<ulong> m_fence_values = default;
+    internal InlineArray3<ulong> m_fence_values = default;
     internal ulong fence_value;
     internal int m_cur_frame;
     internal uint m_callback_cookie;

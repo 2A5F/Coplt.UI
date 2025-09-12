@@ -8,7 +8,7 @@ using Silk.NET.Direct3D12;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public sealed unsafe partial class D3d12FrameUploadPool(GpuRendererBackendD3d12 Backend)
+public sealed unsafe partial class D3d12FrameUploadPool(D3d12RendererBackend Backend)
 {
     #region Consts
 
@@ -41,7 +41,7 @@ public sealed unsafe partial class D3d12FrameUploadPool(GpuRendererBackendD3d12 
 
     #region Fields
 
-    public GpuRendererBackendD3d12 Backend { get; } = Backend;
+    public D3d12RendererBackend Backend { get; } = Backend;
 
     internal readonly List<BufferItem> m_buffers = new();
 
@@ -155,6 +155,12 @@ public sealed unsafe partial class D3d12FrameUploadPool(GpuRendererBackendD3d12 
         return new(Count, range.Pointer, range.GpuVPtr, range.Resource, range.Offset);
     }
 
+    public UploadRange<T> Alloc<T>(uint Count = 1, ulong Align = 256) where T : unmanaged
+    {
+        var range = Alloc((ulong)(sizeof(T) * Count), Align);
+        return new((int)Count, range.Pointer, range.GpuVPtr, range.Resource, range.Offset);
+    }
+
     public UploadRange<T> Alloc<T>(T Value, ulong Align = 256) where T : unmanaged
     {
         var range = Alloc<T>(1, Align);
@@ -230,7 +236,10 @@ public readonly unsafe struct UploadRange<T>(int Count, void* Pointer, ulong Gpu
     #region View
 
     public Span<T> GetSpan() => new(Pointer, Count);
-    public ref T View() => ref Unsafe.AsRef<T>(Pointer);
+    public ref T View() => ref *(T*)Pointer;
+
+    public ref T this[int index] => ref ((T*)Pointer)[index];
+    public ref T this[uint index] => ref ((T*)Pointer)[index];
 
     #endregion
 }

@@ -10,7 +10,7 @@ public sealed unsafe partial class D3d12CommandSignature
 {
     #region Fields
 
-    public GpuRendererBackendD3d12 Backend { get; }
+    public D3d12RendererBackend Backend { get; }
     public D3d12RootSignature RootSignature { get; }
 
     [Drop]
@@ -27,7 +27,7 @@ public sealed unsafe partial class D3d12CommandSignature
     #region Ctor
 
     public D3d12CommandSignature(
-        GpuRendererBackendD3d12 Backend, D3d12RootSignature RootSignature,
+        D3d12RendererBackend Backend, D3d12RootSignature RootSignature,
         uint ByteStride, ReadOnlySpan<IndirectArgumentDesc> args
     )
     {

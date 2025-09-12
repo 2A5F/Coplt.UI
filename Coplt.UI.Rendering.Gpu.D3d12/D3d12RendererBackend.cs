@@ -15,7 +15,7 @@ using Feature = Silk.NET.Direct3D12.Feature;
 namespace Coplt.UI.Rendering.Gpu.D3d12;
 
 [Dropping(Unmanaged = true)]
-public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
+public unsafe partial class D3d12RendererBackend : GpuRendererBackend
 {
     #region Silk
 
@@ -84,7 +84,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     #region RecyclablePack
 
     [Dropping(Unmanaged = true)]
-    internal sealed partial class RecyclablePack(D3d12RecyclablePool<RecyclablePack> Pool, GpuRendererBackendD3d12 Backend)
+    internal sealed partial class RecyclablePack(D3d12RecyclablePool<RecyclablePack> Pool, D3d12RendererBackend Backend)
         : AD3d12Recyclable<RecyclablePack>(Pool)
     {
         [Drop]
@@ -132,7 +132,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     #region Shader
 
     [Drop(Order = 3)]
-    public D3d12RootSignature RootSignature_Box { get; }
+    public D3d12RootSignature RootSignature { get; }
     [Drop(Order = 3)]
     public D3d12CommandSignature CommandSignature_Box { get; }
     [Drop(Order = 3)]
@@ -146,7 +146,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     /// <param name="Context">Context's dispose will be called</param>
     /// <param name="RenderTarget">RenderTarget's dispose will be called</param>
-    public GpuRendererBackendD3d12(D3d12GpuContext Context, D3d12RenderTarget RenderTarget)
+    public D3d12RendererBackend(D3d12GpuContext Context, D3d12RenderTarget RenderTarget)
         : this(Context.m_device, Context.m_queue, Context.m_command_list, Context, RenderTarget, Context.DebugEnabled)
     {
         this.Context = Context;
@@ -155,7 +155,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     /// <summary>
     /// Will call AddRef
     /// </summary>
-    public GpuRendererBackendD3d12(
+    public D3d12RendererBackend(
         ComPtr<ID3D12Device1> Device,
         ComPtr<ID3D12CommandQueue> Queue,
         ComPtr<ID3D12GraphicsCommandList> List,
@@ -257,7 +257,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #region RootSignature
 
-        RootSignature_Box = new D3d12RootSignature(this, [
+        RootSignature = new D3d12RootSignature(this, [
             // ViewData
             new RootParameter
             {
@@ -286,15 +286,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #region CommandSignature
 
-        CommandSignature_Box = new D3d12CommandSignature(this, RootSignature_Box, (uint)sizeof(D3d12DrawCommand_Box), [
-            new()
-            {
-                Type = IndirectArgumentType.ConstantBufferView,
-                ConstantBufferView = new()
-                {
-                    RootParameterIndex = 1,
-                },
-            },
+        CommandSignature_Box = new D3d12CommandSignature(this, RootSignature, (uint)sizeof(D3d12DrawCommand_Box), [
             new()
             {
                 Type = IndirectArgumentType.ShaderResourceView,
@@ -313,7 +305,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
         #region Shader
 
-        var asm = typeof(GpuRendererBackendD3d12).Assembly;
+        var asm = typeof(D3d12RendererBackend).Assembly;
 
         {
             var box_vertex = asm.GetManifestResourceSpan(".shaders/Box.Vertex.dxil");
@@ -359,7 +351,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
             };
 
             Pipeline_Box_NoDepth = new D3d12GraphicsPipeline(
-                this, RootSignature_Box,
+                this, RootSignature,
                 box_vertex, box_pixel,
                 RenderTarget.Format,
                 Format.FormatUnknown,
@@ -373,7 +365,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
             );
 
             Pipeline_Box_Depth = new D3d12GraphicsPipeline(
-                this, RootSignature_Box,
+                this, RootSignature,
                 box_vertex, box_pixel,
                 RenderTarget.Format,
                 Format.FormatD24UnormS8Uint,
@@ -478,9 +470,9 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #endregion
 
-    #region CreateCommandRecorder
+    #region CreateRenderLayerPool
 
-    public override GpuCommandRecorder CreateCommandRecorder() => new D3d12CommandRecorder(this);
+    public override GpuRenderLayerManager CreateRenderLayerPool() => new D3d12RenderLayerManager(this);
 
     #endregion
 
@@ -490,6 +482,11 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
     {
         m_pack = m_pack_pool.Rent() ?? new(m_pack_pool, this);
         m_command_list.Handle->SetDescriptorHeaps(1, m_res_heap);
+        m_command_list.Handle->SetGraphicsRootSignature(RootSignature.m_root_signature);
+        m_command_list.Handle->SetGraphicsRootDescriptorTable(0, m_res_heap_start_G);
+        m_command_list.Handle->IASetPrimitiveTopology(D3DPrimitiveTopology.D3DPrimitiveTopologyTrianglelist);
+        var rt = m_pack.GetMsaaRt();
+        m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
     }
 
     public override void EndFrame()
@@ -705,13 +702,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
 
     #region SetViewPort
 
-    private record struct ViewData
-    {
-        public float4 ViewSize;
-        public float4x4 VP;
-    }
-
-    private UploadRange<ViewData> m_cur_view_data;
+    internal UploadRange<ViewData> m_cur_view_data;
 
     public override void SetViewPort(uint Left, uint Top, uint Width, uint Height, float MaxZ)
     {
@@ -727,6 +718,7 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
             ViewSize = new(Width, Height, 1f / Width, 1f / Height),
             VP = vp,
         });
+        m_command_list.Handle->SetGraphicsRootConstantBufferView(1, m_cur_view_data.GpuVPtr);
     }
 
     #endregion
@@ -738,17 +730,11 @@ public unsafe partial class GpuRendererBackendD3d12 : GpuRendererBackend
         if (Batches.IsEmpty) return;
 
         Debug.Assert(m_pack != null);
-        var rt = m_pack.GetMsaaRt();
 
         var batches = m_pack.FrameUploadBuffer.Alloc(Batches, (uint)sizeof(BoxDataHandleData));
 
-        m_command_list.Handle->SetGraphicsRootSignature(RootSignature_Box.m_root_signature);
-        m_command_list.Handle->SetGraphicsRootDescriptorTable(0, m_res_heap_start_G);
         m_command_list.Handle->SetPipelineState(Pipeline_Box_NoDepth.m_pipeline);
-        m_command_list.Handle->SetGraphicsRootConstantBufferView(1, m_cur_view_data.GpuVPtr);
         m_command_list.Handle->SetGraphicsRootShaderResourceView(2, batches.GpuVPtr);
-        m_command_list.Handle->IASetPrimitiveTopology(D3DPrimitiveTopology.D3DPrimitiveTopologyTrianglelist);
-        m_command_list.Handle->OMSetRenderTargets(1, rt.Rtv, false, null);
         m_command_list.Handle->DrawInstanced(42, (uint)batches.Count, 0, 0);
     }
 
