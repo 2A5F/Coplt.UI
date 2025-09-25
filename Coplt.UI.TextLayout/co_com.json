@@ -1,0 +1,14 @@
+{
+  "inputs": [
+    "./obj/ForCom/Coplt.UI.TextLayout.dll"
+  ],
+  "outputs": [
+    {
+      "type": "cpp",
+      "co_com_path": "CoCom.h",
+      "proj_name": "COPLT_UL_TEXT_LAYOUT",
+      "namespace": "Coplt",
+      "path": "../Coplt.Ui.TextLayout.Native/api"
+    }
+  ]
+}

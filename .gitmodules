@@ -1,0 +1,6 @@
+[submodule "Coplt.Com2"]
+	path = Coplt.Com2
+	url = https://github.com/2A5F/Coplt.Com2
+[submodule "vcpkg"]
+	path = vcpkg
+	url = https://github.com/microsoft/vcpkg

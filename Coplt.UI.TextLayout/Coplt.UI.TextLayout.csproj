@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Coplt.Com" Version="0.1.0"/>
+        <PackageReference Include="Coplt.Dropping" Version="0.6.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Coplt.Com2\Coplt.Com2\Coplt.Com2.csproj" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <Target Name="ReadyGenCom" AfterTargets="Build">
+        <MakeDir Directories="$(BaseIntermediateOutputPath)\ForCom"/>
+        <ItemGroup>
+            <AllTargetDirFiles Include="$(TargetDir)**\*"/>
+        </ItemGroup>
+        <Copy
+                SourceFiles="@(AllTargetDirFiles)"
+                DestinationFolder="$(BaseIntermediateOutputPath)\ForCom"
+                SkipUnchangedFiles="true"/>
+    </Target>
+
+    <Target Name="GenCom" AfterTargets="ReadyGenCom">
+        <Exec Command="..\Coplt.Com2\Coplt.Com2\bin\Release\net10.0\Coplt.Com2.exe" Condition="'$(Configuration)' == 'Release'"/>
+        <Exec Command="..\Coplt.Com2\Coplt.Com2\bin\Debug\net10.0\Coplt.Com2.exe" Condition="'$(Configuration)' == 'Debug'"/>
+    </Target>
+
+</Project>

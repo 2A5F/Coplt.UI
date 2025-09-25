@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "coplt.com2": {
+      "version": "0.1.0",
+      "commands": [
+        "cocom2"
+      ],
+      "rollForward": false
+    }
+  }
+}
