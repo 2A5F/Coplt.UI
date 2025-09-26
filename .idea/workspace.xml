@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="2823" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="2795" type="long" />
     <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
   </component>
   <component name="CMakePresetLoader">{
@@ -34,14 +34,41 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/vcpkg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/Attrs.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/Attrs.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/ComUtils.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/ComUtils.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/Coplt.Com.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/Coplt.Com.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/HResult.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/HResult.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/packages.lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com/packages.lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.Analyzer/Generators/InterfaceGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.Analyzer/Generators/InterfaceGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.Analyzer/Generators/Templates/TemplateComInterface.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.Analyzer/Generators/Templates/TemplateComInterface.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.DefineModel/StructDeclare.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.DefineModel/StructDeclare.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.DefineModel/TypeDeclare.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2.DefineModel/TypeDeclare.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/TypeSymbol.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/TypeSymbol.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Directory.Packages.props" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Directory.Packages.props" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Concepts.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Concepts.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Macros.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Macros.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.NullPointerError.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.NullPointerError.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Rc.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Rc.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Coplt.UI.TextLayout.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Coplt.UI.TextLayout.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFace.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/ILibTextLayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/ILibTextLayout.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/TextLayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/TextLayout.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.sln" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.sln" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Details.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Types.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/Com.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/Com.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/Face.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/Face.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vcpkg.json" beforeDir="false" afterPath="$PROJECT_DIR$/vcpkg.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,38 +98,41 @@
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
   </component>
+  <component name="ProjectStatusUIService">{
+  &quot;uiKindId&quot;: &quot;Widget&quot;
+}</component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.west.config.association.type.startup.service&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Proj/NetProj/Coplt.UI&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.west.config.association.type.startup.service": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "D:/Proj/NetProj/Coplt.UI",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "CPPToolchains",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.TextLayout.Native">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="Com" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Com" CONFIG_NAME="Main - Debug">
@@ -143,7 +173,10 @@
       <workItem from="1758787595806" duration="460000" />
       <workItem from="1758788084209" duration="331000" />
       <workItem from="1758788436973" duration="2622000" />
-      <workItem from="1758791087266" duration="2096000" />
+      <workItem from="1758791087266" duration="2713000" />
+      <workItem from="1758854122687" duration="8243000" />
+      <workItem from="1758864318997" duration="5574000" />
+      <workItem from="1758872082175" duration="14569000" />
     </task>
     <servers />
   </component>

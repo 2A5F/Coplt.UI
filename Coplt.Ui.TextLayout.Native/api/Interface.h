@@ -8,16 +8,18 @@
 
 namespace Coplt {
 
-    COPLT_COM_INTERFACE(IFace, "805e2d1f-6be2-4ebd-ac64-60c6f5f73d63", ::Coplt::IUnknown)
+    COPLT_COM_INTERFACE(IFontCollection, "e56d9271-e6fd-4def-b03a-570380e0d560", ::Coplt::IUnknown)
     {
-        COPLT_COM_INTERFACE_BODY_Coplt_IFace
+        COPLT_COM_INTERFACE_BODY_Coplt_IFontCollection
     };
 
     COPLT_COM_INTERFACE(ILibTextLayout, "778be1fe-18f2-4aa5-8d1f-52d83b132cff", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_ILibTextLayout
 
-        COPLT_COM_METHOD(CreateFace, IFace*, ())
+        COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
+        COPLT_COM_METHOD(get_CurrentErrorMessage, const::Coplt::u8*, ());
+        COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
     };
 
 } // namespace Coplt

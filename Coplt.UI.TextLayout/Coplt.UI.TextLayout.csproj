@@ -9,12 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Coplt.Com" Version="0.1.0"/>
         <PackageReference Include="Coplt.Dropping" Version="0.6.0"/>
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Coplt.Com2\Coplt.Com2.Analyzer\Coplt.Com2.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\Coplt.Com2\Coplt.Com2\Coplt.Com2.csproj" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\Coplt.Com2\Coplt.Com\Coplt.Com.csproj" />
+        <ProjectReference Include="..\Coplt.UI.Utilities\Coplt.UI.Utilities.csproj" />
     </ItemGroup>
 
     <Target Name="ReadyGenCom" AfterTargets="Build">
@@ -31,6 +33,10 @@
     <Target Name="GenCom" AfterTargets="ReadyGenCom">
         <Exec Command="..\Coplt.Com2\Coplt.Com2\bin\Release\net10.0\Coplt.Com2.exe" Condition="'$(Configuration)' == 'Release'"/>
         <Exec Command="..\Coplt.Com2\Coplt.Com2\bin\Debug\net10.0\Coplt.Com2.exe" Condition="'$(Configuration)' == 'Debug'"/>
+    </Target>
+    
+    <Target Name="BuildNative" BeforeTargets="Publish">
+        <Exec WorkingDirectory="../" Command="cmake --build --target Coplt.Ui.TextLayout.Native --config Release --preset Release"/>
     </Target>
 
 </Project>
