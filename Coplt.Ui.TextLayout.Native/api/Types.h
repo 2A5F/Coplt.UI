@@ -20,6 +20,8 @@ namespace Coplt {
 
     struct Str8;
 
+    struct FontFamilyNameInfo;
+
     struct Str16
     {
         ::Coplt::char16* Data;
@@ -30,6 +32,12 @@ namespace Coplt {
     {
         ::Coplt::u8* Data;
         ::Coplt::u32 Size;
+    };
+
+    struct FontFamilyNameInfo
+    {
+        ::Coplt::Str16 Name;
+        ::Coplt::u32 Local;
     };
 
 } // namespace Coplt

@@ -1,4 +1,6 @@
-﻿using Coplt.Com;
+﻿using System.Collections.Frozen;
+using System.Globalization;
+using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Layouts.Native;
 
@@ -10,14 +12,14 @@ public sealed unsafe partial class FontFamily
     #region Fields
 
     internal Rc<IFontFamily> m_inner;
-    internal readonly string[] m_names;
+    internal readonly FrozenDictionary<CultureInfo, string> m_names;
 
     #endregion
 
     #region Properties
 
     public ref readonly Rc<IFontFamily> Inner => ref m_inner;
-    public ReadOnlySpan<string> Names => m_names;
+    public FrozenDictionary<CultureInfo, string> Names => m_names;
 
     #endregion
 
@@ -26,15 +28,28 @@ public sealed unsafe partial class FontFamily
     internal FontFamily(Rc<IFontFamily> inner)
     {
         m_inner = inner;
+        CultureInfo[] cultures;
+        {
+            uint len;
+            var p_names = inner.GetLocalNames(&len);
+            cultures = new CultureInfo[len];
+            for (var i = 0; i < len; i++)
+            {
+                cultures[i] = CultureInfo.GetCultureInfo(p_names[i].ToString());
+            }
+        }
+        Dictionary<CultureInfo, string> names = new();
         {
             uint len;
             var p_names = inner.GetNames(&len);
-            m_names = new string[len];
             for (var i = 0; i < len; i++)
             {
-                m_names[i] = p_names[i].ToString();
+                var name = p_names[i].Name.ToString();
+                var culture = cultures[p_names[i].Local];
+                names.Add(culture, name);
             }
         }
+        m_names = names.ToFrozenDictionary();
         inner.ClearNativeNamesCache();
     }
 
@@ -42,7 +57,7 @@ public sealed unsafe partial class FontFamily
 
     #region ToString
 
-    public override string ToString() => $"FontFamily {{ {string.Join(", ", m_names)} }}";
+    public override string ToString() => $"FontFamily {{ {string.Join(", ", m_names.Select(a => $"{a.Key}: {a.Value}"))} }}";
 
     #endregion
 }

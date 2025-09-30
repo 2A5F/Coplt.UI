@@ -20,7 +20,8 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFamily
 
-        COPLT_COM_METHOD(GetNames, ::Coplt::Str16 const*, (COPLT_OUT ::Coplt::u32* length) const, length);
+        COPLT_COM_METHOD(GetLocalNames, ::Coplt::Str16 const*, (COPLT_OUT ::Coplt::u32* length) const, length);
+        COPLT_COM_METHOD(GetNames, ::Coplt::FontFamilyNameInfo const*, (COPLT_OUT ::Coplt::u32* length) const, length);
         COPLT_COM_METHOD(ClearNativeNamesCache, void, ());
     };
 

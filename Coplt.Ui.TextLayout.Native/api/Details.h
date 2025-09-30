@@ -130,12 +130,14 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFamily>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    ::Coplt::Str16 const* (*const COPLT_CDECL f_GetNames)(const ::Coplt::IFontFamily*, COPLT_OUT ::Coplt::u32* length) noexcept;
+    ::Coplt::Str16 const* (*const COPLT_CDECL f_GetLocalNames)(const ::Coplt::IFontFamily*, COPLT_OUT ::Coplt::u32* length) noexcept;
+    ::Coplt::FontFamilyNameInfo const* (*const COPLT_CDECL f_GetNames)(const ::Coplt::IFontFamily*, COPLT_OUT ::Coplt::u32* length) noexcept;
     void (*const COPLT_CDECL f_ClearNativeNamesCache)(::Coplt::IFontFamily*) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontFamily
 {
-    extern "C" ::Coplt::Str16 const* COPLT_CDECL GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept;
+    extern "C" ::Coplt::Str16 const* COPLT_CDECL GetLocalNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept;
+    extern "C" ::Coplt::FontFamilyNameInfo const* COPLT_CDECL GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept;
     extern "C" void COPLT_CDECL ClearNativeNamesCache(::Coplt::IFontFamily* self) noexcept;
 }
 
@@ -168,6 +170,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFamily>
         static VirtualTable vtb
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_GetLocalNames = VirtualImpl_Coplt_IFontFamily::GetLocalNames,
             .f_GetNames = VirtualImpl_Coplt_IFontFamily::GetNames,
             .f_ClearNativeNamesCache = VirtualImpl_Coplt_IFontFamily::ClearNativeNamesCache,
         };
@@ -177,7 +180,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFamily>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual ::Coplt::Str16 const* Impl_GetNames(COPLT_OUT ::Coplt::u32* length) const = 0;
+        virtual ::Coplt::Str16 const* Impl_GetLocalNames(COPLT_OUT ::Coplt::u32* length) const = 0;
+        virtual ::Coplt::FontFamilyNameInfo const* Impl_GetNames(COPLT_OUT ::Coplt::u32* length) const = 0;
         virtual void Impl_ClearNativeNamesCache() = 0;
     };
 
@@ -192,15 +196,28 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFamily>
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontFamily
 {
 
-    extern "C" inline ::Coplt::Str16 const* COPLT_CDECL GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
+    extern "C" inline ::Coplt::Str16 const* COPLT_CDECL GetLocalNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
     {
         ::Coplt::Str16 const* r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, GetNames, ::Coplt::Str16 const*)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, GetLocalNames, ::Coplt::Str16 const*)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::IFontFamily>(self)->Impl_GetLocalNames(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, GetLocalNames, ::Coplt::Str16 const*)
+        #endif
+        return r;
+    }
+
+    extern "C" inline ::Coplt::FontFamilyNameInfo const* COPLT_CDECL GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
+    {
+        ::Coplt::FontFamilyNameInfo const* r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, GetNames, ::Coplt::FontFamilyNameInfo const*)
         #endif
         r = ::Coplt::Internal::AsImpl<::Coplt::IFontFamily>(self)->Impl_GetNames(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, GetNames, ::Coplt::Str16 const*)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, GetNames, ::Coplt::FontFamilyNameInfo const*)
         #endif
         return r;
     }
@@ -226,7 +243,11 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontFamily
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFamily>
 {
-    static COPLT_FORCE_INLINE ::Coplt::Str16 const* GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::Str16 const* GetLocalNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
+    {
+        return COPLT_COM_PVTB(IFontFamily, self)->f_GetLocalNames(self, p0);
+    }
+    static COPLT_FORCE_INLINE ::Coplt::FontFamilyNameInfo const* GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
     {
         return COPLT_COM_PVTB(IFontFamily, self)->f_GetNames(self, p0);
     }
