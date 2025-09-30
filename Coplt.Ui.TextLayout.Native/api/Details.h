@@ -22,11 +22,13 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFontCollection>
     VirtualTable<::Coplt::IUnknown> b;
     IFontFamily* const* (*const COPLT_CDECL f_GetFamilies)(const ::Coplt::IFontCollection*, COPLT_OUT ::Coplt::u32* count) noexcept;
     void (*const COPLT_CDECL f_ClearNativeFamiliesCache)(::Coplt::IFontCollection*) noexcept;
+    ::Coplt::u32 (*const COPLT_CDECL f_FindDefaultFamily)(::Coplt::IFontCollection*) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontCollection
 {
     extern "C" IFontFamily* const* COPLT_CDECL GetFamilies(const ::Coplt::IFontCollection* self, COPLT_OUT ::Coplt::u32* p0) noexcept;
     extern "C" void COPLT_CDECL ClearNativeFamiliesCache(::Coplt::IFontCollection* self) noexcept;
+    extern "C" ::Coplt::u32 COPLT_CDECL FindDefaultFamily(::Coplt::IFontCollection* self) noexcept;
 }
 
 template <>
@@ -60,6 +62,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontCollection>
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
             .f_GetFamilies = VirtualImpl_Coplt_IFontCollection::GetFamilies,
             .f_ClearNativeFamiliesCache = VirtualImpl_Coplt_IFontCollection::ClearNativeFamiliesCache,
+            .f_FindDefaultFamily = VirtualImpl_Coplt_IFontCollection::FindDefaultFamily,
         };
         return vtb;
     };
@@ -69,6 +72,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontCollection>
 
         virtual IFontFamily* const* Impl_GetFamilies(COPLT_OUT ::Coplt::u32* count) const = 0;
         virtual void Impl_ClearNativeFamiliesCache() = 0;
+        virtual ::Coplt::u32 Impl_FindDefaultFamily() = 0;
     };
 
     template <std::derived_from<::Coplt::IFontCollection> Base = ::Coplt::IFontCollection>
@@ -106,6 +110,19 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontCollection
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontCollection, ClearNativeFamiliesCache, void)
         #endif
     }
+
+    extern "C" inline ::Coplt::u32 COPLT_CDECL FindDefaultFamily(::Coplt::IFontCollection* self) noexcept
+    {
+        ::Coplt::u32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontCollection, FindDefaultFamily, ::Coplt::u32)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::IFontCollection>(self)->Impl_FindDefaultFamily();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontCollection, FindDefaultFamily, ::Coplt::u32)
+        #endif
+        return r;
+    }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_IFontCollection\
     using Super = ::Coplt::IUnknown;\
@@ -123,6 +140,10 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontCollection>
     static COPLT_FORCE_INLINE void ClearNativeFamiliesCache(::Coplt::IFontCollection* self) noexcept
     {
         COPLT_COM_PVTB(IFontCollection, self)->f_ClearNativeFamiliesCache(self);
+    }
+    static COPLT_FORCE_INLINE ::Coplt::u32 FindDefaultFamily(::Coplt::IFontCollection* self) noexcept
+    {
+        return COPLT_COM_PVTB(IFontCollection, self)->f_FindDefaultFamily(self);
     }
 };
 

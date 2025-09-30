@@ -9,6 +9,8 @@ public class Tests
     {
         var a = TextLayout.Instance;
         var b = a.SystemFontCollection;
+        Console.WriteLine(b.DefaultFamily);
+        Console.WriteLine();
         foreach (var family in b.Families) 
         {
             Console.WriteLine(family);

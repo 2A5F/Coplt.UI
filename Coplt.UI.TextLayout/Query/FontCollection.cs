@@ -11,6 +11,7 @@ public sealed unsafe partial class FontCollection
 
     internal Rc<IFontCollection> m_inner;
     internal readonly FontFamily[] m_families;
+    internal readonly uint m_default_family;
 
     #endregion
 
@@ -18,6 +19,8 @@ public sealed unsafe partial class FontCollection
 
     public ref readonly Rc<IFontCollection> Inner => ref m_inner;
     public ReadOnlySpan<FontFamily> Families => m_families;
+    
+    public FontFamily DefaultFamily => m_families[m_default_family];
 
     #endregion
 
@@ -36,6 +39,8 @@ public sealed unsafe partial class FontCollection
             m_families[i] = new(new(p));
         }
         inner.ClearNativeFamiliesCache();
+
+        m_default_family = inner.FindDefaultFamily();
     }
 
     #endregion

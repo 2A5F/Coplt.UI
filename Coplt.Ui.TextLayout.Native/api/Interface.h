@@ -14,6 +14,7 @@ namespace Coplt {
 
         COPLT_COM_METHOD(GetFamilies, IFontFamily* const*, (COPLT_OUT ::Coplt::u32* count) const, count);
         COPLT_COM_METHOD(ClearNativeFamiliesCache, void, ());
+        COPLT_COM_METHOD(FindDefaultFamily, ::Coplt::u32, ());
     };
 
     COPLT_COM_INTERFACE(IFontFamily, "f8009d34-9417-4b87-b23b-b7885d27aeab", ::Coplt::IUnknown)

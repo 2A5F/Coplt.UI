@@ -27,5 +27,7 @@ namespace Coplt
 
         IFontFamily* const* Impl_GetFamilies(u32* count) const override;
         void Impl_ClearNativeFamiliesCache() override;
+
+        u32 Impl_FindDefaultFamily() override;
     };
 }

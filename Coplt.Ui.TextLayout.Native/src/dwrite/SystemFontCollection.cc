@@ -53,3 +53,24 @@ void SystemFontCollection::Impl_ClearNativeFamiliesCache()
 {
     m_p_families = {};
 }
+
+u32 SystemFontCollection::Impl_FindDefaultFamily()
+{
+    NONCLIENTMETRICS ncm = {};
+    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+
+    if (!SystemParametersInfoW(
+        SPI_GETNONCLIENTMETRICS,
+        sizeof(NONCLIENTMETRICS),
+        &ncm,
+        0))
+        throw std::runtime_error("Failed to get non-client metrics");
+
+    const auto face_name = ncm.lfMessageFont.lfFaceName;
+    u32 index;
+    BOOL found;
+    if (const auto hr = m_collection->FindFamilyName(face_name, &index, &found); FAILED(hr))
+        throw ComException(hr, "Failed to find family name");
+
+    return found ? index : 0;
+}

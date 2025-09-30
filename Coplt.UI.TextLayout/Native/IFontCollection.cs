@@ -10,4 +10,6 @@ public unsafe partial struct IFontCollection
     public readonly partial IFontFamily** GetFamilies([Out] uint* count);
     
     public partial void ClearNativeFamiliesCache();
+
+    public partial uint FindDefaultFamily();
 }
