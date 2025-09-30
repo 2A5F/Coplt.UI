@@ -6,6 +6,9 @@ namespace Coplt.UI.Layouts.Native;
 [Interface, Guid("f8009d34-9417-4b87-b23b-b7885d27aeab")]
 public unsafe partial struct IFontFamily
 {
+    [return: ComType<ConstPtr<Ptr<IFont>>>]
+    public readonly partial IFont** GetFonts([Out] uint* length);
+    
     [return: ComType<ConstPtr<Str16>>]
     public readonly partial Str16* GetLocalNames([Out] uint* length);
     

@@ -73,6 +73,12 @@ Rc<FontFamily> FontFamily::Create(Rc<IDWriteFontFamily>& family)
     return Rc(new FontFamily(family, w_names, str_names, local_names, local_name_mapper, str_local_names));
 }
 
+IFont* const* FontFamily::Impl_GetFonts(u32* length) const
+{
+    // todo
+    return nullptr;
+}
+
 const Str16* FontFamily::Impl_GetLocalNames(u32* length) const
 {
     *length = m_str_local_names.size();
