@@ -11,8 +11,7 @@ public unsafe partial struct ILibTextLayout
 {
     public partial void SetLogger(void* obj, delegate*<LogLevel, int, char*, void> logger, delegate*<void*, void> drop);
 
-    [ComType<ConstPtr<byte>>]
-    public partial byte* CurrentErrorMessage { get; }
+    public partial Str8 GetCurrentErrorMessage();
 
     public partial HResult GetSystemFontCollection(IFontCollection** fc);
 }

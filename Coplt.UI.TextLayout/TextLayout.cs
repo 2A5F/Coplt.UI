@@ -46,9 +46,8 @@ public sealed unsafe partial class TextLayout
     {
         get
         {
-            var ptr = m_lib.CurrentErrorMessage;
-            if (ptr == null || *ptr == 0) return "";
-            return new string((sbyte*)ptr);
+            var str = m_lib.GetCurrentErrorMessage();
+            return str.ToString();
         }
     }
 
@@ -62,7 +61,7 @@ public sealed unsafe partial class TextLayout
     private FontCollection GetSystemFontCollection()
     {
         IFontCollection* fc;
-        m_lib.GetSystemFontCollection(&fc).TryThrow();
+        m_lib.GetSystemFontCollection(&fc).TryThrowWithMsg(this);
         return new(new(fc));
     }
 

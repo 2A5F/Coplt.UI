@@ -11,6 +11,17 @@ namespace Coplt {
     COPLT_COM_INTERFACE(IFontCollection, "e56d9271-e6fd-4def-b03a-570380e0d560", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontCollection
+
+        COPLT_COM_METHOD(GetFamilies, IFontFamily* const*, (COPLT_OUT ::Coplt::u32* count) const, count);
+        COPLT_COM_METHOD(ClearNativeFamiliesCache, void, ());
+    };
+
+    COPLT_COM_INTERFACE(IFontFamily, "f8009d34-9417-4b87-b23b-b7885d27aeab", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IFontFamily
+
+        COPLT_COM_METHOD(GetNames, ::Coplt::Str16 const*, (COPLT_OUT ::Coplt::u32* length) const, length);
+        COPLT_COM_METHOD(ClearNativeNamesCache, void, ());
     };
 
     COPLT_COM_INTERFACE(ILibTextLayout, "778be1fe-18f2-4aa5-8d1f-52d83b132cff", ::Coplt::IUnknown)
@@ -18,7 +29,7 @@ namespace Coplt {
         COPLT_COM_INTERFACE_BODY_Coplt_ILibTextLayout
 
         COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
-        COPLT_COM_METHOD(get_CurrentErrorMessage, const::Coplt::u8*, ());
+        COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
     };
 

@@ -53,9 +53,8 @@ namespace Coplt
         LoggerData m_logger{};
         Rc<Backend> m_backend{};
 
-    protected:
         void Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop) override;
-        const u8* Impl_get_CurrentErrorMessage() override;
+        Str8 Impl_GetCurrentErrorMessage() override;
         HResult Impl_GetSystemFontCollection(IFontCollection** fc) override;
     };
 

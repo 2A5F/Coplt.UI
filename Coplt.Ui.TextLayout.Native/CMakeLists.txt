@@ -18,14 +18,17 @@ if (WIN32)
             src/dwrite/Backend.h
             src/dwrite/SystemFontCollection.cc
             src/dwrite/SystemFontCollection.h
-            src/Error.cc
-            src/Error.h
+            src/dwrite/FontFamily.cc
+            src/dwrite/FontFamily.h
+            src/dwrite/Error.h
     )
 endif ()
 
 add_library(${PROJECT_NAME} SHARED
         src/lib.cc
         src/lib.h
+        src/Error.cc
+        src/Error.h
         src/Backend.h
         ${BACKEND_SOURCES}
 )

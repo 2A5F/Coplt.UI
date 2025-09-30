@@ -22,8 +22,7 @@ Coplt::HResult Coplt::Backend::Create(Rc<Backend>& out)
 
 Coplt::HResult Coplt::Backend::GetSystemFontCollection(Rc<IFontCollection>& out) const
 {
-    Rc<SystemFontCollection> sfc{};
-    const auto hr = SystemFontCollection::Create(this, sfc);
+    Rc<SystemFontCollection> sfc = SystemFontCollection::Create(this);
     out = std::move(sfc);
-    return hr;
+    return HResultE::Ok;
 }

@@ -9,9 +9,10 @@ void LibTextLayout::Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>
     m_logger = LoggerData(obj, logger, drop);
 }
 
-const u8* LibTextLayout::Impl_get_CurrentErrorMessage()
+Str8 LibTextLayout::Impl_GetCurrentErrorMessage()
 {
-    return reinterpret_cast<const u8*>(GetCurrentErrorMessage().c_str());
+    const auto& msg = Coplt::GetCurrentErrorMessage();
+    return Str8(reinterpret_cast<u8*>(const_cast<char*>(msg.data())), msg.size());
 }
 
 HResult LibTextLayout::Impl_GetSystemFontCollection(IFontCollection** fc)

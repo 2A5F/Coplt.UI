@@ -16,6 +16,22 @@ namespace Coplt {
         Verbose = 5,
     };
 
+    struct Str16;
+
+    struct Str8;
+
+    struct Str16
+    {
+        ::Coplt::char16* Data;
+        ::Coplt::u32 Size;
+    };
+
+    struct Str8
+    {
+        ::Coplt::u8* Data;
+        ::Coplt::u32 Size;
+    };
+
 } // namespace Coplt
 
 #endif //COPLT_UL_TEXT_LAYOUT_TYPES_H
