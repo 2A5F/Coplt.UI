@@ -13,6 +13,8 @@ public sealed unsafe partial class FontFamily
 
     internal Rc<IFontFamily> m_inner;
     internal readonly FrozenDictionary<CultureInfo, string> m_names;
+    internal readonly FontCollection m_collection;
+    internal readonly uint m_index_in_collection;
 
     #endregion
 
@@ -20,14 +22,18 @@ public sealed unsafe partial class FontFamily
 
     public ref readonly Rc<IFontFamily> Inner => ref m_inner;
     public FrozenDictionary<CultureInfo, string> Names => m_names;
+    public FontCollection Collection => m_collection;
+    public uint Index => m_index_in_collection;
 
     #endregion
 
     #region Ctor
 
-    internal FontFamily(Rc<IFontFamily> inner)
+    internal FontFamily(Rc<IFontFamily> inner, FontCollection collection, uint index)
     {
         m_inner = inner;
+        m_collection = collection;
+        m_index_in_collection = index;
         CultureInfo[] cultures;
         {
             uint len;
