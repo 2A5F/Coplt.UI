@@ -21,9 +21,11 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFont>
 {
     VirtualTable<::Coplt::IUnknown> b;
+    ::Coplt::NFontInfo* (*const COPLT_CDECL f_get_Info)(::Coplt::IFont*) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFont
 {
+    extern "C" ::Coplt::NFontInfo* COPLT_CDECL get_Info(::Coplt::IFont* self) noexcept;
 }
 
 template <>
@@ -55,12 +57,15 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFont>
         static VirtualTable vtb
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_get_Info = VirtualImpl_Coplt_IFont::get_Info,
         };
         return vtb;
     };
 
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
+
+        virtual ::Coplt::NFontInfo* Impl_get_Info() = 0;
     };
 
     template <std::derived_from<::Coplt::IFont> Base = ::Coplt::IFont>
@@ -73,6 +78,19 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFont>
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFont
 {
+
+    extern "C" inline ::Coplt::NFontInfo* COPLT_CDECL get_Info(::Coplt::IFont* self) noexcept
+    {
+        ::Coplt::NFontInfo* r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFont, get_Info, ::Coplt::NFontInfo*)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::IFont>(self)->Impl_get_Info();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFont, get_Info, ::Coplt::NFontInfo*)
+        #endif
+        return r;
+    }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_IFont\
     using Super = ::Coplt::IUnknown;\
@@ -83,6 +101,10 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFont
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IFont>
 {
+    static COPLT_FORCE_INLINE ::Coplt::NFontInfo* get_Info(::Coplt::IFont* self) noexcept
+    {
+        return COPLT_COM_PVTB(IFont, self)->f_get_Info(self);
+    }
 };
 
 template <>

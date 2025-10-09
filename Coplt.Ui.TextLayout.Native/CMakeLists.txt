@@ -21,7 +21,11 @@ if (WIN32)
             src/dwrite/FontFamily.cc
             src/dwrite/FontFamily.h
             src/dwrite/Error.h
+            src/dwrite/Font.cc
+            src/dwrite/Font.h
     )
+
+#    set(HB_HAVE_DIRECTWRITE ON)
 endif ()
 
 add_library(${PROJECT_NAME} SHARED

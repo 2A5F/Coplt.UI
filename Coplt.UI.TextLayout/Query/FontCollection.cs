@@ -12,6 +12,7 @@ public sealed unsafe partial class FontCollection
 {
     #region Fields
 
+    [Drop]
     internal Rc<IFontCollection> m_inner;
     internal readonly FontFamily[] m_families;
     internal readonly uint m_default_family;

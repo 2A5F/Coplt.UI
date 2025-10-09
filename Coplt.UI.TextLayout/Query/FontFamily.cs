@@ -11,6 +11,7 @@ public sealed unsafe partial class FontFamily
 {
     #region Fields
 
+    [Drop]
     internal Rc<IFontFamily> m_inner;
     internal readonly FrozenDictionary<CultureInfo, string> m_names;
     internal readonly FontCollection m_collection;
