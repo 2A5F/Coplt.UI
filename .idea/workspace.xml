@@ -41,10 +41,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.cc" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.h" afterDir="false" />
@@ -58,7 +55,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Release" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Debug" />
   <component name="FileTemplateManagerImpl">
     <option name="SCHEME" value="项目" />
   </component>
@@ -110,9 +107,9 @@
   }
 }</component>
   <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.TextLayout.Native">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="Com" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Com" CONFIG_NAME="Main - Debug">
@@ -203,6 +200,7 @@
       <workItem from="1759204612525" duration="15527000" />
       <workItem from="1759891331915" duration="949000" />
       <workItem from="1759978938270" duration="13617000" />
+      <workItem from="1760003749923" duration="118000" />
     </task>
     <servers />
   </component>

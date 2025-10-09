@@ -2,6 +2,8 @@
 #include "lib.h"
 #include "Error.h"
 
+#include <hb.h>
+
 using namespace Coplt;
 
 void LibTextLayout::Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop)
@@ -28,6 +30,5 @@ HResult LibTextLayout::Impl_GetSystemFontCollection(IFontCollection** fc)
 ILibTextLayout* Coplt::Coplt_CreateLibTextLayout()
 {
     hb_version_string();
-    // hb_icu_get_unicode_funcs();
     return new LibTextLayout();
 }

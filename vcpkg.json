@@ -1,10 +1,10 @@
 {
   "dependencies" : [ {
     "name" : "cpptrace",
-    "version>=" : "0.8.3"
+    "version>=" : "1.0.2#0"
   }, {
     "name" : "harfbuzz",
-    "version>=" : "11.3.3",
+    "version>=" : "11.2.0#0",
     "features": ["directwrite"],
     "platform" : "windows"
   }, {
