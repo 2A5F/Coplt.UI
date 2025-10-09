@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using Coplt.UI.TextLayout;
+using Coplt.UI.Texts;
 
 namespace TestTexts1;
 

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.UI.Styles;
-using Coplt.UI.TextLayout;
+using Coplt.UI.Texts;
 
 namespace Coplt.UI.Layouts.Native;
 

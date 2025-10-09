@@ -1,4 +1,4 @@
-﻿namespace Coplt.UI.TextLayout;
+﻿namespace Coplt.UI.Texts;
 
 public record struct FontMetrics
 {

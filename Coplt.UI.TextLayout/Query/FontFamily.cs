@@ -4,7 +4,7 @@ using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Layouts.Native;
 
-namespace Coplt.UI.TextLayout;
+namespace Coplt.UI.Texts;
 
 [Dropping]
 public sealed unsafe partial class FontFamily

@@ -3,7 +3,7 @@ using Coplt.Dropping;
 using Coplt.UI.Layouts.Native;
 using Coplt.UI.Styles;
 
-namespace Coplt.UI.TextLayout;
+namespace Coplt.UI.Texts;
 
 [Dropping]
 public sealed unsafe partial class Font

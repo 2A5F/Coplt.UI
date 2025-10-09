@@ -1,4 +1,4 @@
-﻿namespace Coplt.UI.TextLayout;
+﻿namespace Coplt.UI.Texts;
 
 [Flags]
 public enum FontFlags

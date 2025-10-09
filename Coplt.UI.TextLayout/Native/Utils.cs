@@ -4,7 +4,7 @@ namespace Coplt.UI.Layouts.Native;
 
 internal static unsafe class Utils
 {
-    public static void TryThrowWithMsg(this HResult hr, TextLayout.TextLayout lib)
+    public static void TryThrowWithMsg(this HResult hr, Texts.TextLayout lib)
     {
         if (hr.IsSuccess) return;
         var msg = lib.CurrentErrorMessage;
