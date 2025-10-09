@@ -1,6 +1,7 @@
 #include "Font.h"
 
 #include "Error.h"
+#include "FontFace.h"
 #include "FontFamily.h"
 
 using namespace Coplt;
@@ -83,4 +84,10 @@ Font::Font(Rc<IDWriteFont3>& font) : m_font(std::move(font))
 NFontInfo const* Font::Impl_get_Info() const
 {
     return &m_info;
+}
+
+HResult Font::Impl_CreateFace(IFontFace** face) const
+{
+    *face = new DWriteFontFace(m_font);
+    return HResultE::Ok;
 }

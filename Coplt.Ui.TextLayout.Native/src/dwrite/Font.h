@@ -17,5 +17,7 @@ namespace Coplt
         explicit Font(Rc<IDWriteFont3>& font);
 
         NFontInfo const* Impl_get_Info() const override;
+
+        HResult Impl_CreateFace(IFontFace** face) const override;
     };
 }

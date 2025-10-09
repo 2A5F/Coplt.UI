@@ -12,6 +12,7 @@ public sealed unsafe partial class FontCollection
 {
     #region Fields
 
+    internal readonly TextLayout m_lib;
     [Drop]
     internal Rc<IFontCollection> m_inner;
     internal readonly FontFamily[] m_families;
@@ -23,6 +24,7 @@ public sealed unsafe partial class FontCollection
 
     #region Properties
 
+    public TextLayout Lib => m_lib;
     public ref readonly Rc<IFontCollection> Inner => ref m_inner;
     public ReadOnlySpan<FontFamily> Families => m_families;
 
@@ -35,8 +37,9 @@ public sealed unsafe partial class FontCollection
 
     #region Ctor
 
-    internal FontCollection(Rc<IFontCollection> inner)
+    internal FontCollection(Rc<IFontCollection> inner, TextLayout lib)
     {
+        m_lib = lib;
         m_inner = inner;
         uint len;
         var p_families = inner.GetFamilies(&len);

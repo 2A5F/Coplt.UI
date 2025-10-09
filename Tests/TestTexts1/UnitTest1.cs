@@ -32,10 +32,11 @@ public class Tests
         var elapsed = Stopwatch.GetElapsedTime(start, end);
         var d = b.DefaultFamily;
         var fonts = d.GetFonts();
+        foreach (var font in fonts) font.EnsureFace();
         Console.WriteLine($"{elapsed}");
         foreach (var font in fonts)
         {
-            Console.WriteLine(font);
+            Console.WriteLine(font.Face);
         }
     }
 }

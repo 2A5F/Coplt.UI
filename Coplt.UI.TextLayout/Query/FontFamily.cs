@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Coplt.Com;
 using Coplt.Dropping;
@@ -17,22 +18,27 @@ public sealed unsafe partial class FontFamily
 
     #region Fields
 
+    internal readonly TextLayout m_lib;
     [Drop]
     internal Rc<IFontFamily> m_inner;
     internal readonly FrozenDictionary<CultureInfo, string> m_names;
-    internal readonly FontCollection m_collection;
+    internal readonly FontCollection? m_collection;
     internal readonly uint m_index_in_collection;
 
     internal volatile Font[]? m_fonts;
-    internal Lock? m_load_fonts_lock;
+    
+    [field: AllowNull, MaybeNull]
+    internal Lock m_load_fonts_lock =>
+        field ?? Interlocked.CompareExchange(ref field, new Lock(), null) ?? field;
 
     #endregion
 
     #region Properties
 
+    public TextLayout Lib => m_lib;
     public ref readonly Rc<IFontFamily> Inner => ref m_inner;
     public FrozenDictionary<CultureInfo, string> Names => m_names;
-    public FontCollection Collection => m_collection;
+    public FontCollection? Collection => m_collection;
     public uint Index => m_index_in_collection;
 
     public string Name =>
@@ -47,6 +53,7 @@ public sealed unsafe partial class FontFamily
 
     internal FontFamily(Rc<IFontFamily> inner, FontCollection collection, uint index)
     {
+        m_lib = collection.m_lib;
         m_inner = inner;
         m_collection = collection;
         m_index_in_collection = index;
@@ -91,7 +98,7 @@ public sealed unsafe partial class FontFamily
     {
         var fonts = m_fonts;
         if (fonts != null) return fonts;
-        lock (Interlocked.CompareExchange(ref m_load_fonts_lock, new Lock(), null) ?? m_load_fonts_lock)
+        lock (m_load_fonts_lock)
         {
             if (m_fonts != null) return m_fonts;
             uint num_fonts;

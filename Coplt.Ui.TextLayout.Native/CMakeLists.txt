@@ -25,6 +25,8 @@ if (WIN32)
             src/dwrite/Font.h
             src/FontFace.cc
             src/FontFace.h
+            src/dwrite/FontFace.cc
+            src/dwrite/FontFace.h
     )
 endif ()
 

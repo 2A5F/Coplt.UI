@@ -2,12 +2,14 @@
 
 #include <hb.h>
 
+#include "../api/Interface.h"
+
 namespace Coplt
 {
-    struct FontFace
+    struct FontFace : ComObject<IFontFace>
     {
-        hb_face_t* m_hb_face;
+        hb_face_t* m_hb_face{nullptr};
 
-        ~FontFace();
+        ~FontFace() override;
     };
 }

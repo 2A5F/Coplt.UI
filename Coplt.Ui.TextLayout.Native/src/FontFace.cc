@@ -10,3 +10,4 @@ FontFace::~FontFace()
         m_hb_face = nullptr;
     }
 }
+

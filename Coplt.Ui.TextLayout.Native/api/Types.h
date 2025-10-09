@@ -24,6 +24,8 @@ namespace Coplt {
 
     struct IFontCollection;
 
+    struct IFontFace;
+
     struct IFontFamily;
 
     struct ILibTextLayout;

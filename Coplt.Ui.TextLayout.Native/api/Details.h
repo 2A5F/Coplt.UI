@@ -12,6 +12,7 @@ namespace Coplt {
 
     struct IFont;
     struct IFontCollection;
+    struct IFontFace;
     struct IFontFamily;
     struct ILibTextLayout;
 
@@ -22,10 +23,12 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFont>
 {
     VirtualTable<::Coplt::IUnknown> b;
     ::Coplt::NFontInfo const* (*const COPLT_CDECL f_get_Info)(const ::Coplt::IFont*) noexcept;
+    ::Coplt::HResult* (*const COPLT_CDECL f_CreateFace)(const ::Coplt::IFont*, ::Coplt::HResult*, COPLT_OUT IFontFace** face) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFont
 {
     extern "C" ::Coplt::NFontInfo const* COPLT_CDECL get_Info(const ::Coplt::IFont* self) noexcept;
+    extern "C" ::Coplt::HResult* COPLT_CDECL CreateFace(const ::Coplt::IFont* self, ::Coplt::HResult* r, COPLT_OUT IFontFace** p0) noexcept;
 }
 
 template <>
@@ -58,6 +61,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFont>
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
             .f_get_Info = VirtualImpl_Coplt_IFont::get_Info,
+            .f_CreateFace = VirtualImpl_Coplt_IFont::CreateFace,
         };
         return vtb;
     };
@@ -66,6 +70,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFont>
     {
 
         virtual ::Coplt::NFontInfo const* Impl_get_Info() const = 0;
+        virtual ::Coplt::HResult Impl_CreateFace(COPLT_OUT IFontFace** face) const = 0;
     };
 
     template <std::derived_from<::Coplt::IFont> Base = ::Coplt::IFont>
@@ -91,6 +96,18 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFont
         #endif
         return r;
     }
+
+    extern "C" inline ::Coplt::HResult* COPLT_CDECL CreateFace(const ::Coplt::IFont* self, ::Coplt::HResult* r, COPLT_OUT IFontFace** p0) noexcept
+    {
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::HResult)
+        #endif
+        *r = ::Coplt::Internal::AsImpl<::Coplt::IFont>(self)->Impl_CreateFace(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::HResult)
+        #endif
+        return r;
+    }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_IFont\
     using Super = ::Coplt::IUnknown;\
@@ -104,6 +121,11 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFont>
     static COPLT_FORCE_INLINE ::Coplt::NFontInfo const* get_Info(const ::Coplt::IFont* self) noexcept
     {
         return COPLT_COM_PVTB(IFont, self)->f_get_Info(self);
+    }
+    static COPLT_FORCE_INLINE ::Coplt::HResult CreateFace(const ::Coplt::IFont* self, COPLT_OUT IFontFace** p0) noexcept
+    {
+        ::Coplt::HResult r{};
+        return *COPLT_COM_PVTB(IFont, self)->f_CreateFace(self, &r, p0);
     }
 };
 
@@ -236,6 +258,74 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontCollection>
     {
         return COPLT_COM_PVTB(IFontCollection, self)->f_FindDefaultFamily(self);
     }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFace>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
+{
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
+{
+    using VirtualTable = VirtualTable<::Coplt::IFontFace>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("09c443bc-9736-4aac-8117-6890555005ff");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::IFontFace>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IFontFace*>(self)));
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+    };
+
+    template <std::derived_from<::Coplt::IFontFace> Base = ::Coplt::IFontFace>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
+{
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_IFontFace\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::IFontFace;\
+\
+    explicit IFontFace(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFace>
+{
 };
 
 template <>

@@ -62,7 +62,7 @@ public sealed unsafe partial class TextLayout
     {
         IFontCollection* fc;
         m_lib.GetSystemFontCollection(&fc).TryThrowWithMsg(this);
-        return new(new(fc));
+        return new(new(fc), this);
     }
 
     public FontCollection SystemFontCollection => m_system_font_collection ??= GetSystemFontCollection();

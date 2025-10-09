@@ -16,6 +16,8 @@ public sealed unsafe partial class Font
     internal NFontInfo* m_info;
     internal readonly int m_index;
 
+    internal FontFace? m_face;
+
     #endregion
 
     #region Properties
@@ -27,7 +29,7 @@ public sealed unsafe partial class Font
     public FontWidth Width => m_info->Width;
     public FontWeight Weight => m_info->Weight;
     public FontStyle Style => m_info->Style;
-    
+
     public FontFlags Flags => m_info->Flags;
 
     public bool IsColor => (m_info->Flags & FontFlags.Color) != 0;
@@ -61,6 +63,22 @@ public sealed unsafe partial class Font
 
     public override string ToString() =>
         $"Font({m_family.LocalName}, {m_index}) {{ Width = {Width}, Weight = {Weight}, Style = {Style}, Flags = {Flags} }}";
+
+    #endregion
+
+    #region Face
+
+    private FontFace CreateFace()
+    {
+        IFontFace* face;
+        m_inner.CreateFace(&face).TryThrowWithMsg(m_family.m_lib);
+        return new(new(face), this);
+    }
+
+    public FontFace Face => EnsureFace();
+    
+    public FontFace EnsureFace() => 
+        m_face ?? Interlocked.CompareExchange(ref m_face, m_face ?? CreateFace(), null) ?? m_face;
 
     #endregion
 }
