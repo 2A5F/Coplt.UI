@@ -11,10 +11,13 @@ public struct NFontInfo
     public FontWidth Width;
     public FontWeight Weight;
     public FontStyle Style;
+    public FontFlags Flags;
 }
+
 
 [Interface, Guid("09c443bc-9736-4aac-8117-6890555005ff")]
 public unsafe partial struct IFont
 {
-    public partial NFontInfo* Info { get; }
+    [ComType<ConstPtr<NFontInfo>>]
+    public readonly partial NFontInfo* Info { get; }
 }

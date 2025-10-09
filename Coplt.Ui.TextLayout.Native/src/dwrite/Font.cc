@@ -5,7 +5,7 @@
 
 using namespace Coplt;
 
-Font::Font(Rc<IDWriteFont>& font) : m_font(std::move(font))
+Font::Font(Rc<IDWriteFont3>& font) : m_font(std::move(font))
 {
     DWRITE_FONT_METRICS metrics;
     m_font->GetMetrics(&metrics);
@@ -67,10 +67,20 @@ Font::Font(Rc<IDWriteFont>& font) : m_font(std::move(font))
         m_info.Style = FontStyle::Normal;
     }
 
-    m_info.Width = static_cast<FontWidth>(m_font->GetWeight());
+    m_info.Weight = static_cast<FontWeight>(m_font->GetWeight());
+
+    if (m_font->IsColorFont())
+    {
+        m_info.Flags |= FontFlags::Color;
+    }
+
+    if (m_font->IsMonospacedFont())
+    {
+        m_info.Flags |= FontFlags::Monospaced;
+    }
 }
 
-NFontInfo* Font::Impl_get_Info()
+NFontInfo const* Font::Impl_get_Info() const
 {
     return &m_info;
 }

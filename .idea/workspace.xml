@@ -41,20 +41,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Styles/FontStyle.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/TypeSymbol.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/TypeSymbol.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFont.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFont.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontCollection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontCollection.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFontFamily.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFontFamily.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontFamily.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontFamily.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontMetrics.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontMetrics.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Styles/FontStretch.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Styles/FontWidth.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Styles/FontWidth.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Details.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Interface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vcpkg.json" beforeDir="false" afterPath="$PROJECT_DIR$/vcpkg.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Backend.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Backend.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Backend.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Backend.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/FontFamily.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/FontFamily.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/FontFamily.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/FontFamily.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/SystemFontCollection.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/SystemFontCollection.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/SystemFontCollection.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/SystemFontCollection.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -208,7 +217,7 @@
       <workItem from="1759075079624" duration="495000" />
       <workItem from="1759204612525" duration="15527000" />
       <workItem from="1759891331915" duration="949000" />
-      <workItem from="1759978938270" duration="6170000" />
+      <workItem from="1759978938270" duration="12887000" />
     </task>
     <servers />
   </component>

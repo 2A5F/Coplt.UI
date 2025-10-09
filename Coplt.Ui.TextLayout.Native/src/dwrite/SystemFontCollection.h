@@ -1,6 +1,6 @@
 #pragma once
 
-#include <dwrite.h>
+#include <dwrite_3.h>
 
 #include "../Com.h"
 #include "FontFamily.h"
@@ -11,14 +11,14 @@ namespace Coplt
 
     struct SystemFontCollection final : ComObject<IFontCollection>
     {
-        Rc<IDWriteFactory> m_dw_factory;
-        Rc<IDWriteFontCollection> m_collection;
+        Rc<IDWriteFactory7> m_dw_factory;
+        Rc<IDWriteFontCollection3> m_collection;
         std::vector<Rc<FontFamily>> m_families;
         std::vector<IFontFamily*> m_p_families;
 
         explicit SystemFontCollection(
-            Rc<IDWriteFactory> dw_factory,
-            Rc<IDWriteFontCollection>& collection,
+            Rc<IDWriteFactory7> dw_factory,
+            Rc<IDWriteFontCollection3>& collection,
             std::vector<Rc<FontFamily>>& families,
             std::vector<IFontFamily*>& p_families
         );

@@ -7,8 +7,8 @@
 using namespace Coplt;
 
 SystemFontCollection::SystemFontCollection(
-    Rc<IDWriteFactory> dw_factory,
-    Rc<IDWriteFontCollection>& collection,
+    Rc<IDWriteFactory7> dw_factory,
+    Rc<IDWriteFontCollection3>& collection,
     std::vector<Rc<FontFamily>>& families,
     std::vector<IFontFamily*>& p_families
 ) :
@@ -21,8 +21,9 @@ SystemFontCollection::SystemFontCollection(
 
 Rc<SystemFontCollection> SystemFontCollection::Create(const Backend* backend)
 {
-    Rc<IDWriteFontCollection> collection{};
-    if (const auto hr = backend->m_dw_factory->GetSystemFontCollection(collection.put()); FAILED(hr))
+    Rc<IDWriteFontCollection3> collection{};
+    if (const auto hr = backend->m_dw_factory->GetSystemFontCollection(
+        FALSE, DWRITE_FONT_FAMILY_MODEL_TYPOGRAPHIC, collection.put()); FAILED(hr))
         throw ComException(hr, "Failed to get system font collection");
     const auto len = collection->GetFontFamilyCount();
     std::vector<Rc<FontFamily>> families;
@@ -31,10 +32,10 @@ Rc<SystemFontCollection> SystemFontCollection::Create(const Backend* backend)
     p_families.reserve(len);
     for (u32 i = 0; i < len; ++i)
     {
-        Rc<IDWriteFontFamily> family;
+        Rc<IDWriteFontFamily2> family;
         if (const auto hr = collection->GetFontFamily(i, family.put()); FAILED(hr))
             throw ComException(hr, "Failed to get font family");
-        Rc<FontFamily> obj = FontFamily::Create(family);
+        Rc obj(new FontFamily(family));
         p_families.push_back(obj.get());
         families.push_back(std::move(obj));
     }

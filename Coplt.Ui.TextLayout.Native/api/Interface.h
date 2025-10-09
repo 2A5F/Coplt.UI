@@ -12,7 +12,7 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFont
 
-        COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo*, ());
+        COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
     };
 
     COPLT_COM_INTERFACE(IFontCollection, "e56d9271-e6fd-4def-b03a-570380e0d560", ::Coplt::IUnknown)
@@ -28,10 +28,11 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFamily
 
-        COPLT_COM_METHOD(GetFonts, IFont* const*, (COPLT_OUT ::Coplt::u32* length) const, length);
         COPLT_COM_METHOD(GetLocalNames, ::Coplt::Str16 const*, (COPLT_OUT ::Coplt::u32* length) const, length);
         COPLT_COM_METHOD(GetNames, ::Coplt::FontFamilyNameInfo const*, (COPLT_OUT ::Coplt::u32* length) const, length);
         COPLT_COM_METHOD(ClearNativeNamesCache, void, ());
+        COPLT_COM_METHOD(GetFonts, ::Coplt::NFontPair const*, (COPLT_OUT ::Coplt::u32* length), length);
+        COPLT_COM_METHOD(ClearNativeFontsCache, void, ());
     };
 
     COPLT_COM_INTERFACE(ILibTextLayout, "778be1fe-18f2-4aa5-8d1f-52d83b132cff", ::Coplt::IUnknown)

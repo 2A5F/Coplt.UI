@@ -1,6 +1,6 @@
 #pragma once
 
-#include <dwrite.h>
+#include <dwrite_3.h>
 #include <hb-directwrite.h>
 
 #include "../Com.h"
@@ -12,10 +12,10 @@ namespace Coplt
     struct Font final : ComObject<IFont>
     {
         NFontInfo m_info{};
-        Rc<IDWriteFont> m_font;
+        Rc<IDWriteFont3> m_font;
 
-        explicit Font(Rc<IDWriteFont>& font);
+        explicit Font(Rc<IDWriteFont3>& font);
 
-        NFontInfo* Impl_get_Info() override;
+        NFontInfo const* Impl_get_Info() const override;
     };
 }

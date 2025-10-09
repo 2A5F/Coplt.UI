@@ -1,6 +1,6 @@
 ﻿namespace Coplt.UI.TextLayout;
 
-public struct FontMetrics
+public record struct FontMetrics
 {
     public float Ascent;
     public float Descent;

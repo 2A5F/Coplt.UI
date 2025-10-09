@@ -9,6 +9,12 @@ namespace Coplt.UI.TextLayout;
 [Dropping]
 public sealed unsafe partial class FontFamily
 {
+    #region CultureInfo
+
+    internal static readonly CultureInfo s_culture_en_US = CultureInfo.GetCultureInfo("en-US");
+
+    #endregion
+
     #region Fields
 
     [Drop]
@@ -16,6 +22,9 @@ public sealed unsafe partial class FontFamily
     internal readonly FrozenDictionary<CultureInfo, string> m_names;
     internal readonly FontCollection m_collection;
     internal readonly uint m_index_in_collection;
+
+    internal volatile Font[]? m_fonts;
+    internal Lock? m_load_fonts_lock;
 
     #endregion
 
@@ -25,6 +34,12 @@ public sealed unsafe partial class FontFamily
     public FrozenDictionary<CultureInfo, string> Names => m_names;
     public FontCollection Collection => m_collection;
     public uint Index => m_index_in_collection;
+
+    public string Name =>
+        m_names.TryGetValue(s_culture_en_US, out var name) ? name : m_names.FirstOrDefault().Value ?? "";
+
+    public string LocalName =>
+        m_names.TryGetValue(CultureInfo.CurrentCulture, out var name) ? name : Name;
 
     #endregion
 
@@ -65,6 +80,34 @@ public sealed unsafe partial class FontFamily
     #region ToString
 
     public override string ToString() => $"FontFamily {{ {string.Join(", ", m_names.Select(a => $"{a.Key}: {a.Value}"))} }}";
+
+    #endregion
+
+    #region Fonts
+
+    public ReadOnlySpan<Font> GetFonts() => GetFontsInternal();
+
+    internal Font[] GetFontsInternal()
+    {
+        var fonts = m_fonts;
+        if (fonts != null) return fonts;
+        lock (Interlocked.CompareExchange(ref m_load_fonts_lock, new Lock(), null) ?? m_load_fonts_lock)
+        {
+            if (m_fonts != null) return m_fonts;
+            uint num_fonts;
+            var pp_fp = m_inner.GetFonts(&num_fonts);
+            fonts = new Font[num_fonts];
+            for (var i = 0; i < num_fonts; i++)
+            {
+                ref readonly var fp = ref pp_fp[i];
+                fp.Font->AddRef();
+                fonts[i] = new Font(new(fp.Font), fp.Info, this, i);
+            }
+            m_inner.ClearNativeFontsCache();
+            m_fonts = fonts;
+            return fonts;
+        }
+    }
 
     #endregion
 }

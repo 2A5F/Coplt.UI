@@ -10,9 +10,11 @@ public sealed unsafe partial class Font
 {
     #region Fields
 
+    internal readonly FontFamily m_family;
     [Drop]
     internal Rc<IFont> m_inner;
     internal NFontInfo* m_info;
+    internal readonly int m_index;
 
     #endregion
 
@@ -20,9 +22,16 @@ public sealed unsafe partial class Font
 
     public ref readonly Rc<IFont> Inner => ref m_inner;
     public ref readonly FontMetrics Metrics => ref m_info->Metrics;
+    public FontFamily Family => m_family;
+    public int Index => m_index;
     public FontWidth Width => m_info->Width;
     public FontWeight Weight => m_info->Weight;
     public FontStyle Style => m_info->Style;
+    
+    public FontFlags Flags => m_info->Flags;
+
+    public bool IsColor => (m_info->Flags & FontFlags.Color) != 0;
+    public bool IsMonospaced => (m_info->Flags & FontFlags.Monospaced) != 0;
 
     #endregion
 
@@ -38,11 +47,20 @@ public sealed unsafe partial class Font
 
     #region Ctor
 
-    internal Font(Rc<IFont> inner, NFontInfo* info)
+    internal Font(Rc<IFont> inner, NFontInfo* info, FontFamily family, int index)
     {
+        m_family = family;
         m_inner = inner;
         m_info = info;
+        m_index = index;
     }
+
+    #endregion
+
+    #region ToString
+
+    public override string ToString() =>
+        $"Font({m_family.LocalName}, {m_index}) {{ Width = {Width}, Weight = {Weight}, Style = {Style}, Flags = {Flags} }}";
 
     #endregion
 }

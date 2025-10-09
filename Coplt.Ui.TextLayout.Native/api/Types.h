@@ -6,6 +6,28 @@
 
 namespace Coplt {
 
+    struct Str16;
+
+    struct Str8;
+
+    struct FontFamilyNameInfo;
+
+    struct NFontInfo;
+
+    struct NFontPair;
+
+    struct FontWidth;
+
+    struct FontMetrics;
+
+    struct IFont;
+
+    struct IFontCollection;
+
+    struct IFontFamily;
+
+    struct ILibTextLayout;
+
     enum class FontStyle : ::Coplt::u8
     {
         Normal = 0,
@@ -29,6 +51,13 @@ namespace Coplt {
         ExtraBlack = 950,
     };
 
+    COPLT_ENUM_FLAGS(FontFlags, ::Coplt::i32)
+    {
+        None = 0,
+        Color = 1,
+        Monospaced = 2,
+    };
+
     enum class LogLevel : ::Coplt::u8
     {
         Fatal = 0,
@@ -38,18 +67,6 @@ namespace Coplt {
         Debug = 4,
         Verbose = 5,
     };
-
-    struct Str16;
-
-    struct Str8;
-
-    struct FontFamilyNameInfo;
-
-    struct NFontInfo;
-
-    struct FontWidth;
-
-    struct FontMetrics;
 
     struct Str16
     {
@@ -89,6 +106,13 @@ namespace Coplt {
         ::Coplt::FontWidth Width;
         ::Coplt::FontWeight Weight;
         ::Coplt::FontStyle Style;
+        ::Coplt::FontFlags Flags;
+    };
+
+    struct NFontPair
+    {
+        IFont* Font;
+        ::Coplt::NFontInfo* Info;
     };
 
 } // namespace Coplt
