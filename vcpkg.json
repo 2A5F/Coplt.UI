@@ -4,8 +4,9 @@
     "version>=" : "0.8.3"
   }, {
     "name" : "harfbuzz",
-    "version>=" : "10.2.0#4",
-    "features": ["directwrite"]
+    "version>=" : "11.3.3",
+    "features": ["directwrite"],
+    "platform" : "windows"
   }, {
     "name" : "mimalloc",
     "version>=" : "2.2.3#1"

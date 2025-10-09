@@ -23,9 +23,9 @@ if (WIN32)
             src/dwrite/Error.h
             src/dwrite/Font.cc
             src/dwrite/Font.h
+            src/FontFace.cc
+            src/FontFace.h
     )
-
-#    set(HB_HAVE_DIRECTWRITE ON)
 endif ()
 
 add_library(${PROJECT_NAME} SHARED
@@ -41,9 +41,9 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY
 target_link_libraries(${PROJECT_NAME} PRIVATE
         Coplt::Com
         cpptrace::cpptrace
-        harfbuzz::harfbuzz
         mimalloc-static
         fmt::fmt-header-only
+        harfbuzz::harfbuzz
 )
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE Dwrite.lib)

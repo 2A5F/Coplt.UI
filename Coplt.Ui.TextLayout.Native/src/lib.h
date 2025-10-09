@@ -3,6 +3,9 @@
 #include "Defines.h"
 #include "Backend.h"
 
+#include <hb.h>
+// #include <hb-icu.h>
+
 namespace Coplt
 {
     struct LoggerData

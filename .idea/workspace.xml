@@ -41,16 +41,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFont.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFont.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/Utils.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/Utils.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontCollection.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontCollection.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontFamily.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontFamily.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontFlags.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontFlags.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontMetrics.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/FontMetrics.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/TextLayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/TextLayout.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.cc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/lib.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vcpkg.json" beforeDir="false" afterPath="$PROJECT_DIR$/vcpkg.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +58,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Debug" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Release" />
   <component name="FileTemplateManagerImpl">
     <option name="SCHEME" value="项目" />
   </component>

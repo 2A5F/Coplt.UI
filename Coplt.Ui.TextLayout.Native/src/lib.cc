@@ -27,5 +27,7 @@ HResult LibTextLayout::Impl_GetSystemFontCollection(IFontCollection** fc)
 
 ILibTextLayout* Coplt::Coplt_CreateLibTextLayout()
 {
+    hb_version_string();
+    // hb_icu_get_unicode_funcs();
     return new LibTextLayout();
 }
