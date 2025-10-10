@@ -11,5 +11,10 @@ public unsafe partial struct ILib
 
     public partial Str8 GetCurrentErrorMessage();
 
+    public readonly partial void* Alloc(int size, int align);
+    public readonly partial void Free(void* ptr, int align);
+    public readonly partial void* ZAlloc(int size, int align);
+    public readonly partial void* ReAlloc(void* ptr, int size, int align);
+
     public partial HResult GetSystemFontCollection(IFontCollection** fc);
 }

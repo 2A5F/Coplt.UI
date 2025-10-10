@@ -1,5 +1,36 @@
 ﻿namespace Coplt.UI.Styles;
 
+public enum TextAlign : byte
+{
+    Auto,
+    Left,
+    Right,
+    Center,
+}
+
+public enum FontStyle : byte
+{
+    Normal,
+    Italic,
+    Oblique,
+}
+
+public enum FontWeight
+{
+    None = 0,
+    Thin = 100,
+    ExtraLight = 200,
+    Light = 300,
+    SemiLight = 350,
+    Normal = 400,
+    Medium = 500,
+    SemiBold = 600,
+    Bold = 700,
+    ExtraBold = 800,
+    Black = 900,
+    ExtraBlack = 950,
+}
+
 public enum FontStretch
 {
     Undefined,

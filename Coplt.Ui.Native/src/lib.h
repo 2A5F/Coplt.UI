@@ -55,6 +55,12 @@ namespace Coplt
 
         void Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop) override;
         Str8 Impl_GetCurrentErrorMessage() override;
+
+        void* Impl_Alloc(i32 size, i32 align) const override;
+        void Impl_Free(void* ptr, i32 align) const override;
+        void* Impl_ZAlloc(i32 size, i32 align) const override;
+        void* Impl_ReAlloc(void* ptr, i32 size, i32 align) const override;
+
         HResult Impl_GetSystemFontCollection(IFontCollection** fc) override;
     };
 

@@ -15,6 +15,7 @@ namespace Coplt {
     struct IFontFace;
     struct IFontFamily;
     struct ILib;
+    struct IStub;
 
 } // namespace Coplt
 
@@ -506,12 +507,20 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     VirtualTable<::Coplt::IUnknown> b;
     void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
     ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILib*, ::Coplt::Str8*) noexcept;
+    void* (*const COPLT_CDECL f_Alloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
+    void (*const COPLT_CDECL f_Free)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 align) noexcept;
+    void* (*const COPLT_CDECL f_ZAlloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
+    void* (*const COPLT_CDECL f_ReAlloc)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
     ::Coplt::HResult* (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, ::Coplt::HResult*, IFontCollection** fc) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
     extern "C" void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
     extern "C" ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept;
+    extern "C" void* COPLT_CDECL Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
+    extern "C" void COPLT_CDECL Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept;
+    extern "C" void* COPLT_CDECL ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
+    extern "C" void* COPLT_CDECL ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept;
     extern "C" ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept;
 }
 
@@ -546,6 +555,10 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
             .f_SetLogger = VirtualImpl_Coplt_ILib::SetLogger,
             .f_GetCurrentErrorMessage = VirtualImpl_Coplt_ILib::GetCurrentErrorMessage,
+            .f_Alloc = VirtualImpl_Coplt_ILib::Alloc,
+            .f_Free = VirtualImpl_Coplt_ILib::Free,
+            .f_ZAlloc = VirtualImpl_Coplt_ILib::ZAlloc,
+            .f_ReAlloc = VirtualImpl_Coplt_ILib::ReAlloc,
             .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
         };
         return vtb;
@@ -556,6 +569,10 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
 
         virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) = 0;
         virtual ::Coplt::Str8 Impl_GetCurrentErrorMessage() = 0;
+        virtual void* Impl_Alloc(::Coplt::i32 size, ::Coplt::i32 align) const = 0;
+        virtual void Impl_Free(void* ptr, ::Coplt::i32 align) const = 0;
+        virtual void* Impl_ZAlloc(::Coplt::i32 size, ::Coplt::i32 align) const = 0;
+        virtual void* Impl_ReAlloc(void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) const = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
     };
 
@@ -594,6 +611,57 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         return r;
     }
 
+    extern "C" inline void* COPLT_CDECL Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+    {
+        void* r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, Alloc, void*)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_Alloc(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, Alloc, void*)
+        #endif
+        return r;
+    }
+
+    extern "C" inline void COPLT_CDECL Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, Free, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_Free(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, Free, void)
+        #endif
+    }
+
+    extern "C" inline void* COPLT_CDECL ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+    {
+        void* r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ZAlloc, void*)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_ZAlloc(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ZAlloc, void*)
+        #endif
+        return r;
+    }
+
+    extern "C" inline void* COPLT_CDECL ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept
+    {
+        void* r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ReAlloc, void*)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_ReAlloc(p0, p1, p2);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ReAlloc, void*)
+        #endif
+        return r;
+    }
+
     extern "C" inline ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept
     {
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -624,10 +692,115 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
         ::Coplt::Str8 r{};
         return *COPLT_COM_PVTB(ILib, self)->f_GetCurrentErrorMessage(self, &r);
     }
+    static COPLT_FORCE_INLINE void* Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+    {
+        return COPLT_COM_PVTB(ILib, self)->f_Alloc(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept
+    {
+        COPLT_COM_PVTB(ILib, self)->f_Free(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void* ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+    {
+        return COPLT_COM_PVTB(ILib, self)->f_ZAlloc(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void* ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept
+    {
+        return COPLT_COM_PVTB(ILib, self)->f_ReAlloc(self, p0, p1, p2);
+    }
     static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
     {
         ::Coplt::HResult r{};
         return *COPLT_COM_PVTB(ILib, self)->f_GetSystemFontCollection(self, &r, p0);
+    }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::IStub>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    void (*const COPLT_CDECL f_Some)(::Coplt::IStub*, ::Coplt::UiNodeData* a) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IStub
+{
+    extern "C" void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::UiNodeData* p0) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
+{
+    using VirtualTable = VirtualTable<::Coplt::IStub>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("a998ec87-868d-4320-a30a-638c291f5562");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::IStub>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IStub*>(self)));
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_Some = VirtualImpl_Coplt_IStub::Some,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual void Impl_Some(::Coplt::UiNodeData* a) = 0;
+    };
+
+    template <std::derived_from<::Coplt::IStub> Base = ::Coplt::IStub>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IStub
+{
+
+    extern "C" inline void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::UiNodeData* p0) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IStub, Some, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IStub>(self)->Impl_Some(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IStub, Some, void)
+        #endif
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_IStub\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::IStub;\
+\
+    explicit IStub(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::IStub>
+{
+    static COPLT_FORCE_INLINE void Some(::Coplt::IStub* self, ::Coplt::UiNodeData* p0) noexcept
+    {
+        COPLT_COM_PVTB(IStub, self)->f_Some(self, p0);
     }
 };
 

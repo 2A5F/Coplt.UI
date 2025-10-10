@@ -6,10 +6,12 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <NoWarn>CS8500</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Coplt.Dropping" Version="0.6.0"/>
+        <PackageReference Include="Coplt.Mathematics" Version="0.17.0" />
     </ItemGroup>
 
     <ItemGroup>

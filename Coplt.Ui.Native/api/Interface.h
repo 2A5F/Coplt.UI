@@ -47,7 +47,18 @@ namespace Coplt {
 
         COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
         COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());
+        COPLT_COM_METHOD(Alloc, void*, (::Coplt::i32 size, ::Coplt::i32 align) const, size, align);
+        COPLT_COM_METHOD(Free, void, (void* ptr, ::Coplt::i32 align) const, ptr, align);
+        COPLT_COM_METHOD(ZAlloc, void*, (::Coplt::i32 size, ::Coplt::i32 align) const, size, align);
+        COPLT_COM_METHOD(ReAlloc, void*, (void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) const, ptr, size, align);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
+    };
+
+    COPLT_COM_INTERFACE(IStub, "a998ec87-868d-4320-a30a-638c291f5562", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IStub
+
+        COPLT_COM_METHOD(Some, void, (::Coplt::UiNodeData* a), a);
     };
 
 } // namespace Coplt
