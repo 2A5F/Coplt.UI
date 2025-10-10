@@ -48,15 +48,15 @@ namespace Coplt
         }
     };
 
-    struct LibTextLayout final : ComObject<ILibTextLayout>
+    struct LibUi final : ComObject<ILib>
     {
         LoggerData m_logger{};
-        Rc<Backend> m_backend{};
+        Rc<TextBackend> m_backend{};
 
         void Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop) override;
         Str8 Impl_GetCurrentErrorMessage() override;
         HResult Impl_GetSystemFontCollection(IFontCollection** fc) override;
     };
 
-    extern "C" COPLT_EXPORT ILibTextLayout* Coplt_CreateLibTextLayout();
+    extern "C" COPLT_EXPORT ILib* Coplt_CreateLibUi();
 }

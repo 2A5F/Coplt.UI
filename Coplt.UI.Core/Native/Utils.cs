@@ -4,10 +4,10 @@ namespace Coplt.UI.Native;
 
 internal static unsafe class Utils
 {
-    public static void TryThrowWithMsg(this HResult hr, Texts.TextLayout lib)
+    public static void TryThrowWithMsg(this HResult hr)
     {
         if (hr.IsSuccess) return;
-        var msg = lib.CurrentErrorMessage;
+        var msg = NativeLib.Instance.CurrentErrorMessage;
         if (string.IsNullOrWhiteSpace(msg)) hr.TryThrow();
         throw new NativeException(msg, hr.ToException());
     }

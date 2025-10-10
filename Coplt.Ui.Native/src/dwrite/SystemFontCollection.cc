@@ -19,7 +19,7 @@ SystemFontCollection::SystemFontCollection(
 {
 }
 
-Rc<SystemFontCollection> SystemFontCollection::Create(const Backend* backend)
+Rc<SystemFontCollection> SystemFontCollection::Create(const TextBackend* backend)
 {
     Rc<IDWriteFontCollection3> collection{};
     if (const auto hr = backend->m_dw_factory->GetSystemFontCollection(

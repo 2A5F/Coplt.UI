@@ -17,8 +17,7 @@ public sealed unsafe partial class FontFamily
     #endregion
 
     #region Fields
-
-    internal readonly TextLayout m_lib;
+    
     [Drop]
     internal Rc<IFontFamily> m_inner;
     internal readonly FrozenDictionary<CultureInfo, string> m_names;
@@ -35,7 +34,6 @@ public sealed unsafe partial class FontFamily
 
     #region Properties
 
-    public TextLayout Lib => m_lib;
     public ref readonly Rc<IFontFamily> Inner => ref m_inner;
     public FrozenDictionary<CultureInfo, string> Names => m_names;
     public FontCollection? Collection => m_collection;
@@ -53,7 +51,6 @@ public sealed unsafe partial class FontFamily
 
     internal FontFamily(Rc<IFontFamily> inner, FontCollection collection, uint index)
     {
-        m_lib = collection.m_lib;
         m_inner = inner;
         m_collection = collection;
         m_index_in_collection = index;

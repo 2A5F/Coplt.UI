@@ -12,9 +12,6 @@ public sealed unsafe partial class FontCollection
 {
     #region Fields
 
-    internal readonly TextLayout m_lib;
-    [Drop]
-    internal Rc<IFontCollection> m_inner;
     internal readonly FontFamily[] m_families;
     internal readonly uint m_default_family;
     internal readonly FrozenDictionary<string, uint> m_all_in_one_name_to_family;
@@ -24,8 +21,6 @@ public sealed unsafe partial class FontCollection
 
     #region Properties
 
-    public TextLayout Lib => m_lib;
-    public ref readonly Rc<IFontCollection> Inner => ref m_inner;
     public ReadOnlySpan<FontFamily> Families => m_families;
 
     public FontFamily DefaultFamily => m_families[m_default_family];
@@ -37,10 +32,9 @@ public sealed unsafe partial class FontCollection
 
     #region Ctor
 
-    internal FontCollection(Rc<IFontCollection> inner, TextLayout lib)
+    internal FontCollection(Rc<IFontCollection> inner)
     {
-        m_lib = lib;
-        m_inner = inner;
+        using var _ = inner;
         uint len;
         var p_families = inner.GetFamilies(&len);
         m_families = new FontFamily[len];
@@ -72,6 +66,22 @@ public sealed unsafe partial class FontCollection
         m_name_to_family = name_to_family
             .ToFrozenDictionary(a => a.Key, a => a.Value.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase));
     }
+
+    #endregion
+
+    #region SystemFontCollection
+
+    [Drop(Order = -1)]
+    private static FontCollection? m_system_font_collection;
+
+    private static FontCollection GetSystemFontCollection()
+    {
+        IFontCollection* fc;
+        NativeLib.Instance.Lib.GetSystemFontCollection(&fc).TryThrowWithMsg();
+        return new(new(fc));
+    }
+
+    public static FontCollection SystemCollection => m_system_font_collection ??= GetSystemFontCollection();
 
     #endregion
 

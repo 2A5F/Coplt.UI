@@ -28,7 +28,7 @@ namespace Coplt {
 
     struct IFontFamily;
 
-    struct ILibTextLayout;
+    struct ILib;
 
     enum class LogLevel : ::Coplt::u8
     {

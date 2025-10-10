@@ -5,13 +5,13 @@
 
 namespace Coplt
 {
-    struct Backend : ComObject<IUnknown>
+    struct TextBackend : ComObject<IUnknown>
     {
         Rc<IDWriteFactory7> m_dw_factory;
 
-        explicit Backend(Rc<IDWriteFactory7>&& m_dw_factory);
+        explicit TextBackend(Rc<IDWriteFactory7>&& m_dw_factory);
 
-        static HResult Create(Rc<Backend>& out);
+        static HResult Create(Rc<TextBackend>& out);
 
         HResult GetSystemFontCollection(Rc<IFontCollection>& out) const;
     };

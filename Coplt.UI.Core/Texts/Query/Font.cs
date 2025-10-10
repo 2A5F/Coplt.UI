@@ -71,7 +71,7 @@ public sealed unsafe partial class Font
     private FontFace CreateFace()
     {
         IFontFace* face;
-        m_inner.CreateFace(&face).TryThrowWithMsg(m_family.m_lib);
+        m_inner.CreateFace(&face).TryThrowWithMsg();
         return new(new(face), this);
     }
     

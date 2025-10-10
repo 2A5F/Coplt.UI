@@ -41,9 +41,9 @@ namespace Coplt {
         COPLT_COM_METHOD(ClearNativeFontsCache, void, ());
     };
 
-    COPLT_COM_INTERFACE(ILibTextLayout, "778be1fe-18f2-4aa5-8d1f-52d83b132cff", ::Coplt::IUnknown)
+    COPLT_COM_INTERFACE(ILib, "778be1fe-18f2-4aa5-8d1f-52d83b132cff", ::Coplt::IUnknown)
     {
-        COPLT_COM_INTERFACE_BODY_Coplt_ILibTextLayout
+        COPLT_COM_INTERFACE_BODY_Coplt_ILib
 
         COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
         COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());

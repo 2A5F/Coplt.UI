@@ -14,7 +14,7 @@ namespace Coplt {
     struct IFontCollection;
     struct IFontFace;
     struct IFontFamily;
-    struct ILibTextLayout;
+    struct ILib;
 
 } // namespace Coplt
 
@@ -501,24 +501,24 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFamily>
 };
 
 template <>
-struct ::Coplt::Internal::VirtualTable<::Coplt::ILibTextLayout>
+struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILibTextLayout*, void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
-    ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILibTextLayout*, ::Coplt::Str8*) noexcept;
-    ::Coplt::HResult* (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILibTextLayout*, ::Coplt::HResult*, IFontCollection** fc) noexcept;
+    void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
+    ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILib*, ::Coplt::Str8*) noexcept;
+    ::Coplt::HResult* (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, ::Coplt::HResult*, IFontCollection** fc) noexcept;
 };
-namespace Coplt::Internal::VirtualImpl_Coplt_ILibTextLayout
+namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
-    extern "C" void COPLT_CDECL SetLogger(::Coplt::ILibTextLayout* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
-    extern "C" ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILibTextLayout* self, ::Coplt::Str8* r) noexcept;
-    extern "C" ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILibTextLayout* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept;
+    extern "C" void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
+    extern "C" ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept;
+    extern "C" ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept;
 }
 
 template <>
-struct ::Coplt::Internal::ComProxy<::Coplt::ILibTextLayout>
+struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
 {
-    using VirtualTable = VirtualTable<::Coplt::ILibTextLayout>;
+    using VirtualTable = VirtualTable<::Coplt::ILib>;
 
     static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
     {
@@ -530,9 +530,9 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILibTextLayout>
     COPLT_FORCE_INLINE
     static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
     {
-        if (guid == guid_of<::Coplt::ILibTextLayout>())
+        if (guid == guid_of<::Coplt::ILib>())
         {
-            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ILibTextLayout*>(self)));
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ILib*>(self)));
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
@@ -544,9 +544,9 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILibTextLayout>
         static VirtualTable vtb
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
-            .f_SetLogger = VirtualImpl_Coplt_ILibTextLayout::SetLogger,
-            .f_GetCurrentErrorMessage = VirtualImpl_Coplt_ILibTextLayout::GetCurrentErrorMessage,
-            .f_GetSystemFontCollection = VirtualImpl_Coplt_ILibTextLayout::GetSystemFontCollection,
+            .f_SetLogger = VirtualImpl_Coplt_ILib::SetLogger,
+            .f_GetCurrentErrorMessage = VirtualImpl_Coplt_ILib::GetCurrentErrorMessage,
+            .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
         };
         return vtb;
     };
@@ -559,7 +559,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILibTextLayout>
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
     };
 
-    template <std::derived_from<::Coplt::ILibTextLayout> Base = ::Coplt::ILibTextLayout>
+    template <std::derived_from<::Coplt::ILib> Base = ::Coplt::ILib>
     struct Proxy : Impl, Base
     {
         explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
@@ -567,67 +567,67 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILibTextLayout>
         explicit Proxy() : Base(&GetVtb()) {}
     };
 };
-namespace Coplt::Internal::VirtualImpl_Coplt_ILibTextLayout
+namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
 
-    extern "C" inline void COPLT_CDECL SetLogger(::Coplt::ILibTextLayout* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+    extern "C" inline void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILibTextLayout, SetLogger, void)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, SetLogger, void)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::ILibTextLayout>(self)->Impl_SetLogger(p0, p1, p2);
+        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_SetLogger(p0, p1, p2);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILibTextLayout, SetLogger, void)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, SetLogger, void)
         #endif
     }
 
-    extern "C" inline ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILibTextLayout* self, ::Coplt::Str8* r) noexcept
+    extern "C" inline ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept
     {
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILibTextLayout, GetCurrentErrorMessage, ::Coplt::Str8)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, GetCurrentErrorMessage, ::Coplt::Str8)
         #endif
-        *r = ::Coplt::Internal::AsImpl<::Coplt::ILibTextLayout>(self)->Impl_GetCurrentErrorMessage();
+        *r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_GetCurrentErrorMessage();
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILibTextLayout, GetCurrentErrorMessage, ::Coplt::Str8)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetCurrentErrorMessage, ::Coplt::Str8)
         #endif
         return r;
     }
 
-    extern "C" inline ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILibTextLayout* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept
+    extern "C" inline ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept
     {
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILibTextLayout, GetSystemFontCollection, ::Coplt::HResult)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::HResult)
         #endif
-        *r = ::Coplt::Internal::AsImpl<::Coplt::ILibTextLayout>(self)->Impl_GetSystemFontCollection(p0);
+        *r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_GetSystemFontCollection(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILibTextLayout, GetSystemFontCollection, ::Coplt::HResult)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::HResult)
         #endif
         return r;
     }
 }
-#define COPLT_COM_INTERFACE_BODY_Coplt_ILibTextLayout\
+#define COPLT_COM_INTERFACE_BODY_Coplt_ILib\
     using Super = ::Coplt::IUnknown;\
-    using Self = ::Coplt::ILibTextLayout;\
+    using Self = ::Coplt::ILib;\
 \
-    explicit ILibTextLayout(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+    explicit ILib(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
 
 template <>
-struct ::Coplt::Internal::CallComMethod<::Coplt::ILibTextLayout>
+struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
 {
-    static COPLT_FORCE_INLINE void SetLogger(::Coplt::ILibTextLayout* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+    static COPLT_FORCE_INLINE void SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
     {
-        COPLT_COM_PVTB(ILibTextLayout, self)->f_SetLogger(self, p0, p1, p2);
+        COPLT_COM_PVTB(ILib, self)->f_SetLogger(self, p0, p1, p2);
     }
-    static COPLT_FORCE_INLINE ::Coplt::Str8 GetCurrentErrorMessage(::Coplt::ILibTextLayout* self) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::Str8 GetCurrentErrorMessage(::Coplt::ILib* self) noexcept
     {
         ::Coplt::Str8 r{};
-        return *COPLT_COM_PVTB(ILibTextLayout, self)->f_GetCurrentErrorMessage(self, &r);
+        return *COPLT_COM_PVTB(ILib, self)->f_GetCurrentErrorMessage(self, &r);
     }
-    static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontCollection(::Coplt::ILibTextLayout* self, IFontCollection** p0) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
     {
         ::Coplt::HResult r{};
-        return *COPLT_COM_PVTB(ILibTextLayout, self)->f_GetSystemFontCollection(self, &r, p0);
+        return *COPLT_COM_PVTB(ILib, self)->f_GetSystemFontCollection(self, &r, p0);
     }
 };
 

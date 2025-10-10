@@ -2,12 +2,12 @@
 
 #include "SystemFontCollection.h"
 
-Coplt::Backend::Backend(Rc<IDWriteFactory7>&& m_dw_factory)
+Coplt::TextBackend::TextBackend(Rc<IDWriteFactory7>&& m_dw_factory)
     : m_dw_factory(std::forward<Rc<IDWriteFactory7>>(m_dw_factory))
 {
 }
 
-Coplt::HResult Coplt::Backend::Create(Rc<Backend>& out)
+Coplt::HResult Coplt::TextBackend::Create(Rc<TextBackend>& out)
 {
     Rc<IDWriteFactory7> dw_factory{};
     HRESULT hr = DWriteCreateFactory(
@@ -16,11 +16,11 @@ Coplt::HResult Coplt::Backend::Create(Rc<Backend>& out)
         dw_factory.put<::IUnknown>()
     );
     if (FAILED(hr)) return hr;
-    out = Rc(new Backend(std::move(dw_factory)));
+    out = Rc(new TextBackend(std::move(dw_factory)));
     return HResultE::Ok;
 }
 
-Coplt::HResult Coplt::Backend::GetSystemFontCollection(Rc<IFontCollection>& out) const
+Coplt::HResult Coplt::TextBackend::GetSystemFontCollection(Rc<IFontCollection>& out) const
 {
     Rc<SystemFontCollection> sfc = SystemFontCollection::Create(this);
     out = std::move(sfc);

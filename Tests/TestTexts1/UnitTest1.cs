@@ -9,8 +9,7 @@ public class Tests
     public void Test1()
     {
         var start = Stopwatch.GetTimestamp();
-        var a = TextLayout.Instance;
-        var b = a.SystemFontCollection;
+        var b = FontCollection.SystemCollection;
         var end = Stopwatch.GetTimestamp();
         var elapsed = Stopwatch.GetElapsedTime(start, end);
         Console.WriteLine($"{elapsed}");
@@ -26,8 +25,7 @@ public class Tests
     public void Test2()
     {
         var start = Stopwatch.GetTimestamp();
-        var a = TextLayout.Instance;
-        var b = a.SystemFontCollection;
+        var b = FontCollection.SystemCollection;
         var end = Stopwatch.GetTimestamp();
         var elapsed = Stopwatch.GetElapsedTime(start, end);
         var d = b.DefaultFamily;

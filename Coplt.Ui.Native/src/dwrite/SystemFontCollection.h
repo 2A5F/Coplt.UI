@@ -7,7 +7,7 @@
 
 namespace Coplt
 {
-    struct Backend;
+    struct TextBackend;
 
     struct SystemFontCollection final : ComObject<IFontCollection>
     {
@@ -23,7 +23,7 @@ namespace Coplt
             std::vector<IFontFamily*>& p_families
         );
 
-        static Rc<SystemFontCollection> Create(const Backend* backend);
+        static Rc<SystemFontCollection> Create(const TextBackend* backend);
 
         IFontFamily* const* Impl_GetFamilies(u32* count) const override;
         void Impl_ClearNativeFamiliesCache() override;
