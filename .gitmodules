@@ -10,3 +10,6 @@
 [submodule "taffy"]
 	path = taffy
 	url = https://github.com/coplt/taffy
+[submodule "ThirdParty/corrosion"]
+	path = ThirdParty/corrosion
+	url = https://github.com/corrosion-rs/corrosion

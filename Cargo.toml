@@ -1,0 +1,7 @@
+[workspace]
+exclude = ["taffy"]
+members = ["coplt_ui_rusty"]
+resolver = "3"
+
+[workspace.dependencies]
+taffy = {path = "taffy"}

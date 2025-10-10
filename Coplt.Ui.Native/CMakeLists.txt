@@ -42,6 +42,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 target_link_libraries(${PROJECT_NAME} PRIVATE
         Coplt::Com
+        coplt_ui_rusty
         cpptrace::cpptrace
         mimalloc-static
         fmt::fmt-header-only
@@ -50,3 +51,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE Dwrite.lib)
 endif ()
+
