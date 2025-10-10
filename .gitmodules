@@ -7,3 +7,6 @@
 [submodule "ThirdParty/emhash"]
 	path = ThirdParty/emhash
 	url = https://github.com/ktprime/emhash
+[submodule "taffy"]
+	path = taffy
+	url = https://github.com/coplt/taffy

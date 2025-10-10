@@ -41,17 +41,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFont.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Native/IFont.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Details.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Interface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/api/Types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/FontFace.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.TextLayout.Native/src/dwrite/Font.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -206,7 +197,7 @@
       <workItem from="1759204612525" duration="15527000" />
       <workItem from="1759891331915" duration="949000" />
       <workItem from="1759978938270" duration="13617000" />
-      <workItem from="1760003749923" duration="2724000" />
+      <workItem from="1760003749923" duration="3457000" />
     </task>
     <servers />
   </component>
