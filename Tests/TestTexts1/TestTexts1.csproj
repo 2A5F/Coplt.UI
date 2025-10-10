@@ -21,16 +21,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Coplt.UI.TextLayout\Coplt.UI.TextLayout.csproj"/>
+        <ProjectReference Include="..\..\Coplt.UI.Core\Coplt.UI.Core.csproj" />
     </ItemGroup>
 
-    <Import Project="..\..\Coplt.UI.TextLayout\BuildNative.targets"/>
+    <Import Project="..\..\Coplt.UI.Core\BuildNative.targets"/>
     <Target Name="ReadyNative" AfterTargets="Build">
         <CallTarget Targets="BuildNative"/>
         <ItemGroup>
-            <NativeItems Include="$(SolutionDir)/build/Coplt.Ui.TextLayout.Native/Debug/**/*.dll" Condition="'$(Configuration)' == 'Debug'"/>
-            <NativeItems Include="$(SolutionDir)/build/Coplt.Ui.TextLayout.Native/Debug/**/*.pdb" Condition="'$(Configuration)' == 'Debug'"/>
-            <NativeItems Include="$(SolutionDir)/build/Coplt.Ui.TextLayout.Native/Release/**/*.dll" Condition="'$(Configuration)' == 'Release'"/>
+            <NativeItems Include="$(SolutionDir)/build/Coplt.Ui.Native/Debug/**/*.dll" Condition="'$(Configuration)' == 'Debug'"/>
+            <NativeItems Include="$(SolutionDir)/build/Coplt.Ui.Native/Debug/**/*.pdb" Condition="'$(Configuration)' == 'Debug'"/>
+            <NativeItems Include="$(SolutionDir)/build/Coplt.Ui.Native/Release/**/*.dll" Condition="'$(Configuration)' == 'Release'"/>
         </ItemGroup>
         <Copy SourceFiles="@(NativeItems)" DestinationFolder="$(OutDir)"/>
     </Target>

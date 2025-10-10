@@ -22,4 +22,4 @@ add_definitions(-Wno-everything)
 add_subdirectory(ThirdParty/emhash)
 
 add_subdirectory(Coplt.Com2)
-add_subdirectory(Coplt.Ui.TextLayout.Native)
+add_subdirectory(Coplt.Ui.Native)

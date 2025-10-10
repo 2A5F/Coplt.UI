@@ -1,6 +1,6 @@
 ﻿using Coplt.Com;
 using Coplt.Dropping;
-using Coplt.UI.Layouts.Native;
+using Coplt.UI.Native;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Texts;

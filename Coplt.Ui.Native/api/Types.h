@@ -1,6 +1,6 @@
 ﻿#pragma once
-#ifndef COPLT_UL_TEXT_LAYOUT_TYPES_H
-#define COPLT_UL_TEXT_LAYOUT_TYPES_H
+#ifndef COPLT_UI_TYPES_H
+#define COPLT_UI_TYPES_H
 
 #include "CoCom.h"
 
@@ -30,6 +30,16 @@ namespace Coplt {
 
     struct ILibTextLayout;
 
+    enum class LogLevel : ::Coplt::u8
+    {
+        Fatal = 0,
+        Error = 1,
+        Warning = 2,
+        Info = 3,
+        Debug = 4,
+        Verbose = 5,
+    };
+
     enum class FontStyle : ::Coplt::u8
     {
         Normal = 0,
@@ -58,16 +68,6 @@ namespace Coplt {
         None = 0,
         Color = 1,
         Monospaced = 2,
-    };
-
-    enum class LogLevel : ::Coplt::u8
-    {
-        Fatal = 0,
-        Error = 1,
-        Warning = 2,
-        Info = 3,
-        Debug = 4,
-        Verbose = 5,
     };
 
     struct Str16
@@ -119,4 +119,4 @@ namespace Coplt {
 
 } // namespace Coplt
 
-#endif //COPLT_UL_TEXT_LAYOUT_TYPES_H
+#endif //COPLT_UI_TYPES_H

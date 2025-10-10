@@ -1,4 +1,4 @@
-﻿namespace Coplt.UI.Layouts.Native;
+﻿namespace Coplt.UI.Native;
 
 public class NativeException : Exception
 {

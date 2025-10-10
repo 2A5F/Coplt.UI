@@ -1,0 +1,14 @@
+{
+  "inputs": [
+    "./obj/ForCom/Coplt.UI.Core.dll"
+  ],
+  "outputs": [
+    {
+      "type": "cpp",
+      "co_com_path": "CoCom.h",
+      "proj_name": "COPLT_UI",
+      "namespace": "Coplt",
+      "path": "../Coplt.Ui.Native/api"
+    }
+  ]
+}

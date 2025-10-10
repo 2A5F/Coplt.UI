@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
-using Coplt.UI.Layouts.Native;
+using Coplt.UI.Native;
 
 namespace Coplt.UI.Texts;
 
@@ -25,7 +25,7 @@ public sealed unsafe partial class TextLayout
 
     private TextLayout()
     {
-        [DllImport("Coplt.UI.TextLayout.Native")]
+        [DllImport("Coplt.UI.Native")]
         static extern ILibTextLayout* Coplt_CreateLibTextLayout();
 
         m_lib = new(Coplt_CreateLibTextLayout());

@@ -16,7 +16,6 @@
         <ProjectReference Include="..\Coplt.Com2\Coplt.Com2.Analyzer\Coplt.Com2.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\Coplt.Com2\Coplt.Com2\Coplt.Com2.csproj" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\Coplt.Com2\Coplt.Com\Coplt.Com.csproj" />
-        <ProjectReference Include="..\Coplt.UI.Utilities\Coplt.UI.Utilities.csproj" />
     </ItemGroup>
 
     <Target Name="ReadyGenCom" AfterTargets="Build">
@@ -36,7 +35,7 @@
     </Target>
     
     <Target Name="BuildNative" BeforeTargets="Publish">
-        <Exec WorkingDirectory="../" Command="cmake --build --target Coplt.Ui.TextLayout.Native --config Release --preset Release"/>
+        <Exec WorkingDirectory="../" Command="cmake --build --target Coplt.Ui.Native --config Release --preset Release"/>
     </Target>
 
 </Project>

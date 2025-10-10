@@ -1,10 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
-using Coplt.Com.OpaqueTypes;
-using Coplt.Dropping;
-using Coplt.UI.Utilities.Miscellaneous;
+using Coplt.UI.Miscellaneous;
 
-namespace Coplt.UI.Layouts.Native;
+namespace Coplt.UI.Native;
 
 [Interface, Guid("778be1fe-18f2-4aa5-8d1f-52d83b132cff")]
 public unsafe partial struct ILibTextLayout

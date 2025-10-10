@@ -1,4 +1,4 @@
-project(Coplt.Ui.TextLayout.Native LANGUAGES CXX)
+project(Coplt.Ui.Native LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 

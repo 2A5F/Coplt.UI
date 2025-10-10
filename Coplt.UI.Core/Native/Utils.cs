@@ -1,6 +1,6 @@
 ﻿using Coplt.Com;
 
-namespace Coplt.UI.Layouts.Native;
+namespace Coplt.UI.Native;
 
 internal static unsafe class Utils
 {

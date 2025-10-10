@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Coplt.Com;
 using Coplt.Dropping;
-using Coplt.UI.Layouts.Native;
+using Coplt.UI.Native;
 
 namespace Coplt.UI.Texts;
 

@@ -1,6 +1,6 @@
 ﻿#pragma once
-#ifndef COPLT_UL_TEXT_LAYOUT_INTERFACE_H
-#define COPLT_UL_TEXT_LAYOUT_INTERFACE_H
+#ifndef COPLT_UI_INTERFACE_H
+#define COPLT_UI_INTERFACE_H
 
 #include "CoCom.h"
 #include "./Types.h"
@@ -52,4 +52,4 @@ namespace Coplt {
 
 } // namespace Coplt
 
-#endif //COPLT_UL_TEXT_LAYOUT_INTERFACE_H
+#endif //COPLT_UI_INTERFACE_H

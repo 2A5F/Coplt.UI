@@ -1,6 +1,6 @@
 ﻿#pragma once
-#ifndef COPLT_UL_TEXT_LAYOUT_DETAILS_H
-#define COPLT_UL_TEXT_LAYOUT_DETAILS_H
+#ifndef COPLT_UI_DETAILS_H
+#define COPLT_UI_DETAILS_H
 
 #include "CoCom.h"
 #include "./Types.h"
@@ -631,4 +631,4 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILibTextLayout>
     }
 };
 
-#endif //COPLT_UL_TEXT_LAYOUT_DETAILS_H
+#endif //COPLT_UI_DETAILS_H

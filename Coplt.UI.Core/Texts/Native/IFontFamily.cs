@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
 
-namespace Coplt.UI.Layouts.Native;
+namespace Coplt.UI.Native;
 
 public unsafe struct NFontPair
 {

@@ -1,0 +1,6 @@
+﻿<Project>
+    <Target Name="BuildNative">
+        <Exec WorkingDirectory="$(SolutionDir)" Command="cmake --build --target Coplt.Ui.Native --config Debug --preset Debug" Condition="'$(Configuration)' == 'Debug'"/>
+        <Exec WorkingDirectory="$(SolutionDir)" Command="cmake --build --target Coplt.Ui.Native --config Release --preset Release" Condition="'$(Configuration)' == 'Release'"/>
+    </Target>
+</Project>

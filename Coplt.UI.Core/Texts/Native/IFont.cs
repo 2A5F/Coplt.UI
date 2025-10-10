@@ -3,7 +3,7 @@ using Coplt.Com;
 using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 
-namespace Coplt.UI.Layouts.Native;
+namespace Coplt.UI.Native;
 
 public struct NFontInfo
 {
