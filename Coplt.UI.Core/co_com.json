@@ -9,6 +9,10 @@
       "proj_name": "COPLT_UI",
       "namespace": "Coplt",
       "path": "../Coplt.Ui.Native/api"
+    },
+    {
+      "type": "rust",
+      "path": "../coplt_ui_rusty/src/com.rs"
     }
   ]
 }
