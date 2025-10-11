@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="2795" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="2831" type="long" />
     <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
   </component>
   <component name="CMakePresetLoader">{
@@ -18,17 +18,23 @@
   </component>
   <component name="CMakeRunConfigurationManager">
     <generated>
-      <config projectName="Coplt.Ui" targetName="Test1" />
       <config projectName="Coplt.Ui" targetName="Com" />
-      <config projectName="Coplt.Ui" targetName="bs" />
       <config projectName="Coplt.Ui" targetName="ebench" />
-      <config projectName="Coplt.Ui" targetName="mbench" />
       <config projectName="Coplt.Ui" targetName="hbench" />
+      <config projectName="Coplt.Ui" targetName="cargo-clean_coplt_ui_rusty" />
+      <config projectName="Coplt.Ui" targetName="cargo-clean" />
+      <config projectName="Coplt.Ui" targetName="Coplt.Ui.Native" />
+      <config projectName="Coplt.Ui" targetName="Com_shared" />
+      <config projectName="Coplt.Ui" targetName="cargo-build_coplt_ui_rusty" />
+      <config projectName="Coplt.Ui" targetName="Test1" />
+      <config projectName="Coplt.Ui" targetName="bs" />
+      <config projectName="Coplt.Ui" targetName="mbench" />
+      <config projectName="Coplt.Ui" targetName="_cargo-build_coplt_ui_rusty" />
+      <config projectName="Coplt.Ui" targetName="cargo-prebuild" />
+      <config projectName="Coplt.Ui" targetName="cargo-prebuild_coplt_ui_rusty" />
       <config projectName="Coplt.Ui" targetName="bi" />
       <config projectName="Coplt.Ui" targetName="fbench" />
       <config projectName="Coplt.Ui" targetName="sbench" />
-      <config projectName="Coplt.Ui" targetName="Com_shared" />
-      <config projectName="Coplt.Ui" targetName="Coplt.Ui.TextLayout.Native" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -41,8 +47,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.TextLayout/Query/Font.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestTexts1/UnitTest1.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Coplt.UI.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Coplt.UI.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/com_ptr.rs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/com_ptr.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/object.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,12 +67,15 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Debug" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Release" />
   <component name="FileTemplateManagerImpl">
     <option name="SCHEME" value="项目" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/Coplt.Com2" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectApplicationVersion">
     <option name="ide" value="CLion" />
@@ -103,12 +121,7 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.TextLayout.Native">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
-      </method>
-    </configuration>
+  <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.Native">
     <configuration name="Com" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Com" CONFIG_NAME="Main - Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -119,12 +132,17 @@
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Coplt.Ui.TextLayout.Native" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Coplt.Ui.TextLayout.Native" CONFIG_NAME="Main - Debug">
+    <configuration name="Coplt.Ui.Native" type="CMakeRunConfiguration" factoryName="Application" nameIsGenerated="true" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Coplt.Ui.Native" CONFIG_NAME="Main - Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <configuration name="Test1" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Test1" CONFIG_NAME="Main - Debug" RUN_TARGET_PROJECT_NAME="Coplt.Ui" RUN_TARGET_NAME="Test1">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="_cargo-build_coplt_ui_rusty" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="_cargo-build_coplt_ui_rusty" CONFIG_NAME="Main - Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -135,6 +153,31 @@
       </method>
     </configuration>
     <configuration name="bs" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="bs" CONFIG_NAME="Main - Debug" RUN_TARGET_PROJECT_NAME="Coplt.Ui" RUN_TARGET_NAME="bs">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cargo-build_coplt_ui_rusty" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="cargo-build_coplt_ui_rusty" CONFIG_NAME="Main - Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cargo-clean" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="cargo-clean" CONFIG_NAME="Main - Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cargo-clean_coplt_ui_rusty" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="cargo-clean_coplt_ui_rusty" CONFIG_NAME="Main - Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cargo-prebuild" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="cargo-prebuild" CONFIG_NAME="Main - Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="cargo-prebuild_coplt_ui_rusty" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="cargo-prebuild_coplt_ui_rusty" CONFIG_NAME="Main - Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -165,9 +208,15 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="CMake 应用程序.Coplt.Ui.Native" />
+      <item itemvalue="CMake 应用程序._cargo-build_coplt_ui_rusty" />
+      <item itemvalue="CMake 应用程序.cargo-build_coplt_ui_rusty" />
+      <item itemvalue="CMake 应用程序.cargo-clean" />
+      <item itemvalue="CMake 应用程序.cargo-clean_coplt_ui_rusty" />
+      <item itemvalue="CMake 应用程序.cargo-prebuild" />
+      <item itemvalue="CMake 应用程序.cargo-prebuild_coplt_ui_rusty" />
       <item itemvalue="CMake 应用程序.Com" />
       <item itemvalue="CMake 应用程序.Com_shared" />
-      <item itemvalue="CMake 应用程序.Coplt.Ui.TextLayout.Native" />
       <item itemvalue="CMake 应用程序.bi" />
       <item itemvalue="CMake 应用程序.bs" />
       <item itemvalue="CMake 应用程序.ebench" />
@@ -198,6 +247,7 @@
       <workItem from="1759891331915" duration="949000" />
       <workItem from="1759978938270" duration="13617000" />
       <workItem from="1760003749923" duration="3457000" />
+      <workItem from="1760164797993" duration="2840000" />
     </task>
     <servers />
   </component>

@@ -50,6 +50,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFont>
         if (guid == guid_of<::Coplt::IFont>())
         {
             object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IFont*>(self)));
+            self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
@@ -163,6 +164,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontCollection>
         if (guid == guid_of<::Coplt::IFontCollection>())
         {
             object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IFontCollection*>(self)));
+            self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
@@ -288,6 +290,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
         if (guid == guid_of<::Coplt::IFontFace>())
         {
             object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IFontFace*>(self)));
+            self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
@@ -366,6 +369,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFamily>
         if (guid == guid_of<::Coplt::IFontFamily>())
         {
             object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IFontFamily*>(self)));
+            self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
@@ -542,6 +546,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         if (guid == guid_of<::Coplt::ILib>())
         {
             object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ILib*>(self)));
+            self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
@@ -744,6 +749,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
         if (guid == guid_of<::Coplt::IStub>())
         {
             object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IStub*>(self)));
+            self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
         return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
