@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Native;
 
-internal static unsafe class Utils
+internal static unsafe class NativeUtils
 {
     public static void TryThrowWithMsg(this HResult hr)
     {

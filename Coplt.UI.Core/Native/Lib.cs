@@ -55,6 +55,7 @@ public sealed unsafe partial class NativeLib
     #region Alloc
 
     public void* Alloc(int size, int align) => m_lib.Alloc(size, align);
+    public void* ReAlloc(void* ptr, int size, int align) => m_lib.ReAlloc(ptr, size, align);
     public void Free(void* ptr, int align) => m_lib.Free(ptr, align);
 
     #endregion

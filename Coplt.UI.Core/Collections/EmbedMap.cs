@@ -65,6 +65,7 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region Initialize
 
+    [UnscopedRef]
     private int Initialize(int capacity)
     {
         var size = HashHelpers.GetPrime(capacity);
@@ -84,8 +85,9 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region GetBucket
 
+    [UnscopedRef]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref int GetBucket(int hash_code)
+    private readonly ref int GetBucket(int hash_code)
     {
         var buckets = m_buckets!;
         return ref buckets[HashHelpers.FastMod((uint)hash_code, (uint)buckets.Length, m_fast_mode_multiplier)];
@@ -95,7 +97,9 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region Resize
 
+    [UnscopedRef]
     private void Resize() => Resize(HashHelpers.ExpandPrime(m_count), force_new_hash_codes: false);
+    [UnscopedRef]
     private void Resize(int new_size, bool force_new_hash_codes)
     {
         // Value types never rehash
@@ -139,6 +143,7 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region TryInsert
 
+    [UnscopedRef]
     private InsertResult TryInsert(TKey key, TValue value, bool overwrite)
     {
         if (m_buckets == null) Initialize(0);
@@ -221,7 +226,8 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region FindValue
 
-    internal ref TValue FindValue(TKey key)
+    [UnscopedRef]
+    internal readonly ref TValue FindValue(TKey key)
     {
         if (m_buckets == null) goto ReturnNotFound;
 
@@ -261,9 +267,10 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region Index
 
+    [UnscopedRef]
     public TValue this[TKey key]
     {
-        get => TryGet(key, out var value) ? value : throw new KeyNotFoundException();
+        readonly get => TryGet(key, out var value) ? value : throw new KeyNotFoundException();
         set => TryInsert(key, value, true);
     }
 
@@ -271,12 +278,14 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region GetValueRefOrNullRef
 
-    public ref TValue GetValueRefOrNullRef(TKey key) => ref FindValue(key);
+    [UnscopedRef]
+    public readonly ref TValue GetValueRefOrNullRef(TKey key) => ref FindValue(key);
 
     #endregion
 
     #region GetValueRefOrAddDefault
 
+    [UnscopedRef]
     public ref TValue? GetValueRefOrAddDefault(TKey key, out bool exists)
     {
         if (m_buckets == null) Initialize(0);
@@ -360,6 +369,7 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region GetValueRefOrUninitialized
 
+    [UnscopedRef]
     public ref TValue? GetValueRefOrUninitialized(TKey key, out bool exists)
     {
         if (m_buckets == null) Initialize(0);
@@ -443,25 +453,29 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region TryAdd
 
+    [UnscopedRef]
     public bool TryAdd(TKey key, TValue value) => TryInsert(key, value, false) == InsertResult.AddNew;
 
     #endregion
 
     #region Set
 
+    [UnscopedRef]
     public bool Set(TKey key, TValue value) => TryInsert(key, value, true) == InsertResult.AddNew;
 
     #endregion
 
     #region Contains
 
-    public bool Contains(TKey key) => !Unsafe.IsNullRef(ref FindValue(key));
+    [UnscopedRef]
+    public readonly bool Contains(TKey key) => !Unsafe.IsNullRef(ref FindValue(key));
 
     #endregion
 
     #region TryGet
 
-    public bool TryGet(TKey key, out TValue value)
+    [UnscopedRef]
+    public readonly bool TryGet(TKey key, out TValue value)
     {
         ref var value_ref = ref FindValue(key);
         if (!Unsafe.IsNullRef(ref value_ref))
@@ -480,6 +494,7 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region Remove
 
+    [UnscopedRef]
     public bool Remove(TKey key)
     {
         if (m_buckets == null) return false;
@@ -539,6 +554,7 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         return false;
     }
 
+    [UnscopedRef]
     public bool Remove(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
         if (m_buckets == null) goto None;
@@ -606,6 +622,7 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     #region Clear
 
+    [UnscopedRef]
     public void Clear()
     {
         int count = m_count;

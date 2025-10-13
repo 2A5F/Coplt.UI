@@ -47,17 +47,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Coplt.UI/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Coplt.UI.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Coplt.UI.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/com_ptr.rs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/com_ptr.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/lib.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/object.rs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom_rs/src/object.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -247,7 +237,7 @@
       <workItem from="1759891331915" duration="949000" />
       <workItem from="1759978938270" duration="13617000" />
       <workItem from="1760003749923" duration="3457000" />
-      <workItem from="1760164797993" duration="2840000" />
+      <workItem from="1760164797993" duration="3658000" />
     </task>
     <servers />
   </component>
