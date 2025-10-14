@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Coplt.UI.Collections;
 
@@ -145,6 +147,14 @@ public struct EmbedList<T> : IList<T>, IReadOnlyList<T>
         m_size = size + 1;
         return ref m_items![size];
     }
+
+    #endregion
+
+    #region At
+
+    [UnscopedRef]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref T UnsafeAt(int index) => ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_items!), index);
 
     #endregion
 

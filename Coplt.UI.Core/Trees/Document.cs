@@ -205,16 +205,11 @@ public sealed partial class Document
 
     #region Create
 
-    private NodeId AllocNodeId()
+    private NodeId CreateNode()
     {
+        // todo
         return new(m_node_id_inc++, 1);
     }
-
-    public Element Create(NodeType type) => new(this, type);
-
-    public Element CreateView() => Create(NodeType.View);
-
-    public Element CreateText() => Create(NodeType.Text);
 
     #endregion
 }

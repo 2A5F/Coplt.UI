@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Native;
@@ -20,7 +22,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
     }
 
     #endregion
-    
+
     #region Capacity
 
     private const int DefaultCapacity = 4;
@@ -181,6 +183,14 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
         NativeLib.Instance.Free(m_items, Utils.AlignOf<T>());
         m_items = null;
     }
+
+    #endregion
+
+    #region At
+
+    [UnscopedRef]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T* UnsafeAt(int index) => &m_items[index];
 
     #endregion
 
