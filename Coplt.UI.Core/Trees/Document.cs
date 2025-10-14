@@ -1,4 +1,5 @@
 ﻿using System.Collections.Frozen;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
@@ -6,14 +7,15 @@ using Coplt.UI.Trees.Datas;
 
 namespace Coplt.UI.Trees;
 
-[Dropping]
+[Dropping(Unmanaged = true)]
 public sealed partial class Document
 {
     #region Fields
 
     internal readonly Template m_template;
     internal readonly Arche[] m_arches;
-    internal DenseSet m_dense_set;
+    internal EmbedQueue<NodeId> m_node_id_recycle = new();
+    internal uint m_node_id_inc;
 
     #endregion
 
@@ -114,19 +116,35 @@ public sealed partial class Document
         internal override AStorage Create() => type switch
         {
             StorageType.Default => new Storage<T>(this),
-            StorageType.Pinned => new PinnedStorage<T>(this),
+            StorageType.Pinned => RuntimeHelpers.IsReferenceOrContainsReferences<T>()
+                ? new Storage<T>(this)
+                : new PinnedStorage<T>(this),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
 
     #endregion
 
+    #region Drop
+
+    [Drop]
+    private void Drop()
+    {
+        foreach (var arch in m_arches)
+        {
+            arch.Dispose();
+        }
+    }
+
+    #endregion
+
     #region Instance
 
-    public sealed class Arche
+    public sealed class Arche : IDisposable
     {
         internal readonly ArcheTemplate m_template;
         internal readonly AStorage[] m_storages;
+        internal EmbedMap<NodeId, int> m_id_index_map = new();
 
         internal Arche(ArcheTemplate template)
         {
@@ -137,9 +155,17 @@ public sealed partial class Document
                 m_storages[storage.m_index] = storage.Create();
             }
         }
+
+        public void Dispose()
+        {
+            foreach (var storage in m_storages) { }
+        }
     }
 
-    public abstract class AStorage { }
+    public abstract class AStorage : IDisposable
+    {
+        public abstract void Dispose();
+    }
 
     public abstract class AStorage<T> : AStorage
         where T : new()
@@ -155,20 +181,40 @@ public sealed partial class Document
     public sealed class Storage<T> : AStorage<T>
         where T : new()
     {
-        internal readonly StorageTemplate<T> m_template;
-        internal PinChunkList<T> m_list = new();
+        internal EmbedList<T> m_list = new();
 
         internal Storage(StorageTemplate<T> template) : base(template) { }
+
+        public override void Dispose() { }
     }
 
     public sealed class PinnedStorage<T> : AStorage<T>
         where T : new()
     {
-        internal readonly StorageTemplate<T> m_template;
-        internal PinChunkList<T> m_list = new();
+        internal NativeList<T> m_list = new();
 
         internal PinnedStorage(StorageTemplate<T> template) : base(template) { }
+
+        public override void Dispose()
+        {
+            m_list.Dispose();
+        }
     }
+
+    #endregion
+
+    #region Create
+
+    private NodeId AllocNodeId()
+    {
+        return new(m_node_id_inc++, 1);
+    }
+
+    public Element Create(NodeType type) => new(this, type);
+
+    public Element CreateView() => Create(NodeType.View);
+
+    public Element CreateText() => Create(NodeType.Text);
 
     #endregion
 }

@@ -10,8 +10,17 @@ namespace Coplt.UI.Collections;
 
 [Dropping]
 public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
-    where T : unmanaged
 {
+    #region Static Check
+
+    static NativeList()
+    {
+        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            throw new NotSupportedException("Only unmanaged types are supported");
+    }
+
+    #endregion
+    
     #region Capacity
 
     private const int DefaultCapacity = 4;
