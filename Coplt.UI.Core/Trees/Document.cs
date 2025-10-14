@@ -162,10 +162,8 @@ public sealed partial class Document
         }
     }
 
-    public abstract class AStorage : IDisposable
-    {
-        public abstract void Dispose();
-    }
+    [Dropping]
+    public abstract partial class AStorage { }
 
     public abstract class AStorage<T> : AStorage
         where T : new()
@@ -181,24 +179,19 @@ public sealed partial class Document
     public sealed class Storage<T> : AStorage<T>
         where T : new()
     {
-        internal EmbedList<T> m_list = new();
+        internal HiveStorage<T> m_storage = new();
 
         internal Storage(StorageTemplate<T> template) : base(template) { }
-
-        public override void Dispose() { }
     }
 
-    public sealed class PinnedStorage<T> : AStorage<T>
+    [Dropping(Unmanaged = true)]
+    public sealed partial class PinnedStorage<T> : AStorage<T>
         where T : new()
     {
-        internal NativeList<T> m_list = new();
+        [Drop]
+        internal NativeHiveStorage<T> m_storage = new();
 
         internal PinnedStorage(StorageTemplate<T> template) : base(template) { }
-
-        public override void Dispose()
-        {
-            m_list.Dispose();
-        }
     }
 
     #endregion
