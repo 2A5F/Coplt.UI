@@ -58,7 +58,7 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IStub
 
-        COPLT_COM_METHOD(Some, void, (::Coplt::UiNodeData* a), a);
+        COPLT_COM_METHOD(Some, void, (::Coplt::LayoutData* layout), layout);
     };
 
 } // namespace Coplt

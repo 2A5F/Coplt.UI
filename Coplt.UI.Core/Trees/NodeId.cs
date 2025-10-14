@@ -1,3 +1,3 @@
-﻿namespace Coplt.UI.Documents;
+﻿namespace Coplt.UI.Trees;
 
 public record struct NodeId(ulong Id);

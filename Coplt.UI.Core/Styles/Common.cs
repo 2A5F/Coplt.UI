@@ -6,7 +6,6 @@ public enum Display : byte
     Grid,
     Block,
     Inline,
-    None,
 }
 
 public enum Position : byte

@@ -1,29 +1,21 @@
-﻿using Coplt.Com;
-using Coplt.Com.OpaqueTypes;
-using Coplt.Dropping;
+﻿using Coplt.UI.Styles;
 
-namespace Coplt.UI.Styles;
+namespace Coplt.UI.Trees.Datas;
 
-[Dropping]
-public partial struct StyleData()
+public record struct CommonStyleData()
 {
-    [ComType<Ptr<ComVoid>>]
-    public object? Image = null;
-    
     public int ZIndex;
     public float Opacity = 1;
 
+    public bool Visible = true;
+}
+
+public record struct ViewStyleData()
+{
     public float ColorR = 1;
     public float ColorG = 1;
     public float ColorB = 1;
     public float ColorA = 0;
-    
-    public float ImageTintR = 1;
-    public float ImageTintG = 1;
-    public float ImageTintB = 1;
-    public float ImageTintA = 1;
-
-    public float ScrollbarWidth = 0;
 
     public float InsertTopValue = 0;
     public float InsertRightValue = 0;
@@ -58,16 +50,6 @@ public partial struct StyleData()
 
     public float GapXValue = 0;
     public float GapYValue = 0;
-    
-    public float TextColorR = 1;
-    public float TextColorG = 1;
-    public float TextColorB = 1;
-    public float TextColorA = 1;
-    
-    public float TextSizeValue = 16;
-
-    public BorderRadiusMode BorderMode = BorderRadiusMode.Circle;
-    public SamplerType BackgroundSampler = SamplerType.LinearWrap;
 
     public Display Display = Display.Flex;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
@@ -88,7 +70,7 @@ public partial struct StyleData()
 
     public LengthType MaxMinWidth = LengthType.Auto;
     public LengthType MaxMinHeight = LengthType.Auto;
-    
+
     public bool HasAspectRatio = false;
 
     public LengthType MarginTop = LengthType.Fixed;
@@ -115,11 +97,4 @@ public partial struct StyleData()
 
     public LengthType GapX = LengthType.Fixed;
     public LengthType GapY = LengthType.Fixed;
-
-    public TextAlign TextAlign = TextAlign.Auto;
-    
-    public LengthType TextSize = LengthType.Fixed;
-
-    public CursorType Cursor = CursorType.Default;
-    public PointerEvents PointerEvents = PointerEvents.Auto;
 }

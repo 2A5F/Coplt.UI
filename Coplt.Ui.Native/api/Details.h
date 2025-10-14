@@ -724,11 +724,11 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IStub>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    void (*const COPLT_CDECL f_Some)(::Coplt::IStub*, ::Coplt::UiNodeData* a) noexcept;
+    void (*const COPLT_CDECL f_Some)(::Coplt::IStub*, ::Coplt::LayoutData* layout) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IStub
 {
-    extern "C" void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::UiNodeData* p0) noexcept;
+    extern "C" void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::LayoutData* p0) noexcept;
 }
 
 template <>
@@ -769,7 +769,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual void Impl_Some(::Coplt::UiNodeData* a) = 0;
+        virtual void Impl_Some(::Coplt::LayoutData* layout) = 0;
     };
 
     template <std::derived_from<::Coplt::IStub> Base = ::Coplt::IStub>
@@ -783,7 +783,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
 namespace Coplt::Internal::VirtualImpl_Coplt_IStub
 {
 
-    extern "C" inline void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::UiNodeData* p0) noexcept
+    extern "C" inline void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::LayoutData* p0) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -804,7 +804,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IStub
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IStub>
 {
-    static COPLT_FORCE_INLINE void Some(::Coplt::IStub* self, ::Coplt::UiNodeData* p0) noexcept
+    static COPLT_FORCE_INLINE void Some(::Coplt::IStub* self, ::Coplt::LayoutData* p0) noexcept
     {
         COPLT_COM_PVTB(IStub, self)->f_Some(self, p0);
     }
