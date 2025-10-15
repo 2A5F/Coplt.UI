@@ -13,6 +13,11 @@
         <PackageReference Include="Coplt.Dropping" Version="0.6.0"/>
         <PackageReference Include="Coplt.Mathematics" Version="0.17.0" />
         <PackageReference Include="Coplt.Union" Version="0.19.2" />
+        <PackageReference Include="Fody" Version="6.9.3">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="InlineIL.Fody" Version="1.10.1" />
     </ItemGroup>
 
     <ItemGroup>

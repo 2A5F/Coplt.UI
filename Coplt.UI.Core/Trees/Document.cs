@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Trees.Datas;
+using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Trees;
 
@@ -241,10 +242,11 @@ public sealed partial class Document
 
         public override Action<int> Remove => idx =>
         {
-            if (m_data.UnsafeAt(idx) is IDisposable disposable) disposable.Dispose();
+            ref var slot = ref m_data.UnsafeAt(idx);
+            DisposeProxy.TryDispose(ref slot);
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             {
-                m_data.UnsafeAt(idx) = default!;
+                slot = default!;
             }
         };
     }
@@ -264,10 +266,7 @@ public sealed partial class Document
             m_data.UnsafeAt(idx) = new();
         };
 
-        public override Action<int> Remove => idx =>
-        {
-            if (m_data.UnsafeAt(idx) is IDisposable disposable) disposable.Dispose();
-        };
+        public override Action<int> Remove => idx => { DisposeProxy.TryDispose(ref m_data.UnsafeAt(idx)); };
     }
 
     #endregion
@@ -278,16 +277,18 @@ public sealed partial class Document
     /// <param name="index">temporarily available index, if added again or the parameter will become invalid</param>
     public NodeId CreateNode(NodeType type, out int index)
     {
-        var id = new NodeId(m_node_id_inc++, 1, type);
+        if (m_node_id_recycle.TryDequeue(out var id))
+            id = new(id.Id, id.Version + 1, type);
+        else id = new(m_node_id_inc++, 1, type);
         index = m_arches[(int)type].Add(id);
         return id;
     }
 
     public void Remove(NodeId id)
     {
-        // todo recycle id
         var type = id.Type;
         m_arches[(int)type].Remove(id);
+        m_node_id_recycle.Enqueue(id);
     }
 
     #endregion
