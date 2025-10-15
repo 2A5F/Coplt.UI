@@ -144,6 +144,9 @@ public sealed partial class Document
     {
         internal readonly ArcheTemplate m_template;
         internal readonly AStorage[] m_storages;
+        internal EmbedList<Action> m_storage_fns_dispose;
+        internal readonly Action<int, CtrlOp>[] m_storage_fns_add;
+        internal readonly Action<int>[] m_storage_fns_remove;
         internal NSplitMapCtrl<NodeId> m_ctrl = new();
 
         internal Arche(ArcheTemplate template)
@@ -154,16 +157,61 @@ public sealed partial class Document
             {
                 m_storages[storage.m_index] = storage.Create();
             }
+            foreach (var storage in m_storages)
+            {
+                var dispose = storage.Dispose;
+                if (dispose == null) continue;
+                m_storage_fns_dispose.Add(dispose);
+            }
+            m_storage_fns_add = new Action<int, CtrlOp>[m_storages.Length];
+            m_storage_fns_remove = new Action<int>[m_storages.Length];
+            for (var i = 0; i < m_storages.Length; i++)
+            {
+                var storage = m_storages[i];
+                m_storage_fns_add[i] = storage.Add;
+                m_storage_fns_remove[i] = storage.Remove;
+            }
         }
 
         public void Dispose()
         {
-            foreach (var storage in m_storages) { }
+            foreach (var dispose in m_storage_fns_dispose)
+            {
+                dispose();
+            }
+        }
+
+        public int Add(NodeId id)
+        {
+            var op = CtrlOp.None;
+            var r = m_ctrl.TryInsert(id, false, ref op, out var idx);
+            if (r != InsertResult.AddNew) throw new InvalidOperationException();
+            if (!op.IsNone)
+            {
+                foreach (var add in m_storage_fns_add)
+                {
+                    add(idx, op);
+                }
+            }
+            return idx;
+        }
+
+        public void Remove(NodeId id)
+        {
+            var idx = m_ctrl.Remove(id);
+            foreach (var remove in m_storage_fns_remove)
+            {
+                remove(idx);
+            }
         }
     }
 
-    [Dropping]
-    public abstract partial class AStorage { }
+    public abstract class AStorage
+    {
+        public abstract Action? Dispose { get; }
+        public abstract Action<int, CtrlOp> Add { get; }
+        public abstract Action<int> Remove { get; }
+    }
 
     public abstract class AStorage<T> : AStorage
         where T : new()
@@ -182,26 +230,64 @@ public sealed partial class Document
         internal SplitMapData<T> m_data = new();
 
         internal Storage(StorageTemplate<T> template) : base(template) { }
+
+        public override Action? Dispose => null;
+
+        public override Action<int, CtrlOp> Add => (idx, op) =>
+        {
+            m_data.ApplyOp(op);
+            m_data.UnsafeAt(idx) = new();
+        };
+
+        public override Action<int> Remove => idx =>
+        {
+            if (m_data.UnsafeAt(idx) is IDisposable disposable) disposable.Dispose();
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            {
+                m_data.UnsafeAt(idx) = default!;
+            }
+        };
     }
 
-    [Dropping(Unmanaged = true)]
     public sealed partial class PinnedStorage<T> : AStorage<T>
         where T : new()
     {
-        [Drop]
         internal NSplitMapData<T> m_data = new();
 
         internal PinnedStorage(StorageTemplate<T> template) : base(template) { }
+
+        public override Action Dispose => () => m_data.Dispose();
+
+        public override Action<int, CtrlOp> Add => (idx, op) =>
+        {
+            m_data.ApplyOp(op);
+            m_data.UnsafeAt(idx) = new();
+        };
+
+        public override Action<int> Remove => idx =>
+        {
+            if (m_data.UnsafeAt(idx) is IDisposable disposable) disposable.Dispose();
+        };
     }
 
     #endregion
 
     #region Create
 
-    private NodeId CreateNode(NodeType type)
+    /// <param name="type"></param>
+    /// <param name="index">temporarily available index, if added again or the parameter will become invalid</param>
+    public NodeId CreateNode(NodeType type, out int index)
     {
-        // todo
-        return new(m_node_id_inc++, 1, type);
+        var id = new NodeId(m_node_id_inc++, 1, type);
+        index = m_arches[(int)type].Add(id);
+        return id;
+    }
+
+    public void Remove(NodeId id)
+    {
+        // todo recycle id
+        var type = id.Type;
+        m_arches[(int)type].Remove(id);
     }
 
     #endregion
