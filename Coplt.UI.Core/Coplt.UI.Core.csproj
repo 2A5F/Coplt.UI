@@ -12,6 +12,7 @@
     <ItemGroup>
         <PackageReference Include="Coplt.Dropping" Version="0.6.0"/>
         <PackageReference Include="Coplt.Mathematics" Version="0.17.0" />
+        <PackageReference Include="Coplt.Union" Version="0.19.2" />
     </ItemGroup>
 
     <ItemGroup>

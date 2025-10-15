@@ -1,6 +1,6 @@
 ﻿namespace Coplt.UI.Collections;
 
-internal enum InsertResult
+public enum InsertResult
 {
     None,
     AddNew,
