@@ -144,7 +144,7 @@ public sealed partial class Document
     {
         internal readonly ArcheTemplate m_template;
         internal readonly AStorage[] m_storages;
-        internal EmbedMap<NodeId, int> m_id_index_map = new();
+        internal NSplitMapCtrl<NodeId> m_ctrl = new();
 
         internal Arche(ArcheTemplate template)
         {
@@ -179,7 +179,7 @@ public sealed partial class Document
     public sealed class Storage<T> : AStorage<T>
         where T : new()
     {
-        internal HiveStorage<T> m_storage = new();
+        internal SplitMapData<T> m_data = new();
 
         internal Storage(StorageTemplate<T> template) : base(template) { }
     }
@@ -189,7 +189,7 @@ public sealed partial class Document
         where T : new()
     {
         [Drop]
-        internal NativeHiveStorage<T> m_storage = new();
+        internal NSplitMapData<T> m_data = new();
 
         internal PinnedStorage(StorageTemplate<T> template) : base(template) { }
     }
@@ -198,10 +198,10 @@ public sealed partial class Document
 
     #region Create
 
-    private NodeId CreateNode()
+    private NodeId CreateNode(NodeType type)
     {
         // todo
-        return new(m_node_id_inc++, 1);
+        return new(m_node_id_inc++, 1, type);
     }
 
     #endregion
