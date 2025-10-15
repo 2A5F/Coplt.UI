@@ -43,8 +43,9 @@ public class TestHive
     [Test]
     public void Test1()
     {
-        using var hive = new NativeHive<int>();
-        hive.Add(123);
-        hive.Add(456);
+       using var hive = new NativeHive<int>();
+       hive.Add(123);
+       hive.Add(456);
+       // hive.Remove(0, 0);
     }
 }

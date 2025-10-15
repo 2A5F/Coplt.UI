@@ -1,6 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
+using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Native;
 
@@ -57,6 +59,10 @@ public sealed unsafe partial class NativeLib
     public void* Alloc(int size, int align) => m_lib.Alloc(size, align);
     public void* ReAlloc(void* ptr, int size, int align) => m_lib.ReAlloc(ptr, size, align);
     public void Free(void* ptr, int align) => m_lib.Free(ptr, align);
+
+    public T* Alloc<T>(int size = 1) => (T*)m_lib.Alloc(size * sizeof(T), Utils.AlignOf<T>());
+    public T* ReAlloc<T>(T* ptr, int size) => (T*)m_lib.ReAlloc(ptr, size * sizeof(T), Utils.AlignOf<T>());
+    public void Free<T>(T* ptr) => m_lib.Free(ptr, Utils.AlignOf<T>());
 
     #endregion
 }
