@@ -215,7 +215,7 @@ public sealed partial class Document
 
     #region Instance
 
-    public Arche ArcheAt(NodeType type) => m_arches[(int)type];
+    public Arche ArcheOf(NodeType type) => m_arches[(int)type];
     public ReadOnlySpan<Arche> Arches => m_arches;
 
     public sealed class Arche : IDisposable
@@ -226,8 +226,8 @@ public sealed partial class Document
         internal EmbedList<Action> m_storage_fns_dispose;
         internal readonly Action<int, CtrlOp>[] m_storage_fns_add;
         internal readonly Action<int>[] m_storage_fns_remove;
-        internal NSplitMapCtrl<NodeId> m_ctrl = new();
         internal readonly AStorage m_node_id_storage;
+        internal NSplitMapCtrl<NodeId> m_ctrl = new();
 
         internal Arche(ArcheTemplate template)
         {
@@ -262,10 +262,12 @@ public sealed partial class Document
             {
                 dispose();
             }
+            m_ctrl.Dispose();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public AStorage<T> UnsafeStorageAt<T>() => (AStorage<T>)UnsafeStorageAt(IndexOf<T>());
+        public AStorage<T> StorageOf<T>() => (AStorage<T>)UnsafeStorageAt(IndexOf<T>());
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AStorage UnsafeStorageAt(int index) => Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_storages), index);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

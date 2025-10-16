@@ -14,6 +14,7 @@ namespace Coplt {
     struct IFontCollection;
     struct IFontFace;
     struct IFontFamily;
+    struct ILayout;
     struct ILib;
     struct IStub;
 
@@ -502,6 +503,97 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFamily>
     static COPLT_FORCE_INLINE void ClearNativeFontsCache(::Coplt::IFontFamily* self) noexcept
     {
         COPLT_COM_PVTB(IFontFamily, self)->f_ClearNativeFontsCache(self);
+    }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::ILayout>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    ::Coplt::HResult* (*const COPLT_CDECL f_Calc)(::Coplt::ILayout*, ::Coplt::HResult*, ::Coplt::NLayoutContext* ctx) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ILayout
+{
+    extern "C" ::Coplt::HResult* COPLT_CDECL Calc(::Coplt::ILayout* self, ::Coplt::HResult* r, ::Coplt::NLayoutContext* p0) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::ILayout>
+{
+    using VirtualTable = VirtualTable<::Coplt::ILayout>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("f1e64bf0-ffb9-42ce-be78-31871d247883");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::ILayout>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ILayout*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_Calc = VirtualImpl_Coplt_ILayout::Calc,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual ::Coplt::HResult Impl_Calc(::Coplt::NLayoutContext* ctx) = 0;
+    };
+
+    template <std::derived_from<::Coplt::ILayout> Base = ::Coplt::ILayout>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ILayout
+{
+
+    extern "C" inline ::Coplt::HResult* COPLT_CDECL Calc(::Coplt::ILayout* self, ::Coplt::HResult* r, ::Coplt::NLayoutContext* p0) noexcept
+    {
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::HResult)
+        #endif
+        *r = ::Coplt::Internal::AsImpl<::Coplt::ILayout>(self)->Impl_Calc(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::HResult)
+        #endif
+        return r;
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_ILayout\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::ILayout;\
+\
+    explicit ILayout(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::ILayout>
+{
+    static COPLT_FORCE_INLINE ::Coplt::HResult Calc(::Coplt::ILayout* self, ::Coplt::NLayoutContext* p0) noexcept
+    {
+        ::Coplt::HResult r{};
+        return *COPLT_COM_PVTB(ILayout, self)->f_Calc(self, &r, p0);
     }
 };
 

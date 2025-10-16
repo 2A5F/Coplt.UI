@@ -41,6 +41,13 @@ namespace Coplt {
         COPLT_COM_METHOD(ClearNativeFontsCache, void, ());
     };
 
+    COPLT_COM_INTERFACE(ILayout, "f1e64bf0-ffb9-42ce-be78-31871d247883", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_ILayout
+
+        COPLT_COM_METHOD(Calc, ::Coplt::HResult, (::Coplt::NLayoutContext* ctx), ctx);
+    };
+
     COPLT_COM_INTERFACE(ILib, "778be1fe-18f2-4aa5-8d1f-52d83b132cff", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_ILib

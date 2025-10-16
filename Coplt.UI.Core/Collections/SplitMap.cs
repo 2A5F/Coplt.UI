@@ -66,11 +66,11 @@ public unsafe partial struct NSplitMapCtrl<K>
     internal int* m_buckets;
     [Drop]
     internal NSplitMapData<Ctrl> m_ctrls;
-    private ulong m_fast_mode_multiplier;
-    private int m_cap;
-    private int m_count;
-    private int m_free_list;
-    private int m_free_count;
+    internal ulong m_fast_mode_multiplier;
+    internal int m_cap;
+    internal int m_count;
+    internal int m_free_list;
+    internal int m_free_count;
 
     #endregion
 

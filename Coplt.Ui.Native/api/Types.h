@@ -12,15 +12,41 @@ namespace Coplt {
 
     struct FontFamilyNameInfo;
 
+    struct LayoutCache;
+
+    struct LayoutCacheEntryLayoutOutput;
+
+    struct LayoutCacheEntrySize;
+
+    struct LayoutCollapsibleMarginSet;
+
     struct LayoutData;
+
+    struct LayoutOutput;
 
     struct NFontInfo;
 
     struct NFontPair;
 
+    struct NLayoutContext;
+
+    struct NNodeIdCtrl;
+
     struct FontWidth;
 
     struct FontMetrics;
+
+    struct ChildsData;
+
+    struct CommonStyleData;
+
+    struct TextStyleData;
+
+    struct ViewLayoutData;
+
+    struct ViewStyleData;
+
+    struct NodeId;
 
     struct IFont;
 
@@ -30,9 +56,18 @@ namespace Coplt {
 
     struct IFontFamily;
 
+    struct ILayout;
+
     struct ILib;
 
     struct IStub;
+
+    enum class AvailableSpaceType : ::Coplt::i32
+    {
+        Definite = 0,
+        MinContent = 1,
+        MaxContent = 2,
+    };
 
     enum class LogLevel : ::Coplt::u8
     {
@@ -42,6 +77,35 @@ namespace Coplt {
         Info = 3,
         Debug = 4,
         Verbose = 5,
+    };
+
+    enum class AlignType : ::Coplt::u8
+    {
+        None = 0,
+        Start = 1,
+        End = 2,
+        FlexStart = 3,
+        FlexEnd = 4,
+        Center = 5,
+        Baseline = 6,
+        Stretch = 7,
+        SpaceBetween = 8,
+        SpaceEvenly = 9,
+        SpaceAround = 10,
+    };
+
+    enum class BoxSizing : ::Coplt::u8
+    {
+        BorderBox = 0,
+        ContentBox = 1,
+    };
+
+    enum class Display : ::Coplt::u8
+    {
+        Flex = 0,
+        Grid = 1,
+        Block = 2,
+        Inline = 3,
     };
 
     enum class FontStyle : ::Coplt::u8
@@ -67,11 +131,88 @@ namespace Coplt {
         ExtraBlack = 950,
     };
 
+    enum class LengthType : ::Coplt::u8
+    {
+        Fixed = 0,
+        Percent = 1,
+        Auto = 2,
+    };
+
+    enum class Overflow : ::Coplt::u8
+    {
+        Visible = 0,
+        Clip = 1,
+        Hidden = 2,
+        Scroll = 3,
+    };
+
+    enum class Position : ::Coplt::u8
+    {
+        Relative = 0,
+        Absolute = 1,
+    };
+
+    enum class TextAlign : ::Coplt::u8
+    {
+        Auto = 0,
+        Left = 1,
+        Right = 2,
+        Center = 3,
+    };
+
     COPLT_ENUM_FLAGS(FontFlags, ::Coplt::i32)
     {
         None = 0,
         Color = 1,
         Monospaced = 2,
+    };
+
+    struct LayoutCollapsibleMarginSet
+    {
+        ::Coplt::f32 Positive;
+        ::Coplt::f32 Negative;
+    };
+
+    struct LayoutOutput
+    {
+        ::Coplt::f32 Width;
+        ::Coplt::f32 Height;
+        ::Coplt::f32 ContentWidth;
+        ::Coplt::f32 ContentHeight;
+        ::Coplt::f32 FirstBaselinesX;
+        ::Coplt::f32 FirstBaselinesY;
+        ::Coplt::LayoutCollapsibleMarginSet TopMargin;
+        ::Coplt::LayoutCollapsibleMarginSet BottomMargin;
+        bool HasFirstBaselinesX;
+        bool HasFirstBaselinesY;
+        bool MarginsCanCollapseThrough;
+    };
+
+    struct LayoutCacheEntryLayoutOutput
+    {
+        ::Coplt::f32 KnownDimensionsWidthValue;
+        ::Coplt::f32 KnownDimensionsHeightValue;
+        ::Coplt::f32 AvailableSpaceWidthValue;
+        ::Coplt::f32 AvailableSpaceHeightValue;
+        bool HasKnownDimensionsWidth;
+        bool HasKnownDimensionsHeight;
+        ::Coplt::AvailableSpaceType AvailableSpaceWidth;
+        ::Coplt::AvailableSpaceType AvailableSpaceHeight;
+        ::Coplt::LayoutOutput Content;
+    };
+
+    struct LayoutCacheEntrySize
+    {
+        ::Coplt::f32 KnownDimensionsWidthValue;
+        ::Coplt::f32 KnownDimensionsHeightValue;
+        ::Coplt::f32 AvailableSpaceWidthValue;
+        ::Coplt::f32 AvailableSpaceHeightValue;
+        bool HasKnownDimensionsWidth;
+        bool HasKnownDimensionsHeight;
+        ::Coplt::AvailableSpaceType AvailableSpaceWidth;
+        ::Coplt::AvailableSpaceType AvailableSpaceHeight;
+        ::Coplt::f32 ContentWidth;
+        ::Coplt::f32 ContentHeight;
     };
 
     struct Str16
@@ -80,30 +221,29 @@ namespace Coplt {
         ::Coplt::u32 Size;
     };
 
-    struct FontWidth
+    struct LayoutCache
     {
-        ::Coplt::f32 Width;
-    };
-
-    struct FontMetrics
-    {
-        ::Coplt::f32 Ascent;
-        ::Coplt::f32 Descent;
-        ::Coplt::f32 Leading;
-        ::Coplt::f32 LineHeight;
-        ::Coplt::u16 UnitsPerEm;
-    };
-
-    struct Str8
-    {
-        ::Coplt::u8 const* Data;
-        ::Coplt::u32 Size;
-    };
-
-    struct FontFamilyNameInfo
-    {
-        ::Coplt::Str16 Name;
-        ::Coplt::u32 Local;
+        ::Coplt::LayoutCacheEntryLayoutOutput FinalLayoutEntry;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries0;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries1;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries2;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries3;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries4;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries5;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries6;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries7;
+        ::Coplt::LayoutCacheEntrySize MeasureEntries8;
+        bool HasFinalLayoutEntry;
+        bool HasMeasureEntries0;
+        bool HasMeasureEntries1;
+        bool HasMeasureEntries2;
+        bool HasMeasureEntries3;
+        bool HasMeasureEntries4;
+        bool HasMeasureEntries5;
+        bool HasMeasureEntries6;
+        bool HasMeasureEntries7;
+        bool HasMeasureEntries8;
+        bool IsEmpty;
     };
 
     struct LayoutData
@@ -131,6 +271,38 @@ namespace Coplt {
         ::Coplt::f32 MarginLeftSize;
     };
 
+    struct FontWidth
+    {
+        ::Coplt::f32 Width;
+    };
+
+    struct FontMetrics
+    {
+        ::Coplt::f32 Ascent;
+        ::Coplt::f32 Descent;
+        ::Coplt::f32 Leading;
+        ::Coplt::f32 LineHeight;
+        ::Coplt::u16 UnitsPerEm;
+    };
+
+    struct NodeId
+    {
+        ::Coplt::u32 Id;
+        ::Coplt::u32 VersionAndType;
+    };
+
+    struct Str8
+    {
+        ::Coplt::u8 const* Data;
+        ::Coplt::u32 Size;
+    };
+
+    struct FontFamilyNameInfo
+    {
+        ::Coplt::Str16 Name;
+        ::Coplt::u32 Local;
+    };
+
     struct NFontInfo
     {
         ::Coplt::FontMetrics Metrics;
@@ -144,6 +316,127 @@ namespace Coplt {
     {
         IFont* Font;
         ::Coplt::NFontInfo* Info;
+    };
+
+    struct NLayoutContext
+    {
+        ::Coplt::i32 view_count;
+        ::Coplt::i32 text_count;
+        ::Coplt::i32* view_buckets;
+        ::Coplt::NNodeIdCtrl* view_ctrl;
+        ::Coplt::CommonStyleData* view_common_style_data;
+        ::Coplt::ChildsData* view_childs_data;
+        ::Coplt::ViewStyleData* view_style_data;
+        ::Coplt::ViewLayoutData* view_layout_data;
+        ::Coplt::i32* text_buckets;
+        ::Coplt::NNodeIdCtrl* text_ctrl;
+        ::Coplt::CommonStyleData* text_common_style_data;
+        ::Coplt::TextStyleData* text_style_data;
+    };
+
+    struct NNodeIdCtrl
+    {
+        ::Coplt::i32 HashCode;
+        ::Coplt::i32 Next;
+        ::Coplt::NodeId Key;
+    };
+
+    struct ChildsData
+    {
+    };
+
+    struct CommonStyleData
+    {
+        ::Coplt::i32 ZIndex;
+        ::Coplt::f32 Opacity;
+        bool Visible;
+        ::Coplt::TextAlign TextAlign;
+    };
+
+    struct TextStyleData
+    {
+        ::Coplt::f32 TextColorR;
+        ::Coplt::f32 TextColorG;
+        ::Coplt::f32 TextColorB;
+        ::Coplt::f32 TextColorA;
+        ::Coplt::f32 TextSizeValue;
+        ::Coplt::LengthType TextSize;
+    };
+
+    struct ViewLayoutData
+    {
+        ::Coplt::LayoutData Layout;
+        ::Coplt::LayoutData FinalLayout;
+        ::Coplt::LayoutCache LayoutCache;
+    };
+
+    struct ViewStyleData
+    {
+        ::Coplt::f32 ColorR;
+        ::Coplt::f32 ColorG;
+        ::Coplt::f32 ColorB;
+        ::Coplt::f32 ColorA;
+        ::Coplt::f32 InsertTopValue;
+        ::Coplt::f32 InsertRightValue;
+        ::Coplt::f32 InsertBottomValue;
+        ::Coplt::f32 InsertLeftValue;
+        ::Coplt::f32 WidthValue;
+        ::Coplt::f32 HeightValue;
+        ::Coplt::f32 MinWidthValue;
+        ::Coplt::f32 MinHeightValue;
+        ::Coplt::f32 MaxWidthValue;
+        ::Coplt::f32 MaxHeightValue;
+        ::Coplt::f32 AspectRatioValue;
+        ::Coplt::f32 MarginTopValue;
+        ::Coplt::f32 MarginRightValue;
+        ::Coplt::f32 MarginBottomValue;
+        ::Coplt::f32 MarginLeftValue;
+        ::Coplt::f32 PaddingTopValue;
+        ::Coplt::f32 PaddingRightValue;
+        ::Coplt::f32 PaddingBottomValue;
+        ::Coplt::f32 PaddingLeftValue;
+        ::Coplt::f32 BorderTopValue;
+        ::Coplt::f32 BorderRightValue;
+        ::Coplt::f32 BorderBottomValue;
+        ::Coplt::f32 BorderLeftValue;
+        ::Coplt::f32 GapXValue;
+        ::Coplt::f32 GapYValue;
+        ::Coplt::Display Display;
+        ::Coplt::BoxSizing BoxSizing;
+        ::Coplt::Overflow OverflowX;
+        ::Coplt::Overflow OverflowY;
+        ::Coplt::Position Position;
+        ::Coplt::LengthType InsertTop;
+        ::Coplt::LengthType InsertRight;
+        ::Coplt::LengthType InsertBottomV;
+        ::Coplt::LengthType InsertLeft;
+        ::Coplt::LengthType Width;
+        ::Coplt::LengthType Height;
+        ::Coplt::LengthType MinWidth;
+        ::Coplt::LengthType MinHeight;
+        ::Coplt::LengthType MaxMinWidth;
+        ::Coplt::LengthType MaxMinHeight;
+        bool HasAspectRatio;
+        ::Coplt::LengthType MarginTop;
+        ::Coplt::LengthType MarginRight;
+        ::Coplt::LengthType MarginBottomV;
+        ::Coplt::LengthType MarginLeft;
+        ::Coplt::LengthType PaddingTop;
+        ::Coplt::LengthType PaddingRight;
+        ::Coplt::LengthType PaddingBottomV;
+        ::Coplt::LengthType PaddingLeft;
+        ::Coplt::LengthType BorderTop;
+        ::Coplt::LengthType BorderRight;
+        ::Coplt::LengthType BorderBottomV;
+        ::Coplt::LengthType BorderLeft;
+        ::Coplt::AlignType AlignItems;
+        ::Coplt::AlignType AlignSelf;
+        ::Coplt::AlignType JustifyItems;
+        ::Coplt::AlignType JustifySelf;
+        ::Coplt::AlignType AlignContent;
+        ::Coplt::AlignType JustifyContent;
+        ::Coplt::LengthType GapX;
+        ::Coplt::LengthType GapY;
     };
 
 } // namespace Coplt
