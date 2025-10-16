@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <IsAotCompatible>true</IsAotCompatible>
         <NoWarn>CS8500</NoWarn>
     </PropertyGroup>
 
@@ -17,7 +18,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="InlineIL.Fody" Version="1.10.1" />
+        <PackageReference Include="InlineIL.Fody" Version="1.10.1" PrivateAssets='All' />
     </ItemGroup>
 
     <ItemGroup>

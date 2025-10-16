@@ -1,10 +1,13 @@
 ﻿using System.Collections.Frozen;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Trees.Datas;
+using Coplt.UI.Trees.Modules;
 using Coplt.UI.Utilities;
+using Coplt.UI.Utilities.TypeChains;
 
 namespace Coplt.UI.Trees;
 
@@ -14,6 +17,9 @@ public sealed partial class Document
     #region Fields
 
     internal readonly Template m_template;
+    // ReSharper disable once CollectionNeverQueried.Global
+    internal readonly IModule[] m_modules;
+    internal readonly Action[] m_modules_update;
     internal readonly Arche[] m_arches;
     internal EmbedQueue<NodeId> m_node_id_recycle = new();
     internal uint m_node_id_inc;
@@ -32,6 +38,14 @@ public sealed partial class Document
             if (tem == null) continue;
             m_arches[i] = tem.Create();
         }
+        m_modules = new IModule[m_template.m_modules.Length];
+        m_modules_update = new Action[m_template.m_modules.Length];
+        for (var i = 0; i < m_template.m_modules.Length; i++)
+        {
+            var module_template = m_template.m_modules[i];
+            var module = m_modules[i] = module_template.Create(this);
+            m_modules_update[i] = module.Update;
+        }
     }
 
     #endregion
@@ -40,6 +54,7 @@ public sealed partial class Document
 
     public sealed class Builder
     {
+        private readonly Dictionary<Type, AModuleTemplate> m_modules = new();
         private readonly Dictionary<NodeType, Dictionary<Type, AStorageTemplate>> m_types = new();
 
         public Builder()
@@ -51,20 +66,27 @@ public sealed partial class Document
             Attach<ViewStyleData>(types: NodeTypes.View, storage: StorageType.Pinned);
             Attach<ViewLayoutData>(types: NodeTypes.View, storage: StorageType.Pinned);
             Attach<TextStyleData>(types: NodeTypes.Text, storage: StorageType.Pinned);
+            With<LayoutModule>();
         }
 
         public Builder Attach<T>(NodeTypes types = NodeTypes.All, StorageType storage = StorageType.Default)
             where T : new()
         {
-            var i = 0;
             foreach (var type in types)
             {
                 ref var ts = ref CollectionsMarshal.GetValueRefOrAddDefault(m_types, type, out var exists);
                 if (!exists) ts = new();
-                ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(ts!, typeof(T), out exists);
+                var i = ts!.Count;
+                ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(ts, typeof(T), out exists);
                 if (exists) throw new ArgumentException($"Type {typeof(T)} has already been attached to {type}.");
-                t = new StorageTemplate<T>(i++, storage);
+                t = new StorageTemplate<T>(i, storage);
             }
+            return this;
+        }
+
+        public Builder With<T>() where T : IModule
+        {
+            m_modules.TryAdd(typeof(T), new ModuleTemplate<T>());
             return this;
         }
 
@@ -73,12 +95,37 @@ public sealed partial class Document
             var arches = new ArcheTemplate?[NodeType.Length];
             foreach (var (type, arch) in m_types)
             {
-                arches[(int)type] = new ArcheTemplate(arch.ToFrozenDictionary());
+                arches[(int)type] = new ArcheTemplate(arch);
             }
-            return new(arches);
+            return new(arches, m_modules.Values.ToArray());
         }
 
         public Document Create() => Build().Create();
+    }
+
+    #endregion
+
+    #region Module
+
+    public interface IModule
+    {
+        public static virtual Type[] Before => [];
+        public static virtual Type[] After => [];
+
+        public static abstract IModule Create(Document document);
+
+        public void Update();
+    }
+
+    internal abstract class AModuleTemplate
+    {
+        public abstract IModule Create(Document document);
+    }
+
+    internal class ModuleTemplate<T> : AModuleTemplate
+        where T : IModule
+    {
+        public override IModule Create(Document document) => T.Create(document);
     }
 
     #endregion
@@ -88,40 +135,64 @@ public sealed partial class Document
     public sealed class Template
     {
         internal readonly ArcheTemplate?[] m_arches;
+        internal readonly AModuleTemplate[] m_modules;
 
-        internal Template(ArcheTemplate?[] arches)
+        internal Template(ArcheTemplate?[] arches, AModuleTemplate[] modules)
         {
             m_arches = arches;
+            m_modules = modules;
         }
 
         public Document Create() => new(this);
     }
 
-    internal sealed class ArcheTemplate(FrozenDictionary<Type, AStorageTemplate> storages)
+    internal sealed class ArcheTemplate
     {
-        internal readonly FrozenDictionary<Type, AStorageTemplate> m_storages = storages;
+        internal readonly AStorageTemplate[] m_storages;
+        internal readonly C m_type_chain;
+
+        public ArcheTemplate(Dictionary<Type, AStorageTemplate> storages)
+        {
+            m_storages = storages.Values.OrderBy(a => a.Type.FullName, StringComparer.Ordinal).ToArray();
+            Debug.Assert(m_storages.Length > 0);
+            m_type_chain = m_storages[0].Chain();
+            for (var i = 1; i < m_storages.Length; i++)
+            {
+                m_type_chain = m_storages[i].Chain(m_type_chain);
+            }
+        }
 
         internal Arche Create() => new(this);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal int IndexOf<T>() => m_type_chain.IndexOf<T>();
     }
 
-    internal abstract class AStorageTemplate(int index, StorageType type)
+    internal abstract class AStorageTemplate(Type Type, int index, StorageType type)
     {
+        public Type Type { get; } = Type;
         internal readonly int m_index = index;
         internal readonly StorageType m_type = type;
 
         internal abstract AStorage Create();
+
+        internal abstract C Chain();
+        internal abstract C Chain(C b);
     }
 
-    internal sealed class StorageTemplate<T>(int index, StorageType type) : AStorageTemplate(index, type) where T : new()
+    internal sealed class StorageTemplate<T>(int index, StorageType type) : AStorageTemplate(typeof(T), index, type) where T : new()
     {
-        internal override AStorage Create() => type switch
+        internal override AStorage Create() => m_type switch
         {
             StorageType.Default => new Storage<T>(this),
             StorageType.Pinned => RuntimeHelpers.IsReferenceOrContainsReferences<T>()
                 ? new Storage<T>(this)
                 : new PinnedStorage<T>(this),
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(type), m_type, null)
         };
+
+        internal override C Chain() => C<T>.Instance;
+        internal override C Chain(C b) => b.Add<C<T>>();
     }
 
     #endregion
@@ -131,6 +202,10 @@ public sealed partial class Document
     [Drop]
     private void Drop()
     {
+        foreach (var module in m_modules)
+        {
+            if (module is IDisposable disposable) disposable.Dispose();
+        }
         foreach (var arch in m_arches)
         {
             arch.Dispose();
@@ -153,8 +228,8 @@ public sealed partial class Document
         internal Arche(ArcheTemplate template)
         {
             m_template = template;
-            m_storages = new AStorage[template.m_storages.Count];
-            foreach (var storage in template.m_storages.Values)
+            m_storages = new AStorage[template.m_storages.Length];
+            foreach (var storage in template.m_storages)
             {
                 m_storages[storage.m_index] = storage.Create();
             }
@@ -205,6 +280,8 @@ public sealed partial class Document
                 remove(idx);
             }
         }
+
+        internal int IndexOf<T>() => m_template.IndexOf<T>();
     }
 
     public abstract class AStorage
@@ -289,6 +366,18 @@ public sealed partial class Document
         var type = id.Type;
         m_arches[(int)type].Remove(id);
         m_node_id_recycle.Enqueue(id);
+    }
+
+    #endregion
+
+    #region Update
+
+    public void Update()
+    {
+        foreach (var update in m_modules_update)
+        {
+            update();
+        }
     }
 
     #endregion

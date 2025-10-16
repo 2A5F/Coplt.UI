@@ -25,6 +25,17 @@ public class D : IDisposable
     }
 }
 
+public struct E : IDisposable
+{
+    public int a;
+
+    void IDisposable.Dispose()
+    {
+        a = 456;
+        Console.WriteLine("123");
+    }
+}
+
 public class Tests2
 {
     [Test]
@@ -55,6 +66,52 @@ public class Tests2
     {
         var c = new C();
         BadBox(ref c);
+        Console.WriteLine(c.a);
+        Assert.That(c.a, Is.EqualTo(0));
+    }
+
+    public void BadBox1<T>(ref T a) where T : struct
+    {
+        if (a is IDisposable b) b.Dispose();
+    }
+
+    [Test]
+    public void Test4()
+    {
+        var c = new C();
+        BadBox1(ref c);
+        Console.WriteLine(c.a);
+        Assert.That(c.a, Is.EqualTo(0));
+    }
+
+    public void BadBox2<T>(ref T a) where T : struct
+    {
+        ((IDisposable)a).Dispose();
+    }
+
+    [Test]
+    public void Test5()
+    {
+        var c = new C();
+        BadBox2(ref c);
+        Console.WriteLine(c.a);
+        Assert.That(c.a, Is.EqualTo(0));
+    }
+    
+    [Test]
+    public void Test6()
+    {
+        var c = new E();
+        DisposeProxy.TryDispose(ref c);
+        Console.WriteLine(c.a);
+        Assert.That(c.a, Is.EqualTo(456));
+    }
+    
+    [Test]
+    public void Test7()
+    {
+        var c = new E();
+        ((IDisposable)c).Dispose();
         Console.WriteLine(c.a);
         Assert.That(c.a, Is.EqualTo(0));
     }

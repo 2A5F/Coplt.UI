@@ -8,6 +8,8 @@ public record struct CommonStyleData()
     public float Opacity = 1;
 
     public bool Visible = true;
+
+    public TextAlign TextAlign = TextAlign.Auto;
 }
 
 public record struct ViewStyleData()

@@ -111,7 +111,7 @@ public struct EmbedQueue<T> : IReadOnlyCollection<T>
         ref var slot = ref m_array![m_tail];
         MoveNext(ref m_tail);
         m_size++;
-        return ref slot;
+        return ref slot!;
     }
 
     [UnscopedRef]

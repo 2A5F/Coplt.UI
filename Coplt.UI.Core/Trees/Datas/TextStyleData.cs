@@ -12,7 +12,5 @@ public record struct TextStyleData()
 
     public float TextSizeValue = 16;
 
-    public TextAlign TextAlign = TextAlign.Auto;
-
     public LengthType TextSize = LengthType.Fixed;
 }
