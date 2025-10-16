@@ -59,6 +59,7 @@ public sealed partial class Document
 
         public Builder()
         {
+            Attach<NodeId>();
             Attach<ParentData>();
             Attach<CommonStyleData>(storage: StorageType.Pinned);
             Attach<CommonEventData>();
@@ -76,10 +77,9 @@ public sealed partial class Document
             {
                 ref var ts = ref CollectionsMarshal.GetValueRefOrAddDefault(m_types, type, out var exists);
                 if (!exists) ts = new();
-                var i = ts!.Count;
                 ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(ts, typeof(T), out exists);
                 if (exists) throw new ArgumentException($"Type {typeof(T)} has already been attached to {type}.");
-                t = new StorageTemplate<T>(i, storage);
+                t = new StorageTemplate<T>(storage);
             }
             return this;
         }
@@ -168,10 +168,9 @@ public sealed partial class Document
         internal int IndexOf<T>() => m_type_chain.IndexOf<T>();
     }
 
-    internal abstract class AStorageTemplate(Type Type, int index, StorageType type)
+    internal abstract class AStorageTemplate(Type Type, StorageType type)
     {
         public Type Type { get; } = Type;
-        internal readonly int m_index = index;
         internal readonly StorageType m_type = type;
 
         internal abstract AStorage Create();
@@ -180,14 +179,14 @@ public sealed partial class Document
         internal abstract C Chain(C b);
     }
 
-    internal sealed class StorageTemplate<T>(int index, StorageType type) : AStorageTemplate(typeof(T), index, type) where T : new()
+    internal sealed class StorageTemplate<T>(StorageType type) : AStorageTemplate(typeof(T), type) where T : new()
     {
         internal override AStorage Create() => m_type switch
         {
-            StorageType.Default => new Storage<T>(this),
+            StorageType.Default => new Storage<T>(),
             StorageType.Pinned => RuntimeHelpers.IsReferenceOrContainsReferences<T>()
-                ? new Storage<T>(this)
-                : new PinnedStorage<T>(this),
+                ? throw new NotSupportedException($"Type {typeof(T)} is a managed type and cannot be pinned")
+                : new PinnedStorage<T>(),
             _ => throw new ArgumentOutOfRangeException(nameof(type), m_type, null)
         };
 
@@ -216,22 +215,29 @@ public sealed partial class Document
 
     #region Instance
 
+    public Arche ArcheAt(NodeType type) => m_arches[(int)type];
+    public ReadOnlySpan<Arche> Arches => m_arches;
+
     public sealed class Arche : IDisposable
     {
         internal readonly ArcheTemplate m_template;
+        internal readonly C m_type_chain;
         internal readonly AStorage[] m_storages;
         internal EmbedList<Action> m_storage_fns_dispose;
         internal readonly Action<int, CtrlOp>[] m_storage_fns_add;
         internal readonly Action<int>[] m_storage_fns_remove;
         internal NSplitMapCtrl<NodeId> m_ctrl = new();
+        internal readonly AStorage m_node_id_storage;
 
         internal Arche(ArcheTemplate template)
         {
             m_template = template;
+            m_type_chain = template.m_type_chain;
             m_storages = new AStorage[template.m_storages.Length];
-            foreach (var storage in template.m_storages)
+            for (var i = 0; i < template.m_storages.Length; i++)
             {
-                m_storages[storage.m_index] = storage.Create();
+                var storage = template.m_storages[i];
+                m_storages[i] = storage.Create();
             }
             foreach (var storage in m_storages)
             {
@@ -247,6 +253,7 @@ public sealed partial class Document
                 m_storage_fns_add[i] = storage.Add;
                 m_storage_fns_remove[i] = storage.Remove;
             }
+            m_node_id_storage = UnsafeStorageAt(m_type_chain.IndexOf<NodeId>());
         }
 
         public void Dispose()
@@ -256,6 +263,17 @@ public sealed partial class Document
                 dispose();
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public AStorage<T> UnsafeStorageAt<T>() => (AStorage<T>)UnsafeStorageAt(IndexOf<T>());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public AStorage UnsafeStorageAt(int index) => Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_storages), index);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref T UnsafeGetDataRefAt<T>(int index) => ref UnsafeStorageAt(index).UnsafeGetDataRef<T>();
+
+        public int Count => m_ctrl.Count;
+
+        public ReadOnlySpan<AStorage> Storages => m_storages;
 
         public int Add(NodeId id)
         {
@@ -269,6 +287,7 @@ public sealed partial class Document
                     add(idx, op);
                 }
             }
+            Unsafe.Add(ref m_node_id_storage.UnsafeGetDataRef<NodeId>(), idx) = id;
             return idx;
         }
 
@@ -281,33 +300,26 @@ public sealed partial class Document
             }
         }
 
-        internal int IndexOf<T>() => m_template.IndexOf<T>();
+        public int IndexOf<T>() => m_type_chain.IndexOf<T>();
     }
 
-    public abstract class AStorage
+    public abstract unsafe class AStorage
     {
         public abstract Action? Dispose { get; }
         public abstract Action<int, CtrlOp> Add { get; }
         public abstract Action<int> Remove { get; }
+
+        /// <returns>if not pinned, return null</returns>
+        public abstract T* UnsafeGetDataPtr<T>();
+        public abstract ref T UnsafeGetDataRef<T>();
     }
 
-    public abstract class AStorage<T> : AStorage
-        where T : new()
-    {
-        internal readonly StorageTemplate<T> m_template;
+    public abstract class AStorage<T> : AStorage;
 
-        internal AStorage(StorageTemplate<T> mTemplate)
-        {
-            m_template = mTemplate;
-        }
-    }
-
-    public sealed class Storage<T> : AStorage<T>
+    public sealed unsafe class Storage<T> : AStorage<T>
         where T : new()
     {
         internal SplitMapData<T> m_data = new();
-
-        internal Storage(StorageTemplate<T> template) : base(template) { }
 
         public override Action? Dispose => null;
 
@@ -326,14 +338,15 @@ public sealed partial class Document
                 slot = default!;
             }
         };
+
+        public override T1* UnsafeGetDataPtr<T1>() => null;
+        public override ref T1 UnsafeGetDataRef<T1>() => ref Unsafe.As<T, T1>(ref MemoryMarshal.GetArrayDataReference(m_data.m_items!));
     }
 
-    public sealed partial class PinnedStorage<T> : AStorage<T>
+    public sealed unsafe partial class PinnedStorage<T> : AStorage<T>
         where T : new()
     {
         internal NSplitMapData<T> m_data = new();
-
-        internal PinnedStorage(StorageTemplate<T> template) : base(template) { }
 
         public override Action Dispose => () => m_data.Dispose();
 
@@ -344,11 +357,25 @@ public sealed partial class Document
         };
 
         public override Action<int> Remove => idx => { DisposeProxy.TryDispose(ref m_data.UnsafeAt(idx)); };
+
+        public override T1* UnsafeGetDataPtr<T1>() => (T1*)m_data.m_items;
+        public override ref T1 UnsafeGetDataRef<T1>() => ref *(T1*)m_data.m_items;
     }
 
     #endregion
 
+    #region Query
+
+    public Query<Query.Q<T0>> Query<T0>() => new(this);
+    public Query<Query.Q<T0, T1>> Query<T0, T1>() => new(this);
+    public Query<Query.Q<T0, T1, T2>> Query<T0, T1, T2>() => new(this);
+    public Query<Query.Q<T0, T1, T2, T3>> Query<T0, T1, T2, T3>() => new(this);
+
+    #endregion
+
     #region Create
+
+    public NodeId CreateNode(NodeType type) => CreateNode(type, out _);
 
     /// <param name="type"></param>
     /// <param name="index">temporarily available index, if added again or the parameter will become invalid</param>
@@ -381,4 +408,19 @@ public sealed partial class Document
     }
 
     #endregion
+}
+
+public static class DocumentEx
+{
+    extension(Document.AStorage self)
+    {
+        public Document.Storage<T> AsCommon<T>() where T : new() => (Document.Storage<T>)self;
+        public Document.PinnedStorage<T> AsPinned<T>() where T : new() => (Document.PinnedStorage<T>)self;
+    }
+
+    extension<T>(Document.AStorage<T> self) where T : new()
+    {
+        public Document.Storage<T> AsCommon() => (Document.Storage<T>)self;
+        public Document.PinnedStorage<T> AsPinned() => (Document.PinnedStorage<T>)self;
+    }
 }
