@@ -25,12 +25,12 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFont>
 {
     VirtualTable<::Coplt::IUnknown> b;
     ::Coplt::NFontInfo const* (*const COPLT_CDECL f_get_Info)(const ::Coplt::IFont*) noexcept;
-    ::Coplt::HResult* (*const COPLT_CDECL f_CreateFace)(const ::Coplt::IFont*, ::Coplt::HResult*, COPLT_OUT IFontFace** face) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_CreateFace)(const ::Coplt::IFont*, COPLT_OUT IFontFace** face) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFont
 {
     extern "C" ::Coplt::NFontInfo const* COPLT_CDECL get_Info(const ::Coplt::IFont* self) noexcept;
-    extern "C" ::Coplt::HResult* COPLT_CDECL CreateFace(const ::Coplt::IFont* self, ::Coplt::HResult* r, COPLT_OUT IFontFace** p0) noexcept;
+    extern "C" ::Coplt::i32 COPLT_CDECL CreateFace(const ::Coplt::IFont* self, COPLT_OUT IFontFace** p0) noexcept;
 }
 
 template <>
@@ -100,14 +100,15 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFont
         return r;
     }
 
-    extern "C" inline ::Coplt::HResult* COPLT_CDECL CreateFace(const ::Coplt::IFont* self, ::Coplt::HResult* r, COPLT_OUT IFontFace** p0) noexcept
+    extern "C" inline ::Coplt::i32 COPLT_CDECL CreateFace(const ::Coplt::IFont* self, COPLT_OUT IFontFace** p0) noexcept
     {
+        ::Coplt::i32 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::HResult)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::i32)
         #endif
-        *r = ::Coplt::Internal::AsImpl<::Coplt::IFont>(self)->Impl_CreateFace(p0);
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::IFont>(self)->Impl_CreateFace(p0));
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::HResult)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::i32)
         #endif
         return r;
     }
@@ -127,8 +128,7 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFont>
     }
     static COPLT_FORCE_INLINE ::Coplt::HResult CreateFace(const ::Coplt::IFont* self, COPLT_OUT IFontFace** p0) noexcept
     {
-        ::Coplt::HResult r{};
-        return *COPLT_COM_PVTB(IFont, self)->f_CreateFace(self, &r, p0);
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IFont, self)->f_CreateFace(self, p0));
     }
 };
 
@@ -510,11 +510,11 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::ILayout>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    ::Coplt::HResult* (*const COPLT_CDECL f_Calc)(::Coplt::ILayout*, ::Coplt::HResult*, ::Coplt::NLayoutContext* ctx) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_Calc)(::Coplt::ILayout*, ::Coplt::NLayoutContext* ctx) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILayout
 {
-    extern "C" ::Coplt::HResult* COPLT_CDECL Calc(::Coplt::ILayout* self, ::Coplt::HResult* r, ::Coplt::NLayoutContext* p0) noexcept;
+    extern "C" ::Coplt::i32 COPLT_CDECL Calc(::Coplt::ILayout* self, ::Coplt::NLayoutContext* p0) noexcept;
 }
 
 template <>
@@ -569,14 +569,15 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILayout>
 namespace Coplt::Internal::VirtualImpl_Coplt_ILayout
 {
 
-    extern "C" inline ::Coplt::HResult* COPLT_CDECL Calc(::Coplt::ILayout* self, ::Coplt::HResult* r, ::Coplt::NLayoutContext* p0) noexcept
+    extern "C" inline ::Coplt::i32 COPLT_CDECL Calc(::Coplt::ILayout* self, ::Coplt::NLayoutContext* p0) noexcept
     {
+        ::Coplt::i32 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::HResult)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::i32)
         #endif
-        *r = ::Coplt::Internal::AsImpl<::Coplt::ILayout>(self)->Impl_Calc(p0);
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ILayout>(self)->Impl_Calc(p0));
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::HResult)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::i32)
         #endif
         return r;
     }
@@ -592,8 +593,7 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILayout>
 {
     static COPLT_FORCE_INLINE ::Coplt::HResult Calc(::Coplt::ILayout* self, ::Coplt::NLayoutContext* p0) noexcept
     {
-        ::Coplt::HResult r{};
-        return *COPLT_COM_PVTB(ILayout, self)->f_Calc(self, &r, p0);
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILayout, self)->f_Calc(self, p0));
     }
 };
 
@@ -607,7 +607,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     void (*const COPLT_CDECL f_Free)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 align) noexcept;
     void* (*const COPLT_CDECL f_ZAlloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
     void* (*const COPLT_CDECL f_ReAlloc)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
-    ::Coplt::HResult* (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, ::Coplt::HResult*, IFontCollection** fc) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
@@ -617,7 +617,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
     extern "C" void COPLT_CDECL Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept;
     extern "C" void* COPLT_CDECL ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
     extern "C" void* COPLT_CDECL ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept;
-    extern "C" ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept;
+    extern "C" ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
 }
 
 template <>
@@ -759,14 +759,15 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         return r;
     }
 
-    extern "C" inline ::Coplt::HResult* COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, ::Coplt::HResult* r, IFontCollection** p0) noexcept
+    extern "C" inline ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
     {
+        ::Coplt::i32 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::HResult)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::i32)
         #endif
-        *r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_GetSystemFontCollection(p0);
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_GetSystemFontCollection(p0));
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::HResult)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::i32)
         #endif
         return r;
     }
@@ -807,8 +808,7 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
     }
     static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
     {
-        ::Coplt::HResult r{};
-        return *COPLT_COM_PVTB(ILib, self)->f_GetSystemFontCollection(self, &r, p0);
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_GetSystemFontCollection(self, p0));
     }
 };
 
