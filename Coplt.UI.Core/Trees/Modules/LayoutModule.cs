@@ -53,6 +53,8 @@ public sealed unsafe partial class LayoutModule : Document.IModule
             text_ctrl = (NNodeIdCtrl*)m_ar_Text.m_ctrl.m_ctrls.m_items,
             text_common_style_data = m_st_Text_CommonStyleData.m_data.m_items,
             text_style_data = m_st_TextStyleData.m_data.m_items,
+            
+            rounding = true,
         };
         m_layout.Calc(&ctx).TryThrowWithMsg();
     }

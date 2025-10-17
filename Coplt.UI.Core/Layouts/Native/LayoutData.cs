@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Native;
 
-public struct LayoutData
+public record struct LayoutData
 {
     public uint Order;
     public float LocationX;
@@ -27,7 +27,7 @@ public struct LayoutData
     public float MarginLeftSize;
 }
 
-public struct LayoutOutput
+public record struct LayoutOutput
 {
     public float Width;
     public float Height;
@@ -42,7 +42,7 @@ public struct LayoutOutput
     public bool MarginsCanCollapseThrough;
 }
 
-public struct LayoutCollapsibleMarginSet
+public record struct LayoutCollapsibleMarginSet
 {
     public float Positive;
     public float Negative;

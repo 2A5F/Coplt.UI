@@ -375,6 +375,21 @@ public sealed partial class Document
 
     #endregion
 
+    #region At
+
+    public ref T At<T>(NodeId id)
+    {
+        var arche = ArcheOf(id.Type);
+        var nth = arche.IndexOf<T>();
+        if (nth < 0) throw new InvalidOperationException();
+        var i = arche.m_ctrl.FindValue(id);
+        if (i < 0) throw new IndexOutOfRangeException();
+        var storage = arche.UnsafeStorageAt(nth);
+        return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), i);
+    }
+
+    #endregion
+
     #region Create
 
     public NodeId CreateNode(NodeType type) => CreateNode(type, out _);

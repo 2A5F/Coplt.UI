@@ -10,6 +10,12 @@ namespace Coplt {
 
     struct Str8;
 
+    template <class T0 /* T */>
+    struct FFIOrderedSetNode;
+
+    template <class T0 /* T */>
+    struct FFIOrderedSet;
+
     struct FontFamilyNameInfo;
 
     struct LayoutCache;
@@ -297,6 +303,30 @@ namespace Coplt {
         ::Coplt::u32 Size;
     };
 
+    template <class T0 /* T */>
+    struct FFIOrderedSetNode
+    {
+        ::Coplt::i32 HashCode;
+        ::Coplt::i32 Next;
+        ::Coplt::i32 OrderNext;
+        ::Coplt::i32 OrderPrev;
+        T0 Value;
+    };
+
+    template <class T0 /* T */>
+    struct FFIOrderedSet
+    {
+        ::Coplt::i32* m_buckets;
+        ::Coplt::FFIOrderedSetNode<T0>* m_nodes;
+        ::Coplt::u64 m_fast_mode_multiplier;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_first;
+        ::Coplt::i32 m_last;
+        ::Coplt::i32 m_count;
+        ::Coplt::i32 m_free_list;
+        ::Coplt::i32 m_free_count;
+    };
+
     struct FontFamilyNameInfo
     {
         ::Coplt::Str16 Name;
@@ -332,6 +362,7 @@ namespace Coplt {
         ::Coplt::NNodeIdCtrl* text_ctrl;
         ::Coplt::CommonStyleData* text_common_style_data;
         ::Coplt::TextStyleData* text_style_data;
+        bool rounding;
     };
 
     struct NNodeIdCtrl
@@ -343,6 +374,7 @@ namespace Coplt {
 
     struct ChildsData
     {
+        ::Coplt::FFIOrderedSet<::Coplt::NodeId>* m_childs;
     };
 
     struct CommonStyleData

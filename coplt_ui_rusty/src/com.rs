@@ -119,6 +119,30 @@ pub struct Str8 {
 }
 
 #[repr(C)]
+pub struct FFIOrderedSetNode<T0 /* T */>
+ {
+    pub HashCode: i32,
+    pub Next: i32,
+    pub OrderNext: i32,
+    pub OrderPrev: i32,
+    pub Value: T0,
+}
+
+#[repr(C)]
+pub struct FFIOrderedSet<T0 /* T */>
+ {
+    pub m_buckets: *mut i32,
+    pub m_nodes: *mut FFIOrderedSetNode<T0>,
+    pub m_fast_mode_multiplier: u64,
+    pub m_cap: i32,
+    pub m_first: i32,
+    pub m_last: i32,
+    pub m_count: i32,
+    pub m_free_list: i32,
+    pub m_free_count: i32,
+}
+
+#[repr(C)]
 pub struct FontFamilyNameInfo {
     pub Name: Str16,
     pub Local: u32,
@@ -251,6 +275,7 @@ pub struct NLayoutContext {
     pub text_ctrl: *mut NNodeIdCtrl,
     pub text_common_style_data: *mut CommonStyleData,
     pub text_style_data: *mut TextStyleData,
+    pub rounding: bool,
 }
 
 #[repr(C)]
@@ -276,6 +301,7 @@ pub struct FontMetrics {
 
 #[repr(C)]
 pub struct ChildsData {
+    pub m_childs: *mut FFIOrderedSet<NodeId>,
 }
 
 #[repr(C)]

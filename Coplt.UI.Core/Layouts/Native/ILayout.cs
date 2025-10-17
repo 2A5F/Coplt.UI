@@ -28,6 +28,8 @@ public unsafe struct NLayoutContext
     public NNodeIdCtrl* text_ctrl;
     public CommonStyleData* text_common_style_data;
     public TextStyleData* text_style_data;
+
+    public bool rounding;
 }
 
 [Interface, Guid("f1e64bf0-ffb9-42ce-be78-31871d247883")]
