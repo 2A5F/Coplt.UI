@@ -17,4 +17,7 @@ public record struct NodeId(uint Id, uint Version, NodeType Type)
         get => (NodeType)(Id & TypeMask);
         set => VersionAndType = (VersionAndType & ~TypeMask) | (byte)value & TypeMask;
     }
+
+    public readonly bool Equals(NodeId other) => Id == other.Id && VersionAndType == other.VersionAndType;
+    public readonly override int GetHashCode() => (int)(Id ^ VersionAndType);
 }

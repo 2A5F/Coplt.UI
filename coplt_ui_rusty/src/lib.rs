@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused)]
+
 mod coplt_alloc {
     use core::alloc::GlobalAlloc;
 
@@ -37,5 +40,6 @@ mod coplt_alloc {
     }
 }
 
+mod col;
 mod com;
 mod layout;

@@ -142,7 +142,8 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
         var lib = NativeLib.Instance;
 
         m_nodes = lib.ReAlloc(m_nodes, new_size);
-        m_buckets = lib.ReAlloc(m_buckets, new_size);
+        lib.Free(m_buckets);
+        m_buckets = lib.ZAlloc<int>(new_size);
 
         var count = m_count;
         m_fast_mode_multiplier = HashHelpers.GetFastModMultiplier((uint)new_size);
@@ -407,11 +408,6 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
                     "shouldn't underflow because max hashtable length is MaxPrimeArrayLength = 0x7FEFFFFD(2146435069) _freelist underflow threshold 2147483646");
                 node.Next = StartOfFreeList - m_free_list;
 
-                if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-                {
-                    node.Value = default!;
-                }
-
                 m_free_list = i;
                 m_free_count++;
 
@@ -619,6 +615,7 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
     {
         ref var this_node = ref AddOrGetReturnNode(item, out var this_index);
         ref var next_node = ref AddOrGetReturnNode(next, out var next_index);
+        if (this_index == next_index) throw new InvalidOperationException();
         if (this_node.OrderNext == next_index) return; // already set
         RemoveOrderOnly(ref next_node);
         var old_next = this_node.OrderNext;
@@ -643,6 +640,7 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
     {
         ref var this_node = ref AddOrGetReturnNode(item, out var this_index);
         ref var prev_node = ref AddOrGetReturnNode(prev, out var prev_index);
+        if (this_index == prev_index) throw new InvalidOperationException();
         if (this_node.OrderPrev == prev_index) return; // already set
         RemoveOrderOnly(ref prev_node);
         var old_prev = this_node.OrderPrev;
