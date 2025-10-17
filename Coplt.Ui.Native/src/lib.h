@@ -62,6 +62,8 @@ namespace Coplt
         void* Impl_ReAlloc(void* ptr, i32 size, i32 align) const override;
 
         HResult Impl_GetSystemFontCollection(IFontCollection** fc) override;
+
+        ILayout* Impl_CreateLayout() override;
     };
 
     extern "C" COPLT_EXPORT ILib* Coplt_CreateLibUi();

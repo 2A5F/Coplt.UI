@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using Coplt.Com;
+﻿using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Native;
 using Coplt.UI.Trees.Datas;
@@ -13,7 +11,7 @@ public sealed unsafe partial class LayoutModule : Document.IModule
     public static Document.IModule Create(Document document) => new LayoutModule(document);
 
     [Drop]
-    private Rc<ILayout> m_layout; // todo
+    private Rc<ILayout> m_layout;
 
     private readonly Document.Arche m_ar_View;
     private readonly Document.Arche m_ar_Text;
@@ -26,6 +24,7 @@ public sealed unsafe partial class LayoutModule : Document.IModule
 
     public LayoutModule(Document document)
     {
+        m_layout = NativeLib.Instance.m_layout.Clone();
         m_ar_View = document.ArcheOf(NodeType.View);
         m_ar_Text = document.ArcheOf(NodeType.Text);
         m_st_View_CommonStyleData = m_ar_View.StorageOf<CommonStyleData>().AsPinned();
@@ -56,6 +55,5 @@ public sealed unsafe partial class LayoutModule : Document.IModule
             text_style_data = m_st_TextStyleData.m_data.m_items,
         };
         m_layout.Calc(&ctx).TryThrowWithMsg();
-        // todo
     }
 }

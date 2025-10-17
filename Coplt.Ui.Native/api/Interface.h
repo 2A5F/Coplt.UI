@@ -59,6 +59,7 @@ namespace Coplt {
         COPLT_COM_METHOD(ZAlloc, void*, (::Coplt::i32 size, ::Coplt::i32 align) const, size, align);
         COPLT_COM_METHOD(ReAlloc, void*, (void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) const, ptr, size, align);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
+        COPLT_COM_METHOD(CreateLayout, ILayout*, ());
     };
 
     COPLT_COM_INTERFACE(IStub, "a998ec87-868d-4320-a30a-638c291f5562", ::Coplt::IUnknown)

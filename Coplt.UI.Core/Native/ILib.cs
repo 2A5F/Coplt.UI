@@ -17,4 +17,6 @@ public unsafe partial struct ILib
     public readonly partial void* ReAlloc(void* ptr, int size, int align);
 
     public partial HResult GetSystemFontCollection(IFontCollection** fc);
+
+    public partial ILayout* CreateLayout();
 }

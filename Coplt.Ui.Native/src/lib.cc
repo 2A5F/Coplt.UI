@@ -4,6 +4,8 @@
 
 #include <hb.h>
 
+#include "Layout.h"
+
 using namespace Coplt;
 
 extern "C" void* coplt_ui_malloc(const size_t size, const size_t align)
@@ -65,6 +67,11 @@ HResult LibUi::Impl_GetSystemFontCollection(IFontCollection** fc)
     const auto hr = m_backend->GetSystemFontCollection(out);
     if (hr.IsSuccess()) *fc = out.leak();
     return hr;
+}
+
+ILayout* LibUi::Impl_CreateLayout()
+{
+    return new Layout();
 }
 
 ILib* Coplt::Coplt_CreateLibUi()

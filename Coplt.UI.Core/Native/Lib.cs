@@ -13,6 +13,8 @@ public sealed unsafe partial class NativeLib
 
     [Drop]
     internal Rc<ILib> m_lib;
+    [Drop]
+    internal Rc<ILayout> m_layout;
 
     #endregion
 
@@ -31,6 +33,9 @@ public sealed unsafe partial class NativeLib
 
         m_lib = new(Coplt_CreateLibUi());
         if (!m_lib) throw new Exception("Failed to create native lib");
+
+        m_layout = new(m_lib.CreateLayout());
+        if (!m_layout) throw new Exception("Failed to create native layout object");
     }
 
     #endregion

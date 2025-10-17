@@ -608,6 +608,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     void* (*const COPLT_CDECL f_ZAlloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
     void* (*const COPLT_CDECL f_ReAlloc)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
+    ILayout* (*const COPLT_CDECL f_CreateLayout)(::Coplt::ILib*) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
@@ -618,6 +619,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
     extern "C" void* COPLT_CDECL ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
     extern "C" void* COPLT_CDECL ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept;
     extern "C" ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
+    extern "C" ILayout* COPLT_CDECL CreateLayout(::Coplt::ILib* self) noexcept;
 }
 
 template <>
@@ -657,6 +659,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             .f_ZAlloc = VirtualImpl_Coplt_ILib::ZAlloc,
             .f_ReAlloc = VirtualImpl_Coplt_ILib::ReAlloc,
             .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
+            .f_CreateLayout = VirtualImpl_Coplt_ILib::CreateLayout,
         };
         return vtb;
     };
@@ -671,6 +674,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         virtual void* Impl_ZAlloc(::Coplt::i32 size, ::Coplt::i32 align) const = 0;
         virtual void* Impl_ReAlloc(void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) const = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
+        virtual ILayout* Impl_CreateLayout() = 0;
     };
 
     template <std::derived_from<::Coplt::ILib> Base = ::Coplt::ILib>
@@ -771,6 +775,19 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         #endif
         return r;
     }
+
+    extern "C" inline ILayout* COPLT_CDECL CreateLayout(::Coplt::ILib* self) noexcept
+    {
+        ILayout* r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, CreateLayout, ILayout*)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_CreateLayout();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, CreateLayout, ILayout*)
+        #endif
+        return r;
+    }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_ILib\
     using Super = ::Coplt::IUnknown;\
@@ -809,6 +826,10 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
     static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
     {
         return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_GetSystemFontCollection(self, p0));
+    }
+    static COPLT_FORCE_INLINE ILayout* CreateLayout(::Coplt::ILib* self) noexcept
+    {
+        return COPLT_COM_PVTB(ILib, self)->f_CreateLayout(self);
     }
 };
 
