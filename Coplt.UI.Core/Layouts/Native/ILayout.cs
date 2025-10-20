@@ -14,20 +14,39 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
+    public int* roots;
+
+    public int* view_buckets;
+    public int* text_buckets;
+    public int* root_buckets;
+
+    public NNodeIdCtrl* view_ctrl;
+    public NNodeIdCtrl* text_ctrl;
+    public NNodeIdCtrl* root_ctrl;
+
+    public CommonStyleData* view_common_style_data;
+    public CommonStyleData* text_common_style_data;
+    public CommonStyleData* root_common_style_data;
+
+    public ChildsData* view_childs_data;
+    public void* _pad_0;
+    public ChildsData* root_childs_data;
+
+    public ViewStyleData* view_style_data;
+    public void* _pad_1;
+    public ViewStyleData* root_style_data;
+
+    public ViewLayoutData* view_layout_data;
+    public void* _pad_2;
+    public ViewLayoutData* root_layout_data;
+
+    public TextStyleData* text_style_data;
+
+    public RootData* root_root_data;
+
+    public int root_count;
     public int view_count;
     public int text_count;
-    
-    public int* view_buckets;
-    public NNodeIdCtrl* view_ctrl;
-    public CommonStyleData* view_common_style_data;
-    public ChildsData* view_childs_data;
-    public ViewStyleData* view_style_data;
-    public ViewLayoutData* view_layout_data;
-
-    public int* text_buckets;
-    public NNodeIdCtrl* text_ctrl;
-    public CommonStyleData* text_common_style_data;
-    public TextStyleData* text_style_data;
 
     public bool rounding;
 }

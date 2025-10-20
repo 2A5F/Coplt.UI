@@ -6,6 +6,7 @@ public enum NodeType : byte
 {
     View = 0,
     Text = 1,
+    Root = 2,
 }
 
 [Flags]
@@ -14,8 +15,10 @@ public enum NodeTypes : uint
     None = 0,
     View = 1 << 0,
     Text = 1 << 1,
+    Root = 1 << 2,
 
-    All = View | Text
+    AllView = View | Root,
+    All = View | Text | Root,
 }
 
 public struct NodeTypesEnumerator(NodeTypes types)
@@ -37,7 +40,7 @@ public static class NodeTypeEx
 {
     extension(NodeType)
     {
-        public static int Length => 2;
+        public static int Length => 3;
     }
     
     extension(NodeTypes types)

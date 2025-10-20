@@ -46,6 +46,8 @@ namespace Coplt {
 
     struct CommonStyleData;
 
+    struct RootData;
+
     struct TextStyleData;
 
     struct ViewLayoutData;
@@ -53,6 +55,8 @@ namespace Coplt {
     struct ViewStyleData;
 
     struct NodeId;
+
+    struct NodeLocate;
 
     struct IFont;
 
@@ -111,7 +115,6 @@ namespace Coplt {
         Flex = 0,
         Grid = 1,
         Block = 2,
-        Inline = 3,
     };
 
     enum class FontStyle : ::Coplt::u8
@@ -149,7 +152,6 @@ namespace Coplt {
         Visible = 0,
         Clip = 1,
         Hidden = 2,
-        Scroll = 3,
     };
 
     enum class Position : ::Coplt::u8
@@ -164,6 +166,13 @@ namespace Coplt {
         Left = 1,
         Right = 2,
         Center = 3,
+    };
+
+    enum class VisibleMode : ::Coplt::u8
+    {
+        Visible = 0,
+        Hidden = 1,
+        Remove = 2,
     };
 
     COPLT_ENUM_FLAGS(FontFlags, ::Coplt::i32)
@@ -225,6 +234,20 @@ namespace Coplt {
     {
         ::Coplt::char16 const* Data;
         ::Coplt::u32 Size;
+    };
+
+    template <class T0 /* T */>
+    struct FFIOrderedSet
+    {
+        ::Coplt::i32* m_buckets;
+        ::Coplt::FFIOrderedSetNode<T0>* m_nodes;
+        ::Coplt::u64 m_fast_mode_multiplier;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_first;
+        ::Coplt::i32 m_last;
+        ::Coplt::i32 m_count;
+        ::Coplt::i32 m_free_list;
+        ::Coplt::i32 m_free_count;
     };
 
     struct LayoutCache
@@ -313,20 +336,6 @@ namespace Coplt {
         T0 Value;
     };
 
-    template <class T0 /* T */>
-    struct FFIOrderedSet
-    {
-        ::Coplt::i32* m_buckets;
-        ::Coplt::FFIOrderedSetNode<T0>* m_nodes;
-        ::Coplt::u64 m_fast_mode_multiplier;
-        ::Coplt::i32 m_cap;
-        ::Coplt::i32 m_first;
-        ::Coplt::i32 m_last;
-        ::Coplt::i32 m_count;
-        ::Coplt::i32 m_free_list;
-        ::Coplt::i32 m_free_count;
-    };
-
     struct FontFamilyNameInfo
     {
         ::Coplt::Str16 Name;
@@ -350,18 +359,30 @@ namespace Coplt {
 
     struct NLayoutContext
     {
+        ::Coplt::i32* roots;
+        ::Coplt::i32* view_buckets;
+        ::Coplt::i32* text_buckets;
+        ::Coplt::i32* root_buckets;
+        ::Coplt::NNodeIdCtrl* view_ctrl;
+        ::Coplt::NNodeIdCtrl* text_ctrl;
+        ::Coplt::NNodeIdCtrl* root_ctrl;
+        ::Coplt::CommonStyleData* view_common_style_data;
+        ::Coplt::CommonStyleData* text_common_style_data;
+        ::Coplt::CommonStyleData* root_common_style_data;
+        ::Coplt::ChildsData* view_childs_data;
+        void* _pad_0;
+        ::Coplt::ChildsData* root_childs_data;
+        ::Coplt::ViewStyleData* view_style_data;
+        void* _pad_1;
+        ::Coplt::ViewStyleData* root_style_data;
+        ::Coplt::ViewLayoutData* view_layout_data;
+        void* _pad_2;
+        ::Coplt::ViewLayoutData* root_layout_data;
+        ::Coplt::TextStyleData* text_style_data;
+        ::Coplt::RootData* root_root_data;
+        ::Coplt::i32 root_count;
         ::Coplt::i32 view_count;
         ::Coplt::i32 text_count;
-        ::Coplt::i32* view_buckets;
-        ::Coplt::NNodeIdCtrl* view_ctrl;
-        ::Coplt::CommonStyleData* view_common_style_data;
-        ::Coplt::ChildsData* view_childs_data;
-        ::Coplt::ViewStyleData* view_style_data;
-        ::Coplt::ViewLayoutData* view_layout_data;
-        ::Coplt::i32* text_buckets;
-        ::Coplt::NNodeIdCtrl* text_ctrl;
-        ::Coplt::CommonStyleData* text_common_style_data;
-        ::Coplt::TextStyleData* text_style_data;
         bool rounding;
     };
 
@@ -374,15 +395,22 @@ namespace Coplt {
 
     struct ChildsData
     {
-        ::Coplt::FFIOrderedSet<::Coplt::NodeId>* m_childs;
+        ::Coplt::FFIOrderedSet<::Coplt::NodeLocate> m_childs;
     };
 
     struct CommonStyleData
     {
         ::Coplt::i32 ZIndex;
         ::Coplt::f32 Opacity;
-        bool Visible;
+        ::Coplt::VisibleMode Visible;
         ::Coplt::TextAlign TextAlign;
+    };
+
+    struct RootData
+    {
+        ::Coplt::f32 AvailableSpaceValue;
+        ::Coplt::AvailableSpaceType AvailableSpace;
+        bool UseRounding;
     };
 
     struct TextStyleData
@@ -469,6 +497,12 @@ namespace Coplt {
         ::Coplt::AlignType JustifyContent;
         ::Coplt::LengthType GapX;
         ::Coplt::LengthType GapY;
+    };
+
+    struct NodeLocate
+    {
+        ::Coplt::NodeId Id;
+        ::Coplt::i32 Index;
     };
 
 } // namespace Coplt

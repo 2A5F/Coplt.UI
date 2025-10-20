@@ -1,9 +1,6 @@
-use std::{
-    alloc::Layout,
-    mem::ManuallyDrop,
-};
+use std::{alloc::Layout, mem::ManuallyDrop};
 
-use crate::col::{Enumerator, EnumeratorIter, GetHashCode};
+use crate::col::{Enumerator, EnumeratorIter, GetHashCode, iter::EnumeratorIterator};
 
 use super::hash_helpers::*;
 
@@ -397,7 +394,7 @@ impl<T> OrderedSet<T> {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub fn iter(&self) -> Iter<T> {
         RefEnumerator {
             this: self,
             cur: -1,
@@ -405,7 +402,7 @@ impl<T> OrderedSet<T> {
         .iter()
     }
 
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+    pub fn iter_mut(&mut self) -> IterMut<T> {
         MutEnumerator {
             this: self,
             cur: -1,
@@ -414,8 +411,18 @@ impl<T> OrderedSet<T> {
     }
 }
 
+impl<T: Copy> OrderedSet<T> {
+    pub fn iter_ptr_copy(&self) -> PtrCopyIter<T> {
+        PtrCopyEnumerator {
+            this: self,
+            cur: -1,
+        }
+        .iter()
+    }
+}
+
 use enumerator::*;
-mod enumerator {
+pub mod enumerator {
     pub use super::*;
 
     #[derive(Debug)]
@@ -481,6 +488,39 @@ mod enumerator {
 
         fn current(&self) -> Self::Item {
             &mut unsafe { &mut *self.this.nodes.add(self.cur as usize) }.value
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct PtrCopyEnumerator<T> {
+        pub this: *const OrderedSet<T>,
+        pub cur: i32,
+    }
+
+    impl<T: Copy> Enumerator for PtrCopyEnumerator<T> {
+        type Item = T;
+
+        fn move_next(&mut self) -> bool {
+            if unsafe { &*self.this }.nodes.is_null() {
+                return false;
+            }
+            if self.cur < 0 {
+                if unsafe { &*self.this }.first == -1 {
+                    return false;
+                }
+                self.cur = unsafe { &*self.this }.first;
+            } else {
+                let cur = unsafe { &*unsafe { &*self.this }.nodes.add(self.cur as usize) };
+                if cur.order_next == -1 {
+                    return false;
+                }
+                self.cur = cur.order_next;
+            }
+            true
+        }
+
+        fn current(&self) -> Self::Item {
+            unsafe { &*unsafe { &*self.this }.nodes.add(self.cur as usize) }.value
         }
     }
 }
@@ -610,3 +650,9 @@ impl<T: GetHashCode + PartialEq> OrderedSet<T> {
         true
     }
 }
+
+pub type Iter<'a, T> = EnumeratorIterator<RefEnumerator<'a, T>>;
+
+pub type IterMut<'a, T> = EnumeratorIterator<MutEnumerator<'a, T>>;
+
+pub type PtrCopyIter<T> = EnumeratorIterator<PtrCopyEnumerator<T>>;

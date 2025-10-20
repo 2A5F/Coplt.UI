@@ -2,6 +2,7 @@
 #![allow(non_snake_case)]
 
 #[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum AvailableSpaceType {
     Definite = 0,
     MinContent = 1,
@@ -9,6 +10,7 @@ pub enum AvailableSpaceType {
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum LogLevel {
     Fatal = 0,
     Error = 1,
@@ -19,6 +21,7 @@ pub enum LogLevel {
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum AlignType {
     None = 0,
     Start = 1,
@@ -34,20 +37,22 @@ pub enum AlignType {
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum BoxSizing {
     BorderBox = 0,
     ContentBox = 1,
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Display {
     Flex = 0,
     Grid = 1,
     Block = 2,
-    Inline = 3,
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontStyle {
     Normal = 0,
     Italic = 1,
@@ -55,6 +60,7 @@ pub enum FontStyle {
 }
 
 #[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontWeight {
     None = 0,
     Thin = 100,
@@ -71,6 +77,7 @@ pub enum FontWeight {
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum LengthType {
     Fixed = 0,
     Percent = 1,
@@ -78,20 +85,22 @@ pub enum LengthType {
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Overflow {
     Visible = 0,
     Clip = 1,
     Hidden = 2,
-    Scroll = 3,
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Position {
     Relative = 0,
     Absolute = 1,
 }
 
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum TextAlign {
     Auto = 0,
     Left = 1,
@@ -99,7 +108,16 @@ pub enum TextAlign {
     Center = 3,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum VisibleMode {
+    Visible = 0,
+    Hidden = 1,
+    Remove = 2,
+}
+
 #[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontFlags {
     None = 0,
     Color = 1,
@@ -107,18 +125,21 @@ pub enum FontFlags {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Str16 {
     pub Data: *const u16,
     pub Size: u32,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Str8 {
     pub Data: *const u8,
     pub Size: u32,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct FFIOrderedSetNode<T0 /* T */>
  {
     pub HashCode: i32,
@@ -129,6 +150,7 @@ pub struct FFIOrderedSetNode<T0 /* T */>
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct FFIOrderedSet<T0 /* T */>
  {
     pub m_buckets: *mut i32,
@@ -143,12 +165,14 @@ pub struct FFIOrderedSet<T0 /* T */>
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct FontFamilyNameInfo {
     pub Name: Str16,
     pub Local: u32,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LayoutCache {
     pub FinalLayoutEntry: LayoutCacheEntryLayoutOutput,
     pub MeasureEntries0: LayoutCacheEntrySize,
@@ -174,6 +198,7 @@ pub struct LayoutCache {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LayoutCacheEntryLayoutOutput {
     pub KnownDimensionsWidthValue: f32,
     pub KnownDimensionsHeightValue: f32,
@@ -187,6 +212,7 @@ pub struct LayoutCacheEntryLayoutOutput {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LayoutCacheEntrySize {
     pub KnownDimensionsWidthValue: f32,
     pub KnownDimensionsHeightValue: f32,
@@ -201,12 +227,14 @@ pub struct LayoutCacheEntrySize {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LayoutCollapsibleMarginSet {
     pub Positive: f32,
     pub Negative: f32,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LayoutData {
     pub Order: u32,
     pub LocationX: f32,
@@ -232,6 +260,7 @@ pub struct LayoutData {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct LayoutOutput {
     pub Width: f32,
     pub Height: f32,
@@ -247,6 +276,7 @@ pub struct LayoutOutput {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NFontInfo {
     pub Metrics: FontMetrics,
     pub Width: FontWidth,
@@ -256,29 +286,44 @@ pub struct NFontInfo {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NFontPair {
     pub Font: *mut IFont,
     pub Info: *mut NFontInfo,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
+    pub roots: *mut i32,
+    pub view_buckets: *mut i32,
+    pub text_buckets: *mut i32,
+    pub root_buckets: *mut i32,
+    pub view_ctrl: *mut NNodeIdCtrl,
+    pub text_ctrl: *mut NNodeIdCtrl,
+    pub root_ctrl: *mut NNodeIdCtrl,
+    pub view_common_style_data: *mut CommonStyleData,
+    pub text_common_style_data: *mut CommonStyleData,
+    pub root_common_style_data: *mut CommonStyleData,
+    pub view_childs_data: *mut ChildsData,
+    pub _pad_0: *mut (),
+    pub root_childs_data: *mut ChildsData,
+    pub view_style_data: *mut ViewStyleData,
+    pub _pad_1: *mut (),
+    pub root_style_data: *mut ViewStyleData,
+    pub view_layout_data: *mut ViewLayoutData,
+    pub _pad_2: *mut (),
+    pub root_layout_data: *mut ViewLayoutData,
+    pub text_style_data: *mut TextStyleData,
+    pub root_root_data: *mut RootData,
+    pub root_count: i32,
     pub view_count: i32,
     pub text_count: i32,
-    pub view_buckets: *mut i32,
-    pub view_ctrl: *mut NNodeIdCtrl,
-    pub view_common_style_data: *mut CommonStyleData,
-    pub view_childs_data: *mut ChildsData,
-    pub view_style_data: *mut ViewStyleData,
-    pub view_layout_data: *mut ViewLayoutData,
-    pub text_buckets: *mut i32,
-    pub text_ctrl: *mut NNodeIdCtrl,
-    pub text_common_style_data: *mut CommonStyleData,
-    pub text_style_data: *mut TextStyleData,
     pub rounding: bool,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NNodeIdCtrl {
     pub HashCode: i32,
     pub Next: i32,
@@ -286,11 +331,13 @@ pub struct NNodeIdCtrl {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct FontWidth {
     pub Width: f32,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct FontMetrics {
     pub Ascent: f32,
     pub Descent: f32,
@@ -300,19 +347,30 @@ pub struct FontMetrics {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct ChildsData {
-    pub m_childs: *mut FFIOrderedSet<NodeId>,
+    pub m_childs: FFIOrderedSet<NodeLocate>,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct CommonStyleData {
     pub ZIndex: i32,
     pub Opacity: f32,
-    pub Visible: bool,
+    pub Visible: VisibleMode,
     pub TextAlign: TextAlign,
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct RootData {
+    pub AvailableSpaceValue: f32,
+    pub AvailableSpace: AvailableSpaceType,
+    pub UseRounding: bool,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct TextStyleData {
     pub TextColorR: f32,
     pub TextColorG: f32,
@@ -323,6 +381,7 @@ pub struct TextStyleData {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct ViewLayoutData {
     pub Layout: LayoutData,
     pub FinalLayout: LayoutData,
@@ -330,6 +389,7 @@ pub struct ViewLayoutData {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct ViewStyleData {
     pub ColorR: f32,
     pub ColorG: f32,
@@ -399,9 +459,17 @@ pub struct ViewStyleData {
 }
 
 #[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NodeId {
     pub Id: u32,
     pub VersionAndType: u32,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct NodeLocate {
+    pub Id: NodeId,
+    pub Index: i32,
 }
 
 #[repr(C)]

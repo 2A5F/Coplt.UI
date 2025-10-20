@@ -13,7 +13,7 @@ pub trait EnumeratorIter {
     fn iter(self) -> Self::Iterator;
 }
 
-mod iter {
+pub mod iter {
     use super::*;
 
     #[derive(Debug)]

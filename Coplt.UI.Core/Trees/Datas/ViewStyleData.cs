@@ -2,16 +2,6 @@
 
 namespace Coplt.UI.Trees.Datas;
 
-public record struct CommonStyleData()
-{
-    public int ZIndex;
-    public float Opacity = 1;
-
-    public bool Visible = true;
-
-    public TextAlign TextAlign = TextAlign.Auto;
-}
-
 public record struct ViewStyleData()
 {
     public float ColorR = 1;

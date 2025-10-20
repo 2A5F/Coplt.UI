@@ -1,11 +1,23 @@
 ﻿namespace Coplt.UI.Styles;
 
+public enum VisibleMode : byte
+{
+    Visible,
+    /// <summary>
+    /// Acts like it's transparent, participates in layout, but doesn't display
+    /// </summary>
+    Hidden,
+    /// <summary>
+    /// Does not participate in layout, equivalent to <c>display: none</c>
+    /// </summary>
+    Remove,
+}
+
 public enum Display : byte
 {
     Flex,
     Grid,
     Block,
-    Inline,
 }
 
 public enum Position : byte
@@ -25,7 +37,6 @@ public enum Overflow : byte
     Visible,
     Clip,
     Hidden,
-    Scroll,
 }
 
 public enum LengthType : byte

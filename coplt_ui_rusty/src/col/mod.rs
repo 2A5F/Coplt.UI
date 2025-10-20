@@ -15,10 +15,4 @@ impl GetHashCode for NodeId {
     }
 }
 
-impl PartialEq for NodeId {
-    fn eq(&self, other: &Self) -> bool {
-        self.Id == other.Id && self.VersionAndType == other.VersionAndType
-    }
-}
-
 impl Eq for NodeId {}

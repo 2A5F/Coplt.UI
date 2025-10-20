@@ -23,6 +23,8 @@ public sealed partial class Document
     internal readonly Arche[] m_arches;
     internal EmbedQueue<NodeId> m_node_id_recycle = new();
     internal uint m_node_id_inc;
+    [Drop]
+    internal NativeList<int> m_roots = new();
 
     #endregion
 
@@ -59,13 +61,13 @@ public sealed partial class Document
 
         public Builder()
         {
-            Attach<NodeId>();
+            Attach<RootData>(types: NodeTypes.Root, storage: StorageType.Pinned);
             Attach<ParentData>();
             Attach<CommonStyleData>(storage: StorageType.Pinned);
             Attach<CommonEventData>();
-            Attach<ChildsData>(types: NodeTypes.View, storage: StorageType.Pinned);
-            Attach<ViewStyleData>(types: NodeTypes.View, storage: StorageType.Pinned);
-            Attach<ViewLayoutData>(types: NodeTypes.View, storage: StorageType.Pinned);
+            Attach<ChildsData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
+            Attach<ViewStyleData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
+            Attach<ViewLayoutData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
             Attach<TextStyleData>(types: NodeTypes.Text, storage: StorageType.Pinned);
             With<LayoutModule>();
         }
@@ -256,6 +258,8 @@ public sealed partial class Document
             m_node_id_storage = UnsafeStorageAt(m_type_chain.IndexOf<NodeId>());
         }
 
+        public override string ToString() => m_type_chain.ToString()!;
+
         public void Dispose()
         {
             foreach (var dispose in m_storage_fns_dispose)
@@ -289,7 +293,6 @@ public sealed partial class Document
                     add(idx, op);
                 }
             }
-            Unsafe.Add(ref m_node_id_storage.UnsafeGetDataRef<NodeId>(), idx) = id;
             return idx;
         }
 
@@ -366,50 +369,54 @@ public sealed partial class Document
 
     #endregion
 
-    #region Query
-
-    public Query<Query.Q<T0>> Query<T0>() => new(this);
-    public Query<Query.Q<T0, T1>> Query<T0, T1>() => new(this);
-    public Query<Query.Q<T0, T1, T2>> Query<T0, T1, T2>() => new(this);
-    public Query<Query.Q<T0, T1, T2, T3>> Query<T0, T1, T2, T3>() => new(this);
-
-    #endregion
-
     #region At
 
-    public ref T At<T>(NodeId id)
+    public ref T At<T>(NodeLocate id)
     {
-        var arche = ArcheOf(id.Type);
+        var arche = ArcheOf(id.Id.Type);
         var nth = arche.IndexOf<T>();
         if (nth < 0) throw new InvalidOperationException();
-        var i = arche.m_ctrl.FindValue(id);
-        if (i < 0) throw new IndexOutOfRangeException();
         var storage = arche.UnsafeStorageAt(nth);
-        return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), i);
+        return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
 
     #endregion
 
     #region Create
 
-    public NodeId CreateNode(NodeType type) => CreateNode(type, out _);
-
-    /// <param name="type"></param>
-    /// <param name="index">temporarily available index, if added again or the parameter will become invalid</param>
-    public NodeId CreateNode(NodeType type, out int index)
+    public NodeLocate CreateNode(NodeType type)
     {
         if (m_node_id_recycle.TryDequeue(out var id))
             id = new(id.Id, id.Version + 1, type);
         else id = new(m_node_id_inc++, 1, type);
-        index = m_arches[(int)type].Add(id);
-        return id;
+        var index = m_arches[(int)type].Add(id);
+        if (type is NodeType.Root) m_roots.Add(index);
+        return new(id, index);
     }
 
-    public void Remove(NodeId id)
+    public void Remove(NodeLocate id)
     {
-        var type = id.Type;
-        m_arches[(int)type].Remove(id);
-        m_node_id_recycle.Enqueue(id);
+        var type = id.Id.Type;
+        {
+            ref var parent = ref At<ParentData>(id);
+            if (parent.m_has_parent)
+            {
+                ref var childs = ref At<ChildsData>(parent.m_parent);
+                childs.m_childs.Remove(id);
+            }
+        }
+        if (type is NodeType.Root or NodeType.View)
+        {
+            ref var childs = ref At<ChildsData>(id);
+            foreach (var child in childs.m_childs)
+            {
+                ref var parent = ref At<ParentData>(child);
+                parent.m_has_parent = false;
+            }
+        }
+        if (type is NodeType.Root) m_roots.Remove(id.Index);
+        m_arches[(int)type].Remove(id.Id);
+        m_node_id_recycle.Enqueue(id.Id);
     }
 
     #endregion

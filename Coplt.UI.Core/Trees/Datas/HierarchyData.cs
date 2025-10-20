@@ -9,12 +9,12 @@ namespace Coplt.UI.Trees.Datas;
 public partial record struct ChildsData
 {
     [Drop]
-    [ComType<Ptr<FFIOrderedSet<NodeId>>>]
-    public NOrderedSet<NodeId> m_childs;
+    [ComType<FFIOrderedSet<NodeLocate>>]
+    public NOrderedSet<NodeLocate> m_childs;
 }
 
 public record struct ParentData
 {
-    public NodeId m_parent;
+    public NodeLocate m_parent;
     public bool m_has_parent;
 }
