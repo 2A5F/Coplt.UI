@@ -302,18 +302,15 @@ pub struct NLayoutContext {
     pub view_ctrl: *mut NNodeIdCtrl,
     pub text_ctrl: *mut NNodeIdCtrl,
     pub root_ctrl: *mut NNodeIdCtrl,
+    pub view_layout_data: *mut CommonLayoutData,
+    pub text_layout_data: *mut CommonLayoutData,
+    pub root_layout_data: *mut CommonLayoutData,
     pub view_common_style_data: *mut CommonStyleData,
     pub text_common_style_data: *mut CommonStyleData,
     pub root_common_style_data: *mut CommonStyleData,
     pub view_childs_data: *mut ChildsData,
     pub _pad_0: *mut (),
     pub root_childs_data: *mut ChildsData,
-    pub view_style_data: *mut ViewStyleData,
-    pub _pad_1: *mut (),
-    pub root_style_data: *mut ViewStyleData,
-    pub view_layout_data: *mut ViewLayoutData,
-    pub _pad_2: *mut (),
-    pub root_layout_data: *mut ViewLayoutData,
     pub text_style_data: *mut TextStyleData,
     pub root_root_data: *mut RootData,
     pub root_count: i32,
@@ -354,35 +351,7 @@ pub struct ChildsData {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct CommonStyleData {
-    pub ZIndex: i32,
-    pub Opacity: f32,
-    pub Visible: VisibleMode,
-    pub TextAlign: TextAlign,
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct RootData {
-    pub AvailableSpaceValue: f32,
-    pub AvailableSpace: AvailableSpaceType,
-    pub UseRounding: bool,
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct TextStyleData {
-    pub TextColorR: f32,
-    pub TextColorG: f32,
-    pub TextColorB: f32,
-    pub TextColorA: f32,
-    pub TextSizeValue: f32,
-    pub TextSize: LengthType,
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct ViewLayoutData {
+pub struct CommonLayoutData {
     pub Layout: LayoutData,
     pub FinalLayout: LayoutData,
     pub LayoutCache: LayoutCache,
@@ -390,11 +359,14 @@ pub struct ViewLayoutData {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub struct ViewStyleData {
-    pub ColorR: f32,
-    pub ColorG: f32,
-    pub ColorB: f32,
-    pub ColorA: f32,
+pub struct CommonStyleData {
+    pub ZIndex: i32,
+    pub Opacity: f32,
+    pub ScrollBarSize: f32,
+    pub BoxColorR: f32,
+    pub BoxColorG: f32,
+    pub BoxColorB: f32,
+    pub BoxColorA: f32,
     pub InsertTopValue: f32,
     pub InsertRightValue: f32,
     pub InsertBottomValue: f32,
@@ -420,6 +392,7 @@ pub struct ViewStyleData {
     pub BorderLeftValue: f32,
     pub GapXValue: f32,
     pub GapYValue: f32,
+    pub Visible: VisibleMode,
     pub Container: Container,
     pub BoxSizing: BoxSizing,
     pub OverflowX: Overflow,
@@ -456,6 +429,28 @@ pub struct ViewStyleData {
     pub JustifyContent: AlignType,
     pub GapX: LengthType,
     pub GapY: LengthType,
+    pub TextAlign: TextAlign,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct RootData {
+    pub AvailableSpaceXValue: f32,
+    pub AvailableSpaceYValue: f32,
+    pub AvailableSpaceX: AvailableSpaceType,
+    pub AvailableSpaceY: AvailableSpaceType,
+    pub UseRounding: bool,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct TextStyleData {
+    pub TextColorR: f32,
+    pub TextColorG: f32,
+    pub TextColorB: f32,
+    pub TextColorA: f32,
+    pub TextSizeValue: f32,
+    pub TextSize: LengthType,
 }
 
 #[repr(C)]

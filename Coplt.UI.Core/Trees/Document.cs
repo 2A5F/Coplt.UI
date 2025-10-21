@@ -63,11 +63,10 @@ public sealed partial class Document
         {
             Attach<RootData>(types: NodeTypes.Root, storage: StorageType.Pinned);
             Attach<ParentData>();
+            Attach<CommonLayoutData>(storage: StorageType.Pinned);
             Attach<CommonStyleData>(storage: StorageType.Pinned);
             Attach<CommonEventData>();
             Attach<ChildsData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
-            Attach<ViewStyleData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
-            Attach<ViewLayoutData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
             Attach<TextStyleData>(types: NodeTypes.Text, storage: StorageType.Pinned);
             With<LayoutModule>();
         }

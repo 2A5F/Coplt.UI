@@ -44,15 +44,13 @@ namespace Coplt {
 
     struct ChildsData;
 
+    struct CommonLayoutData;
+
     struct CommonStyleData;
 
     struct RootData;
 
     struct TextStyleData;
-
-    struct ViewLayoutData;
-
-    struct ViewStyleData;
 
     struct NodeId;
 
@@ -366,18 +364,15 @@ namespace Coplt {
         ::Coplt::NNodeIdCtrl* view_ctrl;
         ::Coplt::NNodeIdCtrl* text_ctrl;
         ::Coplt::NNodeIdCtrl* root_ctrl;
+        ::Coplt::CommonLayoutData* view_layout_data;
+        ::Coplt::CommonLayoutData* text_layout_data;
+        ::Coplt::CommonLayoutData* root_layout_data;
         ::Coplt::CommonStyleData* view_common_style_data;
         ::Coplt::CommonStyleData* text_common_style_data;
         ::Coplt::CommonStyleData* root_common_style_data;
         ::Coplt::ChildsData* view_childs_data;
         void* _pad_0;
         ::Coplt::ChildsData* root_childs_data;
-        ::Coplt::ViewStyleData* view_style_data;
-        void* _pad_1;
-        ::Coplt::ViewStyleData* root_style_data;
-        ::Coplt::ViewLayoutData* view_layout_data;
-        void* _pad_2;
-        ::Coplt::ViewLayoutData* root_layout_data;
         ::Coplt::TextStyleData* text_style_data;
         ::Coplt::RootData* root_root_data;
         ::Coplt::i32 root_count;
@@ -398,44 +393,22 @@ namespace Coplt {
         ::Coplt::FFIOrderedSet<::Coplt::NodeLocate> m_childs;
     };
 
-    struct CommonStyleData
-    {
-        ::Coplt::i32 ZIndex;
-        ::Coplt::f32 Opacity;
-        ::Coplt::VisibleMode Visible;
-        ::Coplt::TextAlign TextAlign;
-    };
-
-    struct RootData
-    {
-        ::Coplt::f32 AvailableSpaceValue;
-        ::Coplt::AvailableSpaceType AvailableSpace;
-        bool UseRounding;
-    };
-
-    struct TextStyleData
-    {
-        ::Coplt::f32 TextColorR;
-        ::Coplt::f32 TextColorG;
-        ::Coplt::f32 TextColorB;
-        ::Coplt::f32 TextColorA;
-        ::Coplt::f32 TextSizeValue;
-        ::Coplt::LengthType TextSize;
-    };
-
-    struct ViewLayoutData
+    struct CommonLayoutData
     {
         ::Coplt::LayoutData Layout;
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutCache LayoutCache;
     };
 
-    struct ViewStyleData
+    struct CommonStyleData
     {
-        ::Coplt::f32 ColorR;
-        ::Coplt::f32 ColorG;
-        ::Coplt::f32 ColorB;
-        ::Coplt::f32 ColorA;
+        ::Coplt::i32 ZIndex;
+        ::Coplt::f32 Opacity;
+        ::Coplt::f32 ScrollBarSize;
+        ::Coplt::f32 BoxColorR;
+        ::Coplt::f32 BoxColorG;
+        ::Coplt::f32 BoxColorB;
+        ::Coplt::f32 BoxColorA;
         ::Coplt::f32 InsertTopValue;
         ::Coplt::f32 InsertRightValue;
         ::Coplt::f32 InsertBottomValue;
@@ -461,6 +434,7 @@ namespace Coplt {
         ::Coplt::f32 BorderLeftValue;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
+        ::Coplt::VisibleMode Visible;
         ::Coplt::Container Container;
         ::Coplt::BoxSizing BoxSizing;
         ::Coplt::Overflow OverflowX;
@@ -497,6 +471,26 @@ namespace Coplt {
         ::Coplt::AlignType JustifyContent;
         ::Coplt::LengthType GapX;
         ::Coplt::LengthType GapY;
+        ::Coplt::TextAlign TextAlign;
+    };
+
+    struct RootData
+    {
+        ::Coplt::f32 AvailableSpaceXValue;
+        ::Coplt::f32 AvailableSpaceYValue;
+        ::Coplt::AvailableSpaceType AvailableSpaceX;
+        ::Coplt::AvailableSpaceType AvailableSpaceY;
+        bool UseRounding;
+    };
+
+    struct TextStyleData
+    {
+        ::Coplt::f32 TextColorR;
+        ::Coplt::f32 TextColorG;
+        ::Coplt::f32 TextColorB;
+        ::Coplt::f32 TextColorA;
+        ::Coplt::f32 TextSizeValue;
+        ::Coplt::LengthType TextSize;
     };
 
     struct NodeLocate

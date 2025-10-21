@@ -1,17 +1,43 @@
+use std::hint::unreachable_unchecked;
+
 use cocom::{HResult, HResultE};
 use concat_idents::concat_idents;
-use taffy::{CoreStyle, LayoutPartialTree, Point, TraversePartialTree};
+use taffy::{CoreStyle, LayoutPartialTree, Point, RoundTree, TraversePartialTree, TraverseTree};
 
 use crate::{
     col::{OrderedSet, ordered_set},
-    com::{self, CommonStyleData, NLayoutContext, NodeLocate, ViewStyleData},
+    com::{self, CommonLayoutData, CommonStyleData, NLayoutContext, NodeLocate, RootData},
 };
+
+macro_rules! c_available_space {
+    ( $self:ident.$name:ident ) => {
+        concat_idents!(value_name = $name, Value {
+            match $self.$name {
+                com::AvailableSpaceType::Definite => {
+                    taffy::AvailableSpace::Definite($self.value_name)
+                }
+                com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
+                com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
+            }
+        })
+    };
+}
 
 #[unsafe(no_mangle)]
 pub extern "C" fn coplt_ui_layout_calc(ctx: *mut NLayoutContext) -> HResult {
     unsafe {
         for root_index in (*ctx).roots() {
-            let sub_doc = SubDoc(ctx, *root_index);
+            let mut sub_doc = SubDoc(ctx, *root_index);
+            let root_data = *sub_doc.root_data();
+            let available_space = taffy::Size {
+                width: c_available_space!(root_data.AvailableSpaceX),
+                height: c_available_space!(root_data.AvailableSpaceY),
+            };
+            let root_id = NodeId::new(*root_index, NodeType::Root).into();
+            taffy::compute_root_layout(&mut sub_doc, root_id, available_space);
+            if root_data.UseRounding {
+                taffy::round_layout(&mut sub_doc, root_id);
+            }
         }
 
         HResultE::Ok.into()
@@ -91,7 +117,18 @@ macro_rules! childs_data {
     };
 }
 
+macro_rules! common_layout {
+    [ $self:ident.$s:ident => $i:expr ] => {
+         (*$self.0).$s.add($i as usize)
+    };
+}
+
 impl SubDoc {
+    #[inline(always)]
+    pub fn root_data(&self) -> &RootData {
+        unsafe { &*(*self.0).root_root_data.add(self.1 as usize) }
+    }
+
     #[inline(always)]
     pub fn get_childs(&self, id: NodeId) -> &OrderedSet<NodeLocate> {
         match id.typ() {
@@ -100,6 +137,90 @@ impl SubDoc {
             NodeType::Root => unsafe { &*childs_data![self.root_childs_data => id.index()] },
         }
     }
+
+    #[inline(always)]
+    pub fn common_layout(&self, id: NodeId) -> &CommonLayoutData {
+        match id.typ() {
+            NodeType::View => unsafe { &*common_layout![self.view_layout_data => id.index()] },
+            NodeType::Text => unsafe { &*common_layout![self.text_layout_data => id.index()] },
+            NodeType::Root => unsafe { &*common_layout![self.root_layout_data => id.index()] },
+        }
+    }
+
+    #[inline(always)]
+    pub fn common_layout_mut(&mut self, id: NodeId) -> &mut CommonLayoutData {
+        match id.typ() {
+            NodeType::View => unsafe { &mut *common_layout![self.view_layout_data => id.index()] },
+            NodeType::Text => unsafe { &mut *common_layout![self.text_layout_data => id.index()] },
+            NodeType::Root => unsafe { &mut *common_layout![self.root_layout_data => id.index()] },
+        }
+    }
+}
+
+#[inline(always)]
+fn get_layout(src: &com::LayoutData) -> taffy::Layout {
+    taffy::Layout {
+        order: src.Order,
+        location: taffy::Point {
+            x: src.LocationX,
+            y: src.LocationY,
+        },
+        size: taffy::Size {
+            width: src.Width,
+            height: src.Height,
+        },
+        content_size: taffy::Size {
+            width: src.ContentWidth,
+            height: src.ContentHeight,
+        },
+        scrollbar_size: taffy::Size {
+            width: src.ScrollXSize,
+            height: src.ScrollYSize,
+        },
+        border: taffy::Rect {
+            top: src.BorderTopSize,
+            right: src.BorderRightSize,
+            bottom: src.BorderBottomSize,
+            left: src.BorderLeftSize,
+        },
+        padding: taffy::Rect {
+            top: src.PaddingTopSize,
+            right: src.PaddingRightSize,
+            bottom: src.PaddingBottomSize,
+            left: src.PaddingLeftSize,
+        },
+        margin: taffy::Rect {
+            top: src.MarginTopSize,
+            right: src.MarginRightSize,
+            bottom: src.MarginBottomSize,
+            left: src.MarginLeftSize,
+        },
+    }
+}
+
+#[inline(always)]
+fn set_layout(dst: &mut com::LayoutData, src: &taffy::Layout) {
+    dst.Order = src.order;
+    dst.LocationX = src.location.x;
+    dst.LocationY = src.location.y;
+    dst.Width = src.size.width;
+    dst.Height = src.size.height;
+    dst.ContentWidth = src.content_size.width;
+    dst.ContentHeight = src.content_size.height;
+    dst.ScrollXSize = src.scrollbar_size.width;
+    dst.ScrollYSize = src.scrollbar_size.height;
+    dst.BorderTopSize = src.border.top;
+    dst.BorderRightSize = src.border.right;
+    dst.BorderBottomSize = src.border.bottom;
+    dst.BorderLeftSize = src.border.left;
+    dst.PaddingTopSize = src.padding.top;
+    dst.PaddingRightSize = src.padding.right;
+    dst.PaddingBottomSize = src.padding.bottom;
+    dst.PaddingLeftSize = src.padding.left;
+    dst.MarginTopSize = src.margin.top;
+    dst.MarginRightSize = src.margin.right;
+    dst.MarginBottomSize = src.margin.bottom;
+    dst.MarginLeftSize = src.margin.left;
 }
 
 struct ChildIter(ordered_set::PtrCopyIter<NodeLocate>);
@@ -137,6 +258,8 @@ impl TraversePartialTree for SubDoc {
     }
 }
 
+impl TraverseTree for SubDoc {}
+
 impl LayoutPartialTree for SubDoc {
     type CoreContainerStyle<'a>
         = StyleHandle<'a>
@@ -150,14 +273,11 @@ impl LayoutPartialTree for SubDoc {
         StyleHandle(self, node_id.into())
     }
 
+    #[inline(always)]
     fn set_unrounded_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
         let id = NodeId::from(node_id);
-        match id.1 {
-            NodeType::View => {},
-            NodeType::Text => {},
-            NodeType::Root => {},
-        }
-        todo!()
+        let dst = self.common_layout_mut(id);
+        set_layout(&mut dst.Layout, layout);
     }
 
     fn compute_child_layout(
@@ -166,6 +286,22 @@ impl LayoutPartialTree for SubDoc {
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
         todo!()
+    }
+}
+
+impl RoundTree for SubDoc {
+    #[inline(always)]
+    fn get_unrounded_layout(&self, node_id: taffy::NodeId) -> taffy::Layout {
+        let id = NodeId::from(node_id);
+        let data = self.common_layout(id);
+        get_layout(&data.Layout)
+    }
+
+    #[inline(always)]
+    fn set_final_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
+        let id = NodeId::from(node_id);
+        let data = self.common_layout_mut(id);
+        set_layout(&mut data.FinalLayout, layout);
     }
 }
 
@@ -193,20 +329,11 @@ impl<'a> StyleHandle<'a> {
             NodeType::Root => unsafe { &*common_style![self.root_common_style_data => self.1.0] },
         }
     }
-
-    #[inline(always)]
-    pub fn view_style(&self) -> &ViewStyleData {
-        match self.1.1 {
-            NodeType::View => unsafe { &*common_style![self.view_style_data => self.1.0] },
-            NodeType::Text => unreachable!(),
-            NodeType::Root => unsafe { &*common_style![self.root_style_data => self.1.0] },
-        }
-    }
 }
 
 macro_rules! c_overflow {
     ( $self:ident.$name:ident ) => {
-        match $self.view_style().$name {
+        match $self.common_style().$name {
             com::Overflow::Visible => taffy::Overflow::Visible,
             com::Overflow::Clip => taffy::Overflow::Clip,
             com::Overflow::Hidden => taffy::Overflow::Hidden,
@@ -216,7 +343,7 @@ macro_rules! c_overflow {
 
 macro_rules! c_position {
     ( $self:ident.$name:ident ) => {
-        match $self.view_style().$name {
+        match $self.common_style().$name {
             com::Position::Relative => taffy::Position::Relative,
             com::Position::Absolute => taffy::Position::Absolute,
         }
@@ -226,12 +353,12 @@ macro_rules! c_position {
 macro_rules! c_length_percentage_auto {
     ( $self:ident.$name:ident ) => {
         concat_idents!(value_name = $name, Value {
-            match $self.view_style().$name {
+            match $self.common_style().$name {
                 com::LengthType::Fixed => {
-                    taffy::LengthPercentageAuto::length($self.view_style().value_name)
+                    taffy::LengthPercentageAuto::length($self.common_style().value_name)
                 }
                 com::LengthType::Percent => {
-                    taffy::LengthPercentageAuto::percent($self.view_style().value_name)
+                    taffy::LengthPercentageAuto::percent($self.common_style().value_name)
                 }
                 com::LengthType::Auto => taffy::LengthPercentageAuto::auto(),
             }
@@ -242,12 +369,12 @@ macro_rules! c_length_percentage_auto {
 macro_rules! c_dimension {
     ( $self:ident.$name:ident ) => {
         concat_idents!(value_name = $name, Value {
-            match $self.view_style().$name {
+            match $self.common_style().$name {
                 com::LengthType::Fixed => {
-                    taffy::Dimension::length($self.view_style().value_name)
+                    taffy::Dimension::length($self.common_style().value_name)
                 }
                 com::LengthType::Percent => {
-                    taffy::Dimension::percent($self.view_style().value_name)
+                    taffy::Dimension::percent($self.common_style().value_name)
                 }
                 com::LengthType::Auto => taffy::Dimension::auto(),
             }
@@ -258,12 +385,12 @@ macro_rules! c_dimension {
 macro_rules! c_length_percentage {
     ( $self:ident.$name:ident ) => {
         concat_idents!(value_name = $name, Value {
-            match $self.view_style().$name {
+            match $self.common_style().$name {
                 com::LengthType::Fixed => {
-                    taffy::LengthPercentage::length($self.view_style().value_name)
+                    taffy::LengthPercentage::length($self.common_style().value_name)
                 }
                 com::LengthType::Percent => {
-                    taffy::LengthPercentage::percent($self.view_style().value_name)
+                    taffy::LengthPercentage::percent($self.common_style().value_name)
                 }
                 com::LengthType::Auto => taffy::LengthPercentage::length(0.0),
             }
@@ -297,7 +424,7 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn box_sizing(&self) -> taffy::BoxSizing {
         match self.1.1 {
-            NodeType::View | NodeType::Root => match self.view_style().BoxSizing {
+            NodeType::View | NodeType::Root => match self.common_style().BoxSizing {
                 com::BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
                 com::BoxSizing::ContentBox => taffy::BoxSizing::ContentBox,
             },
@@ -321,27 +448,24 @@ impl<'a> CoreStyle for StyleHandle<'a> {
 
     #[inline(always)]
     fn scrollbar_width(&self) -> f32 {
-        0.0
-    }
-
-    #[inline(always)]
-    fn position(&self) -> taffy::Position {
         match self.1.1 {
-            NodeType::View | NodeType::Root => c_position!(self.Position),
-            NodeType::Text => taffy::Position::Relative,
+            NodeType::View => self.common_style().ScrollBarSize,
+            _ => 0.0,
         }
     }
 
     #[inline(always)]
+    fn position(&self) -> taffy::Position {
+        c_position!(self.Position)
+    }
+
+    #[inline(always)]
     fn inset(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
-        match self.1.1 {
-            NodeType::View | NodeType::Root => taffy::Rect {
-                left: c_length_percentage_auto!(self.InsertLeft),
-                right: c_length_percentage_auto!(self.InsertRight),
-                top: c_length_percentage_auto!(self.InsertTop),
-                bottom: c_length_percentage_auto!(self.InsertBottom),
-            },
-            NodeType::Text => taffy::Rect::auto(),
+        taffy::Rect {
+            left: c_length_percentage_auto!(self.InsertLeft),
+            right: c_length_percentage_auto!(self.InsertRight),
+            top: c_length_percentage_auto!(self.InsertTop),
+            bottom: c_length_percentage_auto!(self.InsertBottom),
         }
     }
 
@@ -382,8 +506,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn aspect_ratio(&self) -> Option<f32> {
         match self.1.1 {
             NodeType::View | NodeType::Root => {
-                if self.view_style().HasAspectRatio {
-                    Some(self.view_style().AspectRatioValue)
+                if self.common_style().HasAspectRatio {
+                    Some(self.common_style().AspectRatioValue)
                 } else {
                     None
                 }
@@ -394,14 +518,11 @@ impl<'a> CoreStyle for StyleHandle<'a> {
 
     #[inline(always)]
     fn margin(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
-        match self.1.1 {
-            NodeType::View | NodeType::Root => taffy::Rect {
-                left: c_length_percentage_auto!(self.MarginLeft),
-                right: c_length_percentage_auto!(self.MarginRight),
-                top: c_length_percentage_auto!(self.MarginTop),
-                bottom: c_length_percentage_auto!(self.MarginBottom),
-            },
-            NodeType::Text => taffy::Rect::auto(),
+        taffy::Rect {
+            left: c_length_percentage_auto!(self.MarginLeft),
+            right: c_length_percentage_auto!(self.MarginRight),
+            top: c_length_percentage_auto!(self.MarginTop),
+            bottom: c_length_percentage_auto!(self.MarginBottom),
         }
     }
 

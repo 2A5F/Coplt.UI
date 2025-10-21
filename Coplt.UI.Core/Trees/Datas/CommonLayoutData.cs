@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Trees.Datas;
 
-public record struct ViewLayoutData
+public record struct CommonLayoutData
 {
     public LayoutData Layout;
     public LayoutData FinalLayout;
