@@ -113,6 +113,22 @@ namespace Coplt {
         Flex = 0,
         Grid = 1,
         Text = 2,
+        Block = 3,
+    };
+
+    enum class FlexDirection : ::Coplt::u8
+    {
+        Column = 0,
+        Row = 1,
+        ColumnReverse = 2,
+        RowReverse = 3,
+    };
+
+    enum class FlexWrap : ::Coplt::u8
+    {
+        NoWrap = 0,
+        Wrap = 1,
+        WrapReverse = 2,
     };
 
     enum class FontStyle : ::Coplt::u8
@@ -434,6 +450,9 @@ namespace Coplt {
         ::Coplt::f32 BorderLeftValue;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
+        ::Coplt::f32 FlexGrow;
+        ::Coplt::f32 FlexShrink;
+        ::Coplt::f32 FlexBasisValue;
         ::Coplt::VisibleMode Visible;
         ::Coplt::Container Container;
         ::Coplt::BoxSizing BoxSizing;
@@ -463,6 +482,8 @@ namespace Coplt {
         ::Coplt::LengthType BorderRight;
         ::Coplt::LengthType BorderBottom;
         ::Coplt::LengthType BorderLeft;
+        ::Coplt::FlexDirection FlexDirection;
+        ::Coplt::FlexWrap FlexWrap;
         ::Coplt::AlignType AlignItems;
         ::Coplt::AlignType AlignSelf;
         ::Coplt::AlignType JustifyItems;
@@ -471,6 +492,7 @@ namespace Coplt {
         ::Coplt::AlignType JustifyContent;
         ::Coplt::LengthType GapX;
         ::Coplt::LengthType GapY;
+        ::Coplt::LengthType FlexBasis;
         ::Coplt::TextAlign TextAlign;
     };
 

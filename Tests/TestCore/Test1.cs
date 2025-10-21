@@ -13,10 +13,12 @@ public class Tests1
             .Create();
         var node1 = doc.CreateNode(NodeType.Root);
         ref var node1_style = ref doc.At<CommonStyleData>(node1);
-        node1_style.Width = LengthType.Percent;
-        node1_style.Height = LengthType.Percent;
-        node1_style.WidthValue = 1;
-        node1_style.HeightValue = 1;
+        node1_style.Width = LengthType.Fixed;
+        node1_style.Height = LengthType.Fixed;
+        node1_style.WidthValue = 100;
+        node1_style.HeightValue = 100;
         doc.Update();
+        ref var node1_layout = ref doc.At<CommonLayoutData>(node1);
+        Console.WriteLine(node1_layout.FinalLayout);
     }
 }

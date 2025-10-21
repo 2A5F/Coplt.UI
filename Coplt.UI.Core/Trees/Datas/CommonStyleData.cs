@@ -49,6 +49,10 @@ public record struct CommonStyleData()
     public float GapXValue = 0;
     public float GapYValue = 0;
 
+    public float FlexGrow = 0;
+    public float FlexShrink = 1;
+    public float FlexBasisValue = 0;
+
     public VisibleMode Visible = VisibleMode.Visible;
 
     public Container Container = Container.Flex;
@@ -88,6 +92,9 @@ public record struct CommonStyleData()
     public LengthType BorderBottom = LengthType.Fixed;
     public LengthType BorderLeft = LengthType.Fixed;
 
+    public FlexDirection FlexDirection = FlexDirection.Column;
+    public FlexWrap FlexWrap = FlexWrap.NoWrap;
+    
     public AlignType AlignItems = AlignType.None;
     public AlignType AlignSelf = AlignType.None;
     public AlignType JustifyItems = AlignType.None;
@@ -97,6 +104,8 @@ public record struct CommonStyleData()
 
     public LengthType GapX = LengthType.Fixed;
     public LengthType GapY = LengthType.Fixed;
+    
+    public LengthType FlexBasis = LengthType.Auto;
 
     public TextAlign TextAlign = TextAlign.Auto;
 }

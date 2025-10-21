@@ -18,6 +18,7 @@ public enum Container : byte
     Flex,
     Grid,
     Text,
+    Block,
 }
 
 public enum Position : byte

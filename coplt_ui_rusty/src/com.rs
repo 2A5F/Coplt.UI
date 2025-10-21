@@ -49,6 +49,24 @@ pub enum Container {
     Flex = 0,
     Grid = 1,
     Text = 2,
+    Block = 3,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum FlexDirection {
+    Column = 0,
+    Row = 1,
+    ColumnReverse = 2,
+    RowReverse = 3,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum FlexWrap {
+    NoWrap = 0,
+    Wrap = 1,
+    WrapReverse = 2,
 }
 
 #[repr(u8)]
@@ -392,6 +410,9 @@ pub struct CommonStyleData {
     pub BorderLeftValue: f32,
     pub GapXValue: f32,
     pub GapYValue: f32,
+    pub FlexGrow: f32,
+    pub FlexShrink: f32,
+    pub FlexBasisValue: f32,
     pub Visible: VisibleMode,
     pub Container: Container,
     pub BoxSizing: BoxSizing,
@@ -421,6 +442,8 @@ pub struct CommonStyleData {
     pub BorderRight: LengthType,
     pub BorderBottom: LengthType,
     pub BorderLeft: LengthType,
+    pub FlexDirection: FlexDirection,
+    pub FlexWrap: FlexWrap,
     pub AlignItems: AlignType,
     pub AlignSelf: AlignType,
     pub JustifyItems: AlignType,
@@ -429,6 +452,7 @@ pub struct CommonStyleData {
     pub JustifyContent: AlignType,
     pub GapX: LengthType,
     pub GapY: LengthType,
+    pub FlexBasis: LengthType,
     pub TextAlign: TextAlign,
 }
 
