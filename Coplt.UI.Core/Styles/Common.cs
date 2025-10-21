@@ -13,11 +13,11 @@ public enum VisibleMode : byte
     Remove,
 }
 
-public enum Display : byte
+public enum Container : byte
 {
     Flex,
     Grid,
-    Block,
+    Text,
 }
 
 public enum Position : byte

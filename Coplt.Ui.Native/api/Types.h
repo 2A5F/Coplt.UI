@@ -110,11 +110,11 @@ namespace Coplt {
         ContentBox = 1,
     };
 
-    enum class Display : ::Coplt::u8
+    enum class Container : ::Coplt::u8
     {
         Flex = 0,
         Grid = 1,
-        Block = 2,
+        Text = 2,
     };
 
     enum class FontStyle : ::Coplt::u8
@@ -461,33 +461,33 @@ namespace Coplt {
         ::Coplt::f32 BorderLeftValue;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
-        ::Coplt::Display Display;
+        ::Coplt::Container Container;
         ::Coplt::BoxSizing BoxSizing;
         ::Coplt::Overflow OverflowX;
         ::Coplt::Overflow OverflowY;
         ::Coplt::Position Position;
         ::Coplt::LengthType InsertTop;
         ::Coplt::LengthType InsertRight;
-        ::Coplt::LengthType InsertBottomV;
+        ::Coplt::LengthType InsertBottom;
         ::Coplt::LengthType InsertLeft;
         ::Coplt::LengthType Width;
         ::Coplt::LengthType Height;
         ::Coplt::LengthType MinWidth;
         ::Coplt::LengthType MinHeight;
-        ::Coplt::LengthType MaxMinWidth;
-        ::Coplt::LengthType MaxMinHeight;
+        ::Coplt::LengthType MaxWidth;
+        ::Coplt::LengthType MaxHeight;
         bool HasAspectRatio;
         ::Coplt::LengthType MarginTop;
         ::Coplt::LengthType MarginRight;
-        ::Coplt::LengthType MarginBottomV;
+        ::Coplt::LengthType MarginBottom;
         ::Coplt::LengthType MarginLeft;
         ::Coplt::LengthType PaddingTop;
         ::Coplt::LengthType PaddingRight;
-        ::Coplt::LengthType PaddingBottomV;
+        ::Coplt::LengthType PaddingBottom;
         ::Coplt::LengthType PaddingLeft;
         ::Coplt::LengthType BorderTop;
         ::Coplt::LengthType BorderRight;
-        ::Coplt::LengthType BorderBottomV;
+        ::Coplt::LengthType BorderBottom;
         ::Coplt::LengthType BorderLeft;
         ::Coplt::AlignType AlignItems;
         ::Coplt::AlignType AlignSelf;

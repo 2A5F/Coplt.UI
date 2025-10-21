@@ -43,7 +43,7 @@ public record struct ViewStyleData()
     public float GapXValue = 0;
     public float GapYValue = 0;
 
-    public Display Display = Display.Flex;
+    public Container Container = Container.Flex;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
     public Overflow OverflowX = Overflow.Visible;
     public Overflow OverflowY = Overflow.Visible;
@@ -51,7 +51,7 @@ public record struct ViewStyleData()
 
     public LengthType InsertTop = LengthType.Auto;
     public LengthType InsertRight = LengthType.Auto;
-    public LengthType InsertBottomV = LengthType.Auto;
+    public LengthType InsertBottom = LengthType.Auto;
     public LengthType InsertLeft = LengthType.Auto;
 
     public LengthType Width = LengthType.Auto;
@@ -60,24 +60,24 @@ public record struct ViewStyleData()
     public LengthType MinWidth = LengthType.Auto;
     public LengthType MinHeight = LengthType.Auto;
 
-    public LengthType MaxMinWidth = LengthType.Auto;
-    public LengthType MaxMinHeight = LengthType.Auto;
+    public LengthType MaxWidth = LengthType.Auto;
+    public LengthType MaxHeight = LengthType.Auto;
 
     public bool HasAspectRatio = false;
 
     public LengthType MarginTop = LengthType.Fixed;
     public LengthType MarginRight = LengthType.Fixed;
-    public LengthType MarginBottomV = LengthType.Fixed;
+    public LengthType MarginBottom = LengthType.Fixed;
     public LengthType MarginLeft = LengthType.Fixed;
 
     public LengthType PaddingTop = LengthType.Fixed;
     public LengthType PaddingRight = LengthType.Fixed;
-    public LengthType PaddingBottomV = LengthType.Fixed;
+    public LengthType PaddingBottom = LengthType.Fixed;
     public LengthType PaddingLeft = LengthType.Fixed;
 
     public LengthType BorderTop = LengthType.Fixed;
     public LengthType BorderRight = LengthType.Fixed;
-    public LengthType BorderBottomV = LengthType.Fixed;
+    public LengthType BorderBottom = LengthType.Fixed;
     public LengthType BorderLeft = LengthType.Fixed;
 
     public AlignType AlignItems = AlignType.None;

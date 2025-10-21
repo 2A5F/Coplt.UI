@@ -1,4 +1,5 @@
 use cocom::{HResult, HResultE};
+use concat_idents::concat_idents;
 use taffy::{CoreStyle, LayoutPartialTree, Point, TraversePartialTree};
 
 use crate::{
@@ -150,6 +151,12 @@ impl LayoutPartialTree for SubDoc {
     }
 
     fn set_unrounded_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
+        let id = NodeId::from(node_id);
+        match id.1 {
+            NodeType::View => {},
+            NodeType::Text => {},
+            NodeType::Root => {},
+        }
         todo!()
     }
 
@@ -197,6 +204,73 @@ impl<'a> StyleHandle<'a> {
     }
 }
 
+macro_rules! c_overflow {
+    ( $self:ident.$name:ident ) => {
+        match $self.view_style().$name {
+            com::Overflow::Visible => taffy::Overflow::Visible,
+            com::Overflow::Clip => taffy::Overflow::Clip,
+            com::Overflow::Hidden => taffy::Overflow::Hidden,
+        }
+    };
+}
+
+macro_rules! c_position {
+    ( $self:ident.$name:ident ) => {
+        match $self.view_style().$name {
+            com::Position::Relative => taffy::Position::Relative,
+            com::Position::Absolute => taffy::Position::Absolute,
+        }
+    };
+}
+
+macro_rules! c_length_percentage_auto {
+    ( $self:ident.$name:ident ) => {
+        concat_idents!(value_name = $name, Value {
+            match $self.view_style().$name {
+                com::LengthType::Fixed => {
+                    taffy::LengthPercentageAuto::length($self.view_style().value_name)
+                }
+                com::LengthType::Percent => {
+                    taffy::LengthPercentageAuto::percent($self.view_style().value_name)
+                }
+                com::LengthType::Auto => taffy::LengthPercentageAuto::auto(),
+            }
+        })
+    };
+}
+
+macro_rules! c_dimension {
+    ( $self:ident.$name:ident ) => {
+        concat_idents!(value_name = $name, Value {
+            match $self.view_style().$name {
+                com::LengthType::Fixed => {
+                    taffy::Dimension::length($self.view_style().value_name)
+                }
+                com::LengthType::Percent => {
+                    taffy::Dimension::percent($self.view_style().value_name)
+                }
+                com::LengthType::Auto => taffy::Dimension::auto(),
+            }
+        })
+    };
+}
+
+macro_rules! c_length_percentage {
+    ( $self:ident.$name:ident ) => {
+        concat_idents!(value_name = $name, Value {
+            match $self.view_style().$name {
+                com::LengthType::Fixed => {
+                    taffy::LengthPercentage::length($self.view_style().value_name)
+                }
+                com::LengthType::Percent => {
+                    taffy::LengthPercentage::percent($self.view_style().value_name)
+                }
+                com::LengthType::Auto => taffy::LengthPercentage::length(0.0),
+            }
+        })
+    };
+}
+
 impl<'a> CoreStyle for StyleHandle<'a> {
     type CustomIdent = String;
 
@@ -212,12 +286,7 @@ impl<'a> CoreStyle for StyleHandle<'a> {
 
     #[inline(always)]
     fn is_block(&self) -> bool {
-        match self.1.1 {
-            NodeType::View | NodeType::Root => {
-                matches!(self.view_style().Display, com::Display::Block)
-            }
-            NodeType::Text => false,
-        }
+        false
     }
 
     #[inline(always)]
@@ -240,16 +309,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn overflow(&self) -> taffy::Point<taffy::Overflow> {
         match self.1.1 {
             NodeType::View | NodeType::Root => Point {
-                x: match self.view_style().OverflowX {
-                    com::Overflow::Visible => taffy::Overflow::Visible,
-                    com::Overflow::Clip => taffy::Overflow::Clip,
-                    com::Overflow::Hidden => taffy::Overflow::Hidden,
-                },
-                y: match self.view_style().OverflowY {
-                    com::Overflow::Visible => taffy::Overflow::Visible,
-                    com::Overflow::Clip => taffy::Overflow::Clip,
-                    com::Overflow::Hidden => taffy::Overflow::Hidden,
-                },
+                x: c_overflow!(self.OverflowX),
+                y: c_overflow!(self.OverflowY),
             },
             NodeType::Text => Point {
                 x: taffy::Overflow::Visible,
@@ -266,51 +327,107 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn position(&self) -> taffy::Position {
         match self.1.1 {
-            NodeType::View | NodeType::Root => match self.view_style().Position {
-                com::Position::Relative => taffy::Position::Relative,
-                com::Position::Absolute => taffy::Position::Absolute,
-            },
+            NodeType::View | NodeType::Root => c_position!(self.Position),
             NodeType::Text => taffy::Position::Relative,
         }
     }
 
     #[inline(always)]
     fn inset(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.inset
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Rect {
+                left: c_length_percentage_auto!(self.InsertLeft),
+                right: c_length_percentage_auto!(self.InsertRight),
+                top: c_length_percentage_auto!(self.InsertTop),
+                bottom: c_length_percentage_auto!(self.InsertBottom),
+            },
+            NodeType::Text => taffy::Rect::auto(),
+        }
     }
 
     #[inline(always)]
     fn size(&self) -> taffy::Size<taffy::Dimension> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.size
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Size {
+                width: c_dimension!(self.Width),
+                height: c_dimension!(self.Height),
+            },
+            NodeType::Text => taffy::Size::auto(),
+        }
     }
 
     #[inline(always)]
     fn min_size(&self) -> taffy::Size<taffy::Dimension> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.min_size
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Size {
+                width: c_dimension!(self.MinWidth),
+                height: c_dimension!(self.MinHeight),
+            },
+            NodeType::Text => taffy::Size::auto(),
+        }
     }
 
     #[inline(always)]
     fn max_size(&self) -> taffy::Size<taffy::Dimension> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.max_size
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Size {
+                width: c_dimension!(self.MaxWidth),
+                height: c_dimension!(self.MaxHeight),
+            },
+            NodeType::Text => taffy::Size::auto(),
+        }
     }
 
     #[inline(always)]
     fn aspect_ratio(&self) -> Option<f32> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.aspect_ratio
+        match self.1.1 {
+            NodeType::View | NodeType::Root => {
+                if self.view_style().HasAspectRatio {
+                    Some(self.view_style().AspectRatioValue)
+                } else {
+                    None
+                }
+            }
+            NodeType::Text => None,
+        }
     }
 
     #[inline(always)]
     fn margin(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.margin
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Rect {
+                left: c_length_percentage_auto!(self.MarginLeft),
+                right: c_length_percentage_auto!(self.MarginRight),
+                top: c_length_percentage_auto!(self.MarginTop),
+                bottom: c_length_percentage_auto!(self.MarginBottom),
+            },
+            NodeType::Text => taffy::Rect::auto(),
+        }
     }
 
     #[inline(always)]
     fn padding(&self) -> taffy::Rect<taffy::LengthPercentage> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.padding
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Rect {
+                left: c_length_percentage!(self.PaddingLeft),
+                right: c_length_percentage!(self.PaddingRight),
+                top: c_length_percentage!(self.PaddingTop),
+                bottom: c_length_percentage!(self.PaddingBottom),
+            },
+            NodeType::Text => taffy::Rect::zero(),
+        }
     }
 
     #[inline(always)]
     fn border(&self) -> taffy::Rect<taffy::LengthPercentage> {
-        taffy::Style::<Self::CustomIdent>::DEFAULT.border
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Rect {
+                left: c_length_percentage!(self.BorderLeft),
+                right: c_length_percentage!(self.BorderRight),
+                top: c_length_percentage!(self.BorderTop),
+                bottom: c_length_percentage!(self.BorderBottom),
+            },
+            NodeType::Text => taffy::Rect::zero(),
+        }
     }
 }

@@ -45,10 +45,10 @@ pub enum BoxSizing {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum Display {
+pub enum Container {
     Flex = 0,
     Grid = 1,
-    Block = 2,
+    Text = 2,
 }
 
 #[repr(u8)]
@@ -420,33 +420,33 @@ pub struct ViewStyleData {
     pub BorderLeftValue: f32,
     pub GapXValue: f32,
     pub GapYValue: f32,
-    pub Display: Display,
+    pub Container: Container,
     pub BoxSizing: BoxSizing,
     pub OverflowX: Overflow,
     pub OverflowY: Overflow,
     pub Position: Position,
     pub InsertTop: LengthType,
     pub InsertRight: LengthType,
-    pub InsertBottomV: LengthType,
+    pub InsertBottom: LengthType,
     pub InsertLeft: LengthType,
     pub Width: LengthType,
     pub Height: LengthType,
     pub MinWidth: LengthType,
     pub MinHeight: LengthType,
-    pub MaxMinWidth: LengthType,
-    pub MaxMinHeight: LengthType,
+    pub MaxWidth: LengthType,
+    pub MaxHeight: LengthType,
     pub HasAspectRatio: bool,
     pub MarginTop: LengthType,
     pub MarginRight: LengthType,
-    pub MarginBottomV: LengthType,
+    pub MarginBottom: LengthType,
     pub MarginLeft: LengthType,
     pub PaddingTop: LengthType,
     pub PaddingRight: LengthType,
-    pub PaddingBottomV: LengthType,
+    pub PaddingBottom: LengthType,
     pub PaddingLeft: LengthType,
     pub BorderTop: LengthType,
     pub BorderRight: LengthType,
-    pub BorderBottomV: LengthType,
+    pub BorderBottom: LengthType,
     pub BorderLeft: LengthType,
     pub AlignItems: AlignType,
     pub AlignSelf: AlignType,
