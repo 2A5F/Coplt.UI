@@ -1,6 +1,6 @@
 ﻿namespace Coplt.UI.Styles;
 
-public enum VisibleMode : byte
+public enum Visible : byte
 {
     Visible,
     /// <summary>

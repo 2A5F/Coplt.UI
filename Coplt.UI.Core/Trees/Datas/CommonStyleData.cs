@@ -53,7 +53,7 @@ public record struct CommonStyleData()
     public float FlexShrink = 1;
     public float FlexBasisValue = 0;
 
-    public VisibleMode Visible = VisibleMode.Visible;
+    public Visible Visible = Visible.Visible;
 
     public Container Container = Container.Flex;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;

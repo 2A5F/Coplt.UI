@@ -379,6 +379,15 @@ public sealed partial class Document
         return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
 
+    public unsafe T* UnsafePtrAt<T>(NodeLocate id)
+    {
+        var arche = ArcheOf(id.Id.Type);
+        var nth = arche.IndexOf<T>();
+        if (nth < 0) throw new InvalidOperationException();
+        var storage = arche.UnsafeStorageAt(nth);
+        return storage.UnsafeGetDataPtr<T>() + id.Index;
+    }
+
     #endregion
 
     #region Create
