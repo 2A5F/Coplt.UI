@@ -36,9 +36,9 @@ public unsafe struct NLayoutContext
     public void* _pad_0;
     public ChildsData* root_childs_data;
     
-    public GridContainerStyleData* view_grid_container_style_data;
+    public ContainerStyleData* view_container_style_data;
     public void* _pad_1;
-    public GridContainerStyleData* root_grid_container_style_data;
+    public ContainerStyleData* root_container_style_data;
 
     public TextStyleData* text_style_data;
 

@@ -394,7 +394,7 @@ impl<T> OrderedSet<T> {
         }
     }
 
-    pub fn iter(&self) -> Iter<T> {
+    pub fn iter(&'_ self) -> Iter<'_, T> {
         RefEnumerator {
             this: self,
             cur: -1,
@@ -402,7 +402,7 @@ impl<T> OrderedSet<T> {
         .iter()
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<T> {
+    pub fn iter_mut(&'_ mut self) -> IterMut<'_, T> {
         MutEnumerator {
             this: self,
             cur: -1,

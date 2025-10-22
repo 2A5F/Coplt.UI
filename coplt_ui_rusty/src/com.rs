@@ -204,15 +204,20 @@ pub struct Str8 {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct NativeBox<T0 /* T */>
- {
-    pub m_ptr: *mut T0,
+pub struct NativeArcInner<T0 /* T */> {
+    pub m_count: u64,
+    pub m_data: T0,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct NativeList<T0 /* T */>
- {
+pub struct NativeArc<T0 /* T */> {
+    pub m_ptr: *mut NativeArcInner<T0>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NativeList<T0 /* T */> {
     pub m_items: *mut T0,
     pub m_cap: i32,
     pub m_size: i32,
@@ -277,8 +282,7 @@ pub struct TrackSizingFunction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct FFIOrderedSetNode<T0 /* T */>
- {
+pub struct FFIOrderedSetNode<T0 /* T */> {
     pub HashCode: i32,
     pub Next: i32,
     pub OrderNext: i32,
@@ -288,8 +292,7 @@ pub struct FFIOrderedSetNode<T0 /* T */>
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct FFIOrderedSet<T0 /* T */>
- {
+pub struct FFIOrderedSet<T0 /* T */> {
     pub m_buckets: *mut i32,
     pub m_nodes: *mut FFIOrderedSetNode<T0>,
     pub m_fast_mode_multiplier: u64,
@@ -448,9 +451,9 @@ pub struct NLayoutContext {
     pub view_childs_data: *mut ChildsData,
     pub _pad_0: *mut (),
     pub root_childs_data: *mut ChildsData,
-    pub view_grid_container_style_data: *mut GridContainerStyleData,
+    pub view_container_style_data: *mut ContainerStyleData,
     pub _pad_1: *mut (),
-    pub root_grid_container_style_data: *mut GridContainerStyleData,
+    pub root_container_style_data: *mut ContainerStyleData,
     pub text_style_data: *mut TextStyleData,
     pub root_root_data: *mut RootData,
     pub root_count: i32,
@@ -502,7 +505,6 @@ pub struct CommonLayoutData {
 pub struct CommonStyleData {
     pub ZIndex: i32,
     pub Opacity: f32,
-    pub ScrollBarSize: f32,
     pub BoxColorR: f32,
     pub BoxColorG: f32,
     pub BoxColorB: f32,
@@ -511,55 +513,27 @@ pub struct CommonStyleData {
     pub InsertRightValue: f32,
     pub InsertBottomValue: f32,
     pub InsertLeftValue: f32,
-    pub WidthValue: f32,
-    pub HeightValue: f32,
-    pub MinWidthValue: f32,
-    pub MinHeightValue: f32,
-    pub MaxWidthValue: f32,
-    pub MaxHeightValue: f32,
-    pub AspectRatioValue: f32,
     pub MarginTopValue: f32,
     pub MarginRightValue: f32,
     pub MarginBottomValue: f32,
     pub MarginLeftValue: f32,
-    pub PaddingTopValue: f32,
-    pub PaddingRightValue: f32,
-    pub PaddingBottomValue: f32,
-    pub PaddingLeftValue: f32,
     pub BorderTopValue: f32,
     pub BorderRightValue: f32,
     pub BorderBottomValue: f32,
     pub BorderLeftValue: f32,
-    pub GapXValue: f32,
-    pub GapYValue: f32,
     pub FlexGrow: f32,
     pub FlexShrink: f32,
     pub FlexBasisValue: f32,
     pub Visible: Visible,
-    pub Container: Container,
-    pub BoxSizing: BoxSizing,
-    pub OverflowX: Overflow,
-    pub OverflowY: Overflow,
     pub Position: Position,
     pub InsertTop: LengthType,
     pub InsertRight: LengthType,
     pub InsertBottom: LengthType,
     pub InsertLeft: LengthType,
-    pub Width: LengthType,
-    pub Height: LengthType,
-    pub MinWidth: LengthType,
-    pub MinHeight: LengthType,
-    pub MaxWidth: LengthType,
-    pub MaxHeight: LengthType,
-    pub HasAspectRatio: bool,
     pub MarginTop: LengthType,
     pub MarginRight: LengthType,
     pub MarginBottom: LengthType,
     pub MarginLeft: LengthType,
-    pub PaddingTop: LengthType,
-    pub PaddingRight: LengthType,
-    pub PaddingBottom: LengthType,
-    pub PaddingLeft: LengthType,
     pub BorderTop: LengthType,
     pub BorderRight: LengthType,
     pub BorderBottom: LengthType,
@@ -570,13 +544,8 @@ pub struct CommonStyleData {
     pub JustifySelf: AlignType,
     pub AlignContent: AlignType,
     pub JustifyContent: AlignType,
-    pub GapX: LengthType,
-    pub GapY: LengthType,
-    pub FlexDirection: FlexDirection,
-    pub FlexWrap: FlexWrap,
     pub FlexBasis: LengthType,
     pub GridAutoFlow: GridAutoFlow,
-    pub TextAlign: TextAlign,
     pub GridRowStart: GridPlacement,
     pub GridRowEnd: GridPlacement,
     pub GridColumnStart: GridPlacement,
@@ -585,13 +554,47 @@ pub struct CommonStyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct GridContainerStyleData {
-    pub Inner: NativeBox<GridContainerStyleInner>,
+pub struct ContainerStyleData {
+    pub Inner: NativeArc<GridContainerStyle>,
+    pub ScrollBarSize: f32,
+    pub WidthValue: f32,
+    pub HeightValue: f32,
+    pub MinWidthValue: f32,
+    pub MinHeightValue: f32,
+    pub MaxWidthValue: f32,
+    pub MaxHeightValue: f32,
+    pub AspectRatioValue: f32,
+    pub PaddingTopValue: f32,
+    pub PaddingRightValue: f32,
+    pub PaddingBottomValue: f32,
+    pub PaddingLeftValue: f32,
+    pub GapXValue: f32,
+    pub GapYValue: f32,
+    pub PaddingTop: LengthType,
+    pub PaddingRight: LengthType,
+    pub PaddingBottom: LengthType,
+    pub PaddingLeft: LengthType,
+    pub Container: Container,
+    pub BoxSizing: BoxSizing,
+    pub OverflowX: Overflow,
+    pub OverflowY: Overflow,
+    pub Width: LengthType,
+    pub Height: LengthType,
+    pub MinWidth: LengthType,
+    pub MinHeight: LengthType,
+    pub MaxWidth: LengthType,
+    pub MaxHeight: LengthType,
+    pub HasAspectRatio: bool,
+    pub FlexDirection: FlexDirection,
+    pub FlexWrap: FlexWrap,
+    pub GapX: LengthType,
+    pub GapY: LengthType,
+    pub TextAlign: TextAlign,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct GridContainerStyleInner {
+pub struct GridContainerStyle {
     pub GridTemplateRows: NativeList<GridTemplateComponent>,
     pub GridTemplateColumns: NativeList<GridTemplateComponent>,
     pub GridAutoRows: NativeList<TrackSizingFunction>,

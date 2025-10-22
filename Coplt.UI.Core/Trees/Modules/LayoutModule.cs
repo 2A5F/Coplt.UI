@@ -24,12 +24,12 @@ public sealed unsafe partial class LayoutModule : Document.IModule
     private readonly Document.PinnedStorage<CommonLayoutData> m_st_Root_ViewLayoutData;
     private readonly Document.PinnedStorage<CommonStyleData> m_st_Root_CommonStyleData;
     private readonly Document.PinnedStorage<ChildsData> m_st_Root_ChildsData;
-    private readonly Document.PinnedStorage<GridContainerStyleData> m_st_Root_GridContainerStyleData;
+    private readonly Document.PinnedStorage<ContainerStyleData> m_st_Root_ContainerStyleData;
     
     private readonly Document.PinnedStorage<CommonLayoutData> m_st_View_ViewLayoutData;
     private readonly Document.PinnedStorage<CommonStyleData> m_st_View_CommonStyleData;
     private readonly Document.PinnedStorage<ChildsData> m_st_View_ChildsData;
-    private readonly Document.PinnedStorage<GridContainerStyleData> m_st_View_GridContainerStyleData;
+    private readonly Document.PinnedStorage<ContainerStyleData> m_st_View_ContainerStyleData;
     
     private readonly Document.PinnedStorage<CommonLayoutData> m_st_Text_ViewLayoutData;
     private readonly Document.PinnedStorage<CommonStyleData> m_st_Text_CommonStyleData;
@@ -45,13 +45,13 @@ public sealed unsafe partial class LayoutModule : Document.IModule
         m_st_Root_ViewLayoutData = m_ar_Root.StorageOf<CommonLayoutData>().AsPinned();
         m_st_Root_CommonStyleData = m_ar_Root.StorageOf<CommonStyleData>().AsPinned();
         m_st_Root_ChildsData = m_ar_Root.StorageOf<ChildsData>().AsPinned();
-        m_st_Root_GridContainerStyleData = m_ar_Root.StorageOf<GridContainerStyleData>().AsPinned();
+        m_st_Root_ContainerStyleData = m_ar_Root.StorageOf<ContainerStyleData>().AsPinned();
         
         m_ar_View = document.ArcheOf(NodeType.View);
         m_st_View_ViewLayoutData = m_ar_View.StorageOf<CommonLayoutData>().AsPinned();
         m_st_View_CommonStyleData = m_ar_View.StorageOf<CommonStyleData>().AsPinned();
         m_st_View_ChildsData = m_ar_View.StorageOf<ChildsData>().AsPinned();
-        m_st_View_GridContainerStyleData = m_ar_View.StorageOf<GridContainerStyleData>().AsPinned();
+        m_st_View_ContainerStyleData = m_ar_View.StorageOf<ContainerStyleData>().AsPinned();
         
         m_ar_Text = document.ArcheOf(NodeType.Text);
         m_st_Text_ViewLayoutData = m_ar_Text.StorageOf<CommonLayoutData>().AsPinned();
@@ -76,14 +76,14 @@ public sealed unsafe partial class LayoutModule : Document.IModule
             root_layout_data = m_st_Root_ViewLayoutData.m_data.m_items,
             root_common_style_data = m_st_Root_CommonStyleData.m_data.m_items,
             root_childs_data = m_st_Root_ChildsData.m_data.m_items,
-            root_grid_container_style_data = m_st_Root_GridContainerStyleData.m_data.m_items,
+            root_container_style_data = m_st_Root_ContainerStyleData.m_data.m_items,
 
             view_buckets = m_ar_View.m_ctrl.m_buckets,
             view_ctrl = (NNodeIdCtrl*)m_ar_View.m_ctrl.m_ctrls.m_items,
             view_layout_data = m_st_View_ViewLayoutData.m_data.m_items,
             view_common_style_data = m_st_View_CommonStyleData.m_data.m_items,
             view_childs_data = m_st_View_ChildsData.m_data.m_items,
-            view_grid_container_style_data = m_st_View_GridContainerStyleData.m_data.m_items,
+            view_container_style_data = m_st_View_ContainerStyleData.m_data.m_items,
 
             text_buckets = m_ar_Text.m_ctrl.m_buckets,
             text_ctrl = (NNodeIdCtrl*)m_ar_Text.m_ctrl.m_ctrls.m_items,

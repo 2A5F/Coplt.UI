@@ -46,49 +46,80 @@ mod col;
 mod com;
 mod layout;
 
-impl Debug for com::GridTemplateComponent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut a = f.debug_tuple("GridTemplateComponent");
-        unsafe {
-            match self.Type {
-                com::GridTemplateComponentType::Single => a.field(&self.Union.Single),
-                com::GridTemplateComponentType::Repeat => a.field(&self.Union.Repeat),
-            }
-        }
-        .finish()
-    }
-}
+mod com_impl {
+    use std::ops::{Deref, DerefMut};
 
-impl PartialEq for com::GridTemplateComponent {
-    fn eq(&self, other: &Self) -> bool {
-        unsafe {
-            self.Type == other.Type
-                && match self.Type {
-                    com::GridTemplateComponentType::Single => {
-                        self.Union.Single == other.Union.Single
-                    }
-                    com::GridTemplateComponentType::Repeat => {
-                        self.Union.Repeat == other.Union.Repeat
-                    }
+    use crate::{col::NArc, com::NativeArc};
+
+    use super::*;
+
+    impl Debug for com::GridTemplateComponent {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let mut a = f.debug_tuple("GridTemplateComponent");
+            unsafe {
+                match self.Type {
+                    com::GridTemplateComponentType::Single => a.field(&self.Union.Single),
+                    com::GridTemplateComponentType::Repeat => a.field(&self.Union.Repeat),
                 }
+            }
+            .finish()
         }
     }
-}
 
-impl PartialOrd for com::GridTemplateComponent {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        unsafe {
-            match self.Type.partial_cmp(&other.Type) {
-                Some(core::cmp::Ordering::Equal) => match self.Type {
-                    com::GridTemplateComponentType::Single => {
-                        self.Union.Single.partial_cmp(&other.Union.Single)
+    impl PartialEq for com::GridTemplateComponent {
+        fn eq(&self, other: &Self) -> bool {
+            unsafe {
+                self.Type == other.Type
+                    && match self.Type {
+                        com::GridTemplateComponentType::Single => {
+                            self.Union.Single == other.Union.Single
+                        }
+                        com::GridTemplateComponentType::Repeat => {
+                            self.Union.Repeat == other.Union.Repeat
+                        }
                     }
-                    com::GridTemplateComponentType::Repeat => {
-                        self.Union.Repeat.partial_cmp(&other.Union.Repeat)
-                    }
-                },
-                ord => return ord,
             }
+        }
+    }
+
+    impl PartialOrd for com::GridTemplateComponent {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            unsafe {
+                match self.Type.partial_cmp(&other.Type) {
+                    Some(core::cmp::Ordering::Equal) => match self.Type {
+                        com::GridTemplateComponentType::Single => {
+                            self.Union.Single.partial_cmp(&other.Union.Single)
+                        }
+                        com::GridTemplateComponentType::Repeat => {
+                            self.Union.Repeat.partial_cmp(&other.Union.Repeat)
+                        }
+                    },
+                    ord => return ord,
+                }
+            }
+        }
+    }
+
+    impl<T> NativeArc<T> {
+        pub fn as_n_arc(&self) -> &NArc<T> {
+            unsafe { std::mem::transmute(self) }
+        }
+        pub fn as_n_arc_mut(&mut self) -> &mut NArc<T> {
+            unsafe { std::mem::transmute(self) }
+        }
+    }
+
+    impl<T> Deref for NativeArc<T> {
+        type Target = T;
+
+        fn deref(&self) -> &Self::Target {
+            unsafe { &(*self.m_ptr).m_data }
+        }
+    }
+
+    impl<T> DerefMut for NativeArc<T> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            unsafe { &mut (*self.m_ptr).m_data }
         }
     }
 }

@@ -16,6 +16,7 @@ public static unsafe partial class Access
         public NodeLocate Locate { get; } = document.CreateNode(type);
 
         public ref CommonStyleData CommonStyle => ref Document.At<CommonStyleData>(Locate);
+        public ref ContainerStyleData ContainerStyle => ref Document.At<ContainerStyleData>(Locate);
         public ref CommonLayoutData CommonLayout => ref Document.At<CommonLayoutData>(Locate);
     }
 
@@ -23,8 +24,8 @@ public static unsafe partial class Access
     {
         public Container Container
         {
-            get => node.CommonStyle.Container;
-            set => node.CommonStyle.Container = value;
+            get => node.ContainerStyle.Container;
+            set => node.ContainerStyle.Container = value;
         }
 
         public Visible Visible
@@ -37,12 +38,12 @@ public static unsafe partial class Access
         {
             get
             {
-                ref var style = ref node.CommonStyle;
+                ref var style = ref node.ContainerStyle;
                 return new(style.Width, style.WidthValue);
             }
             set
             {
-                ref var style = ref node.CommonStyle;
+                ref var style = ref node.ContainerStyle;
                 var type = value.Type;
                 var val = value.Value;
                 style.Width = type;
@@ -53,12 +54,12 @@ public static unsafe partial class Access
         {
             get
             {
-                ref var style = ref node.CommonStyle;
+                ref var style = ref node.ContainerStyle;
                 return new(style.Height, style.HeightValue);
             }
             set
             {
-                ref var style = ref node.CommonStyle;
+                ref var style = ref node.ContainerStyle;
                 var type = value.Type;
                 var val = value.Value;
                 style.Height = type;

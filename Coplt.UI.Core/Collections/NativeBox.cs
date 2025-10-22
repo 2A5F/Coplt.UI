@@ -73,6 +73,12 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
 
     #endregion
 
+    #region GetPinnableReference
+
+    public ref T GetPinnableReference() => ref Value;
+
+    #endregion
+
     #region Move
 
     public NativeBox<T> Move() => Swap(default);
@@ -83,12 +89,6 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
         this = other;
         return self;
     }
-
-    #endregion
-
-    #region GetPinnableReference
-
-    public ref T GetPinnableReference() => ref Value;
 
     #endregion
 }

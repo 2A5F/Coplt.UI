@@ -3,12 +3,18 @@ use std::hint::unreachable_unchecked;
 use cocom::{HResult, HResultE};
 use concat_idents::concat_idents;
 use taffy::{
-    BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CoreStyle, FlexboxContainerStyle, FlexboxItemStyle, GridContainerStyle, LayoutBlockContainer, LayoutFlexboxContainer, LayoutOutput, LayoutPartialTree, Point, RoundTree, TraversePartialTree, TraverseTree
+    BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CoreStyle, FlexboxContainerStyle,
+    FlexboxItemStyle, GridContainerStyle, LayoutBlockContainer, LayoutFlexboxContainer,
+    LayoutOutput, LayoutPartialTree, Point, RoundTree, TraversePartialTree, TraverseTree,
+    prelude::TaffyZero,
 };
 
 use crate::{
     col::{OrderedSet, ordered_set},
-    com::{self, CommonLayoutData, CommonStyleData, NLayoutContext, NodeLocate, RootData},
+    com::{
+        self, CommonLayoutData, CommonStyleData, ContainerStyleData, NLayoutContext, NodeLocate,
+        RootData,
+    },
 };
 
 macro_rules! c_option {
@@ -327,7 +333,7 @@ impl LayoutPartialTree for SubDoc {
             let id = NodeId::from(node_id);
             match id.typ() {
                 NodeType::View | NodeType::Root => {
-                    let container = StyleHandle(tree, id).common_style().Container;
+                    let container = StyleHandle(tree, id).container_style().Container;
                     match container {
                         com::Container::Flex => {
                             taffy::compute_flexbox_layout(tree, node_id, inputs)
@@ -679,11 +685,23 @@ impl<'a> StyleHandle<'a> {
             NodeType::Root => unsafe { &*common_style![self.root_common_style_data => self.1.0] },
         }
     }
+    #[inline(always)]
+    pub fn container_style(&self) -> &ContainerStyleData {
+        match self.1.1 {
+            NodeType::View => unsafe {
+                &*common_style![self.view_container_style_data => self.1.0]
+            },
+            NodeType::Text => unreachable!(),
+            NodeType::Root => unsafe {
+                &*common_style![self.root_container_style_data => self.1.0]
+            },
+        }
+    }
 }
 
 macro_rules! c_overflow {
     ( $self:ident.$name:ident ) => {
-        match $self.common_style().$name {
+        match $self.container_style().$name {
             com::Overflow::Visible => taffy::Overflow::Visible,
             com::Overflow::Clip => taffy::Overflow::Clip,
             com::Overflow::Hidden => taffy::Overflow::Hidden,
@@ -701,14 +719,14 @@ macro_rules! c_position {
 }
 
 macro_rules! c_length_percentage_auto {
-    ( $self:ident.$name:ident ) => {
+    ( $self:expr => $name:ident ) => {
         concat_idents!(value_name = $name, Value {
-            match $self.common_style().$name {
+            match $self.$name {
                 com::LengthType::Fixed => {
-                    taffy::LengthPercentageAuto::length($self.common_style().value_name)
+                    taffy::LengthPercentageAuto::length($self.value_name)
                 }
                 com::LengthType::Percent => {
-                    taffy::LengthPercentageAuto::percent($self.common_style().value_name)
+                    taffy::LengthPercentageAuto::percent($self.value_name)
                 }
                 com::LengthType::Auto => taffy::LengthPercentageAuto::auto(),
             }
@@ -717,14 +735,14 @@ macro_rules! c_length_percentage_auto {
 }
 
 macro_rules! c_dimension {
-    ( $self:ident.$name:ident ) => {
+    ( $self:expr => $name:ident ) => {
         concat_idents!(value_name = $name, Value {
-            match $self.common_style().$name {
+            match $self.$name {
                 com::LengthType::Fixed => {
-                    taffy::Dimension::length($self.common_style().value_name)
+                    taffy::Dimension::length($self.value_name)
                 }
                 com::LengthType::Percent => {
-                    taffy::Dimension::percent($self.common_style().value_name)
+                    taffy::Dimension::percent($self.value_name)
                 }
                 com::LengthType::Auto => taffy::Dimension::auto(),
             }
@@ -733,14 +751,14 @@ macro_rules! c_dimension {
 }
 
 macro_rules! c_length_percentage {
-    ( $self:ident.$name:ident ) => {
+    ( $self:expr => $name:ident ) => {
         concat_idents!(value_name = $name, Value {
-            match $self.common_style().$name {
+            match $self.$name {
                 com::LengthType::Fixed => {
-                    taffy::LengthPercentage::length($self.common_style().value_name)
+                    taffy::LengthPercentage::length($self.value_name)
                 }
                 com::LengthType::Percent => {
-                    taffy::LengthPercentage::percent($self.common_style().value_name)
+                    taffy::LengthPercentage::percent($self.value_name)
                 }
                 com::LengthType::Auto => taffy::LengthPercentage::length(0.0),
             }
@@ -755,9 +773,7 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn box_generation_mode(&self) -> taffy::BoxGenerationMode {
         match self.common_style().Visible {
             com::Visible::Remove => taffy::BoxGenerationMode::None,
-            com::Visible::Visible | com::Visible::Hidden => {
-                taffy::BoxGenerationMode::Normal
-            }
+            com::Visible::Visible | com::Visible::Hidden => taffy::BoxGenerationMode::Normal,
         }
     }
 
@@ -774,7 +790,7 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn box_sizing(&self) -> taffy::BoxSizing {
         match self.1.1 {
-            NodeType::View | NodeType::Root => match self.common_style().BoxSizing {
+            NodeType::View | NodeType::Root => match self.container_style().BoxSizing {
                 com::BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
                 com::BoxSizing::ContentBox => taffy::BoxSizing::ContentBox,
             },
@@ -799,7 +815,7 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn scrollbar_width(&self) -> f32 {
         match self.1.1 {
-            NodeType::View => self.common_style().ScrollBarSize,
+            NodeType::View => self.container_style().ScrollBarSize,
             _ => 0.0,
         }
     }
@@ -812,10 +828,10 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn inset(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
         taffy::Rect {
-            left: c_length_percentage_auto!(self.InsertLeft),
-            right: c_length_percentage_auto!(self.InsertRight),
-            top: c_length_percentage_auto!(self.InsertTop),
-            bottom: c_length_percentage_auto!(self.InsertBottom),
+            left: c_length_percentage_auto!(self.common_style() => InsertLeft),
+            right: c_length_percentage_auto!(self.common_style() => InsertRight),
+            top: c_length_percentage_auto!(self.common_style() => InsertTop),
+            bottom: c_length_percentage_auto!(self.common_style() => InsertBottom),
         }
     }
 
@@ -823,8 +839,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn size(&self) -> taffy::Size<taffy::Dimension> {
         match self.1.1 {
             NodeType::View | NodeType::Root => taffy::Size {
-                width: c_dimension!(self.Width),
-                height: c_dimension!(self.Height),
+                width: c_dimension!(self.container_style() => Width),
+                height: c_dimension!(self.container_style() => Height),
             },
             NodeType::Text => taffy::Size::auto(),
         }
@@ -834,8 +850,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn min_size(&self) -> taffy::Size<taffy::Dimension> {
         match self.1.1 {
             NodeType::View | NodeType::Root => taffy::Size {
-                width: c_dimension!(self.MinWidth),
-                height: c_dimension!(self.MinHeight),
+                width: c_dimension!(self.container_style() => MinWidth),
+                height: c_dimension!(self.container_style() => MinHeight),
             },
             NodeType::Text => taffy::Size::auto(),
         }
@@ -845,8 +861,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn max_size(&self) -> taffy::Size<taffy::Dimension> {
         match self.1.1 {
             NodeType::View | NodeType::Root => taffy::Size {
-                width: c_dimension!(self.MaxWidth),
-                height: c_dimension!(self.MaxHeight),
+                width: c_dimension!(self.container_style() => MaxWidth),
+                height: c_dimension!(self.container_style() => MaxHeight),
             },
             NodeType::Text => taffy::Size::auto(),
         }
@@ -856,8 +872,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn aspect_ratio(&self) -> Option<f32> {
         match self.1.1 {
             NodeType::View | NodeType::Root => {
-                if self.common_style().HasAspectRatio {
-                    Some(self.common_style().AspectRatioValue)
+                if self.container_style().HasAspectRatio {
+                    Some(self.container_style().AspectRatioValue)
                 } else {
                     None
                 }
@@ -869,10 +885,10 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn margin(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
         taffy::Rect {
-            left: c_length_percentage_auto!(self.MarginLeft),
-            right: c_length_percentage_auto!(self.MarginRight),
-            top: c_length_percentage_auto!(self.MarginTop),
-            bottom: c_length_percentage_auto!(self.MarginBottom),
+            left: c_length_percentage_auto!(self.common_style() => MarginLeft),
+            right: c_length_percentage_auto!(self.common_style() => MarginRight),
+            top: c_length_percentage_auto!(self.common_style() => MarginTop),
+            bottom: c_length_percentage_auto!(self.common_style() => MarginBottom),
         }
     }
 
@@ -880,10 +896,10 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn padding(&self) -> taffy::Rect<taffy::LengthPercentage> {
         match self.1.1 {
             NodeType::View | NodeType::Root => taffy::Rect {
-                left: c_length_percentage!(self.PaddingLeft),
-                right: c_length_percentage!(self.PaddingRight),
-                top: c_length_percentage!(self.PaddingTop),
-                bottom: c_length_percentage!(self.PaddingBottom),
+                left: c_length_percentage!(self.container_style() => PaddingLeft),
+                right: c_length_percentage!(self.container_style() => PaddingRight),
+                top: c_length_percentage!(self.container_style() => PaddingTop),
+                bottom: c_length_percentage!(self.container_style() => PaddingBottom),
             },
             NodeType::Text => taffy::Rect::zero(),
         }
@@ -893,10 +909,10 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     fn border(&self) -> taffy::Rect<taffy::LengthPercentage> {
         match self.1.1 {
             NodeType::View | NodeType::Root => taffy::Rect {
-                left: c_length_percentage!(self.BorderLeft),
-                right: c_length_percentage!(self.BorderRight),
-                top: c_length_percentage!(self.BorderTop),
-                bottom: c_length_percentage!(self.BorderBottom),
+                left: c_length_percentage!(self.common_style() => BorderLeft),
+                right: c_length_percentage!(self.common_style() => BorderRight),
+                top: c_length_percentage!(self.common_style() => BorderTop),
+                bottom: c_length_percentage!(self.common_style() => BorderBottom),
             },
             NodeType::Text => taffy::Rect::zero(),
         }
@@ -906,11 +922,14 @@ impl<'a> CoreStyle for StyleHandle<'a> {
 impl<'a> BlockContainerStyle for StyleHandle<'a> {
     #[inline(always)]
     fn text_align(&self) -> taffy::TextAlign {
-        match self.common_style().TextAlign {
-            com::TextAlign::Auto => taffy::TextAlign::Auto,
-            com::TextAlign::Left => taffy::TextAlign::LegacyLeft,
-            com::TextAlign::Right => taffy::TextAlign::LegacyRight,
-            com::TextAlign::Center => taffy::TextAlign::LegacyCenter,
+        match self.1.1 {
+            NodeType::View | NodeType::Root => match self.container_style().TextAlign {
+                com::TextAlign::Auto => taffy::TextAlign::Auto,
+                com::TextAlign::Left => taffy::TextAlign::LegacyLeft,
+                com::TextAlign::Right => taffy::TextAlign::LegacyRight,
+                com::TextAlign::Center => taffy::TextAlign::LegacyCenter,
+            },
+            NodeType::Text => taffy::TextAlign::Auto,
         }
     }
 }
@@ -924,26 +943,35 @@ impl<'a> BlockItemStyle for StyleHandle<'a> {
 
 impl<'a> FlexboxContainerStyle for StyleHandle<'a> {
     fn flex_direction(&self) -> taffy::FlexDirection {
-        match self.common_style().FlexDirection {
-            com::FlexDirection::Column => taffy::FlexDirection::Column,
-            com::FlexDirection::Row => taffy::FlexDirection::Row,
-            com::FlexDirection::ColumnReverse => taffy::FlexDirection::ColumnReverse,
-            com::FlexDirection::RowReverse => taffy::FlexDirection::RowReverse,
+        match self.1.1 {
+            NodeType::View | NodeType::Root => match self.container_style().FlexDirection {
+                com::FlexDirection::Column => taffy::FlexDirection::Column,
+                com::FlexDirection::Row => taffy::FlexDirection::Row,
+                com::FlexDirection::ColumnReverse => taffy::FlexDirection::ColumnReverse,
+                com::FlexDirection::RowReverse => taffy::FlexDirection::RowReverse,
+            },
+            NodeType::Text => taffy::FlexDirection::Column,
         }
     }
 
     fn flex_wrap(&self) -> taffy::FlexWrap {
-        match self.common_style().FlexWrap {
-            com::FlexWrap::NoWrap => taffy::FlexWrap::NoWrap,
-            com::FlexWrap::Wrap => taffy::FlexWrap::Wrap,
-            com::FlexWrap::WrapReverse => taffy::FlexWrap::WrapReverse,
+        match self.1.1 {
+            NodeType::View | NodeType::Root => match self.container_style().FlexWrap {
+                com::FlexWrap::NoWrap => taffy::FlexWrap::NoWrap,
+                com::FlexWrap::Wrap => taffy::FlexWrap::Wrap,
+                com::FlexWrap::WrapReverse => taffy::FlexWrap::WrapReverse,
+            },
+            NodeType::Text => taffy::FlexWrap::NoWrap,
         }
     }
 
     fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
-        taffy::Size {
-            width: c_length_percentage!(self.GapX),
-            height: c_length_percentage!(self.GapY),
+        match self.1.1 {
+            NodeType::View | NodeType::Root => taffy::Size {
+                width: c_length_percentage!(self.container_style() => GapX),
+                height: c_length_percentage!(self.container_style() => GapY),
+            },
+            NodeType::Text => taffy::Size::<taffy::LengthPercentage>::ZERO,
         }
     }
 
@@ -999,7 +1027,7 @@ impl<'a> FlexboxContainerStyle for StyleHandle<'a> {
 impl<'a> FlexboxItemStyle for StyleHandle<'a> {
     #[inline(always)]
     fn flex_basis(&self) -> taffy::Dimension {
-        c_dimension!(self.FlexBasis)
+        c_dimension!(self.common_style() => FlexBasis)
     }
 
     #[inline(always)]

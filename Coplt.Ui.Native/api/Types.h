@@ -11,7 +11,10 @@ namespace Coplt {
     struct Str8;
 
     template <class T0 /* T */>
-    struct NativeBox;
+    struct NativeArcInner;
+
+    template <class T0 /* T */>
+    struct NativeArc;
 
     template <class T0 /* T */>
     struct NativeList;
@@ -68,9 +71,9 @@ namespace Coplt {
 
     struct CommonStyleData;
 
-    struct GridContainerStyleData;
+    struct ContainerStyleData;
 
-    struct GridContainerStyleInner;
+    struct GridContainerStyle;
 
     struct RootData;
 
@@ -346,9 +349,9 @@ namespace Coplt {
     };
 
     template <class T0 /* T */>
-    struct NativeBox
+    struct NativeArc
     {
-        T0* m_ptr;
+        ::Coplt::NativeArcInner<T0>* m_ptr;
     };
 
     struct GridPlacement
@@ -454,6 +457,13 @@ namespace Coplt {
         ::Coplt::u32 Size;
     };
 
+    template <class T0 /* T */>
+    struct NativeArcInner
+    {
+        ::Coplt::u64 m_count;
+        T0 m_data;
+    };
+
     struct GridTemplateArea
     {
         ::Coplt::i32 Id;
@@ -518,9 +528,9 @@ namespace Coplt {
         ::Coplt::ChildsData* view_childs_data;
         void* _pad_0;
         ::Coplt::ChildsData* root_childs_data;
-        ::Coplt::GridContainerStyleData* view_grid_container_style_data;
+        ::Coplt::ContainerStyleData* view_container_style_data;
         void* _pad_1;
-        ::Coplt::GridContainerStyleData* root_grid_container_style_data;
+        ::Coplt::ContainerStyleData* root_container_style_data;
         ::Coplt::TextStyleData* text_style_data;
         ::Coplt::RootData* root_root_data;
         ::Coplt::i32 root_count;
@@ -552,7 +562,6 @@ namespace Coplt {
     {
         ::Coplt::i32 ZIndex;
         ::Coplt::f32 Opacity;
-        ::Coplt::f32 ScrollBarSize;
         ::Coplt::f32 BoxColorR;
         ::Coplt::f32 BoxColorG;
         ::Coplt::f32 BoxColorB;
@@ -561,55 +570,27 @@ namespace Coplt {
         ::Coplt::f32 InsertRightValue;
         ::Coplt::f32 InsertBottomValue;
         ::Coplt::f32 InsertLeftValue;
-        ::Coplt::f32 WidthValue;
-        ::Coplt::f32 HeightValue;
-        ::Coplt::f32 MinWidthValue;
-        ::Coplt::f32 MinHeightValue;
-        ::Coplt::f32 MaxWidthValue;
-        ::Coplt::f32 MaxHeightValue;
-        ::Coplt::f32 AspectRatioValue;
         ::Coplt::f32 MarginTopValue;
         ::Coplt::f32 MarginRightValue;
         ::Coplt::f32 MarginBottomValue;
         ::Coplt::f32 MarginLeftValue;
-        ::Coplt::f32 PaddingTopValue;
-        ::Coplt::f32 PaddingRightValue;
-        ::Coplt::f32 PaddingBottomValue;
-        ::Coplt::f32 PaddingLeftValue;
         ::Coplt::f32 BorderTopValue;
         ::Coplt::f32 BorderRightValue;
         ::Coplt::f32 BorderBottomValue;
         ::Coplt::f32 BorderLeftValue;
-        ::Coplt::f32 GapXValue;
-        ::Coplt::f32 GapYValue;
         ::Coplt::f32 FlexGrow;
         ::Coplt::f32 FlexShrink;
         ::Coplt::f32 FlexBasisValue;
         ::Coplt::Visible Visible;
-        ::Coplt::Container Container;
-        ::Coplt::BoxSizing BoxSizing;
-        ::Coplt::Overflow OverflowX;
-        ::Coplt::Overflow OverflowY;
         ::Coplt::Position Position;
         ::Coplt::LengthType InsertTop;
         ::Coplt::LengthType InsertRight;
         ::Coplt::LengthType InsertBottom;
         ::Coplt::LengthType InsertLeft;
-        ::Coplt::LengthType Width;
-        ::Coplt::LengthType Height;
-        ::Coplt::LengthType MinWidth;
-        ::Coplt::LengthType MinHeight;
-        ::Coplt::LengthType MaxWidth;
-        ::Coplt::LengthType MaxHeight;
-        bool HasAspectRatio;
         ::Coplt::LengthType MarginTop;
         ::Coplt::LengthType MarginRight;
         ::Coplt::LengthType MarginBottom;
         ::Coplt::LengthType MarginLeft;
-        ::Coplt::LengthType PaddingTop;
-        ::Coplt::LengthType PaddingRight;
-        ::Coplt::LengthType PaddingBottom;
-        ::Coplt::LengthType PaddingLeft;
         ::Coplt::LengthType BorderTop;
         ::Coplt::LengthType BorderRight;
         ::Coplt::LengthType BorderBottom;
@@ -620,25 +601,54 @@ namespace Coplt {
         ::Coplt::AlignType JustifySelf;
         ::Coplt::AlignType AlignContent;
         ::Coplt::AlignType JustifyContent;
-        ::Coplt::LengthType GapX;
-        ::Coplt::LengthType GapY;
-        ::Coplt::FlexDirection FlexDirection;
-        ::Coplt::FlexWrap FlexWrap;
         ::Coplt::LengthType FlexBasis;
         ::Coplt::GridAutoFlow GridAutoFlow;
-        ::Coplt::TextAlign TextAlign;
         ::Coplt::GridPlacement GridRowStart;
         ::Coplt::GridPlacement GridRowEnd;
         ::Coplt::GridPlacement GridColumnStart;
         ::Coplt::GridPlacement GridColumnEnd;
     };
 
-    struct GridContainerStyleData
+    struct ContainerStyleData
     {
-        ::Coplt::NativeBox<::Coplt::GridContainerStyleInner> Inner;
+        ::Coplt::NativeArc<::Coplt::GridContainerStyle> Inner;
+        ::Coplt::f32 ScrollBarSize;
+        ::Coplt::f32 WidthValue;
+        ::Coplt::f32 HeightValue;
+        ::Coplt::f32 MinWidthValue;
+        ::Coplt::f32 MinHeightValue;
+        ::Coplt::f32 MaxWidthValue;
+        ::Coplt::f32 MaxHeightValue;
+        ::Coplt::f32 AspectRatioValue;
+        ::Coplt::f32 PaddingTopValue;
+        ::Coplt::f32 PaddingRightValue;
+        ::Coplt::f32 PaddingBottomValue;
+        ::Coplt::f32 PaddingLeftValue;
+        ::Coplt::f32 GapXValue;
+        ::Coplt::f32 GapYValue;
+        ::Coplt::LengthType PaddingTop;
+        ::Coplt::LengthType PaddingRight;
+        ::Coplt::LengthType PaddingBottom;
+        ::Coplt::LengthType PaddingLeft;
+        ::Coplt::Container Container;
+        ::Coplt::BoxSizing BoxSizing;
+        ::Coplt::Overflow OverflowX;
+        ::Coplt::Overflow OverflowY;
+        ::Coplt::LengthType Width;
+        ::Coplt::LengthType Height;
+        ::Coplt::LengthType MinWidth;
+        ::Coplt::LengthType MinHeight;
+        ::Coplt::LengthType MaxWidth;
+        ::Coplt::LengthType MaxHeight;
+        bool HasAspectRatio;
+        ::Coplt::FlexDirection FlexDirection;
+        ::Coplt::FlexWrap FlexWrap;
+        ::Coplt::LengthType GapX;
+        ::Coplt::LengthType GapY;
+        ::Coplt::TextAlign TextAlign;
     };
 
-    struct GridContainerStyleInner
+    struct GridContainerStyle
     {
         ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateRows;
         ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateColumns;
