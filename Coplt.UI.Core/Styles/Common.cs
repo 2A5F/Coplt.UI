@@ -39,10 +39,3 @@ public enum Overflow : byte
     Clip,
     Hidden,
 }
-
-public enum LengthType : byte
-{
-    Fixed,
-    Percent,
-    Auto,
-}

@@ -1,4 +1,5 @@
-﻿using Coplt.UI.Styles;
+﻿using Coplt.UI.Core.Styles;
+using Coplt.UI.Styles;
 
 namespace Coplt.UI.Trees.Datas;
 
@@ -92,9 +93,6 @@ public record struct CommonStyleData()
     public LengthType BorderBottom = LengthType.Fixed;
     public LengthType BorderLeft = LengthType.Fixed;
 
-    public FlexDirection FlexDirection = FlexDirection.Column;
-    public FlexWrap FlexWrap = FlexWrap.NoWrap;
-    
     public AlignType AlignItems = AlignType.None;
     public AlignType AlignSelf = AlignType.None;
     public AlignType JustifyItems = AlignType.None;
@@ -104,8 +102,17 @@ public record struct CommonStyleData()
 
     public LengthType GapX = LengthType.Fixed;
     public LengthType GapY = LengthType.Fixed;
-    
+
+    public FlexDirection FlexDirection = FlexDirection.Column;
+    public FlexWrap FlexWrap = FlexWrap.NoWrap;
     public LengthType FlexBasis = LengthType.Auto;
 
+    public GridAutoFlow GridAutoFlow = GridAutoFlow.Row;
+
     public TextAlign TextAlign = TextAlign.Auto;
+
+    public GridPlacement GridRowStart;
+    public GridPlacement GridRowEnd;
+    public GridPlacement GridColumnStart;
+    public GridPlacement GridColumnEnd;
 }

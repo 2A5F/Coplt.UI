@@ -67,6 +67,7 @@ public sealed partial class Document
             Attach<CommonStyleData>(storage: StorageType.Pinned);
             Attach<CommonEventData>();
             Attach<ChildsData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
+            Attach<GridContainerStyleData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
             Attach<TextStyleData>(types: NodeTypes.Text, storage: StorageType.Pinned);
             With<LayoutModule>();
         }

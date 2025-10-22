@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
+use std::fmt::Debug;
+
 mod coplt_alloc {
     use core::alloc::GlobalAlloc;
 
@@ -43,3 +45,50 @@ mod coplt_alloc {
 mod col;
 mod com;
 mod layout;
+
+impl Debug for com::GridTemplateComponent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut a = f.debug_tuple("GridTemplateComponent");
+        unsafe {
+            match self.Type {
+                com::GridTemplateComponentType::Single => a.field(&self.Union.Single),
+                com::GridTemplateComponentType::Repeat => a.field(&self.Union.Repeat),
+            }
+        }
+        .finish()
+    }
+}
+
+impl PartialEq for com::GridTemplateComponent {
+    fn eq(&self, other: &Self) -> bool {
+        unsafe {
+            self.Type == other.Type
+                && match self.Type {
+                    com::GridTemplateComponentType::Single => {
+                        self.Union.Single == other.Union.Single
+                    }
+                    com::GridTemplateComponentType::Repeat => {
+                        self.Union.Repeat == other.Union.Repeat
+                    }
+                }
+        }
+    }
+}
+
+impl PartialOrd for com::GridTemplateComponent {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        unsafe {
+            match self.Type.partial_cmp(&other.Type) {
+                Some(core::cmp::Ordering::Equal) => match self.Type {
+                    com::GridTemplateComponentType::Single => {
+                        self.Union.Single.partial_cmp(&other.Union.Single)
+                    }
+                    com::GridTemplateComponentType::Repeat => {
+                        self.Union.Repeat.partial_cmp(&other.Union.Repeat)
+                    }
+                },
+                ord => return ord,
+            }
+        }
+    }
+}

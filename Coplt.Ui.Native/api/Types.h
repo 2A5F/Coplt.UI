@@ -11,6 +11,26 @@ namespace Coplt {
     struct Str8;
 
     template <class T0 /* T */>
+    struct NativeBox;
+
+    template <class T0 /* T */>
+    struct NativeList;
+
+    struct GridPlacement;
+
+    struct GridTemplateArea;
+
+    struct GridTemplateComponent;
+
+    union GridTemplateComponentUnion;
+
+    struct GridTemplateRepetition;
+
+    struct SizingValue;
+
+    struct TrackSizingFunction;
+
+    template <class T0 /* T */>
     struct FFIOrderedSetNode;
 
     template <class T0 /* T */>
@@ -48,6 +68,10 @@ namespace Coplt {
 
     struct CommonStyleData;
 
+    struct GridContainerStyleData;
+
+    struct GridContainerStyleInner;
+
     struct RootData;
 
     struct TextStyleData;
@@ -70,6 +94,61 @@ namespace Coplt {
 
     struct IStub;
 
+    enum class AlignType : ::Coplt::u8
+    {
+        None = 0,
+        Start = 1,
+        End = 2,
+        FlexStart = 3,
+        FlexEnd = 4,
+        Center = 5,
+        Baseline = 6,
+        Stretch = 7,
+        SpaceBetween = 8,
+        SpaceEvenly = 9,
+        SpaceAround = 10,
+    };
+
+    enum class GridPlacementType : ::Coplt::u8
+    {
+        Auto = 0,
+        Line = 1,
+        NamedLine = 2,
+        Span = 3,
+        NamedSpan = 4,
+    };
+
+    enum class GridTemplateComponentType : ::Coplt::u8
+    {
+        Single = 0,
+        Repeat = 1,
+    };
+
+    enum class LengthType : ::Coplt::u8
+    {
+        Fixed = 0,
+        Percent = 1,
+        Auto = 2,
+    };
+
+    enum class RepetitionType : ::Coplt::u8
+    {
+        Count = 0,
+        AutoFill = 1,
+        AutoFit = 2,
+    };
+
+    enum class SizingType : ::Coplt::u8
+    {
+        Auto = 0,
+        Fixed = 1,
+        Percent = 2,
+        Fraction = 3,
+        MinContent = 4,
+        MaxContent = 5,
+        FitContent = 6,
+    };
+
     enum class AvailableSpaceType : ::Coplt::i32
     {
         Definite = 0,
@@ -85,21 +164,6 @@ namespace Coplt {
         Info = 3,
         Debug = 4,
         Verbose = 5,
-    };
-
-    enum class AlignType : ::Coplt::u8
-    {
-        None = 0,
-        Start = 1,
-        End = 2,
-        FlexStart = 3,
-        FlexEnd = 4,
-        Center = 5,
-        Baseline = 6,
-        Stretch = 7,
-        SpaceBetween = 8,
-        SpaceEvenly = 9,
-        SpaceAround = 10,
     };
 
     enum class BoxSizing : ::Coplt::u8
@@ -154,11 +218,12 @@ namespace Coplt {
         ExtraBlack = 950,
     };
 
-    enum class LengthType : ::Coplt::u8
+    enum class GridAutoFlow : ::Coplt::u8
     {
-        Fixed = 0,
-        Percent = 1,
-        Auto = 2,
+        Row = 0,
+        Column = 1,
+        RowDense = 2,
+        ColumnDense = 3,
     };
 
     enum class Overflow : ::Coplt::u8
@@ -182,7 +247,7 @@ namespace Coplt {
         Center = 3,
     };
 
-    enum class VisibleMode : ::Coplt::u8
+    enum class Visible : ::Coplt::u8
     {
         Visible = 0,
         Hidden = 1,
@@ -202,6 +267,20 @@ namespace Coplt {
         ::Coplt::f32 Negative;
     };
 
+    template <class T0 /* T */>
+    struct NativeList
+    {
+        T0* m_items;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_size;
+    };
+
+    struct SizingValue
+    {
+        ::Coplt::f32 Value;
+        ::Coplt::LengthType Type;
+    };
+
     struct LayoutOutput
     {
         ::Coplt::f32 Width;
@@ -215,6 +294,22 @@ namespace Coplt {
         bool HasFirstBaselinesX;
         bool HasFirstBaselinesY;
         bool MarginsCanCollapseThrough;
+    };
+
+    struct GridTemplateRepetition
+    {
+        ::Coplt::NativeList<::Coplt::TrackSizingFunction> Tracks;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::i32>> LineIds;
+        ::Coplt::u16 RepetitionValue;
+        ::Coplt::RepetitionType Repetition;
+    };
+
+    struct TrackSizingFunction
+    {
+        ::Coplt::SizingValue MinValue;
+        ::Coplt::SizingValue MaxValue;
+        ::Coplt::SizingType Min;
+        ::Coplt::SizingType Max;
     };
 
     struct LayoutCacheEntryLayoutOutput
@@ -248,6 +343,25 @@ namespace Coplt {
     {
         ::Coplt::char16 const* Data;
         ::Coplt::u32 Size;
+    };
+
+    template <class T0 /* T */>
+    struct NativeBox
+    {
+        T0* m_ptr;
+    };
+
+    struct GridPlacement
+    {
+        ::Coplt::i32 Value0;
+        ::Coplt::i16 Value1;
+        ::Coplt::GridPlacementType Type;
+    };
+
+    union GridTemplateComponentUnion
+    {
+        ::Coplt::TrackSizingFunction Single;
+        ::Coplt::GridTemplateRepetition Repeat;
     };
 
     template <class T0 /* T */>
@@ -340,6 +454,21 @@ namespace Coplt {
         ::Coplt::u32 Size;
     };
 
+    struct GridTemplateArea
+    {
+        ::Coplt::i32 Id;
+        ::Coplt::u16 RowStart;
+        ::Coplt::u16 RowEnd;
+        ::Coplt::u16 ColumnStart;
+        ::Coplt::u16 ColumnEnd;
+    };
+
+    struct GridTemplateComponent
+    {
+        ::Coplt::GridTemplateComponentUnion Union;
+        ::Coplt::GridTemplateComponentType Type;
+    };
+
     template <class T0 /* T */>
     struct FFIOrderedSetNode
     {
@@ -389,6 +518,9 @@ namespace Coplt {
         ::Coplt::ChildsData* view_childs_data;
         void* _pad_0;
         ::Coplt::ChildsData* root_childs_data;
+        ::Coplt::GridContainerStyleData* view_grid_container_style_data;
+        void* _pad_1;
+        ::Coplt::GridContainerStyleData* root_grid_container_style_data;
         ::Coplt::TextStyleData* text_style_data;
         ::Coplt::RootData* root_root_data;
         ::Coplt::i32 root_count;
@@ -453,7 +585,7 @@ namespace Coplt {
         ::Coplt::f32 FlexGrow;
         ::Coplt::f32 FlexShrink;
         ::Coplt::f32 FlexBasisValue;
-        ::Coplt::VisibleMode Visible;
+        ::Coplt::Visible Visible;
         ::Coplt::Container Container;
         ::Coplt::BoxSizing BoxSizing;
         ::Coplt::Overflow OverflowX;
@@ -482,8 +614,6 @@ namespace Coplt {
         ::Coplt::LengthType BorderRight;
         ::Coplt::LengthType BorderBottom;
         ::Coplt::LengthType BorderLeft;
-        ::Coplt::FlexDirection FlexDirection;
-        ::Coplt::FlexWrap FlexWrap;
         ::Coplt::AlignType AlignItems;
         ::Coplt::AlignType AlignSelf;
         ::Coplt::AlignType JustifyItems;
@@ -492,8 +622,31 @@ namespace Coplt {
         ::Coplt::AlignType JustifyContent;
         ::Coplt::LengthType GapX;
         ::Coplt::LengthType GapY;
+        ::Coplt::FlexDirection FlexDirection;
+        ::Coplt::FlexWrap FlexWrap;
         ::Coplt::LengthType FlexBasis;
+        ::Coplt::GridAutoFlow GridAutoFlow;
         ::Coplt::TextAlign TextAlign;
+        ::Coplt::GridPlacement GridRowStart;
+        ::Coplt::GridPlacement GridRowEnd;
+        ::Coplt::GridPlacement GridColumnStart;
+        ::Coplt::GridPlacement GridColumnEnd;
+    };
+
+    struct GridContainerStyleData
+    {
+        ::Coplt::NativeBox<::Coplt::GridContainerStyleInner> Inner;
+    };
+
+    struct GridContainerStyleInner
+    {
+        ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateRows;
+        ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateColumns;
+        ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoRows;
+        ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoColumns;
+        ::Coplt::NativeList<::Coplt::GridTemplateArea> GridTemplateAreas;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::i32>> GridTemplateColumnNames;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::i32>> GridTemplateRowNames;
     };
 
     struct RootData

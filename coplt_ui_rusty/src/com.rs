@@ -1,6 +1,67 @@
 #![allow(unused)]
 #![allow(non_snake_case)]
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum AlignType {
+    None = 0,
+    Start = 1,
+    End = 2,
+    FlexStart = 3,
+    FlexEnd = 4,
+    Center = 5,
+    Baseline = 6,
+    Stretch = 7,
+    SpaceBetween = 8,
+    SpaceEvenly = 9,
+    SpaceAround = 10,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum GridPlacementType {
+    Auto = 0,
+    Line = 1,
+    NamedLine = 2,
+    Span = 3,
+    NamedSpan = 4,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum GridTemplateComponentType {
+    Single = 0,
+    Repeat = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LengthType {
+    Fixed = 0,
+    Percent = 1,
+    Auto = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum RepetitionType {
+    Count = 0,
+    AutoFill = 1,
+    AutoFit = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum SizingType {
+    Auto = 0,
+    Fixed = 1,
+    Percent = 2,
+    Fraction = 3,
+    MinContent = 4,
+    MaxContent = 5,
+    FitContent = 6,
+}
+
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum AvailableSpaceType {
@@ -18,22 +79,6 @@ pub enum LogLevel {
     Info = 3,
     Debug = 4,
     Verbose = 5,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum AlignType {
-    None = 0,
-    Start = 1,
-    End = 2,
-    FlexStart = 3,
-    FlexEnd = 4,
-    Center = 5,
-    Baseline = 6,
-    Stretch = 7,
-    SpaceBetween = 8,
-    SpaceEvenly = 9,
-    SpaceAround = 10,
 }
 
 #[repr(u8)]
@@ -96,10 +141,11 @@ pub enum FontWeight {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum LengthType {
-    Fixed = 0,
-    Percent = 1,
-    Auto = 2,
+pub enum GridAutoFlow {
+    Row = 0,
+    Column = 1,
+    RowDense = 2,
+    ColumnDense = 3,
 }
 
 #[repr(u8)]
@@ -128,7 +174,7 @@ pub enum TextAlign {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum VisibleMode {
+pub enum Visible {
     Visible = 0,
     Hidden = 1,
     Remove = 2,
@@ -143,21 +189,94 @@ pub enum FontFlags {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Str16 {
     pub Data: *const u16,
     pub Size: u32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Str8 {
     pub Data: *const u8,
     pub Size: u32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NativeBox<T0 /* T */>
+ {
+    pub m_ptr: *mut T0,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NativeList<T0 /* T */>
+ {
+    pub m_items: *mut T0,
+    pub m_cap: i32,
+    pub m_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GridPlacement {
+    pub Value0: i32,
+    pub Value1: i16,
+    pub Type: GridPlacementType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GridTemplateArea {
+    pub Id: i32,
+    pub RowStart: u16,
+    pub RowEnd: u16,
+    pub ColumnStart: u16,
+    pub ColumnEnd: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct GridTemplateComponent {
+    pub Union: GridTemplateComponentUnion,
+    pub Type: GridTemplateComponentType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union GridTemplateComponentUnion {
+    pub Single: TrackSizingFunction,
+    pub Repeat: GridTemplateRepetition,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GridTemplateRepetition {
+    pub Tracks: NativeList<TrackSizingFunction>,
+    pub LineIds: NativeList<NativeList<i32>>,
+    pub RepetitionValue: u16,
+    pub Repetition: RepetitionType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct SizingValue {
+    pub Value: f32,
+    pub Type: LengthType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TrackSizingFunction {
+    pub MinValue: SizingValue,
+    pub MaxValue: SizingValue,
+    pub Min: SizingType,
+    pub Max: SizingType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIOrderedSetNode<T0 /* T */>
  {
     pub HashCode: i32,
@@ -168,7 +287,7 @@ pub struct FFIOrderedSetNode<T0 /* T */>
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIOrderedSet<T0 /* T */>
  {
     pub m_buckets: *mut i32,
@@ -183,14 +302,14 @@ pub struct FFIOrderedSet<T0 /* T */>
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontFamilyNameInfo {
     pub Name: Str16,
     pub Local: u32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LayoutCache {
     pub FinalLayoutEntry: LayoutCacheEntryLayoutOutput,
     pub MeasureEntries0: LayoutCacheEntrySize,
@@ -216,7 +335,7 @@ pub struct LayoutCache {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LayoutCacheEntryLayoutOutput {
     pub KnownDimensionsWidthValue: f32,
     pub KnownDimensionsHeightValue: f32,
@@ -230,7 +349,7 @@ pub struct LayoutCacheEntryLayoutOutput {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LayoutCacheEntrySize {
     pub KnownDimensionsWidthValue: f32,
     pub KnownDimensionsHeightValue: f32,
@@ -245,14 +364,14 @@ pub struct LayoutCacheEntrySize {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LayoutCollapsibleMarginSet {
     pub Positive: f32,
     pub Negative: f32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LayoutData {
     pub Order: u32,
     pub LocationX: f32,
@@ -278,7 +397,7 @@ pub struct LayoutData {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LayoutOutput {
     pub Width: f32,
     pub Height: f32,
@@ -294,7 +413,7 @@ pub struct LayoutOutput {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NFontInfo {
     pub Metrics: FontMetrics,
     pub Width: FontWidth,
@@ -304,14 +423,14 @@ pub struct NFontInfo {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NFontPair {
     pub Font: *mut IFont,
     pub Info: *mut NFontInfo,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
     pub roots: *mut i32,
     pub view_buckets: *mut i32,
@@ -329,6 +448,9 @@ pub struct NLayoutContext {
     pub view_childs_data: *mut ChildsData,
     pub _pad_0: *mut (),
     pub root_childs_data: *mut ChildsData,
+    pub view_grid_container_style_data: *mut GridContainerStyleData,
+    pub _pad_1: *mut (),
+    pub root_grid_container_style_data: *mut GridContainerStyleData,
     pub text_style_data: *mut TextStyleData,
     pub root_root_data: *mut RootData,
     pub root_count: i32,
@@ -338,7 +460,7 @@ pub struct NLayoutContext {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NNodeIdCtrl {
     pub HashCode: i32,
     pub Next: i32,
@@ -346,13 +468,13 @@ pub struct NNodeIdCtrl {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontWidth {
     pub Width: f32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontMetrics {
     pub Ascent: f32,
     pub Descent: f32,
@@ -362,13 +484,13 @@ pub struct FontMetrics {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet<NodeLocate>,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonLayoutData {
     pub Layout: LayoutData,
     pub FinalLayout: LayoutData,
@@ -376,7 +498,7 @@ pub struct CommonLayoutData {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonStyleData {
     pub ZIndex: i32,
     pub Opacity: f32,
@@ -413,7 +535,7 @@ pub struct CommonStyleData {
     pub FlexGrow: f32,
     pub FlexShrink: f32,
     pub FlexBasisValue: f32,
-    pub Visible: VisibleMode,
+    pub Visible: Visible,
     pub Container: Container,
     pub BoxSizing: BoxSizing,
     pub OverflowX: Overflow,
@@ -442,8 +564,6 @@ pub struct CommonStyleData {
     pub BorderRight: LengthType,
     pub BorderBottom: LengthType,
     pub BorderLeft: LengthType,
-    pub FlexDirection: FlexDirection,
-    pub FlexWrap: FlexWrap,
     pub AlignItems: AlignType,
     pub AlignSelf: AlignType,
     pub JustifyItems: AlignType,
@@ -452,12 +572,37 @@ pub struct CommonStyleData {
     pub JustifyContent: AlignType,
     pub GapX: LengthType,
     pub GapY: LengthType,
+    pub FlexDirection: FlexDirection,
+    pub FlexWrap: FlexWrap,
     pub FlexBasis: LengthType,
+    pub GridAutoFlow: GridAutoFlow,
     pub TextAlign: TextAlign,
+    pub GridRowStart: GridPlacement,
+    pub GridRowEnd: GridPlacement,
+    pub GridColumnStart: GridPlacement,
+    pub GridColumnEnd: GridPlacement,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GridContainerStyleData {
+    pub Inner: NativeBox<GridContainerStyleInner>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GridContainerStyleInner {
+    pub GridTemplateRows: NativeList<GridTemplateComponent>,
+    pub GridTemplateColumns: NativeList<GridTemplateComponent>,
+    pub GridAutoRows: NativeList<TrackSizingFunction>,
+    pub GridAutoColumns: NativeList<TrackSizingFunction>,
+    pub GridTemplateAreas: NativeList<GridTemplateArea>,
+    pub GridTemplateColumnNames: NativeList<NativeList<i32>>,
+    pub GridTemplateRowNames: NativeList<NativeList<i32>>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct RootData {
     pub AvailableSpaceXValue: f32,
     pub AvailableSpaceYValue: f32,
@@ -467,7 +612,7 @@ pub struct RootData {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextStyleData {
     pub TextColorR: f32,
     pub TextColorG: f32,
@@ -478,14 +623,14 @@ pub struct TextStyleData {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NodeId {
     pub Id: u32,
     pub VersionAndType: u32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NodeLocate {
     pub Id: NodeId,
     pub Index: i32,

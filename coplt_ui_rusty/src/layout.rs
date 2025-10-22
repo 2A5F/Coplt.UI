@@ -3,9 +3,7 @@ use std::hint::unreachable_unchecked;
 use cocom::{HResult, HResultE};
 use concat_idents::concat_idents;
 use taffy::{
-    BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CoreStyle, FlexboxContainerStyle,
-    FlexboxItemStyle, LayoutBlockContainer, LayoutFlexboxContainer, LayoutOutput,
-    LayoutPartialTree, Point, RoundTree, TraversePartialTree, TraverseTree,
+    BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CoreStyle, FlexboxContainerStyle, FlexboxItemStyle, GridContainerStyle, LayoutBlockContainer, LayoutFlexboxContainer, LayoutOutput, LayoutPartialTree, Point, RoundTree, TraversePartialTree, TraverseTree
 };
 
 use crate::{
@@ -756,8 +754,8 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     #[inline(always)]
     fn box_generation_mode(&self) -> taffy::BoxGenerationMode {
         match self.common_style().Visible {
-            com::VisibleMode::Remove => taffy::BoxGenerationMode::None,
-            com::VisibleMode::Visible | com::VisibleMode::Hidden => {
+            com::Visible::Remove => taffy::BoxGenerationMode::None,
+            com::Visible::Visible | com::Visible::Hidden => {
                 taffy::BoxGenerationMode::Normal
             }
         }

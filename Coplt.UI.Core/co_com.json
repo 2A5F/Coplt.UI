@@ -12,7 +12,14 @@
     },
     {
       "type": "rust",
-      "path": "../coplt_ui_rusty/src/com.rs"
+      "path": "../coplt_ui_rusty/src/com.rs",
+      "override": {
+        "GridTemplateComponent": {
+          "Debug": false,
+          "PartialEq": false,
+          "PartialOrd": false
+        }
+      }
     }
   ]
 }

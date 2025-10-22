@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Native;
@@ -11,7 +12,7 @@ using Coplt.UI.Utilities;
 namespace Coplt.UI.Collections;
 
 [Dropping]
-public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
+public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquatable<NativeList<T>>
 {
     #region Static Check
 
@@ -174,6 +175,26 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
 
     #endregion
 
+    #region Move
+
+    public NativeList<T> Move()
+    {
+        var self = this;
+        m_items = null;
+        m_cap = 0;
+        m_size = 0;
+        return self;
+    }
+
+    public NativeList<T> Swap(NativeList<T> list)
+    {
+        var self = this;
+        this = list;
+        return self;
+    }
+
+    #endregion
+
     #region Dispose
 
     [Drop]
@@ -220,19 +241,17 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
     [Drop(Order = -1)]
     public void Clear()
     {
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+        if (m_items != null)
         {
-            var size = m_size;
-            m_size = 0;
-            if (size > 0)
+            if (DisposeProxy<T>.IsDisposable)
             {
-                AsSpan.Clear();
+                foreach (ref var item in this)
+                {
+                    DisposeProxy<T>.Dispose(ref item);
+                }
             }
         }
-        else
-        {
-            m_size = 0;
-        }
+        m_size = 0;
     }
 
     public void UnsafeClear()
@@ -276,14 +295,26 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
     {
         if ((uint)index >= (uint)m_size) throw new IndexOutOfRangeException(nameof(index));
         m_size--;
+        if (DisposeProxy<T>.IsDisposable)
+        {
+            DisposeProxy<T>.Dispose(ref m_items![index]);
+        }
         if (index < m_size)
         {
             AsSpan[(index + 1)..].CopyTo(AsSpan.Slice(index, m_size - 1));
         }
-        if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+    }
+
+    public T RemoveTakeAt(int index)
+    {
+        if ((uint)index >= (uint)m_size) throw new IndexOutOfRangeException(nameof(index));
+        m_size--;
+        var value = m_items![index];
+        if (index < m_size)
         {
-            m_items![m_size] = default!;
+            AsSpan[(index + 1)..].CopyTo(AsSpan.Slice(index, m_size - 1));
         }
+        return value!;
     }
 
     #endregion
@@ -354,6 +385,52 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>
     #region GetPinnableReference
 
     public ref T GetPinnableReference() => ref *m_items;
+
+    #endregion
+
+    #region Equals
+
+    public bool Equals(NativeList<T> other)
+    {
+        if (m_items == null) return other.m_items == null;
+        if (m_items != other.m_items || m_cap != other.m_cap || m_size != other.m_size) return false;
+        for (var i = 0; i < m_size; i++)
+        {
+            if (!EqualityComparer<T>.Default.Equals(m_items[i], other.m_items[i])) return false;
+        }
+        return true;
+    }
+    public override bool Equals(object? obj) => obj is NativeList<T> other && Equals(other);
+    public override int GetHashCode()
+    {
+        if (m_items == null) return 0;
+        var hash = m_size;
+        for (var i = 0; i < m_size; i++)
+        {
+            hash *= i + 233;
+            hash ^= EqualityComparer<T>.Default.GetHashCode(m_items[i]!);
+        }
+        return hash;
+    }
+    public static bool operator ==(NativeList<T> left, NativeList<T> right) => left.Equals(right);
+    public static bool operator !=(NativeList<T> left, NativeList<T> right) => !left.Equals(right);
+
+    #endregion
+
+    #region ToString
+
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        sb.Append('[');
+        for (var i = 0; i < m_size; i++)
+        {
+            if (i != 0) sb.Append(", ");
+            sb.Append($"{m_items[i]}");
+        }
+        sb.Append(']');
+        return sb.ToString();
+    }
 
     #endregion
 }
