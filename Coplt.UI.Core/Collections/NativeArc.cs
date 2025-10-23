@@ -52,10 +52,9 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
 
     public NativeArc(T value)
     {
-        this = New();
-        m_ptr->m_data = value;
+        this = New(value);
     }
-    
+
     private NativeArc(NativeArcInner<T>* ptr)
     {
         m_ptr = ptr;
@@ -65,6 +64,14 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
     {
         var ptr = NativeLib.Instance.Alloc<NativeArcInner<T>>();
         ptr->m_count = 1;
+        return new(ptr);
+    }
+
+    public static NativeArc<T> New(T value)
+    {
+        var ptr = NativeLib.Instance.Alloc<NativeArcInner<T>>();
+        ptr->m_count = 1;
+        ptr->m_data = value;
         return new(ptr);
     }
 

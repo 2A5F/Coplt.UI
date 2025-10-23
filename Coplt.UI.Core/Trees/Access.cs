@@ -1,4 +1,7 @@
-﻿using Coplt.UI.Styles;
+﻿using System.Diagnostics;
+using Coplt.UI.Collections;
+using Coplt.UI.Core.Styles;
+using Coplt.UI.Styles;
 using Coplt.UI.Trees.Datas;
 
 namespace Coplt.UI.Trees;
@@ -18,6 +21,31 @@ public static unsafe partial class Access
         public ref CommonStyleData CommonStyle => ref Document.At<CommonStyleData>(Locate);
         public ref ContainerStyleData ContainerStyle => ref Document.At<ContainerStyleData>(Locate);
         public ref CommonLayoutData CommonLayout => ref Document.At<CommonLayoutData>(Locate);
+        public ref ChildsData Childs => ref Document.At<ChildsData>(Locate);
+
+        public void Add(Node node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            if (node.Locate.Id.Type is NodeType.Root) throw new ArgumentException("The root node cannot be a child");
+            ref var parent = ref Document.At<ParentData>(node.Locate);
+            if (parent.m_has_parent) throw new ArgumentException("Target node already has a parent");
+            Childs.m_childs.Add(node.Locate);
+            parent = new ParentData
+            {
+                m_parent = Locate,
+                m_has_parent = true,
+            };
+        }
+
+        public void Remove(Node node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            ref var parent = ref Document.At<ParentData>(node.Locate);
+            if (!parent.m_has_parent || parent.m_parent != Locate) throw new ArgumentException("Target node is not a child of this node");
+            var r = Childs.m_childs.Remove(node.Locate);
+            Debug.Assert(r);
+            parent.m_has_parent = false;
+        }
     }
 
     extension(Node node)
@@ -64,6 +92,25 @@ public static unsafe partial class Access
                 var val = value.Value;
                 style.Height = type;
                 style.HeightValue = val;
+            }
+        }
+
+        public GridPlacement GridColumn
+        {
+            set
+            {
+                ref var style = ref node.CommonStyle;
+                style.GridColumnStart = value;
+                style.GridColumnEnd = value;
+            }
+        }
+        public GridPlacement GridRow
+        {
+            set
+            {
+                ref var style = ref node.CommonStyle;
+                style.GridRowStart = value;
+                style.GridRowEnd = value;
             }
         }
     }

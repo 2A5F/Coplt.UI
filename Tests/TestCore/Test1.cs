@@ -1,4 +1,6 @@
-﻿using Coplt.UI.Styles;
+﻿using Coplt.UI.Collections;
+using Coplt.UI.Core.Styles;
+using Coplt.UI.Styles;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
 
@@ -13,10 +15,22 @@ public class Tests1
             .Create();
         var node = new Access.Node(doc, NodeType.Root)
         {
-            Width = 100,
-            Height = 100
+            Width = 456, Height = 123,
+            Container = Container.Grid,
         };
+        node.ContainerStyle.Grid = new(new()
+        {
+            GridTemplateRows = [1.fr, 2.fr, 20.px],
+            GridTemplateColumns = [25.pc, 1.fr, 3.fr],
+        });
+        var child = new Access.Node(doc, NodeType.View)
+        {
+            GridRow = 2, GridColumn = 2,
+        };
+        node.Add(child);
         doc.Update();
         Console.WriteLine(node.CommonLayout.FinalLayout);
+        Console.WriteLine();
+        Console.WriteLine(child.CommonLayout.FinalLayout);
     }
 }

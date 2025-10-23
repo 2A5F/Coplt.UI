@@ -1375,6 +1375,17 @@ impl<'a> ExactSizeIterator for TemplateTrackListIter<'a> {}
 #[derive(Debug, Clone)]
 pub struct AutoTrackListIter<'a>(&'a com::NativeList<com::TrackSizingFunction>, i32);
 
+impl<'a> AutoTrackListIter<'a> {
+    pub fn empty() -> Self {
+        static EMPTY: com::NativeList<com::TrackSizingFunction> = com::NativeList {
+            m_items: std::ptr::null_mut(),
+            m_cap: 0,
+            m_size: 0,
+        };
+        Self(unsafe { &EMPTY }, 0)
+    }
+}
+
 impl<'a> Iterator for AutoTrackListIter<'a> {
     type Item = taffy::TrackSizingFunction;
 
@@ -1460,7 +1471,7 @@ impl<'s> GridContainerStyle for StyleHandle<'s> {
     fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
         match self.1.1 {
             NodeType::View | NodeType::Root => Some(TemplateTrackListIter(
-                &self.container_style().Grid.GridTemplateRows,
+                &self.container_style().Grid.val()?.GridTemplateRows,
                 0,
             )),
             NodeType::Text => None,
@@ -1471,7 +1482,7 @@ impl<'s> GridContainerStyle for StyleHandle<'s> {
     fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
         match self.1.1 {
             NodeType::View | NodeType::Root => Some(TemplateTrackListIter(
-                &self.container_style().Grid.GridTemplateColumns,
+                &self.container_style().Grid.val()?.GridTemplateColumns,
                 0,
             )),
             NodeType::Text => None,
@@ -1480,27 +1491,25 @@ impl<'s> GridContainerStyle for StyleHandle<'s> {
 
     #[inline(always)]
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
-        match self.1.1 {
-            NodeType::View | NodeType::Root => {
-                AutoTrackListIter(&self.container_style().Grid.GridAutoRows, 0)
+        if let Some(grid) = self.container_style().Grid.val() {
+            match self.1.1 {
+                NodeType::View | NodeType::Root => AutoTrackListIter(&grid.GridAutoRows, 0),
+                NodeType::Text => AutoTrackListIter::empty(),
             }
-            NodeType::Text => AutoTrackListIter(
-                &self.container_style().Grid.GridAutoRows,
-                self.container_style().Grid.GridAutoRows.m_size,
-            ),
+        } else {
+            AutoTrackListIter::empty()
         }
     }
 
     #[inline(always)]
     fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
-        match self.1.1 {
-            NodeType::View | NodeType::Root => {
-                AutoTrackListIter(&self.container_style().Grid.GridAutoColumns, 0)
+        if let Some(grid) = self.container_style().Grid.val() {
+            match self.1.1 {
+                NodeType::View | NodeType::Root => AutoTrackListIter(&grid.GridAutoColumns, 0),
+                NodeType::Text => AutoTrackListIter::empty(),
             }
-            NodeType::Text => AutoTrackListIter(
-                &self.container_style().Grid.GridAutoColumns,
-                self.container_style().Grid.GridAutoColumns.m_size,
-            ),
+        } else {
+            AutoTrackListIter::empty()
         }
     }
 
@@ -1508,7 +1517,7 @@ impl<'s> GridContainerStyle for StyleHandle<'s> {
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
         match self.1.1 {
             NodeType::View | NodeType::Root => Some(GridTemplateAreasIter(
-                &self.container_style().Grid.GridTemplateAreas,
+                &self.container_style().Grid.val()?.GridTemplateAreas,
                 0,
             )),
             NodeType::Text => None,
@@ -1519,7 +1528,7 @@ impl<'s> GridContainerStyle for StyleHandle<'s> {
     fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>> {
         match self.1.1 {
             NodeType::View | NodeType::Root => Some(TemplateLineNamesIter(
-                &self.container_style().Grid.GridTemplateColumnNames,
+                &self.container_style().Grid.val()?.GridTemplateColumnNames,
                 0,
             )),
             NodeType::Text => None,
@@ -1530,7 +1539,7 @@ impl<'s> GridContainerStyle for StyleHandle<'s> {
     fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>> {
         match self.1.1 {
             NodeType::View | NodeType::Root => Some(TemplateLineNamesIter(
-                &self.container_style().Grid.GridTemplateRowNames,
+                &self.container_style().Grid.val()?.GridTemplateRowNames,
                 0,
             )),
             NodeType::Text => None,

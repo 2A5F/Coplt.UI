@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
+using Coplt.UI.Styles;
 
 namespace Coplt.UI.Core.Styles;
 
@@ -110,6 +111,12 @@ public record struct TrackSizing
             Type = SizingType.FitContent,
         };
     }
+
+    public static implicit operator TrackSizing(float value) => Length(value, LengthType.Fixed);
+    public static implicit operator TrackSizing(Fixed value) => Length(value.Value, LengthType.Fixed);
+    public static implicit operator TrackSizing(Percent value) => Length(value.Value, LengthType.Percent);
+    public static implicit operator TrackSizing(Length value) => Length(value.Value, value.Type);
+    public static implicit operator TrackSizing(Fraction function) => Fraction(function.Value);
 }
 
 public record struct TrackSizingFunction
@@ -126,6 +133,7 @@ public record struct TrackSizingFunction
         Min = Function.Type,
         Max = Function.Type,
     };
+
 
     public static TrackSizingFunction MinMax(TrackSizing Min, TrackSizing Max) => new()
     {
@@ -146,6 +154,12 @@ public record struct TrackSizingFunction
     public static TrackSizingFunction Length(float value, LengthType type) => TrackSizing.Length(value, type);
 
     public static TrackSizingFunction FitContent(float value, LengthType type) => TrackSizing.FitContent(value, type);
+
+    public static implicit operator TrackSizingFunction(float value) => Length(value, LengthType.Fixed);
+    public static implicit operator TrackSizingFunction(Fixed value) => Length(value.Value, LengthType.Fixed);
+    public static implicit operator TrackSizingFunction(Percent value) => Length(value.Value, LengthType.Percent);
+    public static implicit operator TrackSizingFunction(Length value) => Length(value.Value, value.Type);
+    public static implicit operator TrackSizingFunction(Fraction function) => Fraction(function.Value);
 }
 
 [Dropping]
@@ -256,6 +270,12 @@ public record struct GridTemplateComponent : IDisposable
         Type: GridTemplateComponentType.Repeat,
         Union.Repeat.Repetition: RepetitionType.AutoFill or RepetitionType.AutoFit,
     };
+
+    public static implicit operator GridTemplateComponent(float value) => Single(value);
+    public static implicit operator GridTemplateComponent(Fixed value) => Single(value);
+    public static implicit operator GridTemplateComponent(Percent value) => Single(value);
+    public static implicit operator GridTemplateComponent(Length value) => Single(value);
+    public static implicit operator GridTemplateComponent(Fraction value) => Single(value);
 }
 
 public record struct GridTemplateArea
@@ -290,4 +310,6 @@ public record struct GridPlacement
     public static GridPlacement Span(int value) => new() { Value1 = (short)value, Type = GridPlacementType.Span };
     public static GridPlacement NamedSpan(GridName id, int value) =>
         new() { Name = id.Id, NameType = id.Type, Value1 = (short)value, Type = GridPlacementType.NamedSpan };
+
+    public static implicit operator GridPlacement(int value) => Line(value);
 }

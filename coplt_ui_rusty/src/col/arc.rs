@@ -17,6 +17,23 @@ struct Inner<T> {
     value: T,
 }
 
+impl<T> NArc<T> {
+    pub fn val(&self) -> Option<&T> {
+        if self.ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { &(*self.ptr).value })
+        }
+    }
+    pub fn val_mut(&mut self) -> Option<&mut T> {
+        if self.ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { &mut (*self.ptr).value })
+        }
+    }
+}
+
 impl<T> Drop for NArc<T> {
     fn drop(&mut self) {
         unsafe {
@@ -47,23 +64,9 @@ impl<T> Clone for NArc<T> {
     }
 }
 
-impl<T> Deref for NArc<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        unsafe { &(*self.ptr).value }
-    }
-}
-
-impl<T> DerefMut for NArc<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { &mut (*self.ptr).value }
-    }
-}
-
 impl<T: PartialEq> PartialEq for NArc<T> {
     fn eq(&self, other: &Self) -> bool {
-        (**self).eq(&**self)
+        self.val().eq(&other.val())
     }
 }
 
@@ -71,40 +74,40 @@ impl<T: Eq> Eq for NArc<T> {}
 
 impl<T: std::fmt::Debug> std::fmt::Debug for NArc<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        (&**self).fmt(f)
+        self.val().fmt(f)
     }
 }
 
 impl<T: PartialOrd> PartialOrd for NArc<T> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        (**self).partial_cmp(&**self)
+        self.val().partial_cmp(&other.val())
     }
 
     fn lt(&self, other: &Self) -> bool {
-        (**self).lt(&**self)
+        self.val().lt(&other.val())
     }
 
     fn le(&self, other: &Self) -> bool {
-        (**self).le(&**self)
+        self.val().le(&other.val())
     }
 
     fn gt(&self, other: &Self) -> bool {
-        (**self).gt(&**self)
+        self.val().gt(&other.val())
     }
 
     fn ge(&self, other: &Self) -> bool {
-        (**self).ge(&**self)
+        self.val().ge(&other.val())
     }
 }
 
 impl<T: Ord> Ord for NArc<T> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        (**self).cmp(&**self)
+        self.val().cmp(&other.val())
     }
 }
 
 impl<T: Hash> Hash for NArc<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (**self).hash(state)
+        self.val().hash(state);
     }
 }

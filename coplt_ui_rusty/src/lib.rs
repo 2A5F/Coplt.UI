@@ -53,6 +53,9 @@ mod com_impl {
 
     use super::*;
 
+    unsafe impl<T> Send for com::NativeList<T> {}
+    unsafe impl<T> Sync for com::NativeList<T> {}
+
     impl Debug for com::GridTemplateComponent {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let mut a = f.debug_tuple("GridTemplateComponent");
@@ -110,16 +113,16 @@ mod com_impl {
     }
 
     impl<T> Deref for NativeArc<T> {
-        type Target = T;
+        type Target = NArc<T>;
 
         fn deref(&self) -> &Self::Target {
-            unsafe { &(*self.m_ptr).m_data }
+            self.as_n_arc()
         }
     }
 
     impl<T> DerefMut for NativeArc<T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
-            unsafe { &mut (*self.m_ptr).m_data }
+            self.as_n_arc_mut()
         }
     }
 }

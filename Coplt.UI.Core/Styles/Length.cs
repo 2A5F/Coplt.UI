@@ -56,11 +56,26 @@ public record struct Percent(float Value)
     public static implicit operator Percent(float value) => new(value);
 }
 
+public record struct Fraction(float Value)
+{
+    public static implicit operator Fraction(float value) => new(value);
+}
+
 public static partial class StyleExtensions
 {
     extension(float v)
     {
         public Fixed fx => new(v);
+        public Fixed px => new(v);
         public Percent pc => new(v);
+        public Fraction fr => new(v);
+    }
+
+    extension(int v)
+    {
+        public Fixed fx => new(v);
+        public Fixed px => new(v);
+        public Percent pc => new(v / 100f);
+        public Fraction fr => new(v);
     }
 }

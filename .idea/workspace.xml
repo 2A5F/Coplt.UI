@@ -48,18 +48,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Modules/LayoutModule.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Modules/LayoutModule.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,11 +112,6 @@
   }
 }</component>
   <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.Native">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Com" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Com" CONFIG_NAME="Main - Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -257,6 +240,7 @@
       <workItem from="1760164797993" duration="3658000" />
       <workItem from="1760674471049" duration="2442000" />
       <workItem from="1760678006779" duration="390000" />
+      <workItem from="1761202846667" duration="541000" />
     </task>
     <servers />
   </component>

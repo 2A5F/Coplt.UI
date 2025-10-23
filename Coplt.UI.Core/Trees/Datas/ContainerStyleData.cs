@@ -34,18 +34,8 @@ public partial record struct ContainerStyleData()
     public float BorderBottomValue = 0;
     public float BorderLeftValue = 0;
 
-    public LengthType BorderTop = LengthType.Fixed;
-    public LengthType BorderRight = LengthType.Fixed;
-    public LengthType BorderBottom = LengthType.Fixed;
-    public LengthType BorderLeft = LengthType.Fixed;
-
     public float GapXValue = 0;
     public float GapYValue = 0;
-
-    public LengthType PaddingTop = LengthType.Fixed;
-    public LengthType PaddingRight = LengthType.Fixed;
-    public LengthType PaddingBottom = LengthType.Fixed;
-    public LengthType PaddingLeft = LengthType.Fixed;
 
     public Container Container = Container.Flex;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
@@ -60,6 +50,16 @@ public partial record struct ContainerStyleData()
 
     public LengthType MaxWidth = LengthType.Auto;
     public LengthType MaxHeight = LengthType.Auto;
+
+    public LengthType PaddingTop = LengthType.Fixed;
+    public LengthType PaddingRight = LengthType.Fixed;
+    public LengthType PaddingBottom = LengthType.Fixed;
+    public LengthType PaddingLeft = LengthType.Fixed;
+
+    public LengthType BorderTop = LengthType.Fixed;
+    public LengthType BorderRight = LengthType.Fixed;
+    public LengthType BorderBottom = LengthType.Fixed;
+    public LengthType BorderLeft = LengthType.Fixed;
 
     public bool HasAspectRatio = false;
 

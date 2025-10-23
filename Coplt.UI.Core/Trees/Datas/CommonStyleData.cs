@@ -28,6 +28,11 @@ public record struct CommonStyleData()
     public float FlexShrink = 1;
     public float FlexBasisValue = 0;
 
+    public GridPlacement GridRowStart = GridPlacement.Auto;
+    public GridPlacement GridRowEnd = GridPlacement.Auto;
+    public GridPlacement GridColumnStart = GridPlacement.Auto;
+    public GridPlacement GridColumnEnd = GridPlacement.Auto;
+
     public Visible Visible = Visible.Visible;
 
     public Position Position = Position.Relative;
@@ -46,9 +51,4 @@ public record struct CommonStyleData()
     public AlignType JustifySelf = AlignType.None;
 
     public LengthType FlexBasis = LengthType.Auto;
-
-    public GridPlacement GridRowStart = GridPlacement.Auto;
-    public GridPlacement GridRowEnd = GridPlacement.Auto;
-    public GridPlacement GridColumnStart = GridPlacement.Auto;
-    public GridPlacement GridColumnEnd = GridPlacement.Auto;
 }

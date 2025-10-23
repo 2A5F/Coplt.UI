@@ -593,6 +593,10 @@ namespace Coplt {
         ::Coplt::f32 FlexGrow;
         ::Coplt::f32 FlexShrink;
         ::Coplt::f32 FlexBasisValue;
+        ::Coplt::GridPlacement GridRowStart;
+        ::Coplt::GridPlacement GridRowEnd;
+        ::Coplt::GridPlacement GridColumnStart;
+        ::Coplt::GridPlacement GridColumnEnd;
         ::Coplt::Visible Visible;
         ::Coplt::Position Position;
         ::Coplt::LengthType InsertTop;
@@ -606,10 +610,6 @@ namespace Coplt {
         ::Coplt::AlignType AlignSelf;
         ::Coplt::AlignType JustifySelf;
         ::Coplt::LengthType FlexBasis;
-        ::Coplt::GridPlacement GridRowStart;
-        ::Coplt::GridPlacement GridRowEnd;
-        ::Coplt::GridPlacement GridColumnStart;
-        ::Coplt::GridPlacement GridColumnEnd;
     };
 
     struct ContainerStyleData
@@ -631,16 +631,8 @@ namespace Coplt {
         ::Coplt::f32 BorderRightValue;
         ::Coplt::f32 BorderBottomValue;
         ::Coplt::f32 BorderLeftValue;
-        ::Coplt::LengthType BorderTop;
-        ::Coplt::LengthType BorderRight;
-        ::Coplt::LengthType BorderBottom;
-        ::Coplt::LengthType BorderLeft;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
-        ::Coplt::LengthType PaddingTop;
-        ::Coplt::LengthType PaddingRight;
-        ::Coplt::LengthType PaddingBottom;
-        ::Coplt::LengthType PaddingLeft;
         ::Coplt::Container Container;
         ::Coplt::BoxSizing BoxSizing;
         ::Coplt::Overflow OverflowX;
@@ -651,6 +643,14 @@ namespace Coplt {
         ::Coplt::LengthType MinHeight;
         ::Coplt::LengthType MaxWidth;
         ::Coplt::LengthType MaxHeight;
+        ::Coplt::LengthType PaddingTop;
+        ::Coplt::LengthType PaddingRight;
+        ::Coplt::LengthType PaddingBottom;
+        ::Coplt::LengthType PaddingLeft;
+        ::Coplt::LengthType BorderTop;
+        ::Coplt::LengthType BorderRight;
+        ::Coplt::LengthType BorderBottom;
+        ::Coplt::LengthType BorderLeft;
         bool HasAspectRatio;
         ::Coplt::FlexDirection FlexDirection;
         ::Coplt::FlexWrap FlexWrap;
