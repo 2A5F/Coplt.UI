@@ -4,6 +4,19 @@ using Coplt.UI.Collections;
 
 namespace Coplt.UI.Core.Styles;
 
+public enum GridNameType : byte
+{
+    Name,
+    Start,
+    End,
+}
+
+public record struct GridName
+{
+    public int Id;
+    public GridNameType Type;
+}
+
 public enum SizingType : byte
 {
     Auto,
@@ -141,12 +154,12 @@ public partial record struct GridTemplateRepetition
     [Drop]
     public NativeList<TrackSizingFunction> Tracks;
     [Drop]
-    public NativeList<NativeList<int>> LineIds;
+    public NativeList<NativeList<GridName>> LineIds;
     public ushort RepetitionValue;
     public RepetitionType Repetition;
 
     public static GridTemplateRepetition Create(
-        Repetition Repetition, NativeList<TrackSizingFunction> Tracks, NativeList<NativeList<int>> LineIds
+        Repetition Repetition, NativeList<TrackSizingFunction> Tracks, NativeList<NativeList<GridName>> LineIds
     ) => new()
     {
         Tracks = Tracks,
@@ -247,7 +260,7 @@ public record struct GridTemplateComponent : IDisposable
 
 public record struct GridTemplateArea
 {
-    public int Id;
+    public GridName Id;
     public ushort RowStart;
     public ushort RowEnd;
     public ushort ColumnStart;
@@ -265,13 +278,16 @@ public enum GridPlacementType : byte
 
 public record struct GridPlacement
 {
-    public int Value0;
+    public int Name;
     public short Value1;
+    public GridNameType NameType;
     public GridPlacementType Type;
 
     public static GridPlacement Auto => new() { Type = GridPlacementType.Auto };
-    public static GridPlacement Line(int value) => new() { Value0 = value, Type = GridPlacementType.Line };
-    public static GridPlacement NamedLine(int id, int value) => new() { Value0 = id, Value1 = (short)value, Type = GridPlacementType.NamedLine };
-    public static GridPlacement Span(int value) => new() { Value0 = value, Type = GridPlacementType.Span };
-    public static GridPlacement NamedSpan(int id, int value) => new() { Value0 = id, Value1 = (short)value, Type = GridPlacementType.NamedSpan };
+    public static GridPlacement Line(int value) => new() { Value1 = (short)value, Type = GridPlacementType.Line };
+    public static GridPlacement NamedLine(GridName id, int value) =>
+        new() { Name = id.Id, NameType = id.Type, Value1 = (short)value, Type = GridPlacementType.NamedLine };
+    public static GridPlacement Span(int value) => new() { Value1 = (short)value, Type = GridPlacementType.Span };
+    public static GridPlacement NamedSpan(GridName id, int value) =>
+        new() { Name = id.Id, NameType = id.Type, Value1 = (short)value, Type = GridPlacementType.NamedSpan };
 }

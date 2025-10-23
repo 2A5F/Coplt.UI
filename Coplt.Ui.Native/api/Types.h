@@ -19,6 +19,8 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeList;
 
+    struct GridName;
+
     struct GridPlacement;
 
     struct GridTemplateArea;
@@ -110,6 +112,13 @@ namespace Coplt {
         SpaceBetween = 8,
         SpaceEvenly = 9,
         SpaceAround = 10,
+    };
+
+    enum class GridNameType : ::Coplt::u8
+    {
+        Name = 0,
+        Start = 1,
+        End = 2,
     };
 
     enum class GridPlacementType : ::Coplt::u8
@@ -302,7 +311,7 @@ namespace Coplt {
     struct GridTemplateRepetition
     {
         ::Coplt::NativeList<::Coplt::TrackSizingFunction> Tracks;
-        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::i32>> LineIds;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> LineIds;
         ::Coplt::u16 RepetitionValue;
         ::Coplt::RepetitionType Repetition;
     };
@@ -354,10 +363,17 @@ namespace Coplt {
         ::Coplt::NativeArcInner<T0>* m_ptr;
     };
 
+    struct GridName
+    {
+        ::Coplt::i32 Id;
+        ::Coplt::GridNameType Type;
+    };
+
     struct GridPlacement
     {
-        ::Coplt::i32 Value0;
+        ::Coplt::i32 Name;
         ::Coplt::i16 Value1;
+        ::Coplt::GridNameType NameType;
         ::Coplt::GridPlacementType Type;
     };
 
@@ -466,7 +482,7 @@ namespace Coplt {
 
     struct GridTemplateArea
     {
-        ::Coplt::i32 Id;
+        ::Coplt::GridName Id;
         ::Coplt::u16 RowStart;
         ::Coplt::u16 RowEnd;
         ::Coplt::u16 ColumnStart;
@@ -562,10 +578,10 @@ namespace Coplt {
     {
         ::Coplt::i32 ZIndex;
         ::Coplt::f32 Opacity;
-        ::Coplt::f32 BoxColorR;
-        ::Coplt::f32 BoxColorG;
-        ::Coplt::f32 BoxColorB;
-        ::Coplt::f32 BoxColorA;
+        ::Coplt::f32 BackgroundColorR;
+        ::Coplt::f32 BackgroundColorG;
+        ::Coplt::f32 BackgroundColorB;
+        ::Coplt::f32 BackgroundColorA;
         ::Coplt::f32 InsertTopValue;
         ::Coplt::f32 InsertRightValue;
         ::Coplt::f32 InsertBottomValue;
@@ -574,10 +590,6 @@ namespace Coplt {
         ::Coplt::f32 MarginRightValue;
         ::Coplt::f32 MarginBottomValue;
         ::Coplt::f32 MarginLeftValue;
-        ::Coplt::f32 BorderTopValue;
-        ::Coplt::f32 BorderRightValue;
-        ::Coplt::f32 BorderBottomValue;
-        ::Coplt::f32 BorderLeftValue;
         ::Coplt::f32 FlexGrow;
         ::Coplt::f32 FlexShrink;
         ::Coplt::f32 FlexBasisValue;
@@ -591,18 +603,9 @@ namespace Coplt {
         ::Coplt::LengthType MarginRight;
         ::Coplt::LengthType MarginBottom;
         ::Coplt::LengthType MarginLeft;
-        ::Coplt::LengthType BorderTop;
-        ::Coplt::LengthType BorderRight;
-        ::Coplt::LengthType BorderBottom;
-        ::Coplt::LengthType BorderLeft;
-        ::Coplt::AlignType AlignItems;
         ::Coplt::AlignType AlignSelf;
-        ::Coplt::AlignType JustifyItems;
         ::Coplt::AlignType JustifySelf;
-        ::Coplt::AlignType AlignContent;
-        ::Coplt::AlignType JustifyContent;
         ::Coplt::LengthType FlexBasis;
-        ::Coplt::GridAutoFlow GridAutoFlow;
         ::Coplt::GridPlacement GridRowStart;
         ::Coplt::GridPlacement GridRowEnd;
         ::Coplt::GridPlacement GridColumnStart;
@@ -611,7 +614,7 @@ namespace Coplt {
 
     struct ContainerStyleData
     {
-        ::Coplt::NativeArc<::Coplt::GridContainerStyle> Inner;
+        ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
         ::Coplt::f32 ScrollBarSize;
         ::Coplt::f32 WidthValue;
         ::Coplt::f32 HeightValue;
@@ -624,6 +627,14 @@ namespace Coplt {
         ::Coplt::f32 PaddingRightValue;
         ::Coplt::f32 PaddingBottomValue;
         ::Coplt::f32 PaddingLeftValue;
+        ::Coplt::f32 BorderTopValue;
+        ::Coplt::f32 BorderRightValue;
+        ::Coplt::f32 BorderBottomValue;
+        ::Coplt::f32 BorderLeftValue;
+        ::Coplt::LengthType BorderTop;
+        ::Coplt::LengthType BorderRight;
+        ::Coplt::LengthType BorderBottom;
+        ::Coplt::LengthType BorderLeft;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
         ::Coplt::LengthType PaddingTop;
@@ -643,8 +654,13 @@ namespace Coplt {
         bool HasAspectRatio;
         ::Coplt::FlexDirection FlexDirection;
         ::Coplt::FlexWrap FlexWrap;
+        ::Coplt::GridAutoFlow GridAutoFlow;
         ::Coplt::LengthType GapX;
         ::Coplt::LengthType GapY;
+        ::Coplt::AlignType AlignContent;
+        ::Coplt::AlignType JustifyContent;
+        ::Coplt::AlignType AlignItems;
+        ::Coplt::AlignType JustifyItems;
         ::Coplt::TextAlign TextAlign;
     };
 
@@ -655,8 +671,8 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoRows;
         ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoColumns;
         ::Coplt::NativeList<::Coplt::GridTemplateArea> GridTemplateAreas;
-        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::i32>> GridTemplateColumnNames;
-        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::i32>> GridTemplateRowNames;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateColumnNames;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateRowNames;
     };
 
     struct RootData

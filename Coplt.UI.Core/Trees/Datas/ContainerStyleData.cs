@@ -9,7 +9,7 @@ namespace Coplt.UI.Trees.Datas;
 public partial record struct ContainerStyleData()
 {
     [Drop]
-    public NativeArc<GridContainerStyle> Inner;
+    public NativeArc<GridContainerStyle> Grid;
 
     public float ScrollBarSize = 0;
 
@@ -28,6 +28,16 @@ public partial record struct ContainerStyleData()
     public float PaddingRightValue = 0;
     public float PaddingBottomValue = 0;
     public float PaddingLeftValue = 0;
+
+    public float BorderTopValue = 0;
+    public float BorderRightValue = 0;
+    public float BorderBottomValue = 0;
+    public float BorderLeftValue = 0;
+
+    public LengthType BorderTop = LengthType.Fixed;
+    public LengthType BorderRight = LengthType.Fixed;
+    public LengthType BorderBottom = LengthType.Fixed;
+    public LengthType BorderLeft = LengthType.Fixed;
 
     public float GapXValue = 0;
     public float GapYValue = 0;
@@ -56,8 +66,15 @@ public partial record struct ContainerStyleData()
     public FlexDirection FlexDirection = FlexDirection.Column;
     public FlexWrap FlexWrap = FlexWrap.NoWrap;
 
+    public GridAutoFlow GridAutoFlow = GridAutoFlow.Row;
+
     public LengthType GapX = LengthType.Fixed;
     public LengthType GapY = LengthType.Fixed;
+
+    public AlignType AlignContent = AlignType.None;
+    public AlignType JustifyContent = AlignType.None;
+    public AlignType AlignItems = AlignType.None;
+    public AlignType JustifyItems = AlignType.None;
 
     public TextAlign TextAlign = TextAlign.Auto;
 }
@@ -77,7 +94,7 @@ public partial record struct GridContainerStyle
     [Drop]
     public NativeList<GridTemplateArea> GridTemplateAreas;
     [Drop]
-    public NativeList<NativeList<int>> GridTemplateColumnNames;
+    public NativeList<NativeList<GridName>> GridTemplateColumnNames;
     [Drop]
-    public NativeList<NativeList<int>> GridTemplateRowNames;
+    public NativeList<NativeList<GridName>> GridTemplateRowNames;
 }

@@ -9,10 +9,10 @@ public record struct CommonStyleData()
 
     public float Opacity = 1;
 
-    public float BoxColorR = 1;
-    public float BoxColorG = 1;
-    public float BoxColorB = 1;
-    public float BoxColorA = 0;
+    public float BackgroundColorR = 1;
+    public float BackgroundColorG = 1;
+    public float BackgroundColorB = 1;
+    public float BackgroundColorA = 0;
 
     public float InsertTopValue = 0;
     public float InsertRightValue = 0;
@@ -23,11 +23,6 @@ public record struct CommonStyleData()
     public float MarginRightValue = 0;
     public float MarginBottomValue = 0;
     public float MarginLeftValue = 0;
-
-    public float BorderTopValue = 0;
-    public float BorderRightValue = 0;
-    public float BorderBottomValue = 0;
-    public float BorderLeftValue = 0;
 
     public float FlexGrow = 0;
     public float FlexShrink = 1;
@@ -47,24 +42,13 @@ public record struct CommonStyleData()
     public LengthType MarginBottom = LengthType.Fixed;
     public LengthType MarginLeft = LengthType.Fixed;
 
-    public LengthType BorderTop = LengthType.Fixed;
-    public LengthType BorderRight = LengthType.Fixed;
-    public LengthType BorderBottom = LengthType.Fixed;
-    public LengthType BorderLeft = LengthType.Fixed;
-
-    public AlignType AlignItems = AlignType.None;
     public AlignType AlignSelf = AlignType.None;
-    public AlignType JustifyItems = AlignType.None;
     public AlignType JustifySelf = AlignType.None;
-    public AlignType AlignContent = AlignType.None;
-    public AlignType JustifyContent = AlignType.None;
 
     public LengthType FlexBasis = LengthType.Auto;
 
-    public GridAutoFlow GridAutoFlow = GridAutoFlow.Row;
-
-    public GridPlacement GridRowStart;
-    public GridPlacement GridRowEnd;
-    public GridPlacement GridColumnStart;
-    public GridPlacement GridColumnEnd;
+    public GridPlacement GridRowStart = GridPlacement.Auto;
+    public GridPlacement GridRowEnd = GridPlacement.Auto;
+    public GridPlacement GridColumnStart = GridPlacement.Auto;
+    public GridPlacement GridColumnEnd = GridPlacement.Auto;
 }

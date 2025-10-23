@@ -19,6 +19,14 @@ pub enum AlignType {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum GridNameType {
+    Name = 0,
+    Start = 1,
+    End = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum GridPlacementType {
     Auto = 0,
     Line = 1,
@@ -225,16 +233,24 @@ pub struct NativeList<T0 /* T */> {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GridName {
+    pub Id: i32,
+    pub Type: GridNameType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridPlacement {
-    pub Value0: i32,
+    pub Name: i32,
     pub Value1: i16,
+    pub NameType: GridNameType,
     pub Type: GridPlacementType,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridTemplateArea {
-    pub Id: i32,
+    pub Id: GridName,
     pub RowStart: u16,
     pub RowEnd: u16,
     pub ColumnStart: u16,
@@ -259,7 +275,7 @@ pub union GridTemplateComponentUnion {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridTemplateRepetition {
     pub Tracks: NativeList<TrackSizingFunction>,
-    pub LineIds: NativeList<NativeList<i32>>,
+    pub LineIds: NativeList<NativeList<GridName>>,
     pub RepetitionValue: u16,
     pub Repetition: RepetitionType,
 }
@@ -505,10 +521,10 @@ pub struct CommonLayoutData {
 pub struct CommonStyleData {
     pub ZIndex: i32,
     pub Opacity: f32,
-    pub BoxColorR: f32,
-    pub BoxColorG: f32,
-    pub BoxColorB: f32,
-    pub BoxColorA: f32,
+    pub BackgroundColorR: f32,
+    pub BackgroundColorG: f32,
+    pub BackgroundColorB: f32,
+    pub BackgroundColorA: f32,
     pub InsertTopValue: f32,
     pub InsertRightValue: f32,
     pub InsertBottomValue: f32,
@@ -517,10 +533,6 @@ pub struct CommonStyleData {
     pub MarginRightValue: f32,
     pub MarginBottomValue: f32,
     pub MarginLeftValue: f32,
-    pub BorderTopValue: f32,
-    pub BorderRightValue: f32,
-    pub BorderBottomValue: f32,
-    pub BorderLeftValue: f32,
     pub FlexGrow: f32,
     pub FlexShrink: f32,
     pub FlexBasisValue: f32,
@@ -534,18 +546,9 @@ pub struct CommonStyleData {
     pub MarginRight: LengthType,
     pub MarginBottom: LengthType,
     pub MarginLeft: LengthType,
-    pub BorderTop: LengthType,
-    pub BorderRight: LengthType,
-    pub BorderBottom: LengthType,
-    pub BorderLeft: LengthType,
-    pub AlignItems: AlignType,
     pub AlignSelf: AlignType,
-    pub JustifyItems: AlignType,
     pub JustifySelf: AlignType,
-    pub AlignContent: AlignType,
-    pub JustifyContent: AlignType,
     pub FlexBasis: LengthType,
-    pub GridAutoFlow: GridAutoFlow,
     pub GridRowStart: GridPlacement,
     pub GridRowEnd: GridPlacement,
     pub GridColumnStart: GridPlacement,
@@ -555,7 +558,7 @@ pub struct CommonStyleData {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ContainerStyleData {
-    pub Inner: NativeArc<GridContainerStyle>,
+    pub Grid: NativeArc<GridContainerStyle>,
     pub ScrollBarSize: f32,
     pub WidthValue: f32,
     pub HeightValue: f32,
@@ -568,6 +571,14 @@ pub struct ContainerStyleData {
     pub PaddingRightValue: f32,
     pub PaddingBottomValue: f32,
     pub PaddingLeftValue: f32,
+    pub BorderTopValue: f32,
+    pub BorderRightValue: f32,
+    pub BorderBottomValue: f32,
+    pub BorderLeftValue: f32,
+    pub BorderTop: LengthType,
+    pub BorderRight: LengthType,
+    pub BorderBottom: LengthType,
+    pub BorderLeft: LengthType,
     pub GapXValue: f32,
     pub GapYValue: f32,
     pub PaddingTop: LengthType,
@@ -587,8 +598,13 @@ pub struct ContainerStyleData {
     pub HasAspectRatio: bool,
     pub FlexDirection: FlexDirection,
     pub FlexWrap: FlexWrap,
+    pub GridAutoFlow: GridAutoFlow,
     pub GapX: LengthType,
     pub GapY: LengthType,
+    pub AlignContent: AlignType,
+    pub JustifyContent: AlignType,
+    pub AlignItems: AlignType,
+    pub JustifyItems: AlignType,
     pub TextAlign: TextAlign,
 }
 
@@ -600,8 +616,8 @@ pub struct GridContainerStyle {
     pub GridAutoRows: NativeList<TrackSizingFunction>,
     pub GridAutoColumns: NativeList<TrackSizingFunction>,
     pub GridTemplateAreas: NativeList<GridTemplateArea>,
-    pub GridTemplateColumnNames: NativeList<NativeList<i32>>,
-    pub GridTemplateRowNames: NativeList<NativeList<i32>>,
+    pub GridTemplateColumnNames: NativeList<NativeList<GridName>>,
+    pub GridTemplateRowNames: NativeList<NativeList<GridName>>,
 }
 
 #[repr(C)]
