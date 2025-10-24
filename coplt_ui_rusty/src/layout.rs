@@ -6,16 +6,20 @@ use taffy::{
     BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CheapCloneStr, CoreStyle,
     FlexboxContainerStyle, FlexboxItemStyle, GenericRepetition, GridContainerStyle, GridItemStyle,
     LayoutBlockContainer, LayoutFlexboxContainer, LayoutGridContainer, LayoutOutput,
-    LayoutPartialTree, Point, RoundTree, TraversePartialTree, TraverseTree, prelude::TaffyZero,
+    LayoutPartialTree, Point, ResolveOrZero, RoundTree, Size, TraversePartialTree, TraverseTree,
+    prelude::TaffyZero,
 };
 
 use crate::{
     col::{OrderedSet, ordered_set},
     com::{
-        self, CommonLayoutData, CommonStyleData, ContainerStyleData, GridName, GridNameType,
+        self, CommonStyleData, ContainerLayoutData, ContainerStyleData, GridName, GridNameType,
         NLayoutContext, NodeLocate, RootData,
     },
 };
+
+pub mod inline;
+pub use inline::*;
 
 macro_rules! c_option {
     ( #val ; $self:expr => $name:ident  ) => {
@@ -174,29 +178,37 @@ impl SubDoc {
     }
 
     #[inline(always)]
-    pub fn get_childs(&self, id: NodeId) -> &OrderedSet<NodeLocate> {
+    pub fn get_childs(&self, id: NodeId) -> Option<&OrderedSet<NodeLocate>> {
         match id.typ() {
-            NodeType::View => unsafe { &*childs_data![self.view_childs_data => id.index()] },
-            NodeType::Text => unreachable!(),
-            NodeType::Root => unsafe { &*childs_data![self.root_childs_data => id.index()] },
+            NodeType::View => Some(unsafe { &*childs_data![self.view_childs_data => id.index()] }),
+            NodeType::Text => None,
+            NodeType::Root => Some(unsafe { &*childs_data![self.root_childs_data => id.index()] }),
         }
     }
 
     #[inline(always)]
-    pub fn common_layout(&self, id: NodeId) -> &CommonLayoutData {
+    pub fn container_layout(&self, id: NodeId) -> Option<&ContainerLayoutData> {
         match id.typ() {
-            NodeType::View => unsafe { &*common_layout![self.view_layout_data => id.index()] },
-            NodeType::Text => unsafe { &*common_layout![self.text_layout_data => id.index()] },
-            NodeType::Root => unsafe { &*common_layout![self.root_layout_data => id.index()] },
+            NodeType::View => {
+                Some(unsafe { &*common_layout![self.view_container_layout_data => id.index()] })
+            }
+            NodeType::Text => None,
+            NodeType::Root => {
+                Some(unsafe { &*common_layout![self.root_container_layout_data => id.index()] })
+            }
         }
     }
 
     #[inline(always)]
-    pub fn common_layout_mut(&mut self, id: NodeId) -> &mut CommonLayoutData {
+    pub fn container_layout_mut(&mut self, id: NodeId) -> Option<&mut ContainerLayoutData> {
         match id.typ() {
-            NodeType::View => unsafe { &mut *common_layout![self.view_layout_data => id.index()] },
-            NodeType::Text => unsafe { &mut *common_layout![self.text_layout_data => id.index()] },
-            NodeType::Root => unsafe { &mut *common_layout![self.root_layout_data => id.index()] },
+            NodeType::View => {
+                Some(unsafe { &mut *common_layout![self.view_container_layout_data => id.index()] })
+            }
+            NodeType::Text => None,
+            NodeType::Root => {
+                Some(unsafe { &mut *common_layout![self.root_container_layout_data => id.index()] })
+            }
         }
     }
 }
@@ -269,6 +281,24 @@ fn set_layout(dst: &mut com::LayoutData, src: &taffy::Layout) {
 
 struct ChildIter(ordered_set::PtrCopyIter<NodeLocate>);
 
+impl ChildIter {
+    #[inline(always)]
+    pub fn empty() -> Self {
+        static EMPTY: OrderedSet<NodeLocate> = OrderedSet {
+            buckets: std::ptr::null_mut(),
+            nodes: std::ptr::null_mut(),
+            fast_mode_multiplier: 0,
+            cap: 0,
+            first: -1,
+            last: -1,
+            count: 0,
+            free_list: -1,
+            free_count: -1,
+        };
+        unsafe { Self(EMPTY.iter_ptr_copy()) }
+    }
+}
+
 impl Iterator for ChildIter {
     type Item = taffy::NodeId;
 
@@ -290,15 +320,19 @@ impl TraversePartialTree for SubDoc {
     #[inline(always)]
     fn child_ids(&self, parent_node_id: taffy::NodeId) -> Self::ChildIter {
         let id = NodeId::from(parent_node_id);
-        let childs = self.get_childs(id);
-        ChildIter(childs.iter_ptr_copy())
+        match self.get_childs(id) {
+            Some(childs) => ChildIter(childs.iter_ptr_copy()),
+            None => ChildIter::empty(),
+        }
     }
 
     #[inline(always)]
     fn child_count(&self, parent_node_id: taffy::NodeId) -> usize {
         let id = NodeId::from(parent_node_id);
-        let childs = self.get_childs(id);
-        childs.count() as usize
+        match self.get_childs(id) {
+            Some(childs) => childs.count() as usize,
+            None => 0,
+        }
     }
 }
 
@@ -320,7 +354,8 @@ impl LayoutPartialTree for SubDoc {
     #[inline(always)]
     fn set_unrounded_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
         let id = NodeId::from(node_id);
-        let dst = self.common_layout_mut(id);
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let dst = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
         set_layout(&mut dst.Layout, layout);
     }
 
@@ -329,23 +364,40 @@ impl LayoutPartialTree for SubDoc {
         node_id: taffy::NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
-        taffy::compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
-            let id = NodeId::from(node_id);
-            match id.typ() {
-                NodeType::View | NodeType::Root => {
-                    let container = StyleHandle(tree, id).container_style().Container;
+        let id = NodeId::from(node_id);
+        match id.typ() {
+            NodeType::Text => taffy::LayoutOutput::HIDDEN,
+            NodeType::View | NodeType::Root => {
+                taffy::compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
+                    if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
+                        return taffy::compute_hidden_layout(tree, node_id);
+                    }
+                    let style = StyleHandle(tree, id);
+                    let visible = style.common_style().Visible;
+                    if let com::Visible::Remove = visible {
+                        return taffy::compute_hidden_layout(tree, node_id);
+                    }
+                    let childs = tree.get_childs(id).unwrap();
+                    if childs.count() == 0 {
+                        return taffy::compute_leaf_layout(
+                            inputs,
+                            &style,
+                            |_, _| 0.0,
+                            |_, _| Size::ZERO,
+                        );
+                    }
+                    let container = style.container_style().Container;
                     match container {
                         com::Container::Flex => {
                             taffy::compute_flexbox_layout(tree, node_id, inputs)
                         }
                         com::Container::Grid => taffy::compute_grid_layout(tree, node_id, inputs),
-                        com::Container::Text => todo!(),
+                        com::Container::Text => tree.compute_text_layout(id, inputs),
                         com::Container::Block => taffy::compute_block_layout(tree, node_id, inputs),
                     }
-                }
-                NodeType::Text => todo!(),
+                })
             }
-        })
+        }
     }
 }
 
@@ -353,14 +405,16 @@ impl RoundTree for SubDoc {
     #[inline(always)]
     fn get_unrounded_layout(&self, node_id: taffy::NodeId) -> taffy::Layout {
         let id = NodeId::from(node_id);
-        let data = self.common_layout(id);
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let data = unsafe { self.container_layout(id).unwrap_unchecked() };
         get_layout(&data.Layout)
     }
 
     #[inline(always)]
     fn set_final_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
         let id = NodeId::from(node_id);
-        let data = self.common_layout_mut(id);
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let data = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
         set_layout(&mut data.FinalLayout, layout);
     }
 }
@@ -374,7 +428,8 @@ impl CacheTree for SubDoc {
         run_mode: taffy::RunMode,
     ) -> Option<taffy::LayoutOutput> {
         let id = NodeId::from(node_id);
-        let data = &self.common_layout(id).LayoutCache;
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let data = &unsafe { self.container_layout(id).unwrap_unchecked() }.LayoutCache;
         match run_mode {
             taffy::RunMode::PerformLayout => {
                 if !data.HasFinalLayoutEntry {
@@ -504,7 +559,8 @@ impl CacheTree for SubDoc {
         layout_output: taffy::LayoutOutput,
     ) {
         let id = NodeId::from(node_id);
-        let data = &mut self.common_layout_mut(id).LayoutCache;
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let data = &mut unsafe { self.container_layout_mut(id).unwrap_unchecked() }.LayoutCache;
         match run_mode {
             taffy::RunMode::PerformLayout => {
                 data.IsEmpty = false;
@@ -596,7 +652,8 @@ impl CacheTree for SubDoc {
 
     fn cache_clear(&mut self, node_id: taffy::NodeId) {
         let id = NodeId::from(node_id);
-        let data = &mut self.common_layout_mut(id).LayoutCache;
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let data = &mut unsafe { self.container_layout_mut(id).unwrap_unchecked() }.LayoutCache;
         if data.IsEmpty {
             return;
         }
@@ -1725,5 +1782,52 @@ impl<'a> GridItemStyle for StyleHandle<'a> {
             com::AlignType::SpaceEvenly => None,
             com::AlignType::SpaceAround => None,
         }
+    }
+}
+
+impl SubDoc {
+    #[inline(always)]
+    pub fn compute_text_layout(
+        &mut self,
+        id: NodeId,
+        inputs: taffy::LayoutInput,
+    ) -> taffy::LayoutOutput {
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        taffy::compute_leaf_layout(
+            inputs,
+            &StyleHandle(unsafe { &mut *(self as *mut _) }, id),
+            |_, _| 0.0,
+            |known_dimensions, available_space| {
+                self.compute_text_layout_measure(id, inputs, known_dimensions, available_space)
+            },
+        )
+    }
+
+    fn compute_text_layout_measure(
+        &mut self,
+        id: NodeId,
+        inputs: taffy::LayoutInput,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<taffy::AvailableSpace>,
+    ) -> taffy::Size<f32> {
+        debug_assert!(!matches!(id.1, NodeType::Text));
+        let style = StyleHandle(unsafe { &mut *(self as *mut _) }, id);
+        let container_layout = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
+        let container_style = style.container_style();
+
+        let text_layout = &mut container_layout.TextLayoutObject;
+
+        // Determine width
+        let padding = style
+            .padding()
+            .resolve_or_zero(inputs.parent_size, |_, _| 0.0);
+        let border = style
+            .border()
+            .resolve_or_zero(inputs.parent_size, |_, _| 0.0);
+        let container_pb = padding + border;
+        let pbw = container_pb.horizontal_components().sum();
+
+        // todo
+        Size::ZERO
     }
 }

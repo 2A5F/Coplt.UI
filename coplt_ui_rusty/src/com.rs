@@ -233,6 +233,12 @@ pub struct NativeList<T0 /* T */> {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FontSet {
+    pub m_fallbacks: NativeList<*mut IFontFace>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridName {
     pub Id: i32,
     pub Type: GridNameType,
@@ -458,19 +464,19 @@ pub struct NLayoutContext {
     pub view_ctrl: *mut NNodeIdCtrl,
     pub text_ctrl: *mut NNodeIdCtrl,
     pub root_ctrl: *mut NNodeIdCtrl,
-    pub view_layout_data: *mut CommonLayoutData,
-    pub text_layout_data: *mut CommonLayoutData,
-    pub root_layout_data: *mut CommonLayoutData,
+    pub view_container_layout_data: *mut ContainerLayoutData,
+    pub _pad_container_layout_data: *mut (),
+    pub root_container_layout_data: *mut ContainerLayoutData,
     pub view_common_style_data: *mut CommonStyleData,
     pub text_common_style_data: *mut CommonStyleData,
     pub root_common_style_data: *mut CommonStyleData,
     pub view_childs_data: *mut ChildsData,
-    pub _pad_0: *mut (),
+    pub _pad_childs_data: *mut (),
     pub root_childs_data: *mut ChildsData,
     pub view_container_style_data: *mut ContainerStyleData,
-    pub _pad_1: *mut (),
+    pub _pad_container_style_data: *mut (),
     pub root_container_style_data: *mut ContainerStyleData,
-    pub text_style_data: *mut TextStyleData,
+    pub text_data: *mut TextData,
     pub root_root_data: *mut RootData,
     pub root_count: i32,
     pub view_count: i32,
@@ -506,14 +512,6 @@ pub struct FontMetrics {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet<NodeLocate>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct CommonLayoutData {
-    pub Layout: LayoutData,
-    pub FinalLayout: LayoutData,
-    pub LayoutCache: LayoutCache,
 }
 
 #[repr(C)]
@@ -557,8 +555,18 @@ pub struct CommonStyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct ContainerLayoutData {
+    pub TextLayoutObject: *mut ITextLayout,
+    pub FinalLayout: LayoutData,
+    pub Layout: LayoutData,
+    pub LayoutCache: LayoutCache,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ContainerStyleData {
     pub Grid: NativeArc<GridContainerStyle>,
+    pub FontSet: NativeArc<FontSet>,
     pub ScrollBarSize: f32,
     pub WidthValue: f32,
     pub HeightValue: f32,
@@ -577,6 +585,12 @@ pub struct ContainerStyleData {
     pub BorderLeftValue: f32,
     pub GapXValue: f32,
     pub GapYValue: f32,
+    pub TextColorR: f32,
+    pub TextColorG: f32,
+    pub TextColorB: f32,
+    pub TextColorA: f32,
+    pub TextSizeValue: f32,
+    pub TabSizeValue: f32,
     pub Container: Container,
     pub BoxSizing: BoxSizing,
     pub OverflowX: Overflow,
@@ -606,6 +620,8 @@ pub struct ContainerStyleData {
     pub AlignItems: AlignType,
     pub JustifyItems: AlignType,
     pub TextAlign: TextAlign,
+    pub TextSize: LengthType,
+    pub TabSize: LengthType,
 }
 
 #[repr(C)]
@@ -632,13 +648,8 @@ pub struct RootData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct TextStyleData {
-    pub TextColorR: f32,
-    pub TextColorG: f32,
-    pub TextColorB: f32,
-    pub TextColorA: f32,
-    pub TextSizeValue: f32,
-    pub TextSize: LengthType,
+pub struct TextData {
+    pub m_text: NativeList<u16>,
 }
 
 #[repr(C)]
@@ -702,4 +713,11 @@ pub struct IStub {
 }
 
 impl IStub {
+}
+
+#[repr(C)]
+pub struct ITextLayout {
+}
+
+impl ITextLayout {
 }

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
+using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
 using Coplt.UI.Trees.Modules;
 using Coplt.UI.Utilities;
@@ -17,6 +18,7 @@ public sealed partial class Document
     #region Fields
 
     internal readonly Template m_template;
+    internal readonly FontCollection m_system_font_collection = FontCollection.SystemCollection;
     // ReSharper disable once CollectionNeverQueried.Global
     internal readonly IModule[] m_modules;
     internal readonly Action[] m_modules_update;
@@ -63,12 +65,12 @@ public sealed partial class Document
         {
             Attach<RootData>(types: NodeTypes.Root, storage: StorageType.Pinned);
             Attach<ParentData>();
-            Attach<CommonLayoutData>(storage: StorageType.Pinned);
             Attach<CommonStyleData>(storage: StorageType.Pinned);
             Attach<CommonEventData>();
+            Attach<ContainerLayoutData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
             Attach<ChildsData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
             Attach<ContainerStyleData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
-            Attach<TextStyleData>(types: NodeTypes.Text, storage: StorageType.Pinned);
+            Attach<TextData>(types: NodeTypes.Text, storage: StorageType.Pinned);
             With<LayoutModule>();
         }
 

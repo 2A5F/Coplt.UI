@@ -20,8 +20,9 @@ public static unsafe partial class Access
 
         public ref CommonStyleData CommonStyle => ref Document.At<CommonStyleData>(Locate);
         public ref ContainerStyleData ContainerStyle => ref Document.At<ContainerStyleData>(Locate);
-        public ref CommonLayoutData CommonLayout => ref Document.At<CommonLayoutData>(Locate);
+        public ref ContainerLayoutData ContainerLayout => ref Document.At<ContainerLayoutData>(Locate);
         public ref ChildsData Childs => ref Document.At<ChildsData>(Locate);
+        public ref TextData TextData => ref Document.At<TextData>(Locate);
 
         public void Add(Node node)
         {
@@ -111,6 +112,20 @@ public static unsafe partial class Access
                 ref var style = ref node.CommonStyle;
                 style.GridRowStart = value;
                 style.GridRowEnd = value;
+            }
+        }
+
+        public string Text
+        {
+            get
+            {
+                ref var data = ref node.TextData;
+                return data.m_text.ToString();
+            }
+            set
+            {
+                ref var data = ref node.TextData;
+                data.SetText(value);
             }
         }
     }

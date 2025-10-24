@@ -24,23 +24,23 @@ public unsafe struct NLayoutContext
     public NNodeIdCtrl* text_ctrl;
     public NNodeIdCtrl* root_ctrl;
 
-    public CommonLayoutData* view_layout_data;
-    public CommonLayoutData* text_layout_data;
-    public CommonLayoutData* root_layout_data;
+    public ContainerLayoutData* view_container_layout_data;
+    public void* _pad_container_layout_data;
+    public ContainerLayoutData* root_container_layout_data;
 
     public CommonStyleData* view_common_style_data;
     public CommonStyleData* text_common_style_data;
     public CommonStyleData* root_common_style_data;
 
     public ChildsData* view_childs_data;
-    public void* _pad_0;
+    public void* _pad_childs_data;
     public ChildsData* root_childs_data;
     
     public ContainerStyleData* view_container_style_data;
-    public void* _pad_1;
+    public void* _pad_container_style_data;
     public ContainerStyleData* root_container_style_data;
 
-    public TextStyleData* text_style_data;
+    public TextData* text_data;
 
     public RootData* root_root_data;
 

@@ -19,6 +19,8 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeList;
 
+    struct FontSet;
+
     struct GridName;
 
     struct GridPlacement;
@@ -69,9 +71,9 @@ namespace Coplt {
 
     struct ChildsData;
 
-    struct CommonLayoutData;
-
     struct CommonStyleData;
+
+    struct ContainerLayoutData;
 
     struct ContainerStyleData;
 
@@ -79,7 +81,7 @@ namespace Coplt {
 
     struct RootData;
 
-    struct TextStyleData;
+    struct TextData;
 
     struct NodeId;
 
@@ -98,6 +100,8 @@ namespace Coplt {
     struct ILib;
 
     struct IStub;
+
+    struct ITextLayout;
 
     enum class AlignType : ::Coplt::u8
     {
@@ -480,6 +484,11 @@ namespace Coplt {
         T0 m_data;
     };
 
+    struct FontSet
+    {
+        ::Coplt::NativeList<IFontFace*> m_fallbacks;
+    };
+
     struct GridTemplateArea
     {
         ::Coplt::GridName Id;
@@ -535,19 +544,19 @@ namespace Coplt {
         ::Coplt::NNodeIdCtrl* view_ctrl;
         ::Coplt::NNodeIdCtrl* text_ctrl;
         ::Coplt::NNodeIdCtrl* root_ctrl;
-        ::Coplt::CommonLayoutData* view_layout_data;
-        ::Coplt::CommonLayoutData* text_layout_data;
-        ::Coplt::CommonLayoutData* root_layout_data;
+        ::Coplt::ContainerLayoutData* view_container_layout_data;
+        void* _pad_container_layout_data;
+        ::Coplt::ContainerLayoutData* root_container_layout_data;
         ::Coplt::CommonStyleData* view_common_style_data;
         ::Coplt::CommonStyleData* text_common_style_data;
         ::Coplt::CommonStyleData* root_common_style_data;
         ::Coplt::ChildsData* view_childs_data;
-        void* _pad_0;
+        void* _pad_childs_data;
         ::Coplt::ChildsData* root_childs_data;
         ::Coplt::ContainerStyleData* view_container_style_data;
-        void* _pad_1;
+        void* _pad_container_style_data;
         ::Coplt::ContainerStyleData* root_container_style_data;
-        ::Coplt::TextStyleData* text_style_data;
+        ::Coplt::TextData* text_data;
         ::Coplt::RootData* root_root_data;
         ::Coplt::i32 root_count;
         ::Coplt::i32 view_count;
@@ -565,13 +574,6 @@ namespace Coplt {
     struct ChildsData
     {
         ::Coplt::FFIOrderedSet<::Coplt::NodeLocate> m_childs;
-    };
-
-    struct CommonLayoutData
-    {
-        ::Coplt::LayoutData Layout;
-        ::Coplt::LayoutData FinalLayout;
-        ::Coplt::LayoutCache LayoutCache;
     };
 
     struct CommonStyleData
@@ -612,9 +614,18 @@ namespace Coplt {
         ::Coplt::LengthType FlexBasis;
     };
 
+    struct ContainerLayoutData
+    {
+        ITextLayout* TextLayoutObject;
+        ::Coplt::LayoutData FinalLayout;
+        ::Coplt::LayoutData Layout;
+        ::Coplt::LayoutCache LayoutCache;
+    };
+
     struct ContainerStyleData
     {
         ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
+        ::Coplt::NativeArc<::Coplt::FontSet> FontSet;
         ::Coplt::f32 ScrollBarSize;
         ::Coplt::f32 WidthValue;
         ::Coplt::f32 HeightValue;
@@ -633,6 +644,12 @@ namespace Coplt {
         ::Coplt::f32 BorderLeftValue;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
+        ::Coplt::f32 TextColorR;
+        ::Coplt::f32 TextColorG;
+        ::Coplt::f32 TextColorB;
+        ::Coplt::f32 TextColorA;
+        ::Coplt::f32 TextSizeValue;
+        ::Coplt::f32 TabSizeValue;
         ::Coplt::Container Container;
         ::Coplt::BoxSizing BoxSizing;
         ::Coplt::Overflow OverflowX;
@@ -662,6 +679,8 @@ namespace Coplt {
         ::Coplt::AlignType AlignItems;
         ::Coplt::AlignType JustifyItems;
         ::Coplt::TextAlign TextAlign;
+        ::Coplt::LengthType TextSize;
+        ::Coplt::LengthType TabSize;
     };
 
     struct GridContainerStyle
@@ -684,14 +703,9 @@ namespace Coplt {
         bool UseRounding;
     };
 
-    struct TextStyleData
+    struct TextData
     {
-        ::Coplt::f32 TextColorR;
-        ::Coplt::f32 TextColorG;
-        ::Coplt::f32 TextColorB;
-        ::Coplt::f32 TextColorA;
-        ::Coplt::f32 TextSizeValue;
-        ::Coplt::LengthType TextSize;
+        ::Coplt::NativeList<::Coplt::char16> m_text;
     };
 
     struct NodeLocate

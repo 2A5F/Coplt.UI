@@ -10,6 +10,8 @@ public partial record struct ContainerStyleData()
 {
     [Drop]
     public NativeArc<GridContainerStyle> Grid;
+    [Drop]
+    public NativeArc<FontSet> FontSet;
 
     public float ScrollBarSize = 0;
 
@@ -36,6 +38,14 @@ public partial record struct ContainerStyleData()
 
     public float GapXValue = 0;
     public float GapYValue = 0;
+
+    public float TextColorR = 1;
+    public float TextColorG = 1;
+    public float TextColorB = 1;
+    public float TextColorA = 1;
+
+    public float TextSizeValue = 16;
+    public float TabSizeValue = 4;
 
     public Container Container = Container.Flex;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
@@ -77,6 +87,9 @@ public partial record struct ContainerStyleData()
     public AlignType JustifyItems = AlignType.None;
 
     public TextAlign TextAlign = TextAlign.Auto;
+
+    public LengthType TextSize = LengthType.Fixed;
+    public LengthType TabSize = LengthType.Percent;
 }
 
 [Dropping]

@@ -69,6 +69,11 @@ namespace Coplt {
         COPLT_COM_METHOD(Some, void, (::Coplt::LayoutData* layout), layout);
     };
 
+    COPLT_COM_INTERFACE(ITextLayout, "f558ba07-1f1d-4c32-8229-134271b17083", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_ITextLayout
+    };
+
 } // namespace Coplt
 
 #endif //COPLT_UI_INTERFACE_H

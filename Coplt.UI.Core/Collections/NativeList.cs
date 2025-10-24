@@ -195,7 +195,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
 
     #endregion
 
-    #region Dispose
+    #region Free
 
     [Drop]
     private void Free()
@@ -233,6 +233,23 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
     }
 
     public void Add(T item) => UnsafeAdd() = item;
+
+    #endregion
+
+    #region AddRange
+
+    public void AddRange(ReadOnlySpan<T> data)
+    {
+        if (data.IsEmpty) return;
+
+        var index = m_size;
+
+        var new_count = data.Length + m_size;
+        if (new_count > m_cap) Grow(new_count);
+        m_size = new_count;
+
+        data.CopyTo(AsSpan[index..]);
+    }
 
     #endregion
 
@@ -421,6 +438,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
 
     public override string ToString()
     {
+        if (typeof(T) == typeof(char)) return AsSpan.ToString();
         var sb = new StringBuilder();
         sb.Append('[');
         for (var i = 0; i < m_size; i++)

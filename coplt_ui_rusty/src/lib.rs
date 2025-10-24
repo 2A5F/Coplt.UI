@@ -56,6 +56,9 @@ mod com_impl {
     unsafe impl<T> Send for com::NativeList<T> {}
     unsafe impl<T> Sync for com::NativeList<T> {}
 
+    unsafe impl<T> Send for col::OrderedSet<T> {}
+    unsafe impl<T> Sync for col::OrderedSet<T> {}
+
     impl Debug for com::GridTemplateComponent {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let mut a = f.debug_tuple("GridTemplateComponent");

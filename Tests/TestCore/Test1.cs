@@ -29,8 +29,27 @@ public class Tests1
         };
         node.Add(child);
         doc.Update();
-        Console.WriteLine(node.CommonLayout.FinalLayout);
+        Console.WriteLine(node.ContainerLayout.FinalLayout);
         Console.WriteLine();
-        Console.WriteLine(child.CommonLayout.FinalLayout);
+        Console.WriteLine(child.ContainerLayout.FinalLayout);
+    }
+
+    [Test]
+    public void Test2()
+    {
+        using var doc = new Document.Builder()
+            .Create();
+        var node = new Access.Node(doc, NodeType.Root)
+        {
+            Width = 100, Height = 100,
+            Container = Container.Text,
+        };
+        var child = new Access.Node(doc, NodeType.Text)
+        {
+            Text = "123",
+        };
+        node.Add(child);
+        doc.Update();
+        Console.WriteLine(node.ContainerLayout.FinalLayout);
     }
 }

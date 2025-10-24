@@ -17,6 +17,7 @@ namespace Coplt {
     struct ILayout;
     struct ILib;
     struct IStub;
+    struct ITextLayout;
 
 } // namespace Coplt
 
@@ -921,6 +922,75 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IStub>
     {
         COPLT_COM_PVTB(IStub, self)->f_Some(self, p0);
     }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::ITextLayout>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ITextLayout
+{
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::ITextLayout>
+{
+    using VirtualTable = VirtualTable<::Coplt::ITextLayout>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("f558ba07-1f1d-4c32-8229-134271b17083");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::ITextLayout>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ITextLayout*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+    };
+
+    template <std::derived_from<::Coplt::ITextLayout> Base = ::Coplt::ITextLayout>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ITextLayout
+{
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_ITextLayout\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::ITextLayout;\
+\
+    explicit ITextLayout(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::ITextLayout>
+{
 };
 
 #endif //COPLT_UI_DETAILS_H
