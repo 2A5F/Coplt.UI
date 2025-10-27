@@ -48,6 +48,17 @@
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/Config.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/Config.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/CppOutput.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Macros.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Macros.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Object.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Object.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/co_com.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/co_com.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -241,6 +252,9 @@
       <workItem from="1760674471049" duration="2442000" />
       <workItem from="1760678006779" duration="390000" />
       <workItem from="1761202846667" duration="541000" />
+      <workItem from="1761545017510" duration="4491000" />
+      <workItem from="1761549661008" duration="4996000" />
+      <workItem from="1761554970374" duration="1943000" />
     </task>
     <servers />
   </component>

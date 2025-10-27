@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Com.h"
 #include "Defines.h"
 #include "Backend.h"
@@ -48,22 +48,38 @@ namespace Coplt
         }
     };
 
-    struct LibUi final : ComObject<ILib>
+    struct LibUi final : ComImpl<LibUi, ILib>
     {
         LoggerData m_logger{};
         Rc<TextBackend> m_backend{};
 
-        void Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop) override;
-        Str8 Impl_GetCurrentErrorMessage() override;
+        COPLT_IMPL_START
 
-        void* Impl_Alloc(i32 size, i32 align) const override;
-        void Impl_Free(void* ptr, i32 align) const override;
-        void* Impl_ZAlloc(i32 size, i32 align) const override;
-        void* Impl_ReAlloc(void* ptr, i32 size, i32 align) const override;
+        COPLT_FORCE_INLINE
+        void Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop);
 
-        HResult Impl_GetSystemFontCollection(IFontCollection** fc) override;
+        COPLT_FORCE_INLINE
+        Str8 Impl_GetCurrentErrorMessage();
 
-        ILayout* Impl_CreateLayout() override;
+        COPLT_FORCE_INLINE
+        void* Impl_Alloc(i32 size, i32 align) const;
+
+        COPLT_FORCE_INLINE
+        void Impl_Free(void* ptr, i32 align) const;
+
+        COPLT_FORCE_INLINE
+        void* Impl_ZAlloc(i32 size, i32 align) const;
+
+        COPLT_FORCE_INLINE
+        void* Impl_ReAlloc(void* ptr, i32 size, i32 align) const;
+
+        COPLT_FORCE_INLINE
+        HResult Impl_GetSystemFontCollection(IFontCollection** fc);
+
+        COPLT_FORCE_INLINE
+        ILayout* Impl_CreateLayout();
+
+        COPLT_IMPL_END
     };
 
     extern "C" COPLT_EXPORT ILib* Coplt_CreateLibUi();

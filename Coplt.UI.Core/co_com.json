@@ -8,7 +8,14 @@
       "co_com_path": "CoCom.h",
       "proj_name": "COPLT_UI",
       "namespace": "Coplt",
-      "path": "../Coplt.Ui.Native/api"
+      "path": "../Coplt.Ui.Native/api",
+      "object_path": "../Coplt.Ui.Native/src",
+      "objects": {
+        "lib.h": {
+          "name": "LibUi",
+          "impl": "ILib"
+        }
+      }
     },
     {
       "type": "rust",
