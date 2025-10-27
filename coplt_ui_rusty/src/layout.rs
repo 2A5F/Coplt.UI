@@ -417,6 +417,12 @@ impl RoundTree for SubDoc {
         let data = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
         set_layout(&mut data.FinalLayout, layout);
     }
+
+    #[inline(always)]
+    fn should_round(&self, node_id: taffy::NodeId) -> bool {
+        let id = NodeId::from(node_id);
+        return matches!(id.1, NodeType::Root | NodeType::View);
+    }
 }
 
 impl CacheTree for SubDoc {

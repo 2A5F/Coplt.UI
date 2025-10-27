@@ -1,11 +1,17 @@
-#pragma once
+﻿#pragma once
 
-#include "../api/Interface.h"
+#include "Com.h"
 
 namespace Coplt
 {
-    struct Layout final : ComObject<ILayout>
+    struct Layout final : ComImpl<Layout, ILayout>
     {
-        HResult Impl_Calc(NLayoutContext* ctx) override;
+        COPLT_IMPL_START
+
+        COPLT_FORCE_INLINE
+        HResult Impl_Calc(NLayoutContext* ctx);
+
+        COPLT_IMPL_END
+        
     };
-}
+} // namespace Coplt

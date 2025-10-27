@@ -13,31 +13,73 @@
 
 namespace Coplt
 {
-    inline void OnCatchException(const std::exception& e, const cpptrace::stacktrace& stacktrace)
+    COPLT_NO_INLINE
+    inline void OnCatchException(const std::exception& e)
     {
-        auto msg = fmt::format("{} at\n{}", e.what(), stacktrace.to_string());
-        SetCurrentErrorMessage(std::move(msg));
+        SetCurrentErrorMessage(std::string(e.what()));
     }
 
-    void OnCatchException(auto r, const std::exception& e, const cpptrace::stacktrace& stacktrace)
+    COPLT_NO_INLINE
+    inline void OnCatchException(const NullPointerError& e)
     {
-        OnCatchException(e, stacktrace);
+        SetCurrentErrorMessage(e.build_message());
+    }
 
-        if constexpr (std::is_same_v<decltype(r), HResult*>)
+    COPLT_NO_INLINE
+    inline void OnCatchException(const Exception& e)
+    {
+        SetCurrentErrorMessage(e.ToString());
+    }
+
+    template <class T>
+    COPLT_FORCE_INLINE auto DefaultReturnOnError()
+    {
+        if constexpr (std::is_same_v<T, void>)
         {
-            *r = HResult(HResultE::Fail);
         }
-        else if constexpr (std::is_same_v<decltype(r), HResult**>)
+        else if constexpr (std::is_same_v<T, HResult>)
         {
-            **r = HResult(HResultE::Fail);
+            return HResult(HResultE::Fail);
+        }
+        else if constexpr (std::is_same_v<T, HResultE>)
+        {
+            return HResultE::Fail;
+        }
+        else if constexpr (std::is_same_v<T, HRESULT>)
+        {
+            return E_FAIL;
+        }
+        else
+        {
+            T t;
+            return t;
+        }
+    }
+
+    template <std::invocable F>
+    auto feb(F&& f) noexcept
+    {
+        using return_type = std::invoke_result_t<F>;
+        try
+        {
+            return std::invoke(std::forward<F>(f));
+        }
+        catch (const Exception& e)
+        {
+            OnCatchException(e);
+            return DefaultReturnOnError<return_type>();
+        }
+        catch (const NullPointerError& e)
+        {
+            OnCatchException(e);
+            return DefaultReturnOnError<return_type>();
+        }
+        catch (const std::exception& e)
+        {
+            OnCatchException(e);
+            return DefaultReturnOnError<return_type>();
         }
     }
 }
-
-#define COPLT_COM_BEFORE_VIRTUAL_CALL(INTERFACE, METHOD, RET_TYPE)\
-CPPTRACE_TRY {
-#define COPLT_COM_AFTER_VIRTUAL_CALL(INTERFACE, METHOD, RET_TYPE)\
-} CPPTRACE_CATCH(const std::exception& e) \
-{  ::Coplt::OnCatchException(&r, e, ::cpptrace::from_current_exception()); }
 
 #include "../api/Interface.h"

@@ -2,6 +2,9 @@ project(Coplt.Ui.Native LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT lto_supported OUTPUT lto_error)
+
 add_definitions(-DUNICODE)
 add_definitions(-D_UNICODE)
 add_definitions(-DCPPTRACE_STATIC_DEFINE)
@@ -12,36 +15,15 @@ find_package(harfbuzz CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
-if (WIN32)
-    set(BACKEND_SOURCES
-            src/dwrite/Backend.cc
-            src/dwrite/Backend.h
-            src/dwrite/SystemFontCollection.cc
-            src/dwrite/SystemFontCollection.h
-            src/dwrite/FontFamily.cc
-            src/dwrite/FontFamily.h
-            src/dwrite/Error.h
-            src/dwrite/Font.cc
-            src/dwrite/Font.h
-            src/FontFace.cc
-            src/FontFace.h
-            src/dwrite/FontFace.cc
-            src/dwrite/FontFace.h
-            src/Layout.cc
-            src/Layout.h
-    )
-endif ()
-
-add_library(${PROJECT_NAME} SHARED
-        src/lib.cc
-        src/lib.h
-        src/Error.cc
-        src/Error.h
-        src/Backend.h
-        ${BACKEND_SOURCES}
-)
+add_library(${PROJECT_NAME} SHARED src/Build.cc)
 set_property(TARGET ${PROJECT_NAME} PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+if (lto_supported)
+    message(STATUS "IPO / LTO enabled")
+    set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else ()
+    message(STATUS "IPO / LTO not supported: <${lto_error}>")
+endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE
         Coplt::Com
         coplt_ui_rusty
@@ -53,4 +35,3 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE Dwrite.lib)
 endif ()
-

@@ -94,28 +94,12 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFont>
 
         static ::Coplt::NFontInfo const* COPLT_CDECL f_get_Info(const ::Coplt::IFont* self) noexcept
         {
-            ::Coplt::NFontInfo const* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFont, get_Info, ::Coplt::NFontInfo const*)
-            #endif
-            r = AsImpl(self)->Impl_get_Info();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFont, get_Info, ::Coplt::NFontInfo const*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_get_Info();
         }
 
         static ::Coplt::i32 COPLT_CDECL f_CreateFace(const ::Coplt::IFont* self, COPLT_OUT IFontFace** p0) noexcept
         {
-            ::Coplt::i32 r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::i32)
-            #endif
-            r = ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_CreateFace(p0));
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFont, CreateFace, ::Coplt::i32)
-            #endif
-            return r;
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_CreateFace(p0));
         }
     };
 
@@ -252,40 +236,17 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontCollection>
 
         static IFontFamily* const* COPLT_CDECL f_GetFamilies(const ::Coplt::IFontCollection* self, COPLT_OUT ::Coplt::u32* p0) noexcept
         {
-            IFontFamily* const* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontCollection, GetFamilies, IFontFamily* const*)
-            #endif
-            r = AsImpl(self)->Impl_GetFamilies(p0);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontCollection, GetFamilies, IFontFamily* const*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_GetFamilies(p0);
         }
 
         static void COPLT_CDECL f_ClearNativeFamiliesCache(::Coplt::IFontCollection* self) noexcept
         {
-            struct { } r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontCollection, ClearNativeFamiliesCache, void)
-            #endif
             AsImpl(self)->Impl_ClearNativeFamiliesCache();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontCollection, ClearNativeFamiliesCache, void)
-            #endif
         }
 
         static ::Coplt::u32 COPLT_CDECL f_FindDefaultFamily(::Coplt::IFontCollection* self) noexcept
         {
-            ::Coplt::u32 r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontCollection, FindDefaultFamily, ::Coplt::u32)
-            #endif
-            r = AsImpl(self)->Impl_FindDefaultFamily();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontCollection, FindDefaultFamily, ::Coplt::u32)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_FindDefaultFamily();
         }
     };
 
@@ -530,65 +491,27 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFamily>
 
         static ::Coplt::Str16 const* COPLT_CDECL f_GetLocalNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
         {
-            ::Coplt::Str16 const* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, GetLocalNames, ::Coplt::Str16 const*)
-            #endif
-            r = AsImpl(self)->Impl_GetLocalNames(p0);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, GetLocalNames, ::Coplt::Str16 const*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_GetLocalNames(p0);
         }
 
         static ::Coplt::FontFamilyNameInfo const* COPLT_CDECL f_GetNames(const ::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
         {
-            ::Coplt::FontFamilyNameInfo const* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, GetNames, ::Coplt::FontFamilyNameInfo const*)
-            #endif
-            r = AsImpl(self)->Impl_GetNames(p0);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, GetNames, ::Coplt::FontFamilyNameInfo const*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_GetNames(p0);
         }
 
         static void COPLT_CDECL f_ClearNativeNamesCache(::Coplt::IFontFamily* self) noexcept
         {
-            struct { } r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, ClearNativeNamesCache, void)
-            #endif
             AsImpl(self)->Impl_ClearNativeNamesCache();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, ClearNativeNamesCache, void)
-            #endif
         }
 
         static ::Coplt::NFontPair const* COPLT_CDECL f_GetFonts(::Coplt::IFontFamily* self, COPLT_OUT ::Coplt::u32* p0) noexcept
         {
-            ::Coplt::NFontPair const* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, GetFonts, ::Coplt::NFontPair const*)
-            #endif
-            r = AsImpl(self)->Impl_GetFonts(p0);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, GetFonts, ::Coplt::NFontPair const*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_GetFonts(p0);
         }
 
         static void COPLT_CDECL f_ClearNativeFontsCache(::Coplt::IFontFamily* self) noexcept
         {
-            struct { } r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFamily, ClearNativeFontsCache, void)
-            #endif
             AsImpl(self)->Impl_ClearNativeFontsCache();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFamily, ClearNativeFontsCache, void)
-            #endif
         }
     };
 
@@ -769,15 +692,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILayout>
 
         static ::Coplt::i32 COPLT_CDECL f_Calc(::Coplt::ILayout* self, ::Coplt::NLayoutContext* p0) noexcept
         {
-            ::Coplt::i32 r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::i32)
-            #endif
-            r = ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Calc(p0));
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILayout, Calc, ::Coplt::i32)
-            #endif
-            return r;
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Calc(p0));
         }
     };
 
@@ -916,103 +831,43 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
 
         static void COPLT_CDECL f_SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
         {
-            struct { } r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, SetLogger, void)
-            #endif
             AsImpl(self)->Impl_SetLogger(p0, p1, p2);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, SetLogger, void)
-            #endif
         }
 
         static ::Coplt::Str8* COPLT_CDECL f_GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept
         {
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, GetCurrentErrorMessage, ::Coplt::Str8)
-            #endif
             *r = AsImpl(self)->Impl_GetCurrentErrorMessage();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetCurrentErrorMessage, ::Coplt::Str8)
-            #endif
             return r;
         }
 
         static void* COPLT_CDECL f_Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
         {
-            void* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, Alloc, void*)
-            #endif
-            r = AsImpl(self)->Impl_Alloc(p0, p1);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, Alloc, void*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_Alloc(p0, p1);
         }
 
         static void COPLT_CDECL f_Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept
         {
-            struct { } r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, Free, void)
-            #endif
             AsImpl(self)->Impl_Free(p0, p1);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, Free, void)
-            #endif
         }
 
         static void* COPLT_CDECL f_ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
         {
-            void* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ZAlloc, void*)
-            #endif
-            r = AsImpl(self)->Impl_ZAlloc(p0, p1);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ZAlloc, void*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_ZAlloc(p0, p1);
         }
 
         static void* COPLT_CDECL f_ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept
         {
-            void* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ReAlloc, void*)
-            #endif
-            r = AsImpl(self)->Impl_ReAlloc(p0, p1, p2);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ReAlloc, void*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_ReAlloc(p0, p1, p2);
         }
 
         static ::Coplt::i32 COPLT_CDECL f_GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
         {
-            ::Coplt::i32 r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::i32)
-            #endif
-            r = ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_GetSystemFontCollection(p0));
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetSystemFontCollection, ::Coplt::i32)
-            #endif
-            return r;
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_GetSystemFontCollection(p0));
         }
 
         static ILayout* COPLT_CDECL f_CreateLayout(::Coplt::ILib* self) noexcept
         {
-            ILayout* r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, CreateLayout, ILayout*)
-            #endif
-            r = AsImpl(self)->Impl_CreateLayout();
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, CreateLayout, ILayout*)
-            #endif
-            return r;
+            return AsImpl(self)->Impl_CreateLayout();
         }
     };
 
@@ -1247,14 +1102,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
 
         static void COPLT_CDECL f_Some(::Coplt::IStub* self, ::Coplt::LayoutData* p0) noexcept
         {
-            struct { } r;
-            #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-            COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IStub, Some, void)
-            #endif
             AsImpl(self)->Impl_Some(p0);
-            #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-            COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IStub, Some, void)
-            #endif
         }
     };
 

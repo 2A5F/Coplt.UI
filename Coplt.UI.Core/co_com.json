@@ -14,6 +14,26 @@
         "lib.h": {
           "name": "LibUi",
           "impl": "ILib"
+        },
+        "Layout.h": {
+          "name": "Layout",
+          "impl": "ILayout"
+        },
+        "dwrite/SystemFontCollection.h": {
+          "name": "SystemFontCollection",
+          "impl": "IFontCollection"
+        },
+        "dwrite/FontFamily.h": {
+          "name": "FontFamily",
+          "impl": "IFontFamily"
+        },
+        "dwrite/Font.h": {
+          "name": "Font",
+          "impl": "IFont"
+        },
+        "dwrite/FontFace.h": {
+          "name": "DWriteFontFace",
+          "impl": "IFontFace"
         }
       }
     },

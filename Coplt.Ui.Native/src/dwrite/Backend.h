@@ -5,7 +5,7 @@
 
 namespace Coplt
 {
-    struct TextBackend : ComObject<IUnknown>
+    struct TextBackend : RefCount<TextBackend>
     {
         Rc<IDWriteFactory7> m_dw_factory;
 

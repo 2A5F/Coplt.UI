@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <dwrite_3.h>
 
@@ -9,7 +9,7 @@
 
 namespace Coplt
 {
-    struct FontFamily final : ComObject<IFontFamily>
+    struct FontFamily final : ComImpl<FontFamily, IFontFamily>
     {
         Rc<IDWriteFontFamily2> m_family;
 
@@ -27,10 +27,23 @@ namespace Coplt
             Rc<IDWriteFontFamily2>& family
         );
 
-        const Str16* Impl_GetLocalNames(u32* length) const override;
-        const FontFamilyNameInfo* Impl_GetNames(u32* length) const override;
-        void Impl_ClearNativeNamesCache() override;
-        NFontPair const* Impl_GetFonts(u32* length) override;
-        void Impl_ClearNativeFontsCache() override;
+        COPLT_IMPL_START
+
+        COPLT_FORCE_INLINE
+        Str16 const* Impl_GetLocalNames(COPLT_OUT u32* length) const;
+
+        COPLT_FORCE_INLINE
+        FontFamilyNameInfo const* Impl_GetNames(COPLT_OUT u32* length) const;
+
+        COPLT_FORCE_INLINE
+        void Impl_ClearNativeNamesCache();
+
+        COPLT_FORCE_INLINE
+        NFontPair const* Impl_GetFonts(COPLT_OUT u32* length);
+
+        COPLT_FORCE_INLINE
+        void Impl_ClearNativeFontsCache();
+
+        COPLT_IMPL_END
     };
 }

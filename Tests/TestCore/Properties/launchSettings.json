@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TestCore": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

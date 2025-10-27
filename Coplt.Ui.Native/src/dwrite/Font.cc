@@ -88,6 +88,9 @@ NFontInfo const* Font::Impl_get_Info() const
 
 HResult Font::Impl_CreateFace(IFontFace** face) const
 {
-    *face = new DWriteFontFace(m_font);
-    return HResultE::Ok;
+    return feb([&]
+    {
+        *face = new DWriteFontFace(m_font);
+        return HResultE::Ok;
+    });
 }

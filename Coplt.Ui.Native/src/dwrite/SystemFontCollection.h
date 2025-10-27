@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <dwrite_3.h>
 
@@ -9,7 +9,7 @@ namespace Coplt
 {
     struct TextBackend;
 
-    struct SystemFontCollection final : ComObject<IFontCollection>
+    struct SystemFontCollection final : ComImpl<SystemFontCollection, IFontCollection>
     {
         Rc<IDWriteFactory7> m_dw_factory;
         Rc<IDWriteFontCollection3> m_collection;
@@ -25,9 +25,17 @@ namespace Coplt
 
         static Rc<SystemFontCollection> Create(const TextBackend* backend);
 
-        IFontFamily* const* Impl_GetFamilies(u32* count) const override;
-        void Impl_ClearNativeFamiliesCache() override;
+        COPLT_IMPL_START
 
-        u32 Impl_FindDefaultFamily() override;
+        COPLT_FORCE_INLINE
+        IFontFamily* const* Impl_GetFamilies(COPLT_OUT u32* count) const;
+
+        COPLT_FORCE_INLINE
+        void Impl_ClearNativeFamiliesCache();
+
+        COPLT_FORCE_INLINE
+        u32 Impl_FindDefaultFamily();
+
+        COPLT_IMPL_END
     };
 }

@@ -61,21 +61,23 @@ void* LibUi::Impl_ReAlloc(void* ptr, const i32 size, const i32 align) const
 
 HResult LibUi::Impl_GetSystemFontCollection(IFontCollection** fc)
 {
-    if (!m_backend)
-        if (const auto hr = TextBackend::Create(m_backend); hr.IsError()) return hr;
-    Rc<IFontCollection> out{};
-    const auto hr = m_backend->GetSystemFontCollection(out);
-    if (hr.IsSuccess()) *fc = out.leak();
-    return hr;
+    return feb([this, fc]
+    {
+        if (!m_backend)
+            if (const auto hr = TextBackend::Create(m_backend); hr.IsError()) return hr;
+        Rc<IFontCollection> out{};
+        const auto hr = m_backend->GetSystemFontCollection(out);
+        if (hr.IsSuccess()) *fc = out.leak();
+        return hr;
+    });
 }
 
 ILayout* LibUi::Impl_CreateLayout()
 {
-    return new Layout();
+    return feb([] { return new Layout(); });
 }
 
 ILib* Coplt::Coplt_CreateLibUi()
 {
-    hb_version_string();
     return new LibUi();
 }

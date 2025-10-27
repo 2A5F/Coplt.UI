@@ -76,19 +76,24 @@ NFontPair const* FontFamily::Impl_GetFonts(u32* length)
 {
     if (!m_has_fonts)
     {
-        const auto num_fonts = m_family->GetFontCount();
-        m_fonts.reserve(num_fonts);
-        m_p_fonts.reserve(num_fonts);
-        for (u32 i = 0; i < num_fonts; ++i)
+        return feb([&]
         {
-            Rc<IDWriteFont3> d_font;
-            if (const auto r = m_family->GetFont(i, d_font.put()); FAILED(r))
-                throw ComException(r, "Failed to get font");
-            Rc font(new Font(d_font));
-            m_p_fonts.push_back(NFontPair{font.get(), &font->m_info});
-            m_fonts.push_back(std::move(font));
-        }
-        m_has_fonts = true;
+            const auto num_fonts = m_family->GetFontCount();
+            m_fonts.reserve(num_fonts);
+            m_p_fonts.reserve(num_fonts);
+            for (u32 i = 0; i < num_fonts; ++i)
+            {
+                Rc<IDWriteFont3> d_font;
+                if (const auto r = m_family->GetFont(i, d_font.put()); FAILED(r))
+                    throw ComException(r, "Failed to get font");
+                Rc font(new Font(d_font));
+                m_p_fonts.push_back(NFontPair{font.get(), &font->m_info});
+                m_fonts.push_back(std::move(font));
+            }
+            m_has_fonts = true;
+            *length = m_p_fonts.size();
+            return m_p_fonts.data();
+        });
     }
     *length = m_p_fonts.size();
     return m_p_fonts.data();
