@@ -67,7 +67,7 @@ u32 SystemFontCollection::Impl_FindDefaultFamily()
             sizeof(NONCLIENTMETRICS),
             &ncm,
             0))
-            throw std::runtime_error("Failed to get non-client metrics");
+            throw Exception("Failed to get non-client metrics");
 
         const auto face_name = ncm.lfMessageFont.lfFaceName;
         u32 index;

@@ -129,4 +129,13 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
     }
 
     #endregion
+
+    #region bool
+
+    public static bool operator true(NativeArc<T> self) => self.m_ptr != null;
+    public static bool operator false(NativeArc<T> self) => self.m_ptr == null;
+
+    public static bool operator !(NativeArc<T> self) => self.m_ptr == null;
+
+    #endregion
 }

@@ -72,7 +72,7 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IStub
 
-        COPLT_COM_METHOD(Some, void, ());
+        COPLT_COM_METHOD(Some, void, (::Coplt::NodeType a), a);
     };
 
     COPLT_COM_INTERFACE(ITextLayout, "f558ba07-1f1d-4c32-8229-134271b17083", ::Coplt::IUnknown)

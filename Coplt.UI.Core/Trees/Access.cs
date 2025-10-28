@@ -120,7 +120,7 @@ public static unsafe partial class Access
             get
             {
                 ref var data = ref node.TextData;
-                return data.m_text.ToString();
+                return data.GetText();
             }
             set
             {

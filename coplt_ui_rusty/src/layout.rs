@@ -13,7 +13,8 @@ use taffy::{
 use crate::{
     col::{OrderedSet, ordered_set},
     com::{
-        self, CommonStyleData, ContainerLayoutData, ContainerStyleData, GridName, GridNameType, ILib, NLayoutContext, NodeLocate, RootData
+        self, CommonStyleData, ContainerLayoutData, ContainerStyleData, GridName, GridNameType,
+        ILib, NLayoutContext, NodeLocate, NodeType, RootData,
     },
 };
 
@@ -71,10 +72,10 @@ macro_rules! c_available_space {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn coplt_ui_layout_calc(lib: *mut ILib, ctx: *mut NLayoutContext) -> HResult {
+pub extern "C" fn coplt_ui_layout_calc(layout: *mut (), ctx: *mut NLayoutContext) -> HResult {
     unsafe {
         for root_index in (*ctx).roots() {
-            let mut sub_doc = SubDoc(ctx, *root_index);
+            let mut sub_doc = SubDoc(ctx, *root_index, layout);
             let root_data = *sub_doc.root_data();
             let available_space = taffy::Size {
                 width: c_available_space!(root_data.AvailableSpaceX),
@@ -98,14 +99,17 @@ impl NLayoutContext {
     }
 }
 
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-enum NodeType {
-    View = 0,
-    Text = 1,
-    Root = 2,
+impl Eq for NodeType {}
+impl Ord for NodeType {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        (*self as u8).cmp(&(*other as u8))
+    }
 }
-
+impl Hash for NodeType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+    }
+}
 impl From<u8> for NodeType {
     #[inline(always)]
     fn from(value: u8) -> Self {
@@ -156,7 +160,7 @@ impl From<taffy::NodeId> for NodeId {
 }
 
 #[derive(Debug)]
-struct SubDoc(*mut NLayoutContext, i32);
+struct SubDoc(*mut NLayoutContext, i32, *mut ());
 
 macro_rules! childs_data {
     [ $self:ident.$s:ident => $i:expr ] => {
@@ -1816,23 +1820,27 @@ impl SubDoc {
         available_space: Size<taffy::AvailableSpace>,
     ) -> taffy::Size<f32> {
         debug_assert!(!matches!(id.1, NodeType::Text));
-        let style = StyleHandle(unsafe { &mut *(self as *mut _) }, id);
-        let container_layout = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
-        let container_style = style.container_style();
+        // let style = StyleHandle(unsafe { &mut *(self as *mut _) }, id);
+        // let container_layout = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
+        // let container_style = style.container_style();
 
-        let text_layout = &mut container_layout.TextLayoutObject;
+        // let text_layout = &mut container_layout.TextLayoutObject;
 
-        // Determine width
-        let padding = style
-            .padding()
-            .resolve_or_zero(inputs.parent_size, |_, _| 0.0);
-        let border = style
-            .border()
-            .resolve_or_zero(inputs.parent_size, |_, _| 0.0);
-        let container_pb = padding + border;
-        let pbw = container_pb.horizontal_components().sum();
+        unsafe {
+            coplt_ui_layout_analyze_text(self.2, self.0, id.0, id.1);
+        }
 
         // todo
         Size::ZERO
     }
+}
+
+unsafe extern "C" {
+    #[allow(improper_ctypes)]
+    fn coplt_ui_layout_analyze_text(
+        layout: *mut (),
+        ctx: *mut NLayoutContext,
+        node_index: i32,
+        node_type: NodeType,
+    );
 }

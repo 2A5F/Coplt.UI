@@ -4,3 +4,5 @@
 #include "FontFamily.cc"
 #include "Font.cc"
 #include "FontFace.cc"
+#include "Layout.cc"
+#include "TextLayout.cc"

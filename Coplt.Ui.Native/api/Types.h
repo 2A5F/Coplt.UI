@@ -277,6 +277,13 @@ namespace Coplt {
         Monospaced = 2,
     };
 
+    enum class NodeType : ::Coplt::u8
+    {
+        View = 0,
+        Text = 1,
+        Root = 2,
+    };
+
     struct LayoutCollapsibleMarginSet
     {
         ::Coplt::f32 Positive;
@@ -701,6 +708,8 @@ namespace Coplt {
     struct TextData
     {
         ::Coplt::NativeList<::Coplt::char16> m_text;
+        ::Coplt::u64 m_version;
+        ::Coplt::u64 m_inner_version;
     };
 
     struct NodeLocate

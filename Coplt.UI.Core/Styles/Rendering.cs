@@ -1,5 +1,6 @@
 ﻿namespace Coplt.UI.Styles;
 
+// todo use css corner-shape
 public enum BorderRadiusMode : uint
 {
     Circle,

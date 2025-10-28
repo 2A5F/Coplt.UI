@@ -1,17 +1,9 @@
 ﻿#pragma once
 
-#include "Com.h"
 
-namespace Coplt
-{
-    struct LibUi;
-
+namespace Coplt {
     struct Layout final : ComImpl<Layout, ILayout>
     {
-        Rc<LibUi> m_lib;
-
-        explicit Layout(Rc<LibUi> lib);
-
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE

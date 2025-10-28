@@ -4,7 +4,7 @@
 
 #include <hb.h>
 
-#include "Layout.h"
+#include "dwrite/Layout.h"
 
 using namespace Coplt;
 
@@ -90,9 +90,11 @@ HResult LibUi::Impl_GetSystemFontFallback(IFontFallback** ff)
 
 HResult LibUi::Impl_CreateLayout(ILayout** layout)
 {
+    if (const auto hr = Backend(); hr.IsError()) return hr;
     return feb([&]
     {
-        *layout = new Layout(CloneRc(this));
+        auto out = Layout::Create(CloneRc(this));
+        *layout = out.leak();
         return HResultE::Ok;
     });
 }

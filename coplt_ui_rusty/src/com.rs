@@ -196,6 +196,14 @@ pub enum FontFlags {
     Monospaced = 2,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum NodeType {
+    View = 0,
+    Text = 1,
+    Root = 2,
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Str16 {
@@ -644,6 +652,8 @@ pub struct RootData {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData {
     pub m_text: NativeList<u16>,
+    pub m_version: u64,
+    pub m_inner_version: u64,
 }
 
 #[repr(C)]

@@ -47,27 +47,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
+      <change afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Interface.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Object.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Object.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Rc.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/cocom/includes/CoCom.Rc.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Collections/NativeArc.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Collections/NativeArc.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/IStub.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/IStub.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Styles/Core/Text.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Styles/Rendering.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Styles/Rendering.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Access.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Access.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/TextData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/TextData.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/co_com.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/co_com.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Backend.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Backend.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Backend.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Backend.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Build.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Build.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.cc" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Build.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Build.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/SystemFontCollection.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/SystemFontCollection.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/SystemFontCollection.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/SystemFontCollection.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/layout.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/layout.rs" afterDir="false" />
     </list>
@@ -133,6 +132,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Proj\NetProj\Coplt.UI\Coplt.Ui.Native\src\dwrite" />
+    </key>
+  </component>
   <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.Native">
     <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
@@ -271,7 +275,7 @@
       <workItem from="1761545017510" duration="4491000" />
       <workItem from="1761549661008" duration="4996000" />
       <workItem from="1761554970374" duration="13775000" />
-      <workItem from="1761631200154" duration="3389000" />
+      <workItem from="1761631200154" duration="14616000" />
     </task>
     <servers />
   </component>

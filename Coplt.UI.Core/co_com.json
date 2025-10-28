@@ -19,6 +19,10 @@
           "name": "Layout",
           "impl": "ILayout"
         },
+        "TextLayout.h": {
+          "name": "TextLayout",
+          "impl": "ITextLayout"
+        },
         "dwrite/SystemFontCollection.h": {
           "name": "SystemFontCollection",
           "impl": "IFontCollection"
