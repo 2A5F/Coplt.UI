@@ -1,5 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
+using Coplt.UI.Collections;
+using Coplt.UI.Core.Utilities;
 using Coplt.UI.Miscellaneous;
 
 namespace Coplt.UI.Native;
@@ -20,4 +22,6 @@ public unsafe partial struct ILib
     public partial HResult GetSystemFontFallback(IFontFallback** ff);
 
     public partial HResult CreateLayout(ILayout** layout);
+    
+    public partial void SplitScripts(NativeList<SimpleRange>* ranges, [ComType<ConstPtr<char>>] char* chars, int len);
 }

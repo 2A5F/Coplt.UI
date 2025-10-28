@@ -66,6 +66,7 @@ namespace Coplt {
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
         COPLT_COM_METHOD(GetSystemFontFallback, ::Coplt::HResult, (IFontFallback** ff), ff);
         COPLT_COM_METHOD(CreateLayout, ::Coplt::HResult, (ILayout** layout), layout);
+        COPLT_COM_METHOD(SplitScripts, void, (::Coplt::NativeList<::Coplt::SimpleRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len), ranges, chars, len);
     };
 
     COPLT_COM_INTERFACE(IStub, "a998ec87-868d-4320-a30a-638c291f5562", ::Coplt::IUnknown)

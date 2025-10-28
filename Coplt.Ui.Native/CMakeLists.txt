@@ -33,5 +33,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         harfbuzz::harfbuzz
 )
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} PRIVATE Dwrite.lib)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Dwrite.lib icuuc.lib)
 endif ()

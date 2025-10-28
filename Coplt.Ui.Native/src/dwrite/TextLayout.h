@@ -1,9 +1,11 @@
 ﻿#pragma once
 
 #include <dwrite_3.h>
+
 #include "../Com.h"
 #include "../Arc.h"
 #include "../List.h"
+#include "../Text.h"
 
 namespace Coplt
 {

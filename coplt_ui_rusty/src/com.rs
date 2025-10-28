@@ -306,6 +306,13 @@ pub struct TrackSizingFunction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct SimpleRange {
+    pub Start: i32,
+    pub Length: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIOrderedSetNode<T0 /* T */> {
     pub HashCode: i32,
     pub Next: i32,

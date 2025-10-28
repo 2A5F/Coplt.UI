@@ -3,8 +3,10 @@
 #include "Error.h"
 
 #include <hb.h>
+#include <icu.h>
 
 #include "dwrite/Layout.h"
+#include "Text.h"
 
 using namespace Coplt;
 
@@ -97,6 +99,11 @@ HResult LibUi::Impl_CreateLayout(ILayout** layout)
         *layout = out.leak();
         return HResultE::Ok;
     });
+}
+
+void LibUi::Impl_SplitScripts(NativeList<SimpleRange>* ranges, char16 const* chars, const i32 len)
+{
+    Coplt::SplitScripts(*ffi_list(ranges), chars, len);
 }
 
 ILib* Coplt::Coplt_CreateLibUi()

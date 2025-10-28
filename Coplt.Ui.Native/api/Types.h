@@ -35,6 +35,8 @@ namespace Coplt {
 
     struct TrackSizingFunction;
 
+    struct SimpleRange;
+
     template <class T0 /* T */>
     struct FFIOrderedSetNode;
 
@@ -504,6 +506,12 @@ namespace Coplt {
     {
         ::Coplt::GridTemplateComponentUnion Union;
         ::Coplt::GridTemplateComponentType Type;
+    };
+
+    struct SimpleRange
+    {
+        ::Coplt::i32 Start;
+        ::Coplt::i32 Length;
     };
 
     template <class T0 /* T */>
