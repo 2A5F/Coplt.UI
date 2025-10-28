@@ -53,6 +53,8 @@ namespace Coplt
         LoggerData m_logger{};
         Rc<TextBackend> m_backend{};
 
+        HResult Backend();
+
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
@@ -77,7 +79,10 @@ namespace Coplt
         HResult Impl_GetSystemFontCollection(IFontCollection** fc);
 
         COPLT_FORCE_INLINE
-        ILayout* Impl_CreateLayout();
+        HResult Impl_GetSystemFontFallback(IFontFallback** ff);
+
+        COPLT_FORCE_INLINE
+        HResult Impl_CreateLayout(ILayout** layout);
 
         COPLT_IMPL_END
     };

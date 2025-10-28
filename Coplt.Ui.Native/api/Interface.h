@@ -30,6 +30,11 @@ namespace Coplt {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFace
     };
 
+    COPLT_COM_INTERFACE(IFontFallback, "b0dbb428-eca1-4784-b27f-629bddf93ea4", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IFontFallback
+    };
+
     COPLT_COM_INTERFACE(IFontFamily, "f8009d34-9417-4b87-b23b-b7885d27aeab", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFamily
@@ -59,14 +64,15 @@ namespace Coplt {
         COPLT_COM_METHOD(ZAlloc, void*, (::Coplt::i32 size, ::Coplt::i32 align) const, size, align);
         COPLT_COM_METHOD(ReAlloc, void*, (void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) const, ptr, size, align);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
-        COPLT_COM_METHOD(CreateLayout, ILayout*, ());
+        COPLT_COM_METHOD(GetSystemFontFallback, ::Coplt::HResult, (IFontFallback** ff), ff);
+        COPLT_COM_METHOD(CreateLayout, ::Coplt::HResult, (ILayout** layout), layout);
     };
 
     COPLT_COM_INTERFACE(IStub, "a998ec87-868d-4320-a30a-638c291f5562", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IStub
 
-        COPLT_COM_METHOD(Some, void, (::Coplt::LayoutData* layout), layout);
+        COPLT_COM_METHOD(Some, void, ());
     };
 
     COPLT_COM_INTERFACE(ITextLayout, "f558ba07-1f1d-4c32-8229-134271b17083", ::Coplt::IUnknown)

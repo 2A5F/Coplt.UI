@@ -1,6 +1,8 @@
-﻿using Coplt.Dropping;
+﻿using Coplt.Com;
+using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
+using Coplt.UI.Native;
 using Coplt.UI.Styles;
 
 namespace Coplt.UI.Trees.Datas;
@@ -10,8 +12,12 @@ public partial record struct ContainerStyleData()
 {
     [Drop]
     public NativeArc<GridContainerStyle> Grid;
+    /// <summary>
+    /// Optional, default use system font fallback
+    /// </summary>
     [Drop]
-    public NativeArc<FontSet> FontSet;
+    [ComType<Ptr<IFontFallback>>]
+    public Rc<IFontFallback> FontFallback;
 
     public float ScrollBarSize = 0;
 

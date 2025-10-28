@@ -13,6 +13,8 @@ namespace Coplt
 
         static HResult Create(Rc<TextBackend>& out);
 
-        HResult GetSystemFontCollection(Rc<IFontCollection>& out) const;
+        Rc<IFontCollection> GetSystemFontCollection() const;
+
+        Rc<IFontFallback> GetSystemFontFallback() const;
     };
 }

@@ -38,4 +38,4 @@ namespace Coplt
 
         COPLT_IMPL_END
     };
-}
+} // namespace Coplt

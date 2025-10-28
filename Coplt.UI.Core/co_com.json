@@ -23,6 +23,10 @@
           "name": "SystemFontCollection",
           "impl": "IFontCollection"
         },
+        "dwrite/SystemFontFallback.h": {
+          "name": "SystemFontFallback",
+          "impl": "IFontFallback"
+        },
         "dwrite/FontFamily.h": {
           "name": "FontFamily",
           "impl": "IFontFamily"

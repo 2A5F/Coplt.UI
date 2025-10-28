@@ -13,8 +13,7 @@ use taffy::{
 use crate::{
     col::{OrderedSet, ordered_set},
     com::{
-        self, CommonStyleData, ContainerLayoutData, ContainerStyleData, GridName, GridNameType,
-        NLayoutContext, NodeLocate, RootData,
+        self, CommonStyleData, ContainerLayoutData, ContainerStyleData, GridName, GridNameType, ILib, NLayoutContext, NodeLocate, RootData
     },
 };
 
@@ -72,7 +71,7 @@ macro_rules! c_available_space {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn coplt_ui_layout_calc(ctx: *mut NLayoutContext) -> HResult {
+pub extern "C" fn coplt_ui_layout_calc(lib: *mut ILib, ctx: *mut NLayoutContext) -> HResult {
     unsafe {
         for root_index in (*ctx).roots() {
             let mut sub_doc = SubDoc(ctx, *root_index);

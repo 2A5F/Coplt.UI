@@ -28,6 +28,13 @@ extern "C" void* coplt_ui_realloc(void* ptr, const size_t new_size, const size_t
     return mi_realloc_aligned(ptr, new_size, align);
 }
 
+HResult LibUi::Backend()
+{
+    if (!m_backend)
+        if (const auto hr = TextBackend::Create(m_backend); hr.IsError()) return hr;
+    return HResultE::Ok;
+}
+
 void LibUi::Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop)
 {
     m_logger = LoggerData(obj, logger, drop);
@@ -61,20 +68,33 @@ void* LibUi::Impl_ReAlloc(void* ptr, const i32 size, const i32 align) const
 
 HResult LibUi::Impl_GetSystemFontCollection(IFontCollection** fc)
 {
-    return feb([this, fc]
+    if (const auto hr = Backend(); hr.IsError()) return hr;
+    return feb([&] -> HResult
     {
-        if (!m_backend)
-            if (const auto hr = TextBackend::Create(m_backend); hr.IsError()) return hr;
-        Rc<IFontCollection> out{};
-        const auto hr = m_backend->GetSystemFontCollection(out);
-        if (hr.IsSuccess()) *fc = out.leak();
-        return hr;
+        auto out = m_backend->GetSystemFontCollection();
+        *fc = out.leak();
+        return HResultE::Ok;
     });
 }
 
-ILayout* LibUi::Impl_CreateLayout()
+HResult LibUi::Impl_GetSystemFontFallback(IFontFallback** ff)
 {
-    return feb([] { return new Layout(); });
+    if (const auto hr = Backend(); hr.IsError()) return hr;
+    return feb([&] -> HResult
+    {
+        auto out = m_backend->GetSystemFontFallback();
+        *ff = out.leak();
+        return HResultE::Ok;
+    });
+}
+
+HResult LibUi::Impl_CreateLayout(ILayout** layout)
+{
+    return feb([&]
+    {
+        *layout = new Layout(CloneRc(this));
+        return HResultE::Ok;
+    });
 }
 
 ILib* Coplt::Coplt_CreateLibUi()

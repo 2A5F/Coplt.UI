@@ -233,12 +233,6 @@ pub struct NativeList<T0 /* T */> {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct FontSet {
-    pub m_fallbacks: NativeList<*mut IFontFace>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridName {
     pub Id: i32,
     pub Type: GridNameType,
@@ -566,7 +560,7 @@ pub struct ContainerLayoutData {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ContainerStyleData {
     pub Grid: NativeArc<GridContainerStyle>,
-    pub FontSet: NativeArc<FontSet>,
+    pub FontFallback: *mut IFontFallback,
     pub ScrollBarSize: f32,
     pub WidthValue: f32,
     pub HeightValue: f32,
@@ -685,6 +679,13 @@ pub struct IFontFace {
 }
 
 impl IFontFace {
+}
+
+#[repr(C)]
+pub struct IFontFallback {
+}
+
+impl IFontFallback {
 }
 
 #[repr(C)]

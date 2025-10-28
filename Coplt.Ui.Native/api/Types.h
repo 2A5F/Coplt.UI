@@ -19,8 +19,6 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeList;
 
-    struct FontSet;
-
     struct GridName;
 
     struct GridPlacement;
@@ -92,6 +90,8 @@ namespace Coplt {
     struct IFontCollection;
 
     struct IFontFace;
+
+    struct IFontFallback;
 
     struct IFontFamily;
 
@@ -484,11 +484,6 @@ namespace Coplt {
         T0 m_data;
     };
 
-    struct FontSet
-    {
-        ::Coplt::NativeList<IFontFace*> m_fallbacks;
-    };
-
     struct GridTemplateArea
     {
         ::Coplt::GridName Id;
@@ -625,7 +620,7 @@ namespace Coplt {
     struct ContainerStyleData
     {
         ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
-        ::Coplt::NativeArc<::Coplt::FontSet> FontSet;
+        IFontFallback* FontFallback;
         ::Coplt::f32 ScrollBarSize;
         ::Coplt::f32 WidthValue;
         ::Coplt::f32 HeightValue;
