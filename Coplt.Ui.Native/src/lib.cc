@@ -37,9 +37,9 @@ HResult LibUi::Backend()
     return HResultE::Ok;
 }
 
-void LibUi::Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop)
+void LibUi::Impl_SetLogger(void* obj, Func<void, void*, LogLevel, i32, char16*>* logger, Func<void, void*>* drop)
 {
-    m_logger = LoggerData(obj, logger, drop);
+    m_logger = LoggerData(obj, reinterpret_cast<Func<void, void*, LogLevel, i32, const char16*>*>(logger), drop);
 }
 
 Str8 LibUi::Impl_GetCurrentErrorMessage()

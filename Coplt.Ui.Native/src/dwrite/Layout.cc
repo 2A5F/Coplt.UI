@@ -1,9 +1,13 @@
 #include "Layout.h"
 
+#include <print>
+#include "fmt/xchar.h"
+
 #include "../FFIUtils.h"
 #include "../lib.h"
 #include "Error.h"
 #include "TextLayout.h"
+#include "TextData.h"
 
 using namespace Coplt;
 
@@ -90,7 +94,7 @@ namespace Coplt::LayoutCalc
         case NodeType::View:
             std::unreachable();
         case NodeType::Text:
-            &ctx->text_data[index];
+            return &ctx->text_data[index];
         case NodeType::Root:
             std::unreachable();
         default:
@@ -101,7 +105,26 @@ namespace Coplt::LayoutCalc
 
 namespace Coplt::LayoutCalc::Texts
 {
-    extern "C" void coplt_ui_layout_analyze_text(
+    void do_coplt_ui_layout_analyze_text(
+        Layout* self, NLayoutContext* ctx,
+        i32 node_index, NodeType node_type
+    );
+
+    extern "C" HResultE coplt_ui_layout_analyze_text(
+        Layout* self, NLayoutContext* ctx,
+        i32 node_index, NodeType node_type
+    )
+    {
+        return feb([&]
+        {
+            do_coplt_ui_layout_analyze_text(
+                self, ctx, node_index, node_type
+            );
+            return HResultE::Ok;
+        });
+    }
+
+    void do_coplt_ui_layout_analyze_text(
         Layout* self, NLayoutContext* ctx,
         i32 node_index, NodeType node_type
     )
@@ -117,6 +140,51 @@ namespace Coplt::LayoutCalc::Texts
 
         for (auto it = iter(childs.m_childs); it.MoveNext();)
         {
+            const auto child_locate = it.Current();
+            auto& text_data = *GetTextData(ctx, child_locate.Index, NodeType::Text);
+
+            self->m_lib->m_logger.Log(LogLevel::Info, text_data.m_text.m_size, text_data.m_text.m_items);
+
+            Rc<IDWriteFontFallback> fallback;
+            if (const auto hr = self->m_lib->m_backend->m_dw_factory->GetSystemFontFallback(fallback.put()); FAILED(hr))
+                throw ComException(hr, "Failed to get system font fallback");
+
+            SliceTextAnalysisSource src(text_data.m_text.m_items, text_data.m_text.m_size);
+
+
+            for (auto i = 0; i < text_data.m_text.m_size;)
+            {
+                u32 mapped_length = 0;
+                Rc<IDWriteFont> font;
+                float scale;
+
+                if (const auto hr = fallback->MapCharacters(
+                    &src, i, text_data.m_text.m_size - i, nullptr, nullptr, DWRITE_FONT_WEIGHT_NORMAL,
+                    DWRITE_FONT_STYLE_NORMAL,
+                    DWRITE_FONT_STRETCH_NORMAL, &mapped_length, font.put(), &scale); FAILED(hr))
+                    throw ComException(hr, "Failed to map characters");
+                const auto ci = i;
+                i += mapped_length;
+
+                Rc<IDWriteFontFamily> family;
+                font->GetFontFamily(family.put());
+
+                Rc<IDWriteLocalizedStrings> name;
+                family->GetFamilyNames(name.put());
+
+                const auto count = name->GetCount();
+                for (u32 j = 0; j < count; ++j)
+                {
+                    u32 local_len, str_len;
+                    name->GetLocaleNameLength(j, &local_len);
+                    name->GetStringLength(j, &str_len);
+                    std::wstring local(local_len + 1, 0);
+                    std::wstring str(str_len + 1, 0);
+                    name->GetLocaleName(j, local.data(), local_len + 1);
+                    name->GetString(j, str.data(), str_len + 1);
+                    self->m_lib->m_logger.Log(LogLevel::Info, fmt::format(L"{} .. {}; {} : {}", ci, i, local.c_str(), str.c_str()));
+                }
+            }
         }
         // todo
     }

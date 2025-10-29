@@ -10,7 +10,7 @@ public unsafe class TestText
     public void TestSplit()
     {
         using var list = new NativeList<TextRange>();
-        var str = "123 阿斯顿 asd ياخشىمۇسىز 😊😅"; 
+        var str = "123 阿斯顿 asd ياخشىمۇسىز 😊😅こんにちは"; 
         fixed (char* p_str = str)
         {
             NativeLib.Instance.SplitTexts(&list, p_str, str.Length);

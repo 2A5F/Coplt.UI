@@ -74,21 +74,33 @@ macro_rules! c_available_space {
 #[unsafe(no_mangle)]
 pub extern "C" fn coplt_ui_layout_calc(layout: *mut (), ctx: *mut NLayoutContext) -> HResult {
     unsafe {
-        for root_index in (*ctx).roots() {
-            let mut sub_doc = SubDoc(ctx, *root_index, layout);
-            let root_data = *sub_doc.root_data();
-            let available_space = taffy::Size {
-                width: c_available_space!(root_data.AvailableSpaceX),
-                height: c_available_space!(root_data.AvailableSpaceY),
-            };
-            let root_id = NodeId::new(*root_index, NodeType::Root).into();
-            taffy::compute_root_layout(&mut sub_doc, root_id, available_space);
-            if root_data.UseRounding {
-                taffy::round_layout(&mut sub_doc, root_id);
+        let r = std::panic::catch_unwind(move || -> HResult {
+            for root_index in (*ctx).roots() {
+                let mut sub_doc = SubDoc(ctx, *root_index, layout);
+                let root_data = *sub_doc.root_data();
+                let available_space = taffy::Size {
+                    width: c_available_space!(root_data.AvailableSpaceX),
+                    height: c_available_space!(root_data.AvailableSpaceY),
+                };
+                let root_id = NodeId::new(*root_index, NodeType::Root).into();
+                taffy::compute_root_layout(&mut sub_doc, root_id, available_space);
+                if root_data.UseRounding {
+                    taffy::round_layout(&mut sub_doc, root_id);
+                }
+            }
+
+            HResultE::Ok.into()
+        });
+        match r {
+            Ok(r) => r,
+            Err(e) => {
+                if let Some(r) = e.downcast_ref::<HResult>() {
+                    *r
+                } else {
+                    std::panic::resume_unwind(e)
+                }
             }
         }
-
-        HResultE::Ok.into()
     }
 }
 
@@ -1827,7 +1839,10 @@ impl SubDoc {
         // let text_layout = &mut container_layout.TextLayoutObject;
 
         unsafe {
-            coplt_ui_layout_analyze_text(self.2, self.0, id.0, id.1);
+            let hr = coplt_ui_layout_analyze_text(self.2, self.0, id.0, id.1);
+            if hr.is_failure() {
+                std::panic::panic_any(hr);
+            }
         }
 
         // todo
@@ -1842,5 +1857,5 @@ unsafe extern "C" {
         ctx: *mut NLayoutContext,
         node_index: i32,
         node_type: NodeType,
-    );
+    ) -> HResult;
 }

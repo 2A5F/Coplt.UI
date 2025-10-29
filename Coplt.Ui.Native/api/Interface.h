@@ -57,7 +57,7 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_ILib
 
-        COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
+        COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
         COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());
         COPLT_COM_METHOD(Alloc, void*, (::Coplt::i32 size, ::Coplt::i32 align) const, size, align);
         COPLT_COM_METHOD(Free, void, (void* ptr, ::Coplt::i32 align) const, ptr, align);
@@ -74,6 +74,11 @@ namespace Coplt {
         COPLT_COM_INTERFACE_BODY_Coplt_IStub
 
         COPLT_COM_METHOD(Some, void, (::Coplt::NodeType a), a);
+    };
+
+    COPLT_COM_INTERFACE(ITextData, "bd0c7402-1de8-4547-860d-c78fd70ff203", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_ITextData
     };
 
     COPLT_COM_INTERFACE(ITextLayout, "f558ba07-1f1d-4c32-8229-134271b17083", ::Coplt::IUnknown)

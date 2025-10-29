@@ -1,4 +1,5 @@
-﻿using Coplt.Dropping;
+﻿using Coplt.Com;
+using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Native;
 using Coplt.UI.Texts;
@@ -9,11 +10,14 @@ namespace Coplt.UI.Trees.Datas;
 public unsafe partial struct TextData
 {
     [Drop]
-    public NativeList<char> m_text;
+    [ComType<Ptr<ITextData>>]
+    internal Rc<ITextData> m_obj;
     [Drop]
-    public NativeList<TextRange> m_ranges_0;
-    public ulong m_version;
-    public ulong m_inner_version;
+    internal NativeList<char> m_text;
+    [Drop]
+    internal NativeList<TextRange> m_ranges_0;
+    internal ulong m_version;
+    internal ulong m_inner_version;
 
     public string GetText() => m_text.ToString();
 

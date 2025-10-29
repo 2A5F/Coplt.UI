@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using Coplt.Com;
+﻿using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;

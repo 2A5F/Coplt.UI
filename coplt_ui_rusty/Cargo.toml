@@ -8,5 +8,6 @@ crate-type = ["staticlib"]
 
 [dependencies]
 cocom = {workspace = true}
-concat-idents = "1"
+concat-idents = {workspace = true}
+dashmap = {workspace = true}
 taffy = {workspace = true}

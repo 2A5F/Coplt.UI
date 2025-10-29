@@ -1,5 +1,6 @@
 ﻿using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
+using Coplt.UI.Native;
 using Coplt.UI.Styles;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
@@ -29,9 +30,8 @@ public class Tests1
         };
         node.Add(child);
         doc.Update();
-        Console.WriteLine(node.ContainerLayout.FinalLayout);
-        Console.WriteLine();
-        Console.WriteLine(child.ContainerLayout.FinalLayout);
+        Console.WriteLine(node.ContainerLayout.ToString());
+        Console.WriteLine(child.ContainerLayout.ToString());
     }
 
     [Test]
@@ -46,10 +46,10 @@ public class Tests1
         };
         var child = new Access.Node(doc, NodeType.Text)
         {
-            Text = "123",
+            Text = "123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな",
         };
         node.Add(child);
         doc.Update();
-        Console.WriteLine(node.ContainerLayout.FinalLayout);
+        Console.WriteLine(node.ContainerLayout.ToString());
     }
 }

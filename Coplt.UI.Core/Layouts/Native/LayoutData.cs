@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Native;
 
-public record struct LayoutData
+internal record struct LayoutData
 {
     public uint Order;
     public float LocationX;
@@ -27,7 +27,7 @@ public record struct LayoutData
     public float MarginLeftSize;
 }
 
-public record struct LayoutOutput
+internal record struct LayoutOutput
 {
     public float Width;
     public float Height;
@@ -42,13 +42,13 @@ public record struct LayoutOutput
     public bool MarginsCanCollapseThrough;
 }
 
-public record struct LayoutCollapsibleMarginSet
+internal record struct LayoutCollapsibleMarginSet
 {
     public float Positive;
     public float Negative;
 }
 
-public struct LayoutCacheEntryLayoutOutput
+internal struct LayoutCacheEntryLayoutOutput
 {
     public float KnownDimensionsWidthValue;
     public float KnownDimensionsHeightValue;
@@ -61,7 +61,7 @@ public struct LayoutCacheEntryLayoutOutput
     public LayoutOutput Content;
 }
 
-public struct LayoutCacheEntrySize
+internal struct LayoutCacheEntrySize
 {
     public float KnownDimensionsWidthValue;
     public float KnownDimensionsHeightValue;
@@ -75,7 +75,7 @@ public struct LayoutCacheEntrySize
     public float ContentHeight;
 }
 
-public struct LayoutCache
+internal struct LayoutCache
 {
     public LayoutCacheEntryLayoutOutput FinalLayoutEntry;
     public LayoutCacheEntrySize MeasureEntries0;

@@ -47,13 +47,38 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Native/IFont.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Native/IFont.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Query/Font.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Query/Font.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Coplt.UI.Core.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Coplt.UI.Core.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Layouts/Native/LayoutData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Layouts/Native/LayoutData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Texts/TextRange.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Texts/TextRange.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerLayoutData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerLayoutData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/TextData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/TextData.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/co_com.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/co_com.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Layout.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/TextLayout.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Build.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Build.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/TextLayout.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/TextLayout.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/TextLayout.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/TextLayout.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tests/TestCore/Test1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestCore/Test1.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tests/TestCore/TestText.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestCore/TestText.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/layout.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/layout.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -265,7 +290,8 @@
       <workItem from="1761665833544" duration="316000" />
       <workItem from="1761666938350" duration="2448000" />
       <workItem from="1761669408196" duration="4488000" />
-      <workItem from="1761709576153" duration="15552000" />
+      <workItem from="1761709576153" duration="25322000" />
+      <workItem from="1761756884484" duration="2213000" />
     </task>
     <servers />
   </component>

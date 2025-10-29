@@ -35,6 +35,8 @@ namespace Coplt {
 
     struct TrackSizingFunction;
 
+    struct CWStr;
+
     template <class T0 /* T */>
     struct FFIOrderedSetNode;
 
@@ -104,6 +106,8 @@ namespace Coplt {
     struct ILib;
 
     struct IStub;
+
+    struct ITextData;
 
     struct ITextLayout;
 
@@ -722,6 +726,11 @@ namespace Coplt {
         ::Coplt::GridTemplateRepetition Repeat;
     };
 
+    struct CWStr
+    {
+        ::Coplt::char16 const* Locale;
+    };
+
     template <class T0 /* T */>
     struct FFIOrderedSet
     {
@@ -908,6 +917,7 @@ namespace Coplt {
 
     struct TextRange
     {
+        ::Coplt::CWStr Locale;
         ::Coplt::i32 Start;
         ::Coplt::i32 Length;
         ::Coplt::ScriptCode Script;
@@ -1061,6 +1071,7 @@ namespace Coplt {
 
     struct TextData
     {
+        ITextData* m_obj;
         ::Coplt::NativeList<::Coplt::char16> m_text;
         ::Coplt::NativeList<::Coplt::TextRange> m_ranges_0;
         ::Coplt::u64 m_version;

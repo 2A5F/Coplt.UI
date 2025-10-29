@@ -15,13 +15,17 @@
           "name": "LibUi",
           "impl": "ILib"
         },
-        "Layout.h": {
+        "dwrite/Layout.h": {
           "name": "Layout",
           "impl": "ILayout"
         },
-        "TextLayout.h": {
+        "dwrite/TextLayout.h": {
           "name": "TextLayout",
           "impl": "ITextLayout"
+        },
+        "dwrite/TextData.h": {
+          "name": "TextDataObj",
+          "impl": "ITextData"
         },
         "dwrite/SystemFontCollection.h": {
           "name": "SystemFontCollection",

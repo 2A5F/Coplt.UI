@@ -7,7 +7,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <IsAotCompatible>true</IsAotCompatible>
-        <NoWarn>CS8500</NoWarn>
+        <NoWarn>CS8500;CS0649</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

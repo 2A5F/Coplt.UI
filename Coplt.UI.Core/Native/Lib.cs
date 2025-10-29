@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
+using Coplt.UI.Miscellaneous;
 using Coplt.UI.Texts;
 using Coplt.UI.Utilities;
 
@@ -49,6 +50,39 @@ public sealed unsafe partial class NativeLib
 
     #endregion
 
+    #region SetLog
+
+    public void SetLogger(
+        void* obj,
+        delegate* unmanaged[Cdecl]<void*, LogLevel, int, char*, void> logger,
+        delegate* unmanaged[Cdecl]<void*, void> drop
+    )
+    {
+        m_lib.SetLogger(obj, logger, drop);
+    }
+
+    public void SetLogger(Action<LogLevel, string> logger)
+    {
+        var gch = GCHandle.Alloc(logger);
+        m_lib.SetLogger((void*)GCHandle.ToIntPtr(gch), &ActionLoggerProxyLogger, &ActionLoggerProxyDrop);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    private static void ActionLoggerProxyLogger(void* obj, LogLevel level, int len, char* msg)
+    {
+        var gch = GCHandle.FromIntPtr((nint)obj);
+        ((Action<LogLevel, string>)gch.Target!).Invoke(level, new string(msg, 0, len));
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    private static void ActionLoggerProxyDrop(void* obj)
+    {
+        var gch = GCHandle.FromIntPtr((nint)obj);
+        gch.Free();
+    }
+
+    #endregion
+
     #region CurrentErrorMessage
 
     public string CurrentErrorMessage
@@ -76,7 +110,7 @@ public sealed unsafe partial class NativeLib
 
     #endregion
 
-    #region MyRegion
+    #region SplitTexts
 
     public void SplitTexts(NativeList<TextRange>* ranges, char* chars, int len)
     {

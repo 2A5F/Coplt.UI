@@ -7,6 +7,39 @@
 
 using namespace Coplt;
 
+namespace Coplt::UnicodeUtils
+{
+    extern "C" usize coplt_ui_unicode_utils_script_to_locale(
+        u32 script,
+        Func<usize, u32> create
+    );
+
+    char16 const* LikelyLocale(const UScriptCode script)
+    {
+        return reinterpret_cast<char16 const*>(coplt_ui_unicode_utils_script_to_locale(
+            static_cast<u32>(script), [](u32 sc)
+            {
+                const auto script = static_cast<UScriptCode>(sc);
+                const auto src = std::format("und_{}", uscript_getShortName(script));
+                auto dst = std::string(128, 0);
+                UErrorCode e{};
+                const auto len = uloc_addLikelySubtags(src.data(), dst.data(), dst.size(), &e);
+                if (e > 0) [[unlikely]]
+                {
+                    throw Exception(std::format("LikelyLocale failed: {}", u_errorName(e)));
+                }
+                // ReSharper disable once CppDFAMemoryLeak
+                const auto locale = new u16[len + 1];
+                for (auto i = 0; i < len; ++i)
+                {
+                    locale[i] = static_cast<u16>(dst[i]);
+                }
+                locale[len] = 0;
+                return reinterpret_cast<usize>(locale);
+            }));
+    }
+}
+
 void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
 {
     if (len == 0) return;
@@ -37,6 +70,7 @@ void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
                     .Script = static_cast<ScriptCode>(cur_script),
                     .Category = static_cast<CharCategory>(cur_category),
                     .ScriptIsRtl = static_cast<bool>(uscript_isRightToLeft(cur_script)),
+                    .Locale = UnicodeUtils::LikelyLocale(cur_script),
                 });
                 cur_i = li;
             }
@@ -51,6 +85,7 @@ void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
             .Script = static_cast<ScriptCode>(cur_script),
             .Category = static_cast<CharCategory>(cur_category),
             .ScriptIsRtl = static_cast<bool>(uscript_isRightToLeft(cur_script)),
+            .Locale = UnicodeUtils::LikelyLocale(cur_script),
         });
     }
 }

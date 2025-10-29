@@ -635,6 +635,12 @@ pub struct TrackSizingFunction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct CWStr {
+    pub Locale: *const u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIOrderedSetNode<T0 /* T */> {
     pub HashCode: i32,
     pub Next: i32,
@@ -848,6 +854,7 @@ pub struct FontMetrics {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextRange {
+    pub Locale: CWStr,
     pub Start: i32,
     pub Length: i32,
     pub Script: ScriptCode,
@@ -1008,6 +1015,7 @@ pub struct RootData {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData {
+    pub m_obj: *mut ITextData,
     pub m_text: NativeList<u16>,
     pub m_ranges_0: NativeList<TextRange>,
     pub m_version: u64,
@@ -1082,6 +1090,13 @@ pub struct IStub {
 }
 
 impl IStub {
+}
+
+#[repr(C)]
+pub struct ITextData {
+}
+
+impl ITextData {
 }
 
 #[repr(C)]

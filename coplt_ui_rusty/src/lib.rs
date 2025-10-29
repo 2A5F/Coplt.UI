@@ -45,6 +45,7 @@ mod coplt_alloc {
 mod col;
 mod com;
 mod layout;
+mod unicode_utils;
 
 mod com_impl {
     use std::ops::{Deref, DerefMut};

@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include "Com.h"
 #include "Defines.h"
 #include "Backend.h"
@@ -8,13 +9,13 @@ namespace Coplt
     struct LoggerData
     {
         void* obj{};
-        Func<void, LogLevel, i32, char16*>* logger{};
+        Func<void, void*, LogLevel, i32, const char16*>* logger{};
         Func<void, void*>* drop{};
 
         LoggerData() = default;
 
         explicit LoggerData(
-            void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop
+            void* obj, Func<void, void*, LogLevel, i32, const char16*>* logger, Func<void, void*>* drop
         ) : obj(obj), logger(logger), drop(drop)
         {
         }
@@ -46,6 +47,25 @@ namespace Coplt
             std::swap(drop, other.drop);
             return *this;
         }
+
+        template <i32 N>
+        void Log(const LogLevel level, const wchar_t (&msg)[N]) const
+        {
+            if (logger == nullptr) return;
+            logger(obj, level, N - 1, msg);
+        }
+
+        void Log(const LogLevel level, const i32 size, const wchar_t* msg) const
+        {
+            if (logger == nullptr) return;
+            logger(obj, level, size, msg);
+        }
+
+        void Log(const LogLevel level, const std::wstring& msg) const
+        {
+            if (logger == nullptr) return;
+            logger(obj, level, msg.size(), msg.data());
+        }
     };
 
     struct LibUi final : ComImpl<LibUi, ILib>
@@ -58,7 +78,7 @@ namespace Coplt
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
-        void Impl_SetLogger(void* obj, Func<void, LogLevel, i32, char16*>* logger, Func<void, void*>* drop);
+        void Impl_SetLogger(void* obj, Func<void, void*, LogLevel, i32, char16*>* logger, Func<void, void*>* drop);
 
         COPLT_FORCE_INLINE
         Str8 Impl_GetCurrentErrorMessage();

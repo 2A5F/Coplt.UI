@@ -18,6 +18,7 @@ namespace Coplt {
     struct ILayout;
     struct ILib;
     struct IStub;
+    struct ITextData;
     struct ITextLayout;
 
 } // namespace Coplt
@@ -822,7 +823,7 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
+    void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
     ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILib*, ::Coplt::Str8*) noexcept;
     void* (*const COPLT_CDECL f_Alloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
     void (*const COPLT_CDECL f_Free)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 align) noexcept;
@@ -835,7 +836,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
-    extern "C" void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
+    extern "C" void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
     extern "C" ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept;
     extern "C" void* COPLT_CDECL Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
     extern "C" void COPLT_CDECL Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept;
@@ -894,7 +895,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) = 0;
+        virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) = 0;
         virtual ::Coplt::Str8 Impl_GetCurrentErrorMessage() = 0;
         virtual void* Impl_Alloc(::Coplt::i32 size, ::Coplt::i32 align) const = 0;
         virtual void Impl_Free(void* ptr, ::Coplt::i32 align) const = 0;
@@ -921,7 +922,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         template <class Interface>
         COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
 
-        static void COPLT_CDECL f_SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+        static void COPLT_CDECL f_SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
         {
             AsImpl(self)->Impl_SetLogger(p0, p1, p2);
         }
@@ -992,7 +993,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
 
-    extern "C" inline void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+    extern "C" inline void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -1128,7 +1129,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
 {
-    static COPLT_FORCE_INLINE void SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+    static COPLT_FORCE_INLINE void SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
     {
         COPLT_COM_PVTB(ILib, self)->f_SetLogger(self, p0, p1, p2);
     }
@@ -1279,6 +1280,89 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IStub>
     {
         COPLT_COM_PVTB(IStub, self)->f_Some(self, p0);
     }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::ITextData>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ITextData
+{
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::ITextData>
+{
+    using VirtualTable = VirtualTable<::Coplt::ITextData>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("bd0c7402-1de8-4547-860d-c78fd70ff203");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::ITextData>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ITextData*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+    };
+
+    template <std::derived_from<::Coplt::ITextData> Base = ::Coplt::ITextData>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+    template <class Impl>
+    struct VirtualImpl
+    {
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+    };
+
+    template<class Impl>
+    constexpr static VirtualTable s_vtb
+    {
+        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ITextData
+{
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_ITextData\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::ITextData;\
+\
+    explicit ITextData(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::ITextData>
+{
 };
 
 template <>
