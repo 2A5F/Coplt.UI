@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="BackendCodeEditorMiscSettings">
-    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="2819" type="long" />
+    <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="2790" type="long" />
     <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
   </component>
   <component name="CMakePresetLoader">{
@@ -47,23 +47,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/RustOutput.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/RustOutput.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Collections/NativeList.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Collections/NativeList.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Styles/Texts.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Styles/Texts.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Build.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Build.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/List.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/List.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/TextLayout.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/TextLayout.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DWriteExtractor/DWriteExtractor.csproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tests/TestCore/TestCore.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestCore/TestCore.csproj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vcpkg" beforeDir="false" afterPath="$PROJECT_DIR$/vcpkg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vcpkg-configuration.json" beforeDir="false" afterPath="$PROJECT_DIR$/vcpkg-configuration.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vcpkg.json" beforeDir="false" afterPath="$PROJECT_DIR$/vcpkg.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,11 +141,6 @@
     </key>
   </component>
   <component name="RunManager" selected="CMake 应用程序.Coplt.Ui.Native">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Com" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Coplt.Ui" TARGET_NAME="Com" CONFIG_NAME="Main - Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -280,6 +277,7 @@
       <workItem from="1761665833544" duration="316000" />
       <workItem from="1761666938350" duration="2448000" />
       <workItem from="1761669408196" duration="4488000" />
+      <workItem from="1761709576153" duration="10434000" />
     </task>
     <servers />
   </component>

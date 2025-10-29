@@ -93,3 +93,56 @@ public readonly record struct FontWidth(float Width)
         _ => $"{Width}",
     };
 }
+
+public enum TextDirection : byte
+{
+    LeftToRight,
+    RightToLeft,
+}
+
+public enum WritingDirection : byte
+{
+    Horizontal,
+    Vertical,
+}
+
+public enum WhiteSpaceMerge : byte
+{
+    Keep,
+    Merge,
+}
+
+public enum WhiteSpaceWrap : byte
+{
+    WrapAll,
+    /// <summary>
+    /// wrap on <c>\n</c> or <c>\r</c>
+    /// </summary>
+    WrapLine,
+}
+
+public enum TextWrap : byte
+{
+    Wrap,
+    NoWrap,
+}
+
+public enum WordBreak : byte
+{
+    Auto,
+    BreakAll,
+    KeepAll,
+}
+
+public enum TextOrientation : byte
+{
+    Mixed,
+    Upright,
+    Sideways,
+}
+
+public enum TextOverflow : byte
+{
+    Clip,
+    Ellipsis,
+}

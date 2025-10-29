@@ -3,6 +3,7 @@ using Coplt.Com;
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Utilities;
 using Coplt.UI.Miscellaneous;
+using Coplt.UI.Texts;
 
 namespace Coplt.UI.Native;
 
@@ -23,5 +24,5 @@ public unsafe partial struct ILib
 
     public partial HResult CreateLayout(ILayout** layout);
     
-    public partial void SplitScripts(NativeList<SimpleRange>* ranges, [ComType<ConstPtr<char>>] char* chars, int len);
+    public partial void SplitTexts(NativeList<TextRange>* ranges, [ComType<ConstPtr<char>>] char* chars, int len);
 }

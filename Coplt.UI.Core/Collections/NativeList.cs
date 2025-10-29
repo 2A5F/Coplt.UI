@@ -318,7 +318,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
         }
         if (index < m_size)
         {
-            AsSpan[(index + 1)..].CopyTo(AsSpan.Slice(index, m_size - 1));
+            AsSpan[(index + 1)..].CopyTo(AsSpan.Slice(index, m_size - index));
         }
     }
 
@@ -329,7 +329,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
         var value = m_items![index];
         if (index < m_size)
         {
-            AsSpan[(index + 1)..].CopyTo(AsSpan.Slice(index, m_size - 1));
+            AsSpan[(index + 1)..].CopyTo(AsSpan.Slice(index, m_size - index));
         }
         return value!;
     }

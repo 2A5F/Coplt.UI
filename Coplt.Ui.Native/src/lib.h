@@ -85,7 +85,7 @@ namespace Coplt
         HResult Impl_CreateLayout(ILayout** layout);
 
         COPLT_FORCE_INLINE
-        void Impl_SplitScripts(NativeList<SimpleRange>* ranges, char16 const* chars, i32 len);
+        void Impl_SplitTexts(NativeList<TextRange>* ranges, char16 const* chars, i32 len);
 
         COPLT_IMPL_END
     };

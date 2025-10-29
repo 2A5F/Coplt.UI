@@ -35,8 +35,6 @@ namespace Coplt {
 
     struct TrackSizingFunction;
 
-    struct SimpleRange;
-
     template <class T0 /* T */>
     struct FFIOrderedSetNode;
 
@@ -68,6 +66,8 @@ namespace Coplt {
     struct FontWidth;
 
     struct FontMetrics;
+
+    struct TextRange;
 
     struct ChildsData;
 
@@ -213,6 +213,20 @@ namespace Coplt {
         WrapReverse = 2,
     };
 
+    enum class FontStretch : ::Coplt::i32
+    {
+        Undefined = 0,
+        UltraCondensed = 1,
+        ExtraCondensed = 2,
+        Condensed = 3,
+        SemiCondensed = 4,
+        Normal = 5,
+        SemiExpanded = 6,
+        Expanded = 7,
+        ExtraExpanded = 8,
+        UltraExpanded = 9,
+    };
+
     enum class FontStyle : ::Coplt::u8
     {
         Normal = 0,
@@ -265,6 +279,31 @@ namespace Coplt {
         Center = 3,
     };
 
+    enum class TextDirection : ::Coplt::u8
+    {
+        LeftToRight = 0,
+        RightToLeft = 1,
+    };
+
+    enum class TextOrientation : ::Coplt::u8
+    {
+        Mixed = 0,
+        Upright = 1,
+        Sideways = 2,
+    };
+
+    enum class TextOverflow : ::Coplt::u8
+    {
+        Clip = 0,
+        Ellipsis = 1,
+    };
+
+    enum class TextWrap : ::Coplt::u8
+    {
+        Wrap = 0,
+        NoWrap = 1,
+    };
+
     enum class Visible : ::Coplt::u8
     {
         Visible = 0,
@@ -272,11 +311,294 @@ namespace Coplt {
         Remove = 2,
     };
 
+    enum class WhiteSpaceMerge : ::Coplt::u8
+    {
+        Keep = 0,
+        Merge = 1,
+    };
+
+    enum class WhiteSpaceWrap : ::Coplt::u8
+    {
+        WrapAll = 0,
+        WrapLine = 1,
+    };
+
+    enum class WordBreak : ::Coplt::u8
+    {
+        Auto = 0,
+        BreakAll = 1,
+        KeepAll = 2,
+    };
+
+    enum class WritingDirection : ::Coplt::u8
+    {
+        Horizontal = 0,
+        Vertical = 1,
+    };
+
+    enum class CharCategory : ::Coplt::u8
+    {
+        Unassigned = 0,
+        GeneralOtherTypes = 0,
+        UppercaseLetter = 1,
+        LowercaseLetter = 2,
+        TitlecaseLetter = 3,
+        ModifierLetter = 4,
+        OtherLetter = 5,
+        NonSpacingMark = 6,
+        EnclosingMark = 7,
+        CombiningSpacingMark = 8,
+        DecimalDigitNumber = 9,
+        LetterNumber = 10,
+        OtherNumber = 11,
+        SpaceSeparator = 12,
+        LineSeparator = 13,
+        ParagraphSeparator = 14,
+        ControlChar = 15,
+        FormatChar = 16,
+        PrivateUseChar = 17,
+        Surrogate = 18,
+        DashPunctuation = 19,
+        StartPunctuation = 20,
+        EndPunctuation = 21,
+        ConnectorPunctuation = 22,
+        OtherPunctuation = 23,
+        MathSymbol = 24,
+        CurrencySymbol = 25,
+        ModifierSymbol = 26,
+        OtherSymbol = 27,
+        InitialPunctuation = 28,
+        FinalPunctuation = 29,
+    };
+
     COPLT_ENUM_FLAGS(FontFlags, ::Coplt::i32)
     {
         None = 0,
         Color = 1,
         Monospaced = 2,
+    };
+
+    enum class ScriptCode : ::Coplt::i32
+    {
+        InvalidCode = -1,
+        Common = 0,
+        Inherited = 1,
+        Arabic = 2,
+        Armenian = 3,
+        Bengali = 4,
+        Bopomofo = 5,
+        Cherokee = 6,
+        Coptic = 7,
+        Cyrillic = 8,
+        Deseret = 9,
+        Devanagari = 10,
+        Ethiopic = 11,
+        Georgian = 12,
+        Gothic = 13,
+        Greek = 14,
+        Gujarati = 15,
+        Gurmukhi = 16,
+        Han = 17,
+        Hangul = 18,
+        Hebrew = 19,
+        Hiragana = 20,
+        Kannada = 21,
+        Katakana = 22,
+        Khmer = 23,
+        Lao = 24,
+        Latin = 25,
+        Malayalam = 26,
+        Mongolian = 27,
+        Myanmar = 28,
+        Ogham = 29,
+        OldItalic = 30,
+        Oriya = 31,
+        Runic = 32,
+        Sinhala = 33,
+        Syriac = 34,
+        Tamil = 35,
+        Telugu = 36,
+        Thaana = 37,
+        Thai = 38,
+        Tibetan = 39,
+        CanadianAboriginal = 40,
+        Ucas = 40,
+        Yi = 41,
+        Tagalog = 42,
+        Hanunoo = 43,
+        Buhid = 44,
+        Tagbanwa = 45,
+        Braille = 46,
+        Cypriot = 47,
+        Limbu = 48,
+        LinearB = 49,
+        Osmanya = 50,
+        Shavian = 51,
+        TaiLe = 52,
+        Ugaritic = 53,
+        KatakanaOrHiragana = 54,
+        Buginese = 55,
+        Glagolitic = 56,
+        Kharoshthi = 57,
+        SylotiNagri = 58,
+        NewTaiLue = 59,
+        Tifinagh = 60,
+        OldPersian = 61,
+        Balinese = 62,
+        Batak = 63,
+        Blissymbols = 64,
+        Brahmi = 65,
+        Cham = 66,
+        Cirth = 67,
+        OldChurchSlavonicCyrillic = 68,
+        DemoticEgyptian = 69,
+        HieraticEgyptian = 70,
+        EgyptianHieroglyphs = 71,
+        Khutsuri = 72,
+        SimplifiedHan = 73,
+        TraditionalHan = 74,
+        PahawhHmong = 75,
+        OldHungarian = 76,
+        HarappanIndus = 77,
+        Javanese = 78,
+        KayahLi = 79,
+        LatinFraktur = 80,
+        LatinGaelic = 81,
+        Lepcha = 82,
+        LinearA = 83,
+        Mandaic = 84,
+        Mandaean = 84,
+        MayanHieroglyphs = 85,
+        MeroiticHieroglyphs = 86,
+        Meroitic = 86,
+        Nko = 87,
+        Orkhon = 88,
+        OldPermic = 89,
+        PhagsPa = 90,
+        Phoenician = 91,
+        Miao = 92,
+        PhoneticPollard = 92,
+        Rongorongo = 93,
+        Sarati = 94,
+        EstrangeloSyriac = 95,
+        WesternSyriac = 96,
+        EasternSyriac = 97,
+        Tengwar = 98,
+        Vai = 99,
+        VisibleSpeech = 100,
+        Cuneiform = 101,
+        UnwrittenLanguages = 102,
+        Unknown = 103,
+        Carian = 104,
+        Japanese = 105,
+        Lanna = 106,
+        Lycian = 107,
+        Lydian = 108,
+        OlChiki = 109,
+        Rejang = 110,
+        Saurashtra = 111,
+        SignWriting = 112,
+        Sundanese = 113,
+        Moon = 114,
+        MeiteiMayek = 115,
+        ImperialAramaic = 116,
+        Avestan = 117,
+        Chakma = 118,
+        Korean = 119,
+        Kaithi = 120,
+        Manichaean = 121,
+        InscriptionalPahlavi = 122,
+        PsalterPahlavi = 123,
+        BookPahlavi = 124,
+        InscriptionalParthian = 125,
+        Samaritan = 126,
+        TaiViet = 127,
+        MathematicalNotation = 128,
+        Symbols = 129,
+        Bamum = 130,
+        Lisu = 131,
+        NakhiGeba = 132,
+        OldSouthArabian = 133,
+        BassaVah = 134,
+        Duployan = 135,
+        Elbasan = 136,
+        Grantha = 137,
+        Kpelle = 138,
+        Loma = 139,
+        Mende = 140,
+        MeroiticCursive = 141,
+        OldNorthArabian = 142,
+        Nabataean = 143,
+        Palmyrene = 144,
+        Khudawadi = 145,
+        Sindhi = 145,
+        WarangCiti = 146,
+        Afaka = 147,
+        Jurchen = 148,
+        Mro = 149,
+        Nushu = 150,
+        Sharada = 151,
+        SoraSompeng = 152,
+        Takri = 153,
+        Tangut = 154,
+        Woleai = 155,
+        AnatolianHieroglyphs = 156,
+        Khojki = 157,
+        Tirhuta = 158,
+        CaucasianAlbanian = 159,
+        Mahajani = 160,
+        Ahom = 161,
+        Hatran = 162,
+        Modi = 163,
+        Multani = 164,
+        PauCinHau = 165,
+        Siddham = 166,
+        Adlam = 167,
+        Bhaiksuki = 168,
+        Marchen = 169,
+        Newa = 170,
+        Osage = 171,
+        HanWithBopomofo = 172,
+        Jamo = 173,
+        SymbolsEmoji = 174,
+        MasaramGondi = 175,
+        Soyombo = 176,
+        ZanabazarSquare = 177,
+        Dogra = 178,
+        GunjalaGondi = 179,
+        Makasar = 180,
+        Medefaidrin = 181,
+        HanifiRohingya = 182,
+        Sogdian = 183,
+        OldSogdian = 184,
+        Elymaic = 185,
+        NyiakengPuachueHmong = 186,
+        Nandinagari = 187,
+        Wancho = 188,
+        Chorasmian = 189,
+        DivesAkuru = 190,
+        KhitanSmallScript = 191,
+        Yezidi = 192,
+        CyproMinoan = 193,
+        OldUyghur = 194,
+        Tangsa = 195,
+        Toto = 196,
+        Vithkuqi = 197,
+        Kawi = 198,
+        NagMundari = 199,
+        ArabicNastaliq = 200,
+        Garay = 201,
+        GurungKhema = 202,
+        KiratRai = 203,
+        OlOnal = 204,
+        Sunuwar = 205,
+        Todhri = 206,
+        TuluTigalari = 207,
+        BeriaErfe = 208,
+        Sidetic = 209,
+        TaiYo = 210,
+        TolongSiki = 211,
+        TraditionalHanWithLatin = 212,
     };
 
     enum class NodeType : ::Coplt::u8
@@ -508,12 +830,6 @@ namespace Coplt {
         ::Coplt::GridTemplateComponentType Type;
     };
 
-    struct SimpleRange
-    {
-        ::Coplt::i32 Start;
-        ::Coplt::i32 Length;
-    };
-
     template <class T0 /* T */>
     struct FFIOrderedSetNode
     {
@@ -579,6 +895,15 @@ namespace Coplt {
         ::Coplt::i32 HashCode;
         ::Coplt::i32 Next;
         ::Coplt::NodeId Key;
+    };
+
+    struct TextRange
+    {
+        ::Coplt::i32 Start;
+        ::Coplt::i32 Length;
+        ::Coplt::ScriptCode Script;
+        ::Coplt::CharCategory Category;
+        bool ScriptIsRtl;
     };
 
     struct ChildsData
@@ -691,6 +1016,17 @@ namespace Coplt {
         ::Coplt::TextAlign TextAlign;
         ::Coplt::LengthType TextSize;
         ::Coplt::LengthType TabSize;
+        ::Coplt::FontWeight FontWeight;
+        ::Coplt::FontStyle FontStyle;
+        ::Coplt::FontStretch FontStretch;
+        ::Coplt::TextDirection TextDirection;
+        ::Coplt::WritingDirection WritingDirection;
+        ::Coplt::WhiteSpaceMerge WhiteSpaceMerge;
+        ::Coplt::WhiteSpaceWrap WhiteSpaceWrap;
+        ::Coplt::TextWrap TextWrap;
+        ::Coplt::WordBreak WordBreak;
+        ::Coplt::TextOrientation TextOrientation;
+        ::Coplt::TextOverflow TextOverflow;
     };
 
     struct GridContainerStyle

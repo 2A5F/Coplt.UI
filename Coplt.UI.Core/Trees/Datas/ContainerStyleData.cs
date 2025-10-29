@@ -96,6 +96,19 @@ public partial record struct ContainerStyleData()
 
     public LengthType TextSize = LengthType.Fixed;
     public LengthType TabSize = LengthType.Percent;
+    
+    public FontWeight FontWeight = FontWeight.Normal;
+    public FontStyle FontStyle = FontStyle.Normal;
+    public FontStretch FontStretch = FontStretch.Normal;
+
+    public TextDirection TextDirection = TextDirection.LeftToRight;
+    public WritingDirection WritingDirection = WritingDirection.Horizontal;
+    public WhiteSpaceMerge WhiteSpaceMerge = WhiteSpaceMerge.Keep;
+    public WhiteSpaceWrap WhiteSpaceWrap = WhiteSpaceWrap.WrapLine;
+    public TextWrap TextWrap = TextWrap.Wrap;
+    public WordBreak WordBreak = WordBreak.Auto;
+    public TextOrientation TextOrientation = TextOrientation.Mixed;
+    public TextOverflow TextOverflow = TextOverflow.Clip;
 }
 
 [Dropping]
