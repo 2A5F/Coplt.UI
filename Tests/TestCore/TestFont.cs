@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using Coplt.UI.Texts;
 
-namespace TestTexts1;
+namespace TestCore;
 
-public class Tests
+public class TestFont
 {
     [Test]
     public void Test1()

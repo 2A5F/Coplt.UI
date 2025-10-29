@@ -39,7 +39,7 @@ namespace Coplt
         void Impl_ClearNativeNamesCache();
 
         COPLT_FORCE_INLINE
-        NFontPair const* Impl_GetFonts(COPLT_OUT u32* length);
+        HResult Impl_GetFonts(COPLT_OUT u32* length, COPLT_OUT NFontPair const** pair);
 
         COPLT_FORCE_INLINE
         void Impl_ClearNativeFontsCache();

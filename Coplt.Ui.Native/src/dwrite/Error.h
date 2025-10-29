@@ -8,7 +8,7 @@
 
 namespace Coplt
 {
-    class ComException : Exception
+    class ComException : public Exception
     {
         HRESULT hr;
 

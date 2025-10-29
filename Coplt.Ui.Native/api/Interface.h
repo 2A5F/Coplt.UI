@@ -42,7 +42,7 @@ namespace Coplt {
         COPLT_COM_METHOD(GetLocalNames, ::Coplt::Str16 const*, (COPLT_OUT ::Coplt::u32* length) const, length);
         COPLT_COM_METHOD(GetNames, ::Coplt::FontFamilyNameInfo const*, (COPLT_OUT ::Coplt::u32* length) const, length);
         COPLT_COM_METHOD(ClearNativeNamesCache, void, ());
-        COPLT_COM_METHOD(GetFonts, ::Coplt::NFontPair const*, (COPLT_OUT ::Coplt::u32* length), length);
+        COPLT_COM_METHOD(GetFonts, ::Coplt::HResult, (COPLT_OUT ::Coplt::u32* length, COPLT_OUT ::Coplt::NFontPair const** pair), length, pair);
         COPLT_COM_METHOD(ClearNativeFontsCache, void, ());
     };
 

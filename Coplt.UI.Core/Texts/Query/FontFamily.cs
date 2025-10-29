@@ -17,7 +17,7 @@ public sealed unsafe partial class FontFamily
     #endregion
 
     #region Fields
-    
+
     [Drop]
     internal Rc<IFontFamily> m_inner;
     internal readonly FrozenDictionary<CultureInfo, string> m_names;
@@ -25,7 +25,7 @@ public sealed unsafe partial class FontFamily
     internal readonly uint m_index_in_collection;
 
     internal volatile Font[]? m_fonts;
-    
+
     [field: AllowNull, MaybeNull]
     internal Lock m_load_fonts_lock =>
         field ?? Interlocked.CompareExchange(ref field, new Lock(), null) ?? field;
@@ -99,7 +99,8 @@ public sealed unsafe partial class FontFamily
         {
             if (m_fonts != null) return m_fonts;
             uint num_fonts;
-            var pp_fp = m_inner.GetFonts(&num_fonts);
+            NFontPair* pp_fp;
+            m_inner.GetFonts(&num_fonts, &pp_fp).TryThrowWithMsg();
             fonts = new Font[num_fonts];
             for (var i = 0; i < num_fonts; i++)
             {

@@ -1,4 +1,5 @@
-﻿using Coplt.Com;
+﻿using System.Globalization;
+using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
@@ -18,6 +19,8 @@ public partial record struct ContainerStyleData()
     [Drop]
     [ComType<Ptr<IFontFallback>>]
     public Rc<IFontFallback> FontFallback;
+
+    public LanguageId LanguageId;
 
     public float ScrollBarSize = 0;
 
@@ -101,7 +104,7 @@ public partial record struct ContainerStyleData()
     public FontStyle FontStyle = FontStyle.Normal;
     public FontStretch FontStretch = FontStretch.Normal;
 
-    public TextDirection TextDirection = TextDirection.LeftToRight;
+    public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
     public WhiteSpaceMerge WhiteSpaceMerge = WhiteSpaceMerge.Keep;
     public WhiteSpaceWrap WhiteSpaceWrap = WhiteSpaceWrap.WrapLine;

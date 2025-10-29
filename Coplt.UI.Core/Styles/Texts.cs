@@ -96,6 +96,8 @@ public readonly record struct FontWidth(float Width)
 
 public enum TextDirection : byte
 {
+    Forward,
+    Reverse,
     LeftToRight,
     RightToLeft,
 }

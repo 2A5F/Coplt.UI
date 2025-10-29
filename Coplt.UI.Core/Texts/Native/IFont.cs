@@ -5,7 +5,7 @@ using Coplt.UI.Texts;
 
 namespace Coplt.UI.Native;
 
-public struct NFontInfo
+public unsafe struct NFontInfo
 {
     public FontMetrics Metrics;
     public FontWidth Width;

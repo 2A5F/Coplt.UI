@@ -14,14 +14,13 @@ public unsafe partial struct IFontFamily
 {
     [return: ComType<ConstPtr<Str16>>]
     public readonly partial Str16* GetLocalNames([Out] uint* length);
-    
+
     [return: ComType<ConstPtr<FontFamilyNameInfo>>]
     public readonly partial FontFamilyNameInfo* GetNames([Out] uint* length);
 
     public partial void ClearNativeNamesCache();
 
-    [return: ComType<ConstPtr<NFontPair>>]
-    public partial NFontPair* GetFonts([Out] uint* length);
+    public partial HResult GetFonts([Out] uint* length, [Out, ComType<Ptr<ConstPtr<NFontPair>>>] NFontPair** pair);
     public partial void ClearNativeFontsCache();
 }
 

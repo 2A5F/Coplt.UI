@@ -47,17 +47,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/ILib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Native/Lib.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Details.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Interface.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Text.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/lib.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tests/TestCore/TestText.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestCore/TestText.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Native/IFont.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Native/IFont.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Query/Font.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Texts/Query/Font.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Font.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,7 +63,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Release" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Main - Debug" />
   <component name="FileTemplateManagerImpl">
     <option name="SCHEME" value="项目" />
   </component>
@@ -269,7 +265,7 @@
       <workItem from="1761665833544" duration="316000" />
       <workItem from="1761666938350" duration="2448000" />
       <workItem from="1761669408196" duration="4488000" />
-      <workItem from="1761709576153" duration="11477000" />
+      <workItem from="1761709576153" duration="15552000" />
     </task>
     <servers />
   </component>

@@ -65,6 +65,8 @@ namespace Coplt {
 
     struct FontWidth;
 
+    struct LanguageId;
+
     struct FontMetrics;
 
     struct TextRange;
@@ -281,8 +283,10 @@ namespace Coplt {
 
     enum class TextDirection : ::Coplt::u8
     {
-        LeftToRight = 0,
-        RightToLeft = 1,
+        Forward = 0,
+        Reverse = 1,
+        LeftToRight = 2,
+        RightToLeft = 3,
     };
 
     enum class TextOrientation : ::Coplt::u8
@@ -787,6 +791,11 @@ namespace Coplt {
         ::Coplt::f32 Width;
     };
 
+    struct LanguageId
+    {
+        ::Coplt::char16* Name;
+    };
+
     struct FontMetrics
     {
         ::Coplt::f32 Ascent;
@@ -961,6 +970,7 @@ namespace Coplt {
     {
         ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
         IFontFallback* FontFallback;
+        ::Coplt::LanguageId LanguageId;
         ::Coplt::f32 ScrollBarSize;
         ::Coplt::f32 WidthValue;
         ::Coplt::f32 HeightValue;
@@ -1052,6 +1062,7 @@ namespace Coplt {
     struct TextData
     {
         ::Coplt::NativeList<::Coplt::char16> m_text;
+        ::Coplt::NativeList<::Coplt::TextRange> m_ranges_0;
         ::Coplt::u64 m_version;
         ::Coplt::u64 m_inner_version;
     };

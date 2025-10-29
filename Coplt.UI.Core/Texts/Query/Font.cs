@@ -74,8 +74,8 @@ public sealed unsafe partial class Font
         m_inner.CreateFace(&face).TryThrowWithMsg();
         return new(new(face), this);
     }
-    
-    public FontFace GetFace() => 
+
+    public FontFace GetFace() =>
         m_face ?? Interlocked.CompareExchange(ref m_face, m_face ?? CreateFace(), null) ?? m_face;
 
     #endregion

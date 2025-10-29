@@ -198,8 +198,10 @@ pub enum TextAlign {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum TextDirection {
-    LeftToRight = 0,
-    RightToLeft = 1,
+    Forward = 0,
+    Reverse = 1,
+    LeftToRight = 2,
+    RightToLeft = 3,
 }
 
 #[repr(u8)]
@@ -829,6 +831,12 @@ pub struct FontWidth {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LanguageId {
+    pub Name: *mut u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontMetrics {
     pub Ascent: f32,
     pub Descent: f32,
@@ -906,6 +914,7 @@ pub struct ContainerLayoutData {
 pub struct ContainerStyleData {
     pub Grid: NativeArc<GridContainerStyle>,
     pub FontFallback: *mut IFontFallback,
+    pub LanguageId: LanguageId,
     pub ScrollBarSize: f32,
     pub WidthValue: f32,
     pub HeightValue: f32,
@@ -1000,6 +1009,7 @@ pub struct RootData {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData {
     pub m_text: NativeList<u16>,
+    pub m_ranges_0: NativeList<TextRange>,
     pub m_version: u64,
     pub m_inner_version: u64,
 }

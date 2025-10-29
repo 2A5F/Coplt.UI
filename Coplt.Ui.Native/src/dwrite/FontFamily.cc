@@ -72,7 +72,7 @@ void FontFamily::Impl_ClearNativeNamesCache()
     m_str_local_names = {};
 }
 
-NFontPair const* FontFamily::Impl_GetFonts(u32* length)
+HResult FontFamily::Impl_GetFonts(u32* length, NFontPair const** pair)
 {
     if (!m_has_fonts)
     {
@@ -92,11 +92,13 @@ NFontPair const* FontFamily::Impl_GetFonts(u32* length)
             }
             m_has_fonts = true;
             *length = m_p_fonts.size();
-            return m_p_fonts.data();
+            *pair = m_p_fonts.data();
+            return HResultE::Ok;
         });
     }
     *length = m_p_fonts.size();
-    return m_p_fonts.data();
+    *pair = m_p_fonts.data();
+    return HResultE::Ok;
 }
 
 void FontFamily::Impl_ClearNativeFontsCache()
