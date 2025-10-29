@@ -1,5 +1,7 @@
 #include "Text.h"
 
+#include <format>
+
 #include <icu.h>
 #include <hb.h>
 
@@ -18,8 +20,12 @@ void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
     {
         const auto li = i;
         U16_NEXT(str, i, len, c);
-        UErrorCode e;
+        UErrorCode e{};
         const auto script = uscript_getScript(c, &e);
+        if (e > 0) [[unlikely]]
+        {
+            throw Exception(std::format("GetScript failed: {}", u_errorName(e)));
+        }
         const auto category = static_cast<UCharCategory>(u_charType(c));
         if (script != cur_script || category != cur_category)
         {

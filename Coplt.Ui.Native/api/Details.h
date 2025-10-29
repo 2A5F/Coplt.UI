@@ -831,7 +831,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontFallback)(::Coplt::ILib*, IFontFallback** ff) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_CreateLayout)(::Coplt::ILib*, ILayout** layout) noexcept;
-    void (*const COPLT_CDECL f_SplitTexts)(::Coplt::ILib*, ::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_SplitTexts)(::Coplt::ILib*, ::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
@@ -844,7 +844,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
     extern "C" ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
     extern "C" ::Coplt::i32 COPLT_CDECL GetSystemFontFallback(::Coplt::ILib* self, IFontFallback** p0) noexcept;
     extern "C" ::Coplt::i32 COPLT_CDECL CreateLayout(::Coplt::ILib* self, ILayout** p0) noexcept;
-    extern "C" void COPLT_CDECL SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept;
+    extern "C" ::Coplt::i32 COPLT_CDECL SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept;
 }
 
 template <>
@@ -903,7 +903,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontFallback(IFontFallback** ff) = 0;
         virtual ::Coplt::HResult Impl_CreateLayout(ILayout** layout) = 0;
-        virtual void Impl_SplitTexts(::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len) = 0;
+        virtual ::Coplt::HResult Impl_SplitTexts(::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len) = 0;
     };
 
     template <std::derived_from<::Coplt::ILib> Base = ::Coplt::ILib>
@@ -967,9 +967,9 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_CreateLayout(p0));
         }
 
-        static void COPLT_CDECL f_SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept
+        static ::Coplt::i32 COPLT_CDECL f_SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept
         {
-            AsImpl(self)->Impl_SplitTexts(p0, p1, p2);
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_SplitTexts(p0, p1, p2));
         }
     };
 
@@ -1106,16 +1106,17 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         return r;
     }
 
-    extern "C" inline void COPLT_CDECL SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept
+    extern "C" inline ::Coplt::i32 COPLT_CDECL SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept
     {
-        struct { } r;
+        ::Coplt::i32 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, SplitTexts, void)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, SplitTexts, ::Coplt::i32)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_SplitTexts(p0, p1, p2);
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_SplitTexts(p0, p1, p2));
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, SplitTexts, void)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, SplitTexts, ::Coplt::i32)
         #endif
+        return r;
     }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_ILib\
@@ -1164,9 +1165,9 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
     {
         return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_CreateLayout(self, p0));
     }
-    static COPLT_FORCE_INLINE void SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::HResult SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept
     {
-        COPLT_COM_PVTB(ILib, self)->f_SplitTexts(self, p0, p1, p2);
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_SplitTexts(self, p0, p1, p2));
     }
 };
 

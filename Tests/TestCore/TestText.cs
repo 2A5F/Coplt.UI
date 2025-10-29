@@ -13,7 +13,7 @@ public unsafe class TestText
         var str = "123 阿斯顿 asd ياخشىمۇسىز 😊😅"; 
         fixed (char* p_str = str)
         {
-            NativeLib.Instance.Lib.Handle->SplitTexts(&list, p_str, str.Length);
+            NativeLib.Instance.SplitTexts(&list, p_str, str.Length);
         }
         foreach (var range in list)
         {

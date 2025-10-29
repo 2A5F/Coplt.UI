@@ -2,6 +2,8 @@
 using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
+using Coplt.UI.Collections;
+using Coplt.UI.Texts;
 using Coplt.UI.Utilities;
 
 namespace Coplt.UI.Native;
@@ -71,6 +73,15 @@ public sealed unsafe partial class NativeLib
     public T* ZAlloc<T>(int count = 1) => (T*)m_lib.ZAlloc(count * sizeof(T), Utils.AlignOf<T>());
     public T* ReAlloc<T>(T* ptr, int count) => (T*)m_lib.ReAlloc(ptr, count * sizeof(T), Utils.AlignOf<T>());
     public void Free<T>(T* ptr) => m_lib.Free(ptr, Utils.AlignOf<T>());
+
+    #endregion
+
+    #region MyRegion
+
+    public void SplitTexts(NativeList<TextRange>* ranges, char* chars, int len)
+    {
+        m_lib.SplitTexts(ranges, chars, len).TryThrowWithMsg();
+    }
 
     #endregion
 }

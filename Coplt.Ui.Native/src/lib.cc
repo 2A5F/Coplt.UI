@@ -101,9 +101,13 @@ HResult LibUi::Impl_CreateLayout(ILayout** layout)
     });
 }
 
-void LibUi::Impl_SplitTexts(NativeList<TextRange>* ranges, char16 const* chars, const i32 len)
+HResult LibUi::Impl_SplitTexts(NativeList<TextRange>* ranges, char16 const* chars, const i32 len)
 {
-    Coplt::SplitTexts(*ffi_list(ranges), chars, len);
+    return feb([&]
+    {
+        Coplt::SplitTexts(*ffi_list(ranges), chars, len);
+        return HResultE::Ok;
+    });
 }
 
 ILib* Coplt::Coplt_CreateLibUi()

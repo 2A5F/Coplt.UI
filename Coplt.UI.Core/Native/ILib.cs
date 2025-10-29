@@ -24,5 +24,5 @@ public unsafe partial struct ILib
 
     public partial HResult CreateLayout(ILayout** layout);
     
-    public partial void SplitTexts(NativeList<TextRange>* ranges, [ComType<ConstPtr<char>>] char* chars, int len);
+    public partial HResult SplitTexts(NativeList<TextRange>* ranges, [ComType<ConstPtr<char>>] char* chars, int len);
 }
