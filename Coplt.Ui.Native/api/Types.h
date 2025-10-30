@@ -65,6 +65,8 @@ namespace Coplt {
 
     struct NNodeIdCtrl;
 
+    struct NString;
+
     struct FontWidth;
 
     struct LanguageId;
@@ -75,21 +77,15 @@ namespace Coplt {
 
     struct ChildsData;
 
-    struct CommonStyleData;
-
-    struct ContainerLayoutData;
-
-    struct ContainerStyleData;
+    struct CommonData;
 
     struct GridContainerStyle;
 
     struct RootData;
 
-    struct TextData;
+    struct StyleData;
 
     struct NodeId;
-
-    struct NodeLocate;
 
     struct IFont;
 
@@ -204,6 +200,44 @@ namespace Coplt {
         Block = 3,
     };
 
+    enum class CursorType : ::Coplt::u8
+    {
+        Default = 0,
+        Pointer = 1,
+        ContextMenu = 2,
+        Help = 3,
+        Progress = 4,
+        Wait = 5,
+        Cell = 6,
+        Crosshair = 7,
+        Text = 8,
+        VerticalText = 9,
+        Alias = 10,
+        Copy = 11,
+        Move = 12,
+        NoDrop = 13,
+        NotAllowed = 14,
+        Grab = 15,
+        Grabbing = 16,
+        AllScroll = 17,
+        ColResize = 18,
+        RowResize = 19,
+        NResize = 20,
+        EResize = 21,
+        SResize = 22,
+        WResize = 23,
+        NeResize = 24,
+        NwResize = 25,
+        SeResize = 26,
+        SwResize = 27,
+        EwResize = 28,
+        NsResize = 29,
+        NeSwResize = 30,
+        NwSeResize = 31,
+        ZoomIn = 32,
+        ZoomOut = 33,
+    };
+
     enum class FlexDirection : ::Coplt::u8
     {
         Column = 0,
@@ -269,6 +303,12 @@ namespace Coplt {
         Visible = 0,
         Clip = 1,
         Hidden = 2,
+    };
+
+    enum class PointerEvents : ::Coplt::u8
+    {
+        Auto = 0,
+        None = 1,
     };
 
     enum class Position : ::Coplt::u8
@@ -619,7 +659,6 @@ namespace Coplt {
     {
         View = 0,
         Text = 1,
-        Root = 2,
     };
 
     struct LayoutCollapsibleMarginSet
@@ -822,8 +861,8 @@ namespace Coplt {
 
     struct NodeId
     {
-        ::Coplt::u32 Id;
-        ::Coplt::u32 VersionAndType;
+        ::Coplt::u32 Index;
+        ::Coplt::u32 IdAndType;
     };
 
     struct Str8
@@ -887,30 +926,14 @@ namespace Coplt {
 
     struct NLayoutContext
     {
-        ::Coplt::i32* roots;
-        ::Coplt::i32* view_buckets;
-        ::Coplt::i32* text_buckets;
-        ::Coplt::i32* root_buckets;
-        ::Coplt::NNodeIdCtrl* view_ctrl;
-        ::Coplt::NNodeIdCtrl* text_ctrl;
-        ::Coplt::NNodeIdCtrl* root_ctrl;
-        ::Coplt::ContainerLayoutData* view_container_layout_data;
-        void* _pad_container_layout_data;
-        ::Coplt::ContainerLayoutData* root_container_layout_data;
-        ::Coplt::CommonStyleData* view_common_style_data;
-        ::Coplt::CommonStyleData* text_common_style_data;
-        ::Coplt::CommonStyleData* root_common_style_data;
-        ::Coplt::ChildsData* view_childs_data;
-        void* _pad_childs_data;
-        ::Coplt::ChildsData* root_childs_data;
-        ::Coplt::ContainerStyleData* view_container_style_data;
-        void* _pad_container_style_data;
-        ::Coplt::ContainerStyleData* root_container_style_data;
-        ::Coplt::TextData* text_data;
-        ::Coplt::RootData* root_root_data;
+        ::Coplt::RootData* roots;
+        ::Coplt::i32* node_buckets;
+        ::Coplt::NNodeIdCtrl* node_ctrl;
+        ::Coplt::CommonData* node_common_data;
+        ::Coplt::ChildsData* node_childs_data;
+        ::Coplt::StyleData* node_style_data;
         ::Coplt::i32 root_count;
-        ::Coplt::i32 view_count;
-        ::Coplt::i32 text_count;
+        ::Coplt::i32 node_count;
         bool rounding;
     };
 
@@ -919,6 +942,12 @@ namespace Coplt {
         ::Coplt::i32 HashCode;
         ::Coplt::i32 Next;
         ::Coplt::NodeId Key;
+    };
+
+    struct NString
+    {
+        ::Coplt::char16 const* m_str;
+        void* m_handle;
     };
 
     struct TextRange
@@ -933,61 +962,57 @@ namespace Coplt {
 
     struct ChildsData
     {
-        ::Coplt::FFIOrderedSet<::Coplt::NodeLocate> m_childs;
+        ::Coplt::FFIOrderedSet<::Coplt::NodeId> m_childs;
+        ::Coplt::NativeList<::Coplt::NString> m_texts;
+        ::Coplt::u32 m_text_id_inc;
+        ::Coplt::u64 m_version;
+        ::Coplt::u64 m_last_version;
     };
 
-    struct CommonStyleData
+    struct CommonData
     {
+        ITextLayout* TextLayoutObject;
+        ::Coplt::LayoutData FinalLayout;
+        ::Coplt::LayoutData UnRoundedLayout;
+        ::Coplt::LayoutCache LayoutCache;
+    };
+
+    struct GridContainerStyle
+    {
+        ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateRows;
+        ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateColumns;
+        ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoRows;
+        ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoColumns;
+        ::Coplt::NativeList<::Coplt::GridTemplateArea> GridTemplateAreas;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateColumnNames;
+        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateRowNames;
+    };
+
+    struct RootData
+    {
+        ::Coplt::NodeId Node;
+        ::Coplt::f32 AvailableSpaceXValue;
+        ::Coplt::f32 AvailableSpaceYValue;
+        ::Coplt::AvailableSpaceType AvailableSpaceX;
+        ::Coplt::AvailableSpaceType AvailableSpaceY;
+        bool UseRounding;
+    };
+
+    struct StyleData
+    {
+        ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
+        IFontFallback* FontFallback;
+        ::Coplt::LanguageId LanguageId;
         ::Coplt::i32 ZIndex;
+        ::Coplt::f32 TextColorR;
+        ::Coplt::f32 TextColorG;
+        ::Coplt::f32 TextColorB;
+        ::Coplt::f32 TextColorA;
         ::Coplt::f32 Opacity;
         ::Coplt::f32 BackgroundColorR;
         ::Coplt::f32 BackgroundColorG;
         ::Coplt::f32 BackgroundColorB;
         ::Coplt::f32 BackgroundColorA;
-        ::Coplt::f32 InsertTopValue;
-        ::Coplt::f32 InsertRightValue;
-        ::Coplt::f32 InsertBottomValue;
-        ::Coplt::f32 InsertLeftValue;
-        ::Coplt::f32 MarginTopValue;
-        ::Coplt::f32 MarginRightValue;
-        ::Coplt::f32 MarginBottomValue;
-        ::Coplt::f32 MarginLeftValue;
-        ::Coplt::f32 FlexGrow;
-        ::Coplt::f32 FlexShrink;
-        ::Coplt::f32 FlexBasisValue;
-        ::Coplt::TextMode TextMode;
-        ::Coplt::GridPlacement GridRowStart;
-        ::Coplt::GridPlacement GridRowEnd;
-        ::Coplt::GridPlacement GridColumnStart;
-        ::Coplt::GridPlacement GridColumnEnd;
-        ::Coplt::Visible Visible;
-        ::Coplt::Position Position;
-        ::Coplt::LengthType InsertTop;
-        ::Coplt::LengthType InsertRight;
-        ::Coplt::LengthType InsertBottom;
-        ::Coplt::LengthType InsertLeft;
-        ::Coplt::LengthType MarginTop;
-        ::Coplt::LengthType MarginRight;
-        ::Coplt::LengthType MarginBottom;
-        ::Coplt::LengthType MarginLeft;
-        ::Coplt::AlignType AlignSelf;
-        ::Coplt::AlignType JustifySelf;
-        ::Coplt::LengthType FlexBasis;
-    };
-
-    struct ContainerLayoutData
-    {
-        ITextLayout* TextLayoutObject;
-        ::Coplt::LayoutData FinalLayout;
-        ::Coplt::LayoutData Layout;
-        ::Coplt::LayoutCache LayoutCache;
-    };
-
-    struct ContainerStyleData
-    {
-        ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
-        IFontFallback* FontFallback;
-        ::Coplt::LanguageId LanguageId;
         ::Coplt::f32 ScrollBarSize;
         ::Coplt::f32 WidthValue;
         ::Coplt::f32 HeightValue;
@@ -996,6 +1021,14 @@ namespace Coplt {
         ::Coplt::f32 MaxWidthValue;
         ::Coplt::f32 MaxHeightValue;
         ::Coplt::f32 AspectRatioValue;
+        ::Coplt::f32 InsertTopValue;
+        ::Coplt::f32 InsertRightValue;
+        ::Coplt::f32 InsertBottomValue;
+        ::Coplt::f32 InsertLeftValue;
+        ::Coplt::f32 MarginTopValue;
+        ::Coplt::f32 MarginRightValue;
+        ::Coplt::f32 MarginBottomValue;
+        ::Coplt::f32 MarginLeftValue;
         ::Coplt::f32 PaddingTopValue;
         ::Coplt::f32 PaddingRightValue;
         ::Coplt::f32 PaddingBottomValue;
@@ -1006,14 +1039,22 @@ namespace Coplt {
         ::Coplt::f32 BorderLeftValue;
         ::Coplt::f32 GapXValue;
         ::Coplt::f32 GapYValue;
-        ::Coplt::f32 TextColorR;
-        ::Coplt::f32 TextColorG;
-        ::Coplt::f32 TextColorB;
-        ::Coplt::f32 TextColorA;
+        ::Coplt::f32 FlexGrow;
+        ::Coplt::f32 FlexShrink;
+        ::Coplt::f32 FlexBasisValue;
         ::Coplt::f32 TextSizeValue;
         ::Coplt::f32 TabSizeValue;
+        ::Coplt::GridPlacement GridRowStart;
+        ::Coplt::GridPlacement GridRowEnd;
+        ::Coplt::GridPlacement GridColumnStart;
+        ::Coplt::GridPlacement GridColumnEnd;
+        ::Coplt::Visible Visible;
+        ::Coplt::Position Position;
         ::Coplt::Container Container;
+        ::Coplt::TextMode TextMode;
         ::Coplt::BoxSizing BoxSizing;
+        ::Coplt::CursorType Cursor;
+        ::Coplt::PointerEvents PointerEvents;
         ::Coplt::Overflow OverflowX;
         ::Coplt::Overflow OverflowY;
         ::Coplt::LengthType Width;
@@ -1022,6 +1063,14 @@ namespace Coplt {
         ::Coplt::LengthType MinHeight;
         ::Coplt::LengthType MaxWidth;
         ::Coplt::LengthType MaxHeight;
+        ::Coplt::LengthType InsertTop;
+        ::Coplt::LengthType InsertRight;
+        ::Coplt::LengthType InsertBottom;
+        ::Coplt::LengthType InsertLeft;
+        ::Coplt::LengthType MarginTop;
+        ::Coplt::LengthType MarginRight;
+        ::Coplt::LengthType MarginBottom;
+        ::Coplt::LengthType MarginLeft;
         ::Coplt::LengthType PaddingTop;
         ::Coplt::LengthType PaddingRight;
         ::Coplt::LengthType PaddingBottom;
@@ -1040,6 +1089,9 @@ namespace Coplt {
         ::Coplt::AlignType JustifyContent;
         ::Coplt::AlignType AlignItems;
         ::Coplt::AlignType JustifyItems;
+        ::Coplt::AlignType AlignSelf;
+        ::Coplt::AlignType JustifySelf;
+        ::Coplt::LengthType FlexBasis;
         ::Coplt::TextAlign TextAlign;
         ::Coplt::LengthType TextSize;
         ::Coplt::LengthType TabSize;
@@ -1054,41 +1106,6 @@ namespace Coplt {
         ::Coplt::WordBreak WordBreak;
         ::Coplt::TextOrientation TextOrientation;
         ::Coplt::TextOverflow TextOverflow;
-    };
-
-    struct GridContainerStyle
-    {
-        ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateRows;
-        ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateColumns;
-        ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoRows;
-        ::Coplt::NativeList<::Coplt::TrackSizingFunction> GridAutoColumns;
-        ::Coplt::NativeList<::Coplt::GridTemplateArea> GridTemplateAreas;
-        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateColumnNames;
-        ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateRowNames;
-    };
-
-    struct RootData
-    {
-        ::Coplt::f32 AvailableSpaceXValue;
-        ::Coplt::f32 AvailableSpaceYValue;
-        ::Coplt::AvailableSpaceType AvailableSpaceX;
-        ::Coplt::AvailableSpaceType AvailableSpaceY;
-        bool UseRounding;
-    };
-
-    struct TextData
-    {
-        ITextData* m_obj;
-        ::Coplt::NativeList<::Coplt::char16> m_text;
-        ::Coplt::NativeList<::Coplt::TextRange> m_ranges_0;
-        ::Coplt::u64 m_version;
-        ::Coplt::u64 m_inner_version;
-    };
-
-    struct NodeLocate
-    {
-        ::Coplt::NodeId Id;
-        ::Coplt::i32 Index;
     };
 
 } // namespace Coplt

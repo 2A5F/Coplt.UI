@@ -13,7 +13,7 @@ use crate::com::NodeId;
 
 impl GetHashCode for NodeId {
     fn get_hash_code(&self) -> i32 {
-        (self.Id ^ self.VersionAndType) as i32
+        (self.Index ^ self.IdAndType) as i32
     }
 }
 

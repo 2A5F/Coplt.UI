@@ -1,29 +1,28 @@
-﻿namespace Coplt.UI.Trees;
+﻿using System.Runtime.CompilerServices;
 
-public record struct NodeId(uint Id, uint Version, NodeType Type)
+namespace Coplt.UI.Trees;
+
+public record struct NodeId(uint Index, uint Id, NodeType Type)
 {
-    public const uint TypeMask = 0b1111;
+    public const uint TypeMask = 0xF;
 
-    public uint Id = Id;
-    private uint VersionAndType = Version << 4 | (byte)Type & TypeMask;
+    public uint Index = Index;
+    private uint IdAndType = Id << 4 | (byte)Type & TypeMask;
 
-    public uint Version
+    public uint Id
     {
-        get => (VersionAndType & ~TypeMask) >> 4;
-        set => VersionAndType = (VersionAndType & TypeMask) | (value << 4);
+        get => (IdAndType & ~TypeMask) >> 4;
+        set => IdAndType = (IdAndType & TypeMask) | (value << 4);
     }
     public NodeType Type
     {
-        get => (NodeType)(VersionAndType & TypeMask);
-        set => VersionAndType = (VersionAndType & ~TypeMask) | (byte)value;
+        get => (NodeType)(IdAndType & TypeMask);
+        set => IdAndType = (IdAndType & ~TypeMask) | (byte)value;
     }
 
-    public readonly bool Equals(NodeId other) => Id == other.Id && VersionAndType == other.VersionAndType;
-    public readonly override int GetHashCode() => (int)(Id ^ VersionAndType);
-}
+    public readonly bool Equals(NodeId other) => Id == other.Id && IdAndType == other.IdAndType;
+    public readonly override int GetHashCode() => (int)(Index ^ IdAndType);
 
-public record struct NodeLocate(NodeId Id, int Index)
-{
-    public NodeId Id = Id;
-    public int Index = Index;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint NormalizeId(uint id) => id & 0x0FFF_FFFF;
 }

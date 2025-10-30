@@ -107,6 +107,45 @@ pub enum Container {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum CursorType {
+    Default = 0,
+    Pointer = 1,
+    ContextMenu = 2,
+    Help = 3,
+    Progress = 4,
+    Wait = 5,
+    Cell = 6,
+    Crosshair = 7,
+    Text = 8,
+    VerticalText = 9,
+    Alias = 10,
+    Copy = 11,
+    Move = 12,
+    NoDrop = 13,
+    NotAllowed = 14,
+    Grab = 15,
+    Grabbing = 16,
+    AllScroll = 17,
+    ColResize = 18,
+    RowResize = 19,
+    NResize = 20,
+    EResize = 21,
+    SResize = 22,
+    WResize = 23,
+    NeResize = 24,
+    NwResize = 25,
+    SeResize = 26,
+    SwResize = 27,
+    EwResize = 28,
+    NsResize = 29,
+    NeSwResize = 30,
+    NwSeResize = 31,
+    ZoomIn = 32,
+    ZoomOut = 33,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FlexDirection {
     Column = 0,
     Row = 1,
@@ -177,6 +216,13 @@ pub enum Overflow {
     Visible = 0,
     Clip = 1,
     Hidden = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum PointerEvents {
+    Auto = 0,
+    None = 1,
 }
 
 #[repr(u8)]
@@ -537,7 +583,6 @@ pub enum ScriptCode {
 pub enum NodeType {
     View = 0,
     Text = 1,
-    Root = 2,
 }
 
 #[repr(C)]
@@ -801,30 +846,14 @@ pub struct NFontPair {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
-    pub roots: *mut i32,
-    pub view_buckets: *mut i32,
-    pub text_buckets: *mut i32,
-    pub root_buckets: *mut i32,
-    pub view_ctrl: *mut NNodeIdCtrl,
-    pub text_ctrl: *mut NNodeIdCtrl,
-    pub root_ctrl: *mut NNodeIdCtrl,
-    pub view_container_layout_data: *mut ContainerLayoutData,
-    pub _pad_container_layout_data: *mut (),
-    pub root_container_layout_data: *mut ContainerLayoutData,
-    pub view_common_style_data: *mut CommonStyleData,
-    pub text_common_style_data: *mut CommonStyleData,
-    pub root_common_style_data: *mut CommonStyleData,
-    pub view_childs_data: *mut ChildsData,
-    pub _pad_childs_data: *mut (),
-    pub root_childs_data: *mut ChildsData,
-    pub view_container_style_data: *mut ContainerStyleData,
-    pub _pad_container_style_data: *mut (),
-    pub root_container_style_data: *mut ContainerStyleData,
-    pub text_data: *mut TextData,
-    pub root_root_data: *mut RootData,
+    pub roots: *mut RootData,
+    pub node_buckets: *mut i32,
+    pub node_ctrl: *mut NNodeIdCtrl,
+    pub node_common_data: *mut CommonData,
+    pub node_childs_data: *mut ChildsData,
+    pub node_style_data: *mut StyleData,
     pub root_count: i32,
-    pub view_count: i32,
-    pub text_count: i32,
+    pub node_count: i32,
     pub rounding: bool,
 }
 
@@ -834,6 +863,13 @@ pub struct NNodeIdCtrl {
     pub HashCode: i32,
     pub Next: i32,
     pub Key: NodeId,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NString {
+    pub m_str: *const u16,
+    pub m_handle: *mut (),
 }
 
 #[repr(C)]
@@ -872,64 +908,61 @@ pub struct TextRange {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
-    pub m_childs: FFIOrderedSet<NodeLocate>,
+    pub m_childs: FFIOrderedSet<NodeId>,
+    pub m_texts: NativeList<NString>,
+    pub m_text_id_inc: u32,
+    pub m_version: u64,
+    pub m_last_version: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct CommonStyleData {
-    pub ZIndex: i32,
-    pub Opacity: f32,
-    pub BackgroundColorR: f32,
-    pub BackgroundColorG: f32,
-    pub BackgroundColorB: f32,
-    pub BackgroundColorA: f32,
-    pub InsertTopValue: f32,
-    pub InsertRightValue: f32,
-    pub InsertBottomValue: f32,
-    pub InsertLeftValue: f32,
-    pub MarginTopValue: f32,
-    pub MarginRightValue: f32,
-    pub MarginBottomValue: f32,
-    pub MarginLeftValue: f32,
-    pub FlexGrow: f32,
-    pub FlexShrink: f32,
-    pub FlexBasisValue: f32,
-    pub TextMode: TextMode,
-    pub GridRowStart: GridPlacement,
-    pub GridRowEnd: GridPlacement,
-    pub GridColumnStart: GridPlacement,
-    pub GridColumnEnd: GridPlacement,
-    pub Visible: Visible,
-    pub Position: Position,
-    pub InsertTop: LengthType,
-    pub InsertRight: LengthType,
-    pub InsertBottom: LengthType,
-    pub InsertLeft: LengthType,
-    pub MarginTop: LengthType,
-    pub MarginRight: LengthType,
-    pub MarginBottom: LengthType,
-    pub MarginLeft: LengthType,
-    pub AlignSelf: AlignType,
-    pub JustifySelf: AlignType,
-    pub FlexBasis: LengthType,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct ContainerLayoutData {
+pub struct CommonData {
     pub TextLayoutObject: *mut ITextLayout,
     pub FinalLayout: LayoutData,
-    pub Layout: LayoutData,
+    pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct ContainerStyleData {
+pub struct GridContainerStyle {
+    pub GridTemplateRows: NativeList<GridTemplateComponent>,
+    pub GridTemplateColumns: NativeList<GridTemplateComponent>,
+    pub GridAutoRows: NativeList<TrackSizingFunction>,
+    pub GridAutoColumns: NativeList<TrackSizingFunction>,
+    pub GridTemplateAreas: NativeList<GridTemplateArea>,
+    pub GridTemplateColumnNames: NativeList<NativeList<GridName>>,
+    pub GridTemplateRowNames: NativeList<NativeList<GridName>>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct RootData {
+    pub Node: NodeId,
+    pub AvailableSpaceXValue: f32,
+    pub AvailableSpaceYValue: f32,
+    pub AvailableSpaceX: AvailableSpaceType,
+    pub AvailableSpaceY: AvailableSpaceType,
+    pub UseRounding: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct StyleData {
     pub Grid: NativeArc<GridContainerStyle>,
     pub FontFallback: *mut IFontFallback,
     pub LanguageId: LanguageId,
+    pub ZIndex: i32,
+    pub TextColorR: f32,
+    pub TextColorG: f32,
+    pub TextColorB: f32,
+    pub TextColorA: f32,
+    pub Opacity: f32,
+    pub BackgroundColorR: f32,
+    pub BackgroundColorG: f32,
+    pub BackgroundColorB: f32,
+    pub BackgroundColorA: f32,
     pub ScrollBarSize: f32,
     pub WidthValue: f32,
     pub HeightValue: f32,
@@ -938,6 +971,14 @@ pub struct ContainerStyleData {
     pub MaxWidthValue: f32,
     pub MaxHeightValue: f32,
     pub AspectRatioValue: f32,
+    pub InsertTopValue: f32,
+    pub InsertRightValue: f32,
+    pub InsertBottomValue: f32,
+    pub InsertLeftValue: f32,
+    pub MarginTopValue: f32,
+    pub MarginRightValue: f32,
+    pub MarginBottomValue: f32,
+    pub MarginLeftValue: f32,
     pub PaddingTopValue: f32,
     pub PaddingRightValue: f32,
     pub PaddingBottomValue: f32,
@@ -948,14 +989,22 @@ pub struct ContainerStyleData {
     pub BorderLeftValue: f32,
     pub GapXValue: f32,
     pub GapYValue: f32,
-    pub TextColorR: f32,
-    pub TextColorG: f32,
-    pub TextColorB: f32,
-    pub TextColorA: f32,
+    pub FlexGrow: f32,
+    pub FlexShrink: f32,
+    pub FlexBasisValue: f32,
     pub TextSizeValue: f32,
     pub TabSizeValue: f32,
+    pub GridRowStart: GridPlacement,
+    pub GridRowEnd: GridPlacement,
+    pub GridColumnStart: GridPlacement,
+    pub GridColumnEnd: GridPlacement,
+    pub Visible: Visible,
+    pub Position: Position,
     pub Container: Container,
+    pub TextMode: TextMode,
     pub BoxSizing: BoxSizing,
+    pub Cursor: CursorType,
+    pub PointerEvents: PointerEvents,
     pub OverflowX: Overflow,
     pub OverflowY: Overflow,
     pub Width: LengthType,
@@ -964,6 +1013,14 @@ pub struct ContainerStyleData {
     pub MinHeight: LengthType,
     pub MaxWidth: LengthType,
     pub MaxHeight: LengthType,
+    pub InsertTop: LengthType,
+    pub InsertRight: LengthType,
+    pub InsertBottom: LengthType,
+    pub InsertLeft: LengthType,
+    pub MarginTop: LengthType,
+    pub MarginRight: LengthType,
+    pub MarginBottom: LengthType,
+    pub MarginLeft: LengthType,
     pub PaddingTop: LengthType,
     pub PaddingRight: LengthType,
     pub PaddingBottom: LengthType,
@@ -982,6 +1039,9 @@ pub struct ContainerStyleData {
     pub JustifyContent: AlignType,
     pub AlignItems: AlignType,
     pub JustifyItems: AlignType,
+    pub AlignSelf: AlignType,
+    pub JustifySelf: AlignType,
+    pub FlexBasis: LengthType,
     pub TextAlign: TextAlign,
     pub TextSize: LengthType,
     pub TabSize: LengthType,
@@ -1000,48 +1060,9 @@ pub struct ContainerStyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct GridContainerStyle {
-    pub GridTemplateRows: NativeList<GridTemplateComponent>,
-    pub GridTemplateColumns: NativeList<GridTemplateComponent>,
-    pub GridAutoRows: NativeList<TrackSizingFunction>,
-    pub GridAutoColumns: NativeList<TrackSizingFunction>,
-    pub GridTemplateAreas: NativeList<GridTemplateArea>,
-    pub GridTemplateColumnNames: NativeList<NativeList<GridName>>,
-    pub GridTemplateRowNames: NativeList<NativeList<GridName>>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct RootData {
-    pub AvailableSpaceXValue: f32,
-    pub AvailableSpaceYValue: f32,
-    pub AvailableSpaceX: AvailableSpaceType,
-    pub AvailableSpaceY: AvailableSpaceType,
-    pub UseRounding: bool,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct TextData {
-    pub m_obj: *mut ITextData,
-    pub m_text: NativeList<u16>,
-    pub m_ranges_0: NativeList<TextRange>,
-    pub m_version: u64,
-    pub m_inner_version: u64,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NodeId {
-    pub Id: u32,
-    pub VersionAndType: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct NodeLocate {
-    pub Id: NodeId,
-    pub Index: i32,
+    pub Index: u32,
+    pub IdAndType: u32,
 }
 
 #[repr(C)]

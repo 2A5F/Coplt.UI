@@ -6,7 +6,7 @@ namespace Coplt
 {
     inline NodeType typ(const NodeId id)
     {
-        return static_cast<NodeType>(id.VersionAndType & 0b1111);
+        return static_cast<NodeType>(id.IdAndType & 0b1111);
     }
 
     template <class T>

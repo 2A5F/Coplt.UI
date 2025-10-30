@@ -6,90 +6,28 @@ using Coplt.UI.Trees.Datas;
 
 namespace Coplt.UI.Trees.Modules;
 
-[Dropping]
-public sealed unsafe partial class LayoutModule : Document.IModule
+public sealed unsafe class LayoutModule : Document.IModule
 {
-    public static Document.IModule Create(Document document) => new LayoutModule(document);
+    public static Document.IModule Create(Document document) => new LayoutModule();
 
-    [Drop]
-    private Rc<ILayout> m_layout;
-
-    private readonly Document m_document;
-
-    private readonly Document.Arche m_ar_Root;
-    private readonly Document.Arche m_ar_View;
-    private readonly Document.Arche m_ar_Text;
-
-    private readonly Document.PinnedStorage<RootData> m_st_Root_RootData;
-    private readonly Document.PinnedStorage<ContainerLayoutData> m_st_Root_ContainerLayoutData;
-    private readonly Document.PinnedStorage<CommonStyleData> m_st_Root_CommonStyleData;
-    private readonly Document.PinnedStorage<ChildsData> m_st_Root_ChildsData;
-    private readonly Document.PinnedStorage<ContainerStyleData> m_st_Root_ContainerStyleData;
-
-    private readonly Document.PinnedStorage<ContainerLayoutData> m_st_View_ContainerLayoutData;
-    private readonly Document.PinnedStorage<CommonStyleData> m_st_View_CommonStyleData;
-    private readonly Document.PinnedStorage<ChildsData> m_st_View_ChildsData;
-    private readonly Document.PinnedStorage<ContainerStyleData> m_st_View_ContainerStyleData;
-
-    private readonly Document.PinnedStorage<CommonStyleData> m_st_Text_CommonStyleData;
-    private readonly Document.PinnedStorage<TextData> m_st_Text_TextData;
-
-    public LayoutModule(Document document)
+    public void Update(Document document)
     {
-        m_document = document;
-        m_layout = NativeLib.Instance.m_layout.Clone();
-
-        m_ar_Root = document.ArcheOf(NodeType.Root);
-        m_st_Root_RootData = m_ar_Root.StorageOf<RootData>().AsPinned();
-        m_st_Root_ContainerLayoutData = m_ar_Root.StorageOf<ContainerLayoutData>().AsPinned();
-        m_st_Root_CommonStyleData = m_ar_Root.StorageOf<CommonStyleData>().AsPinned();
-        m_st_Root_ChildsData = m_ar_Root.StorageOf<ChildsData>().AsPinned();
-        m_st_Root_ContainerStyleData = m_ar_Root.StorageOf<ContainerStyleData>().AsPinned();
-
-        m_ar_View = document.ArcheOf(NodeType.View);
-        m_st_View_ContainerLayoutData = m_ar_View.StorageOf<ContainerLayoutData>().AsPinned();
-        m_st_View_CommonStyleData = m_ar_View.StorageOf<CommonStyleData>().AsPinned();
-        m_st_View_ChildsData = m_ar_View.StorageOf<ChildsData>().AsPinned();
-        m_st_View_ContainerStyleData = m_ar_View.StorageOf<ContainerStyleData>().AsPinned();
-
-        m_ar_Text = document.ArcheOf(NodeType.Text);
-        m_st_Text_CommonStyleData = m_ar_Text.StorageOf<CommonStyleData>().AsPinned();
-        m_st_Text_TextData = m_ar_Text.StorageOf<TextData>().AsPinned();
-    }
-
-    public void Update()
-    {
-        Debug.Assert(m_document.m_roots.Count == m_ar_Root.m_ctrl.m_count);
+        ref var layout = ref NativeLib.Instance.m_layout;
         var ctx = new NLayoutContext
         {
-            root_count = m_document.m_roots.Count,
-            view_count = m_ar_View.m_ctrl.m_count,
-            text_count = m_ar_Text.m_ctrl.m_count,
+            roots = document.m_roots.Raw,
 
-            roots = m_document.m_roots.Raw,
+            node_buckets = document.m_arche.m_ctrl.m_buckets,
+            node_ctrl = document.m_arche.m_ctrl.m_ctrls.m_items,
+            node_common_data = document.m_arche.StorageOf<CommonData>().AsPinned().m_data.m_items,
+            node_childs_data = document.m_arche.StorageOf<ChildsData>().AsPinned().m_data.m_items,
+            node_style_data = document.m_arche.StorageOf<StyleData>().AsPinned().m_data.m_items,
 
-            root_buckets = m_ar_Root.m_ctrl.m_buckets,
-            root_ctrl = (NNodeIdCtrl*)m_ar_Root.m_ctrl.m_ctrls.m_items,
-            root_root_data = m_st_Root_RootData.m_data.m_items,
-            root_container_layout_data = m_st_Root_ContainerLayoutData.m_data.m_items,
-            root_common_style_data = m_st_Root_CommonStyleData.m_data.m_items,
-            root_childs_data = m_st_Root_ChildsData.m_data.m_items,
-            root_container_style_data = m_st_Root_ContainerStyleData.m_data.m_items,
-
-            view_buckets = m_ar_View.m_ctrl.m_buckets,
-            view_ctrl = (NNodeIdCtrl*)m_ar_View.m_ctrl.m_ctrls.m_items,
-            view_container_layout_data = m_st_View_ContainerLayoutData.m_data.m_items,
-            view_common_style_data = m_st_View_CommonStyleData.m_data.m_items,
-            view_childs_data = m_st_View_ChildsData.m_data.m_items,
-            view_container_style_data = m_st_View_ContainerStyleData.m_data.m_items,
-
-            text_buckets = m_ar_Text.m_ctrl.m_buckets,
-            text_ctrl = (NNodeIdCtrl*)m_ar_Text.m_ctrl.m_ctrls.m_items,
-            text_common_style_data = m_st_Text_CommonStyleData.m_data.m_items,
-            text_data = m_st_Text_TextData.m_data.m_items,
+            root_count = document.m_roots.Count,
+            node_count = document.m_arche.m_ctrl.m_count,
 
             rounding = true,
         };
-        m_layout.Calc(&ctx).TryThrowWithMsg();
+        layout.Calc(&ctx).TryThrowWithMsg();
     }
 }

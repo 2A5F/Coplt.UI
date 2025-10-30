@@ -13,66 +13,62 @@ namespace Coplt.UI.Trees;
 public static unsafe partial class Access
 {
     /// <inheritdoc cref="Access"/>
-    public readonly struct Node(Document document, NodeType type)
+    public readonly struct View(Document document)
     {
         public Document Document { get; } = document;
-        public NodeLocate Locate { get; } = document.CreateNode(type);
+        public NodeId Id { get; } = document.CreateView();
 
-        public ref CommonStyleData CommonStyle => ref Document.At<CommonStyleData>(Locate);
-        public ref ContainerStyleData ContainerStyle => ref Document.At<ContainerStyleData>(Locate);
-        public ref ContainerLayoutData ContainerLayout => ref Document.At<ContainerLayoutData>(Locate);
-        public ref ChildsData Childs => ref Document.At<ChildsData>(Locate);
-        public ref TextData TextData => ref Document.At<TextData>(Locate);
+        public ref StyleData StyleData => ref Document.At<StyleData>(Id);
+        public ref CommonData CommonData => ref Document.At<CommonData>(Id);
+        public LayoutView Layout => CommonData.Layout;
+        public ref ChildsData ChildsData => ref Document.At<ChildsData>(Id);
 
-        public void Add(Node node)
+        public void Add(string text) => ChildsData.AddText(text);
+
+        public void Add(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
-            if (node.Locate.Id.Type is NodeType.Root) throw new ArgumentException("The root node cannot be a child");
-            ref var parent = ref Document.At<ParentData>(node.Locate);
-            if (parent.m_has_parent) throw new ArgumentException("Target node already has a parent");
-            Childs.m_childs.Add(node.Locate);
-            parent = new ParentData
-            {
-                m_parent = Locate,
-                m_has_parent = true,
-            };
+            ref var parent = ref Document.At<ParentData>(node.Id);
+            if (parent.Parent.HasValue) throw new ArgumentException("Target node already has a parent");
+            ChildsData.UnsafeAdd(node.Id);
+            parent.UnsafeSetParent(Id);
         }
 
-        public void Remove(Node node)
+        public void Remove(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
-            ref var parent = ref Document.At<ParentData>(node.Locate);
-            if (!parent.m_has_parent || parent.m_parent != Locate) throw new ArgumentException("Target node is not a child of this node");
-            var r = Childs.m_childs.Remove(node.Locate);
+            ref var parent = ref Document.At<ParentData>(node.Id);
+            if (parent.Parent != Id) throw new ArgumentException("Target node is not a child of this node");
+            var r = ChildsData.UnsafeRemove(node.Id);
             Debug.Assert(r);
-            parent.m_has_parent = false;
+            parent.UnsafeRemoveParent();
         }
     }
 
-    extension(Node node)
+    extension(View node)
     {
         public Container Container
         {
-            get => node.ContainerStyle.Container;
-            set => node.ContainerStyle.Container = value;
+            get => node.StyleData.Container;
+            set => node.StyleData.Container = value;
         }
 
         public Visible Visible
         {
-            get => node.CommonStyle.Visible;
-            set => node.CommonStyle.Visible = value;
+            get => node.StyleData.Visible;
+            set => node.StyleData.Visible = value;
         }
 
         public Length Width
         {
             get
             {
-                ref var style = ref node.ContainerStyle;
+                ref var style = ref node.StyleData;
                 return new(style.Width, style.WidthValue);
             }
             set
             {
-                ref var style = ref node.ContainerStyle;
+                ref var style = ref node.StyleData;
                 var type = value.Type;
                 var val = value.Value;
                 style.Width = type;
@@ -83,12 +79,12 @@ public static unsafe partial class Access
         {
             get
             {
-                ref var style = ref node.ContainerStyle;
+                ref var style = ref node.StyleData;
                 return new(style.Height, style.HeightValue);
             }
             set
             {
-                ref var style = ref node.ContainerStyle;
+                ref var style = ref node.StyleData;
                 var type = value.Type;
                 var val = value.Value;
                 style.Height = type;
@@ -100,7 +96,7 @@ public static unsafe partial class Access
         {
             set
             {
-                ref var style = ref node.CommonStyle;
+                ref var style = ref node.StyleData;
                 style.GridColumnStart = value;
                 style.GridColumnEnd = value;
             }
@@ -109,23 +105,9 @@ public static unsafe partial class Access
         {
             set
             {
-                ref var style = ref node.CommonStyle;
+                ref var style = ref node.StyleData;
                 style.GridRowStart = value;
                 style.GridRowEnd = value;
-            }
-        }
-
-        public string Text
-        {
-            get
-            {
-                ref var data = ref node.TextData;
-                return data.GetText();
-            }
-            set
-            {
-                ref var data = ref node.TextData;
-                data.SetText(value);
             }
         }
     }

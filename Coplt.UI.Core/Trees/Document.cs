@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
+using Coplt.UI.Layouts;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
 using Coplt.UI.Trees.Modules;
@@ -18,15 +19,14 @@ public sealed partial class Document
     #region Fields
 
     internal readonly Template m_template;
-    internal readonly FontCollection m_system_font_collection = FontCollection.SystemCollection;
+    [Drop(Order = 10)]
+    internal readonly Arche m_arche;
+    [Drop]
+    internal NativeList<RootData> m_roots = new(); // native dict
     // ReSharper disable once CollectionNeverQueried.Global
     internal readonly IModule[] m_modules;
-    internal readonly Action[] m_modules_update;
-    internal readonly Arche[] m_arches;
-    internal EmbedQueue<NodeId> m_node_id_recycle = new();
+    internal readonly Action<Document>[] m_modules_update;
     internal uint m_node_id_inc;
-    [Drop]
-    internal NativeList<int> m_roots = new();
 
     #endregion
 
@@ -35,15 +35,9 @@ public sealed partial class Document
     internal Document(Template template)
     {
         m_template = template;
-        m_arches = new Arche[m_template.m_arches.Length];
-        for (var i = 0; i < m_arches.Length; i++)
-        {
-            var tem = m_template.m_arches[i];
-            if (tem == null) continue;
-            m_arches[i] = tem.Create();
-        }
+        m_arche = m_template.m_arche.Create();
         m_modules = new IModule[m_template.m_modules.Length];
-        m_modules_update = new Action[m_template.m_modules.Length];
+        m_modules_update = new Action<Document>[m_template.m_modules.Length];
         for (var i = 0; i < m_template.m_modules.Length; i++)
         {
             var module_template = m_template.m_modules[i];
@@ -59,32 +53,23 @@ public sealed partial class Document
     public sealed class Builder
     {
         private readonly Dictionary<Type, AModuleTemplate> m_modules = new();
-        private readonly Dictionary<NodeType, Dictionary<Type, AStorageTemplate>> m_types = new();
+        private readonly Dictionary<Type, AStorageTemplate> m_types = new();
 
         public Builder()
         {
-            Attach<RootData>(types: NodeTypes.Root, storage: StorageType.Pinned);
             Attach<ParentData>();
-            Attach<CommonStyleData>(storage: StorageType.Pinned);
-            Attach<CommonEventData>();
-            Attach<ContainerLayoutData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
-            Attach<ChildsData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
-            Attach<ContainerStyleData>(types: NodeTypes.AllView, storage: StorageType.Pinned);
-            Attach<TextData>(types: NodeTypes.Text, storage: StorageType.Pinned);
+            Attach<ChildsData>(storage: StorageType.Pinned);
+            Attach<CommonData>(storage: StorageType.Pinned);
+            Attach<StyleData>(storage: StorageType.Pinned);
             With<LayoutModule>();
         }
 
-        public Builder Attach<T>(NodeTypes types = NodeTypes.All, StorageType storage = StorageType.Default)
+        public Builder Attach<T>(StorageType storage = StorageType.Default)
             where T : new()
         {
-            foreach (var type in types)
-            {
-                ref var ts = ref CollectionsMarshal.GetValueRefOrAddDefault(m_types, type, out var exists);
-                if (!exists) ts = new();
-                ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(ts, typeof(T), out exists);
-                if (exists) throw new ArgumentException($"Type {typeof(T)} has already been attached to {type}.");
-                t = new StorageTemplate<T>(storage);
-            }
+            ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(m_types, typeof(T), out var exists);
+            if (exists) throw new ArgumentException($"Type {typeof(T)} has already been attached.");
+            t = new StorageTemplate<T>(storage);
             return this;
         }
 
@@ -94,15 +79,7 @@ public sealed partial class Document
             return this;
         }
 
-        public Template Build()
-        {
-            var arches = new ArcheTemplate?[NodeType.Length];
-            foreach (var (type, arch) in m_types)
-            {
-                arches[(int)type] = new ArcheTemplate(arch);
-            }
-            return new(arches, m_modules.Values.ToArray());
-        }
+        public Template Build() => new(new ArcheTemplate(m_types), m_modules.Values.ToArray());
 
         public Document Create() => Build().Create();
     }
@@ -118,7 +95,7 @@ public sealed partial class Document
 
         public static abstract IModule Create(Document document);
 
-        public void Update();
+        public void Update(Document document);
     }
 
     internal abstract class AModuleTemplate
@@ -138,12 +115,12 @@ public sealed partial class Document
 
     public sealed class Template
     {
-        internal readonly ArcheTemplate?[] m_arches;
+        internal readonly ArcheTemplate m_arche;
         internal readonly AModuleTemplate[] m_modules;
 
-        internal Template(ArcheTemplate?[] arches, AModuleTemplate[] modules)
+        internal Template(ArcheTemplate arche, AModuleTemplate[] modules)
         {
-            m_arches = arches;
+            m_arche = arche;
             m_modules = modules;
         }
 
@@ -209,18 +186,11 @@ public sealed partial class Document
         {
             if (module is IDisposable disposable) disposable.Dispose();
         }
-        foreach (var arch in m_arches)
-        {
-            arch.Dispose();
-        }
     }
 
     #endregion
 
     #region Instance
-
-    public Arche ArcheOf(NodeType type) => m_arches[(int)type];
-    public ReadOnlySpan<Arche> Arches => m_arches;
 
     public sealed class Arche : IDisposable
     {
@@ -230,8 +200,7 @@ public sealed partial class Document
         internal EmbedList<Action> m_storage_fns_dispose;
         internal readonly Action<int, CtrlOp>[] m_storage_fns_add;
         internal readonly Action<int>[] m_storage_fns_remove;
-        internal readonly AStorage m_node_id_storage;
-        internal NSplitMapCtrl<NodeId> m_ctrl = new();
+        internal NSplitMapCtrl<uint> m_ctrl = new();
 
         internal Arche(ArcheTemplate template)
         {
@@ -257,7 +226,6 @@ public sealed partial class Document
                 m_storage_fns_add[i] = storage.Add;
                 m_storage_fns_remove[i] = storage.Remove;
             }
-            m_node_id_storage = UnsafeStorageAt(m_type_chain.IndexOf<NodeId>());
         }
 
         public override string ToString() => m_type_chain.ToString()!;
@@ -283,22 +251,19 @@ public sealed partial class Document
 
         public ReadOnlySpan<AStorage> Storages => m_storages;
 
-        public int Add(NodeId id)
+        public int Add(uint id)
         {
             var op = CtrlOp.None;
             var r = m_ctrl.TryInsert(id, false, ref op, out var idx);
             if (r != InsertResult.AddNew) throw new InvalidOperationException();
-            if (!op.IsNone)
+            foreach (var add in m_storage_fns_add)
             {
-                foreach (var add in m_storage_fns_add)
-                {
-                    add(idx, op);
-                }
+                add(idx, op);
             }
             return idx;
         }
 
-        public void Remove(NodeId id)
+        public void Remove(uint id)
         {
             var idx = m_ctrl.Remove(id);
             foreach (var remove in m_storage_fns_remove)
@@ -373,61 +338,66 @@ public sealed partial class Document
 
     #region At
 
-    public ref T At<T>(NodeLocate id)
+    public ref T At<T>(NodeId id)
     {
-        var arche = ArcheOf(id.Id.Type);
-        var nth = arche.IndexOf<T>();
+        var nth = m_arche.IndexOf<T>();
         if (nth < 0) throw new InvalidOperationException();
-        var storage = arche.UnsafeStorageAt(nth);
+        var storage = m_arche.UnsafeStorageAt(nth);
         return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
 
-    public unsafe T* UnsafePtrAt<T>(NodeLocate id)
+    public unsafe T* UnsafePtrAt<T>(NodeId id)
     {
-        var arche = ArcheOf(id.Id.Type);
-        var nth = arche.IndexOf<T>();
+        var nth = m_arche.IndexOf<T>();
         if (nth < 0) throw new InvalidOperationException();
-        var storage = arche.UnsafeStorageAt(nth);
+        var storage = m_arche.UnsafeStorageAt(nth);
         return storage.UnsafeGetDataPtr<T>() + id.Index;
     }
 
     #endregion
 
-    #region Create
+    #region Node
 
-    public NodeLocate CreateNode(NodeType type)
+    public ref RootData AddRoot(NodeId id) => ref AddRoot(id, AvailableSpace.MinContent, AvailableSpace.MinContent);
+    public ref RootData AddRoot(NodeId id, AvailableSpace X, AvailableSpace Y, bool UseRounding = true)
     {
-        if (m_node_id_recycle.TryDequeue(out var id))
-            id = new(id.Id, id.Version + 1, type);
-        else id = new(m_node_id_inc++, 1, type);
-        var index = m_arches[(int)type].Add(id);
-        if (type is NodeType.Root) m_roots.Add(index);
-        return new(id, index);
+        ref var root = ref m_roots.UnsafeAdd();
+        root.Node = id;
+        root.AvailableSpaceXValue = X.Value;
+        root.AvailableSpaceYValue = Y.Value;
+        root.AvailableSpaceX = X.Type;
+        root.AvailableSpaceY = Y.Type;
+        root.UseRounding = UseRounding;
+        return ref root;
     }
 
-    public void Remove(NodeLocate id)
+    public NodeId CreateView()
     {
-        var type = id.Id.Type;
+        var id = m_node_id_inc++;
+        var index = m_arche.Add(id);
+        return new((uint)index, id, NodeType.View);
+    }
+
+    public void RemoveView(NodeId id)
+    {
+        if (id.Type != NodeType.View) throw new InvalidOperationException();
         {
             ref var parent = ref At<ParentData>(id);
-            if (parent.m_has_parent)
+            if (parent.Parent is { } par)
             {
-                ref var childs = ref At<ChildsData>(parent.m_parent);
-                childs.m_childs.Remove(id);
+                ref var childs = ref At<ChildsData>(par);
+                childs.UnsafeRemove(id);
             }
         }
-        if (type is NodeType.Root or NodeType.View)
         {
             ref var childs = ref At<ChildsData>(id);
-            foreach (var child in childs.m_childs)
+            foreach (var child in childs)
             {
                 ref var parent = ref At<ParentData>(child);
-                parent.m_has_parent = false;
+                parent.UnsafeRemoveParent();
             }
         }
-        if (type is NodeType.Root) m_roots.Remove(id.Index);
-        m_arches[(int)type].Remove(id.Id);
-        m_node_id_recycle.Enqueue(id.Id);
+        m_arche.Remove(id.Id);
     }
 
     #endregion
@@ -438,7 +408,7 @@ public sealed partial class Document
     {
         foreach (var update in m_modules_update)
         {
-            update();
+            update(this);
         }
     }
 

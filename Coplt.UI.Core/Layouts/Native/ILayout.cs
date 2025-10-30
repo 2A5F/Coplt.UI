@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
+using Coplt.UI.Collections;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
 
@@ -14,39 +15,17 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
-    public int* roots;
+    public RootData* roots;
 
-    public int* view_buckets;
-    public int* text_buckets;
-    public int* root_buckets;
-
-    public NNodeIdCtrl* view_ctrl;
-    public NNodeIdCtrl* text_ctrl;
-    public NNodeIdCtrl* root_ctrl;
-
-    public ContainerLayoutData* view_container_layout_data;
-    public void* _pad_container_layout_data;
-    public ContainerLayoutData* root_container_layout_data;
-
-    public CommonStyleData* view_common_style_data;
-    public CommonStyleData* text_common_style_data;
-    public CommonStyleData* root_common_style_data;
-
-    public ChildsData* view_childs_data;
-    public void* _pad_childs_data;
-    public ChildsData* root_childs_data;
-    
-    public ContainerStyleData* view_container_style_data;
-    public void* _pad_container_style_data;
-    public ContainerStyleData* root_container_style_data;
-
-    public TextData* text_data;
-
-    public RootData* root_root_data;
+    public int* node_buckets;
+    [ComType<Ptr<NNodeIdCtrl>>]
+    public NSplitMapCtrl<uint>.Ctrl* node_ctrl;
+    public CommonData* node_common_data;
+    public ChildsData* node_childs_data;
+    public StyleData* node_style_data;
 
     public int root_count;
-    public int view_count;
-    public int text_count;
+    public int node_count;
 
     public bool rounding;
 }
