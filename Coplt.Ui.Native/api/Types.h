@@ -293,6 +293,12 @@ namespace Coplt {
         RightToLeft = 3,
     };
 
+    enum class TextMode : ::Coplt::u8
+    {
+        Block = 0,
+        Inline = 1,
+    };
+
     enum class TextOrientation : ::Coplt::u8
     {
         Mixed = 0,
@@ -949,6 +955,7 @@ namespace Coplt {
         ::Coplt::f32 FlexGrow;
         ::Coplt::f32 FlexShrink;
         ::Coplt::f32 FlexBasisValue;
+        ::Coplt::TextMode TextMode;
         ::Coplt::GridPlacement GridRowStart;
         ::Coplt::GridPlacement GridRowEnd;
         ::Coplt::GridPlacement GridColumnStart;

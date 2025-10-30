@@ -206,6 +206,13 @@ pub enum TextDirection {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum TextMode {
+    Block = 0,
+    Inline = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum TextOrientation {
     Mixed = 0,
     Upright = 1,
@@ -888,6 +895,7 @@ pub struct CommonStyleData {
     pub FlexGrow: f32,
     pub FlexShrink: f32,
     pub FlexBasisValue: f32,
+    pub TextMode: TextMode,
     pub GridRowStart: GridPlacement,
     pub GridRowEnd: GridPlacement,
     pub GridColumnStart: GridPlacement,

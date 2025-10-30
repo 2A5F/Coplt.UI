@@ -28,6 +28,8 @@ public record struct CommonStyleData()
     public float FlexShrink = 1;
     public float FlexBasisValue = 0;
 
+    public TextMode TextMode = TextMode.Block;
+
     public GridPlacement GridRowStart = GridPlacement.Auto;
     public GridPlacement GridRowEnd = GridPlacement.Auto;
     public GridPlacement GridColumnStart = GridPlacement.Auto;

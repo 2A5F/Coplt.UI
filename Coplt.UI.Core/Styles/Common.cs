@@ -21,6 +21,15 @@ public enum Container : byte
     Block,
 }
 
+/// <summary>
+/// Behavior when the outer container is <see cref="Container.Text"/>
+/// </summary>
+public enum TextMode : byte
+{
+    Block,
+    Inline,
+}
+
 public enum Position : byte
 {
     Relative,
