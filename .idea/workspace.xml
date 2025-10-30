@@ -48,31 +48,19 @@
   <component name="ChangeListManager">
     <list default="true" id="ad03c661-ab3e-43f7-8ad7-9f934ca974ef" name="更改" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Com2/Coplt.Com2/packages.lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Layouts/AvailableSpace.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Layouts/AvailableSpace.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Layouts/Native/ILayout.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Layouts/Native/ILayout.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Access.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Access.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/CommonEventData.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/CommonStyleData.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerLayoutData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/CommonData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/ContainerStyleData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/StyleData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/HierarchyData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/HierarchyData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/RootData.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/RootData.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Datas/TextData.cs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Document.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Document.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Modules/LayoutModule.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/Modules/LayoutModule.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/NodeId.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/NodeId.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.UI.Core/Trees/NodeType.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.UI.Core/Trees/NodeType.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/api/Types.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/Build.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/Build.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/FFIUtils.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/FFIUtils.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.cc" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.cc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.h" beforeDir="false" afterPath="$PROJECT_DIR$/Coplt.Ui.Native/src/dwrite/Layout.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tests/TestCore/Test1.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Tests/TestCore/Test1.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/col/arc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/col/arc.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/col/enumerator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/col/enumerator.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/col/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/col/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/col/ordered_set.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/col/ordered_set.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/com.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/layout.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/layout.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/layout/inline.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/layout/inline.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/coplt_ui_rusty/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/coplt_ui_rusty/src/lib.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -286,7 +274,7 @@
       <workItem from="1761669408196" duration="4488000" />
       <workItem from="1761709576153" duration="25322000" />
       <workItem from="1761756884484" duration="2213000" />
-      <workItem from="1761807643762" duration="6448000" />
+      <workItem from="1761807643762" duration="8844000" />
     </task>
     <servers />
   </component>

@@ -1,5 +1,3 @@
-use std::alloc::Layout;
-
 use crate::{col::NArc, com::NativeArc};
 
 pub use super::*;

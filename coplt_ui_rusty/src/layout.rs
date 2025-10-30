@@ -15,7 +15,7 @@ use taffy::{
 };
 
 use crate::{
-    col::{OrderedSet, ordered_set},
+    col::{OrderedSet, map::NativeMap, ordered_set},
     com::{
         self, ChildsData, CommonData, GridName, GridNameType, ILib, NLayoutContext, NodeId,
         NodeType, RootData, StyleData,
@@ -79,7 +79,7 @@ macro_rules! c_available_space {
 pub extern "C" fn coplt_ui_layout_calc(layout: *mut (), ctx: *mut NLayoutContext) -> HResult {
     unsafe {
         let r = std::panic::catch_unwind(move || -> HResult {
-            for root in (*ctx).roots() {
+            for root in unsafe { &mut *(*ctx).roots() }.iter_mut().map(|a| a.1) {
                 let mut sub_doc = SubDoc(ctx, root as *mut _, layout);
                 let root_data = *sub_doc.root_data();
                 let available_space = taffy::Size {
@@ -110,8 +110,8 @@ pub extern "C" fn coplt_ui_layout_calc(layout: *mut (), ctx: *mut NLayoutContext
 
 impl NLayoutContext {
     #[inline(always)]
-    pub fn roots(&self) -> &mut [RootData] {
-        unsafe { std::slice::from_raw_parts_mut(self.roots, self.root_count as usize) }
+    pub fn roots(&self) -> *mut NativeMap<NodeId, RootData> {
+        self.roots as *mut NativeMap<NodeId, RootData>
     }
 }
 
@@ -193,7 +193,6 @@ impl SubDoc {
         unsafe { &mut *self.ctx().node_style_data.add(id.index() as usize) }
     }
 }
-
 
 #[inline(always)]
 fn get_layout(src: &com::LayoutData) -> taffy::Layout {

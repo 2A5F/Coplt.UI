@@ -17,7 +17,7 @@ pub mod iter {
     use super::*;
 
     #[derive(Debug)]
-    pub struct EnumeratorIterator<T>(T);
+    pub struct EnumeratorIterator<T>(pub T);
 
     impl<T: Enumerator> Iterator for EnumeratorIterator<T> {
         type Item = <T as Enumerator>::Item;

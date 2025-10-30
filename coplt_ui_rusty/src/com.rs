@@ -693,6 +693,27 @@ pub struct CWStr {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FFIMapEntry<T0 /* K */, T1 /* V */> {
+    pub HashCode: i32,
+    pub Next: i32,
+    pub Key: T0,
+    pub Value: T1,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FFIMap<T0 /* K */, T1 /* V */> {
+    pub m_buckets: *mut i32,
+    pub m_entries: *mut FFIMapEntry<T0, T1>,
+    pub m_fast_mode_multiplier: u64,
+    pub m_cap: i32,
+    pub m_count: i32,
+    pub m_free_list: i32,
+    pub m_free_count: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIOrderedSetNode<T0 /* T */> {
     pub HashCode: i32,
     pub Next: i32,
@@ -846,13 +867,12 @@ pub struct NFontPair {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
-    pub roots: *mut RootData,
+    pub roots: *mut FFIMap<NodeId, RootData>,
     pub node_buckets: *mut i32,
     pub node_ctrl: *mut NNodeIdCtrl,
     pub node_common_data: *mut CommonData,
     pub node_childs_data: *mut ChildsData,
     pub node_style_data: *mut StyleData,
-    pub root_count: i32,
     pub node_count: i32,
     pub rounding: bool,
 }

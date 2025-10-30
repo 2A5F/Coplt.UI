@@ -7,10 +7,27 @@ mod coplt_alloc {
     use core::alloc::GlobalAlloc;
 
     unsafe extern "C" {
-        fn coplt_ui_malloc(size: usize, align: usize) -> *mut u8;
-        fn coplt_ui_free(ptr: *mut u8, align: usize);
-        fn coplt_ui_zalloc(size: usize, align: usize) -> *mut u8;
-        fn coplt_ui_realloc(ptr: *mut u8, new_size: usize, align: usize) -> *mut u8;
+        pub fn coplt_ui_malloc(size: usize, align: usize) -> *mut u8;
+        pub fn coplt_ui_free(ptr: *mut u8, align: usize);
+        pub fn coplt_ui_zalloc(size: usize, align: usize) -> *mut u8;
+        pub fn coplt_ui_realloc(ptr: *mut u8, new_size: usize, align: usize) -> *mut u8;
+    }
+
+    pub unsafe fn coplt_free<T>(ptr: *mut T) {
+        unsafe { coplt_ui_free(ptr as *mut u8, align_of::<T>()) }
+    }
+
+    pub unsafe fn coplt_alloc_array<T>(size: usize) -> *mut T {
+        (unsafe { coplt_ui_malloc(size_of::<T>() * size, align_of::<T>()) }) as *mut T
+    }
+
+    pub unsafe fn coplt_zalloc_array<T>(size: usize) -> *mut T {
+        (unsafe { coplt_ui_zalloc(size_of::<T>() * size, align_of::<T>()) }) as *mut T
+    }
+
+    pub unsafe fn coplt_realloc_array<T>(old: *mut T, new_size: usize) -> *mut T {
+        (unsafe { coplt_ui_realloc(old as *mut u8, size_of::<T>() * new_size, align_of::<T>()) })
+            as *mut T
     }
 
     #[global_allocator]
@@ -41,6 +58,8 @@ mod coplt_alloc {
         }
     }
 }
+
+use coplt_alloc::*;
 
 mod col;
 mod com;

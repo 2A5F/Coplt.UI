@@ -2,6 +2,7 @@ pub mod arc;
 pub mod enumerator;
 pub mod hash;
 pub mod hash_helpers;
+pub mod map;
 pub mod ordered_set;
 
 pub use arc::NArc;
@@ -18,3 +19,10 @@ impl GetHashCode for NodeId {
 }
 
 impl Eq for NodeId {}
+
+#[repr(C)]
+pub enum InsertResult<T> {
+    None,
+    AddNew,
+    Overwrite(T),
+}

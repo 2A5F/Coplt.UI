@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.UI.Collections;
+using Coplt.UI.Native.Collections;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
 
@@ -15,7 +16,8 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
-    public RootData* roots;
+    [ComType<Ptr<FFIMap<NodeId, RootData>>>]
+    public NativeMap<NodeId, RootData>* roots;
 
     public int* node_buckets;
     [ComType<Ptr<NNodeIdCtrl>>]
@@ -24,7 +26,6 @@ public unsafe struct NLayoutContext
     public ChildsData* node_childs_data;
     public StyleData* node_style_data;
 
-    public int root_count;
     public int node_count;
 
     public bool rounding;

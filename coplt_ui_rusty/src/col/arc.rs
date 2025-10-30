@@ -6,6 +6,8 @@ use std::{
     sync::atomic,
 };
 
+use crate::coplt_alloc::coplt_free;
+
 #[repr(C)]
 pub struct NArc<T> {
     ptr: *mut Inner<T>,
@@ -47,7 +49,7 @@ impl<T> Drop for NArc<T> {
                         as *mut std::mem::ManuallyDrop<T>);
                     ManuallyDrop::drop(data);
                 }
-                std::alloc::dealloc(self.ptr as *mut u8, Layout::new::<Inner<T>>());
+                coplt_free(self.ptr);
             }
         }
     }

@@ -22,7 +22,7 @@ public sealed partial class Document
     [Drop(Order = 10)]
     internal readonly Arche m_arche;
     [Drop]
-    internal NativeList<RootData> m_roots = new(); // native dict
+    internal NativeMap<NodeId, RootData> m_roots;
     // ReSharper disable once CollectionNeverQueried.Global
     internal readonly IModule[] m_modules;
     internal readonly Action<Document>[] m_modules_update;
@@ -361,7 +361,7 @@ public sealed partial class Document
     public ref RootData AddRoot(NodeId id) => ref AddRoot(id, AvailableSpace.MinContent, AvailableSpace.MinContent);
     public ref RootData AddRoot(NodeId id, AvailableSpace X, AvailableSpace Y, bool UseRounding = true)
     {
-        ref var root = ref m_roots.UnsafeAdd();
+        ref var root = ref m_roots.GetValueRefOrUninitialized(id, out _);
         root.Node = id;
         root.AvailableSpaceXValue = X.Value;
         root.AvailableSpaceYValue = Y.Value;
@@ -370,6 +370,8 @@ public sealed partial class Document
         root.UseRounding = UseRounding;
         return ref root;
     }
+
+    public bool RemoveRoot(NodeId id) => m_roots.Remove(id);
 
     public NodeId CreateView()
     {

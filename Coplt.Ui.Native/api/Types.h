@@ -37,6 +37,12 @@ namespace Coplt {
 
     struct CWStr;
 
+    template <class T0 /* K */, class T1 /* V */>
+    struct FFIMapEntry;
+
+    template <class T0 /* K */, class T1 /* V */>
+    struct FFIMap;
+
     template <class T0 /* T */>
     struct FFIOrderedSetNode;
 
@@ -893,6 +899,27 @@ namespace Coplt {
         ::Coplt::GridTemplateComponentType Type;
     };
 
+    template <class T0 /* K */, class T1 /* V */>
+    struct FFIMapEntry
+    {
+        ::Coplt::i32 HashCode;
+        ::Coplt::i32 Next;
+        T0 Key;
+        T1 Value;
+    };
+
+    template <class T0 /* K */, class T1 /* V */>
+    struct FFIMap
+    {
+        ::Coplt::i32* m_buckets;
+        ::Coplt::FFIMapEntry<T0, T1>* m_entries;
+        ::Coplt::u64 m_fast_mode_multiplier;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_count;
+        ::Coplt::i32 m_free_list;
+        ::Coplt::i32 m_free_count;
+    };
+
     template <class T0 /* T */>
     struct FFIOrderedSetNode
     {
@@ -926,13 +953,12 @@ namespace Coplt {
 
     struct NLayoutContext
     {
-        ::Coplt::RootData* roots;
+        ::Coplt::FFIMap<::Coplt::NodeId, ::Coplt::RootData>* roots;
         ::Coplt::i32* node_buckets;
         ::Coplt::NNodeIdCtrl* node_ctrl;
         ::Coplt::CommonData* node_common_data;
         ::Coplt::ChildsData* node_childs_data;
         ::Coplt::StyleData* node_style_data;
-        ::Coplt::i32 root_count;
         ::Coplt::i32 node_count;
         bool rounding;
     };

@@ -1,6 +1,12 @@
-use std::{alloc::Layout, mem::ManuallyDrop};
+use std::{
+    alloc::Layout,
+    mem::{ManuallyDrop, MaybeUninit},
+};
 
-use crate::col::{Enumerator, EnumeratorIter, GetHashCode, iter::EnumeratorIterator};
+use crate::{
+    col::{Enumerator, EnumeratorIter, GetHashCode, iter::EnumeratorIterator},
+    coplt_alloc::*,
+};
 
 use super::hash_helpers::*;
 
@@ -35,14 +41,11 @@ impl<T> Drop for OrderedSet<T> {
         unsafe {
             self.drop_items();
             if self.buckets.is_null() {
-                std::alloc::dealloc(self.buckets as *mut u8, std::alloc::Layout::new::<i32>());
+                coplt_free(self.buckets);
                 self.buckets = std::ptr::null_mut();
             }
             if self.nodes.is_null() {
-                std::alloc::dealloc(
-                    self.nodes as *mut u8,
-                    std::alloc::Layout::new::<OrderedSetNode<T>>(),
-                );
+                coplt_free(self.nodes);
                 self.nodes = std::ptr::null_mut();
             }
         }
@@ -76,18 +79,8 @@ impl<T: GetHashCode + PartialEq> OrderedSet<T> {
         self.first = -1;
         self.last = -1;
         self.free_list = -1;
-        self.buckets = unsafe {
-            std::alloc::alloc_zeroed(Layout::from_size_align_unchecked(
-                size as usize * size_of::<i32>(),
-                align_of::<i32>(),
-            )) as *mut _
-        };
-        self.nodes = unsafe {
-            std::alloc::alloc_zeroed(Layout::from_size_align_unchecked(
-                size as usize * size_of::<OrderedSetNode<T>>(),
-                align_of::<OrderedSetNode<T>>(),
-            )) as *mut _
-        };
+        self.buckets = unsafe { coplt_zalloc_array(size as usize) };
+        self.nodes = unsafe { coplt_alloc_array(size as usize) };
         self.fast_mode_multiplier = get_fast_mod_multiplier(size as u32);
         self.cap = size;
 
@@ -110,16 +103,9 @@ impl<T: GetHashCode + PartialEq> OrderedSet<T> {
         debug_assert!(new_size >= self.cap);
 
         unsafe {
-            self.nodes = std::alloc::realloc(
-                self.nodes as *mut _,
-                Layout::new::<OrderedSetNode<T>>(),
-                new_size as usize,
-            ) as *mut _;
-            std::alloc::dealloc(self.buckets as *mut _, Layout::new::<i32>());
-            self.buckets = std::alloc::alloc_zeroed(Layout::from_size_align_unchecked(
-                new_size as usize * size_of::<i32>(),
-                align_of::<i32>(),
-            )) as *mut _;
+            self.nodes = coplt_realloc_array(self.nodes, new_size as usize);
+            coplt_free(self.buckets);
+            self.buckets = coplt_zalloc_array(new_size as usize);
 
             let count = self.count;
             self.fast_mode_multiplier = get_fast_mod_multiplier(new_size as u32);
@@ -218,7 +204,7 @@ impl<T: GetHashCode + PartialEq> OrderedSet<T> {
         let node = unsafe { &mut *nodes.add(index as usize) };
         node.hash_code = hash_code;
         node.next = *bucket - 1;
-        node.value = item;
+        unsafe { std::ptr::write(&mut node.value as *mut _, item) };
         *bucket = index + 1;
         *location = index;
 
