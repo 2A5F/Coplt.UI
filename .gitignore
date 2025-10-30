@@ -351,4 +351,6 @@ MigrationBackup/
 /build
 /target
 
-.idea/workspace.xml
+.idea/
+!.idea/fileTemplates
+!.idea/codeStyles
