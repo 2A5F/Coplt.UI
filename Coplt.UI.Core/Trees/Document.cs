@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Layouts;
+using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
 using Coplt.UI.Trees.Modules;
@@ -400,6 +401,32 @@ public sealed partial class Document
             }
         }
         m_arche.Remove(id.Id);
+    }
+
+    #endregion
+
+    #region Dirty
+
+    public void DirtyLayout(NodeId id)
+    {
+        while (true)
+        {
+            ref var data = ref At<CommonData>(id);
+            if ((data.DirtyFlags & DirtyFlags.Layout) != 0) return;
+            data.DirtyFlags |= DirtyFlags.Layout;
+            if (At<ParentData>(id).Parent is { } parent)
+            {
+                id = parent;
+                continue;
+            }
+            break;
+        }
+    }
+
+    public void DirtyTextLayout(NodeId id)
+    {
+        At<CommonData>(id).DirtyFlags |= DirtyFlags.TextLayout;
+        DirtyLayout(id);
     }
 
     #endregion

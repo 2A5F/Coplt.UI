@@ -11,12 +11,15 @@ public unsafe struct NString : IDisposable, IEquatable<NString>
     [ComType<ConstPtr<char>>]
     private char* m_str;
     private void* m_handle;
+    private int m_len;
 
     private NString(string str)
     {
+        if (str == null! || str.Length == 0) return;
         var handle = GCHandle.Alloc(str, GCHandleType.Pinned);
         m_str = (char*)handle.AddrOfPinnedObject();
         m_handle = (void*)GCHandle.ToIntPtr(handle);
+        m_len = str.Length;
     }
 
     public static NString Create(string str) => new(str);

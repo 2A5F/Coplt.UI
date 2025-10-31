@@ -578,6 +578,15 @@ pub enum ScriptCode {
     TraditionalHanWithLatin = 212,
 }
 
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum DirtyFlags {
+    None = 0,
+    Layout = 1,
+    Render = 2,
+    TextLayout = 4,
+}
+
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum NodeType {
@@ -890,6 +899,7 @@ pub struct NNodeIdCtrl {
 pub struct NString {
     pub m_str: *const u16,
     pub m_handle: *mut (),
+    pub m_len: i32,
 }
 
 #[repr(C)]
@@ -929,7 +939,7 @@ pub struct TextRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet<NodeId>,
-    pub m_texts: NativeList<NString>,
+    pub m_texts: FFIMap<u32, NString>,
     pub m_text_id_inc: u32,
     pub m_version: u64,
     pub m_last_version: u64,
@@ -942,6 +952,7 @@ pub struct CommonData {
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
+    pub DirtyFlags: DirtyFlags,
 }
 
 #[repr(C)]

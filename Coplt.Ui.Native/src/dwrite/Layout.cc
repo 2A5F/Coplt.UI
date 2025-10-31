@@ -35,11 +35,12 @@ HResult Layout::Impl_Calc(NLayoutContext* ctx)
 {
     using namespace LayoutCalc;
     const auto roots = ffi_map(ctx->roots);
-    auto e = roots->GetEnumerator();
-    while (e.MoveNext())
+    for (auto e = roots->GetEnumerator(); e.MoveNext();)
     {
         const auto& root = *e.Current().second;
-        CollectDirty(CtxNodeRef(ctx, root.Node));
+        const auto node = CtxNodeRef(ctx, root.Node);
+        Phase0(node);
+        Phase1<TextLayout>(node);
     }
     return Internal::BitCast<HResult>(coplt_ui_layout_calc(this, ctx));
 }
@@ -65,10 +66,7 @@ namespace Coplt::LayoutCalc::Texts
         auto& common_data = node.CommonData();
         const auto& style = node.StyleData();
 
-        if (common_data.TextLayoutObject == nullptr)
-        {
-            common_data.TextLayoutObject = new TextLayout();
-        }
+        if (common_data.TextLayoutObject == nullptr) throw NullPointerError();
 
         for (auto it = iter(childs.m_childs); it.MoveNext();)
         {

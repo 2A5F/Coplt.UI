@@ -23,7 +23,11 @@ public static unsafe partial class Access
         public LayoutView Layout => CommonData.Layout;
         public ref ChildsData ChildsData => ref Document.At<ChildsData>(Id);
 
-        public void Add(string text) => ChildsData.AddText(text);
+        public void Add(string text)
+        {
+            ChildsData.UnsafeAddText(text);
+            Document.DirtyTextLayout(Id);
+        }
 
         public void Add(View node)
         {
@@ -32,6 +36,7 @@ public static unsafe partial class Access
             if (parent.Parent.HasValue) throw new ArgumentException("Target node already has a parent");
             ChildsData.UnsafeAdd(node.Id);
             parent.UnsafeSetParent(Id);
+            Document.DirtyLayout(Id);
         }
 
         public void Remove(View node)
@@ -42,6 +47,7 @@ public static unsafe partial class Access
             var r = ChildsData.UnsafeRemove(node.Id);
             Debug.Assert(r);
             parent.UnsafeRemoveParent();
+            Document.DirtyLayout(Id);
         }
     }
 

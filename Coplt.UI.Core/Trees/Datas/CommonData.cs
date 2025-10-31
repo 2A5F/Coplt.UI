@@ -17,9 +17,10 @@ public partial record struct CommonData()
     internal LayoutData UnRoundedLayout;
     internal LayoutCache LayoutCache;
 
+    public DirtyFlags DirtyFlags;
+    
     [UnscopedRef]
     public LayoutView Layout => new(ref this);
-
 }
 
 public ref struct LayoutView(ref CommonData Data)

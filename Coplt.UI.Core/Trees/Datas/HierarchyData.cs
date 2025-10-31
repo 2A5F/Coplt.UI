@@ -14,7 +14,8 @@ public partial record struct ChildsData
     [ComType<FFIOrderedSet<NodeId>>]
     private NOrderedSet<NodeId> m_childs;
     [Drop]
-    private NativeList<NString> m_texts; // todo dict
+    [ComType<FFIMap<uint, NString>>]
+    private NativeMap<uint, NString> m_texts;
     private uint m_text_id_inc;
 
     internal ulong m_version;
@@ -23,13 +24,12 @@ public partial record struct ChildsData
     [UnscopedRef]
     public NOrderedSet<NodeId>.Enumerator GetEnumerator() => m_childs.GetEnumerator();
 
-    public NodeId AddText(string text) => AddText(NString.Create(text));
-    public NodeId AddText(NString text)
+    public NodeId UnsafeAddText(string text) => UnsafeAddText(NString.Create(text));
+    public NodeId UnsafeAddText(NString text)
     {
         var id = m_text_id_inc++;
-        var index = m_texts.Count;
-        m_texts.Add(text);
-        var node = new NodeId((uint)index, id, NodeType.Text);
+        m_texts.Set(id, text, out var idx);
+        var node = new NodeId((uint)idx, id, NodeType.Text);
         UnsafeAdd(node);
         return node;
     }
@@ -37,8 +37,9 @@ public partial record struct ChildsData
     private void RemoveText(NodeId node)
     {
         if (node.Type != NodeType.Text) throw new ArgumentException("node must be of type Text", nameof(node));
+        var r = m_texts.Remove(node.Id);
+        if (!r) throw new ArgumentException("node does not exist", nameof(node));
         UnsafeRemove(node);
-        // todo remove text
     }
 
     public bool UnsafeAdd(NodeId locate)

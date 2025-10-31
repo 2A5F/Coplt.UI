@@ -33,6 +33,26 @@ namespace Coplt
         i32 m_free_count{};
 
     public:
+        TKey* UnsafeKeyAt(i32 index)
+        {
+            return std::addressof(m_entries[index].Key);
+        }
+
+        TKey* UnsafeKeyAt(u32 index)
+        {
+            return std::addressof(m_entries[index].Key);
+        }
+
+        TValue* UnsafeAt(i32 index)
+        {
+            return std::addressof(m_entries[index].Value);
+        }
+
+        TValue* UnsafeAt(u32 index)
+        {
+            return std::addressof(m_entries[index].Value);
+        }
+
         i32 Count() const { return m_count - m_free_count; }
         i32 Capacity() const { return m_cap; }
 

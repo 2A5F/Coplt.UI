@@ -661,6 +661,14 @@ namespace Coplt {
         TraditionalHanWithLatin = 212,
     };
 
+    COPLT_ENUM_FLAGS(DirtyFlags, ::Coplt::u32)
+    {
+        None = 0,
+        Layout = 1,
+        Render = 2,
+        TextLayout = 4,
+    };
+
     enum class NodeType : ::Coplt::u8
     {
         View = 0,
@@ -780,6 +788,18 @@ namespace Coplt {
     struct CWStr
     {
         ::Coplt::char16 const* Locale;
+    };
+
+    template <class T0 /* K */, class T1 /* V */>
+    struct FFIMap
+    {
+        ::Coplt::i32* m_buckets;
+        ::Coplt::FFIMapEntry<T0, T1>* m_entries;
+        ::Coplt::u64 m_fast_mode_multiplier;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_count;
+        ::Coplt::i32 m_free_list;
+        ::Coplt::i32 m_free_count;
     };
 
     template <class T0 /* T */>
@@ -908,18 +928,6 @@ namespace Coplt {
         T1 Value;
     };
 
-    template <class T0 /* K */, class T1 /* V */>
-    struct FFIMap
-    {
-        ::Coplt::i32* m_buckets;
-        ::Coplt::FFIMapEntry<T0, T1>* m_entries;
-        ::Coplt::u64 m_fast_mode_multiplier;
-        ::Coplt::i32 m_cap;
-        ::Coplt::i32 m_count;
-        ::Coplt::i32 m_free_list;
-        ::Coplt::i32 m_free_count;
-    };
-
     template <class T0 /* T */>
     struct FFIOrderedSetNode
     {
@@ -974,6 +982,7 @@ namespace Coplt {
     {
         ::Coplt::char16 const* m_str;
         void* m_handle;
+        ::Coplt::i32 m_len;
     };
 
     struct TextRange
@@ -989,7 +998,7 @@ namespace Coplt {
     struct ChildsData
     {
         ::Coplt::FFIOrderedSet<::Coplt::NodeId> m_childs;
-        ::Coplt::NativeList<::Coplt::NString> m_texts;
+        ::Coplt::FFIMap<::Coplt::u32, ::Coplt::NString> m_texts;
         ::Coplt::u32 m_text_id_inc;
         ::Coplt::u64 m_version;
         ::Coplt::u64 m_last_version;
@@ -1001,6 +1010,7 @@ namespace Coplt {
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutData UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
+        ::Coplt::DirtyFlags DirtyFlags;
     };
 
     struct GridContainerStyle

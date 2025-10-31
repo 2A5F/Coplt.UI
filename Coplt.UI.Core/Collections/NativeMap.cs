@@ -147,7 +147,7 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
     #region TryInsert
 
     [UnscopedRef]
-    private InsertResult TryInsert(TKey key, TValue value, bool overwrite)
+    private InsertResult TryInsert(TKey key, TValue value, bool overwrite, out int idx)
     {
         if (m_buckets == null) Initialize(0);
         Debug.Assert(m_buckets != null);
@@ -170,9 +170,11 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
                 {
                     DisposeProxy.TryDispose(ref entry.Value);
                     entry.Value = value;
+                    idx = i;
                     return InsertResult.Overwrite;
                 }
 
+                idx = i;
                 return InsertResult.None;
             }
 
@@ -213,6 +215,7 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
             entry.Key = key;
             entry.Value = value;
             bucket = index + 1; // Value in _buckets is 1-based
+            idx = index;
         }
 
         return InsertResult.AddNew;
@@ -421,14 +424,20 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
     #region TryAdd
 
     [UnscopedRef]
-    public bool TryAdd(TKey key, TValue value) => TryInsert(key, value, false) == InsertResult.AddNew;
+    public bool TryAdd(TKey key, TValue value) => TryInsert(key, value, false, out _) == InsertResult.AddNew;
+
+    [UnscopedRef]
+    public bool TryAdd(TKey key, TValue value, out int idx) => TryInsert(key, value, false, out idx) == InsertResult.AddNew;
 
     #endregion
 
     #region Set
 
     [UnscopedRef]
-    public bool Set(TKey key, TValue value) => TryInsert(key, value, true) == InsertResult.AddNew;
+    public bool Set(TKey key, TValue value) => TryInsert(key, value, true, out _) == InsertResult.AddNew;
+
+    [UnscopedRef]
+    public bool Set(TKey key, TValue value, out int idx) => TryInsert(key, value, true, out idx) == InsertResult.AddNew;
 
     #endregion
 

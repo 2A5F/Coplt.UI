@@ -6,10 +6,11 @@
 #include "../Arc.h"
 #include "../List.h"
 #include "../Text.h"
+#include "../TextLayout.h"
 
 namespace Coplt
 {
-    struct TextLayout final : ComImpl<TextLayout, ITextLayout>
+    struct TextLayout final : BaseTextLayout<TextLayout>
     {
         COPLT_IMPL_START
         COPLT_IMPL_END
