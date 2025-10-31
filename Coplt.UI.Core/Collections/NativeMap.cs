@@ -116,7 +116,6 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
     [UnscopedRef]
     private void Resize(int new_size)
     {
-        // Value types never rehash
         Debug.Assert(m_entries != null, "m_nodes should be non-null");
         Debug.Assert(new_size >= m_cap);
 

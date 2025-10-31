@@ -3,6 +3,7 @@
 #include <dwrite_3.h>
 #include "../Com.h"
 #include "../Layout.h"
+#include "../Map.h"
 
 namespace Coplt
 {

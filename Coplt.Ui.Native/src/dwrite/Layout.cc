@@ -34,11 +34,13 @@ Rc<Layout> Layout::Create(Rc<LibUi> lib)
 HResult Layout::Impl_Calc(NLayoutContext* ctx)
 {
     using namespace LayoutCalc;
-    // for (auto i = 0; i < ctx->root_count; ++i)
-    // {
-    //     const auto& root = ctx->roots[i];
-    //     CollectDirty(CtxNodeRef(ctx, root.Node));
-    // }
+    const auto roots = ffi_map(ctx->roots);
+    auto e = roots->GetEnumerator();
+    while (e.MoveNext())
+    {
+        const auto& root = *e.Current().second;
+        CollectDirty(CtxNodeRef(ctx, root.Node));
+    }
     return Internal::BitCast<HResult>(coplt_ui_layout_calc(this, ctx));
 }
 
@@ -54,7 +56,6 @@ namespace Coplt::LayoutCalc::Texts
                 self, CtxNodeRef(ctx, node)
             );
             return HResultE::Ok;
-
         });
     }
 
