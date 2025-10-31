@@ -1,40 +1,56 @@
 #pragma once
 
+#include <vector>
+
 #include "Com.h"
 
 namespace Coplt
 {
-    template <class Self>
-    struct BaseTextLayout : ComImpl<Self, ITextLayout>
+    struct BaseTextLayoutStorage
     {
-        void ClearCache()
+        enum class ItemType
         {
-            // todo
-        }
+            Text,
+            InlineBlock,
+            Block,
+        };
 
-        void AddText(NodeId parent, u32 length)
+        struct Item
         {
-            // todo
-        }
+            u32 Start;
+            u32 Length;
+            u32 Scope;
+            NodeId NodeOrParent;
+            ItemType Type;
+        };
 
-        void AddInlineBlock(NodeId parent)
+        struct Paragraph
         {
-            // todo
-        }
+            u32 Start;
+            u32 Length;
+            u32 LogicTextLength;
+        };
 
-        void AddBlock(NodeId parent)
-        {
-            // todo
-        }
+        std::vector<Paragraph> m_paragraphs{};
+        std::vector<Item> m_items{};
+        std::vector<NodeId> m_scopes{};
+        std::vector<u32> m_scope_stack{};
 
-        void StartScope(NodeId node)
-        {
-            // todo
-        }
+        BaseTextLayoutStorage();
 
-        void EndScope(NodeId node)
-        {
-            // todo
-        }
+        void ClearCache();
+        void AddText(NodeId Parent, u32 Length);
+        void AddInlineBlock(NodeId Node);
+        void AddBlock(NodeId Node);
+        void StartScope(NodeId Node);
+        void EndScope();
+
+        // return null if not find
+        const Item* SearchItem(u32 Paragraph, u32 Position) const;
+    };
+
+    template <class Self>
+    struct BaseTextLayout : ComImpl<Self, ITextLayout>, BaseTextLayoutStorage
+    {
     };
 }

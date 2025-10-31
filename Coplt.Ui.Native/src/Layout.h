@@ -155,7 +155,7 @@ namespace Coplt::LayoutCalc
 
             if (need_end_scope)
             {
-                cur_text_layout->EndScope(node.id);
+                cur_text_layout->EndScope();
             }
         }
     }
