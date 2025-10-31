@@ -88,6 +88,7 @@ public partial record struct StyleData()
     public Container Container = Container.Flex;
     public TextMode TextMode = TextMode.Block;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
+    public FloatInText Float = FloatInText.None; // not support yet
     
     public CursorType Cursor = CursorType.Default;
     public PointerEvents PointerEvents = PointerEvents.Auto;

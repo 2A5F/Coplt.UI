@@ -161,6 +161,14 @@ pub enum FlexWrap {
     WrapReverse = 2,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum FloatInText {
+    None = 0,
+    Start = 1,
+    End = 2,
+}
+
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontStretch {
@@ -1034,6 +1042,7 @@ pub struct StyleData {
     pub Container: Container,
     pub TextMode: TextMode,
     pub BoxSizing: BoxSizing,
+    pub Float: FloatInText,
     pub Cursor: CursorType,
     pub PointerEvents: PointerEvents,
     pub OverflowX: Overflow,

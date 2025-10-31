@@ -259,6 +259,13 @@ namespace Coplt {
         WrapReverse = 2,
     };
 
+    enum class FloatInText : ::Coplt::u8
+    {
+        None = 0,
+        Start = 1,
+        End = 2,
+    };
+
     enum class FontStretch : ::Coplt::i32
     {
         Undefined = 0,
@@ -1089,6 +1096,7 @@ namespace Coplt {
         ::Coplt::Container Container;
         ::Coplt::TextMode TextMode;
         ::Coplt::BoxSizing BoxSizing;
+        ::Coplt::FloatInText Float;
         ::Coplt::CursorType Cursor;
         ::Coplt::PointerEvents PointerEvents;
         ::Coplt::Overflow OverflowX;
