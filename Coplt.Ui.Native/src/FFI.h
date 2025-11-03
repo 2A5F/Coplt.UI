@@ -4,13 +4,26 @@
 
 namespace Coplt::FFIUtils
 {
+    struct FFIOrderedSetNodeBase
+    {
+        i32 HashCode;
+        i32 Next;
+        i32 OrderNext;
+        i32 OrderPrev;
+    };
+
     template <class T>
     struct FFIOrderedSetEnumerator
     {
-        const FFIOrderedSet<T>* set{};
-        FFIOrderedSetNode<T>* cur{};
+        struct FFIOrderedSetNode : FFIOrderedSetNodeBase
+        {
+            T Value;
+        };
 
-        explicit FFIOrderedSetEnumerator(const FFIOrderedSet<T>* set) : set(set)
+        const FFIOrderedSet* set{};
+        FFIOrderedSetNode* cur{};
+
+        explicit FFIOrderedSetEnumerator(const FFIOrderedSet* set) : set(set)
         {
         }
 
@@ -20,12 +33,12 @@ namespace Coplt::FFIUtils
             if (cur == nullptr)
             {
                 if (set->m_first == -1) return false;
-                cur = &set->m_nodes[set->m_first];
+                cur = &static_cast<FFIOrderedSetNode*>(set->m_nodes)[set->m_first];
             }
             else
             {
                 if (cur->OrderNext == -1) return false;
-                cur = &set->m_nodes[cur->OrderNext];
+                cur = &static_cast<FFIOrderedSetNode*>(set->m_nodes)[cur->OrderNext];
             }
             return true;
         }
@@ -37,9 +50,9 @@ namespace Coplt::FFIUtils
     };
 
     template <class T>
-    FFIOrderedSetEnumerator<T> GetEnumerator(const FFIOrderedSet<T>* set)
+    FFIOrderedSetEnumerator<T> GetEnumerator(const FFIOrderedSet* set)
     {
-        return FFIOrderedSetEnumerator(set);
+        return FFIOrderedSetEnumerator<T>(set);
     }
 
     inline NodeType GetType(const NodeId id)

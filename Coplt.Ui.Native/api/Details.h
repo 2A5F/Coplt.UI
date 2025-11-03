@@ -1176,11 +1176,11 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IStub>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    void (*const COPLT_CDECL f_Some)(::Coplt::IStub*, ::Coplt::NodeType a) noexcept;
+    void (*const COPLT_CDECL f_Some)(::Coplt::IStub*, ::Coplt::NodeType a, ::Coplt::RootData* b, ::Coplt::NString* c) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IStub
 {
-    extern "C" void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::NodeType p0) noexcept;
+    extern "C" void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::NodeType p0, ::Coplt::RootData* p1, ::Coplt::NString* p2) noexcept;
 }
 
 template <>
@@ -1221,7 +1221,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual void Impl_Some(::Coplt::NodeType a) = 0;
+        virtual void Impl_Some(::Coplt::NodeType a, ::Coplt::RootData* b, ::Coplt::NString* c) = 0;
     };
 
     template <std::derived_from<::Coplt::IStub> Base = ::Coplt::IStub>
@@ -1239,9 +1239,9 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
         template <class Interface>
         COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
 
-        static void COPLT_CDECL f_Some(::Coplt::IStub* self, ::Coplt::NodeType p0) noexcept
+        static void COPLT_CDECL f_Some(::Coplt::IStub* self, ::Coplt::NodeType p0, ::Coplt::RootData* p1, ::Coplt::NString* p2) noexcept
         {
-            AsImpl(self)->Impl_Some(p0);
+            AsImpl(self)->Impl_Some(p0, p1, p2);
         }
     };
 
@@ -1255,13 +1255,13 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IStub>
 namespace Coplt::Internal::VirtualImpl_Coplt_IStub
 {
 
-    extern "C" inline void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::NodeType p0) noexcept
+    extern "C" inline void COPLT_CDECL Some(::Coplt::IStub* self, ::Coplt::NodeType p0, ::Coplt::RootData* p1, ::Coplt::NString* p2) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
         COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IStub, Some, void)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::IStub>(self)->Impl_Some(p0);
+        ::Coplt::Internal::AsImpl<::Coplt::IStub>(self)->Impl_Some(p0, p1, p2);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IStub, Some, void)
         #endif
@@ -1276,9 +1276,9 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IStub
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IStub>
 {
-    static COPLT_FORCE_INLINE void Some(::Coplt::IStub* self, ::Coplt::NodeType p0) noexcept
+    static COPLT_FORCE_INLINE void Some(::Coplt::IStub* self, ::Coplt::NodeType p0, ::Coplt::RootData* p1, ::Coplt::NString* p2) noexcept
     {
-        COPLT_COM_PVTB(IStub, self)->f_Some(self, p0);
+        COPLT_COM_PVTB(IStub, self)->f_Some(self, p0, p1, p2);
     }
 };
 

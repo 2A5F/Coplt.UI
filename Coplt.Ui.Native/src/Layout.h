@@ -56,6 +56,20 @@ namespace Coplt::LayoutCalc
         {
             return *GetCommonData(ctx, id.Index);
         }
+
+        const NString& GetText(const NodeId text) const
+        {
+            const auto& childs = ChildsData();
+            auto& texts = *ffi_map<u32, NString>(&childs.m_texts);
+            return *texts.UnsafeAt(text.Index);
+        }
+
+        const NString& GetText(const u32 index) const
+        {
+            const auto& childs = ChildsData();
+            auto& texts = *ffi_map<u32, NString>(&childs.m_texts);
+            return *texts.UnsafeAt(index);
+        }
     };
 
     // collect and spread dirty
@@ -73,10 +87,10 @@ namespace Coplt::LayoutCalc
         if (node.Type() == NodeType::Text)
         {
             if (!cur_text_layout) return;
-            auto& texts = *ffi_map(&parent_childs->m_texts);
+            auto& texts = *ffi_map<u32, NString>(&parent_childs->m_texts);
             auto& text = *texts.UnsafeAt(node.id.Index);
             if (text.m_len == 0) return;
-            cur_text_layout->AddText(*parent_id, text.m_len);
+            cur_text_layout->AddText(*parent_id, node.id.Index, text.m_len);
         }
         else
         {
@@ -146,7 +160,7 @@ namespace Coplt::LayoutCalc
             if (cur_text_layout)
             {
                 // process childs
-                for (auto e = FFIUtils::GetEnumerator(&childs.m_childs); e.MoveNext();)
+                for (auto e = FFIUtils::GetEnumerator<NodeId>(&childs.m_childs); e.MoveNext();)
                 {
                     auto child = CtxNodeRef(node.ctx, *e.Current());
                     Phase1(child, &node.id, &childs, cur_text_layout);

@@ -6,51 +6,48 @@
 namespace Coplt
 {
     template <class TKey, class TValue, Hash<TKey> THash = DefaultHash<TKey>, Eq<TKey> TEq = DefaultEq<TKey>>
-    struct Map
+    struct Map : FFIMap
     {
-    private:
         const i32 StartOfFreeList = -3;
 
         struct Entry
         {
             i32 HashCode;
             /// <summary>
-        /// 0-based index of next entry in chain: -1 means end of chain
-        /// also encodes whether this entry _itself_ is part of the free list by changing sign and subtracting 3,
-        /// so -2 means end of free list, -3 means index 0 but on free list, -4 means index 1 but on free list, etc.
-        /// </summary>
+            /// 0-based index of next entry in chain: -1 means end of chain
+            /// also encodes whether this entry _itself_ is part of the free list by changing sign and subtracting 3,
+            /// so -2 means end of free list, -3 means index 0 but on free list, -4 means index 1 but on free list, etc.
+            /// </summary>
             i32 Next;
             TKey Key; // Key of entry
             TValue Value; // Value of entry
         };
 
-        i32* m_buckets{};
-        Entry* m_entries{};
-        u64 m_fast_mode_multiplier{};
-        i32 m_cap{};
-        i32 m_count{};
-        i32 m_free_list{};
-        i32 m_free_count{};
+    private:
+        Entry* get_m_entries() const
+        {
+            return static_cast<Entry*>(m_entries);
+        }
 
     public:
-        TKey* UnsafeKeyAt(i32 index)
+        TKey* UnsafeKeyAt(i32 index) const
         {
-            return std::addressof(m_entries[index].Key);
+            return std::addressof(get_m_entries()[index].Key);
         }
 
-        TKey* UnsafeKeyAt(u32 index)
+        TKey* UnsafeKeyAt(u32 index) const
         {
-            return std::addressof(m_entries[index].Key);
+            return std::addressof(get_m_entries()[index].Key);
         }
 
-        TValue* UnsafeAt(i32 index)
+        TValue* UnsafeAt(i32 index) const
         {
-            return std::addressof(m_entries[index].Value);
+            return std::addressof(get_m_entries()[index].Value);
         }
 
-        TValue* UnsafeAt(u32 index)
+        TValue* UnsafeAt(u32 index) const
         {
-            return std::addressof(m_entries[index].Value);
+            return std::addressof(get_m_entries()[index].Value);
         }
 
         i32 Count() const { return m_count - m_free_count; }
@@ -101,7 +98,7 @@ namespace Coplt
             m_fast_mode_multiplier = HashHelpers::GetFastModMultiplier(static_cast<u32>(new_size));
             for (i32 i = 0; i < count; i++)
             {
-                Entry& entry = m_entries[i];
+                Entry& entry = get_m_entries()[i];
                 if (entry.Next >= -1)
                 {
                     i32* bucket = GetBucket(entry.HashCode);
@@ -117,7 +114,7 @@ namespace Coplt
         {
             if (m_buckets == nullptr) Initialize(0);
 
-            auto entries = m_entries;
+            auto entries = get_m_entries();
 
             auto hash_code = THash::GetHashCode(key);
 
@@ -165,7 +162,7 @@ namespace Coplt
                 }
                 index = count;
                 m_count = count + 1;
-                entries = m_entries;
+                entries = get_m_entries();
             }
 
             {
@@ -189,7 +186,7 @@ namespace Coplt
         {
             if (!m_buckets) return nullptr;
 
-            auto entries = m_entries;
+            auto entries = get_m_entries();
 
             auto hash_code = QHash::GetHashCode(key);
             auto i = *GetBucket(hash_code);
@@ -260,7 +257,7 @@ namespace Coplt
         std::optional<std::pair<TKey, TValue>> Remove(const Q& key)
         {
             if (!m_buckets) return std::nullopt;
-            auto entries = m_entries;
+            auto entries = get_m_entries();
 
             u32 collision_count = 0;
             auto hash_code = QHash::GetHashCode(key);
@@ -324,7 +321,7 @@ namespace Coplt
             {
                 while (static_cast<u32>(index) < static_cast<u32>(self->m_count))
                 {
-                    auto& entry = self->m_entries[index++];
+                    auto& entry = self->get_m_entries()[index++];
 
                     if (entry.Next >= -1)
                     {
@@ -369,7 +366,7 @@ namespace Coplt
             m_count = 0;
             m_free_list = -1;
             m_free_count = 0;
-            std::fill_n(m_entries, count, 0);
+            std::fill_n(get_m_entries(), count, 0);
         }
 
         ~Map()
@@ -412,14 +409,14 @@ namespace Coplt
         Map& operator=(const Map& other) = delete;
 
         Map(Map&& other) noexcept
-            : m_buckets(std::exchange(other.m_buckets, nullptr)),
-              m_entries(std::exchange(other.m_entries, nullptr)),
-              m_fast_mode_multiplier(std::exchange(other.m_fast_mode_multiplier, 0)),
-              m_cap(std::exchange(other.m_cap, 0)),
-              m_count(std::exchange(other.m_count, 0)),
-              m_free_list(std::exchange(other.m_free_list, 0)),
-              m_free_count(std::exchange(other.m_free_count, 0))
         {
+            m_buckets = std::exchange(other.m_buckets, nullptr);
+            m_entries = std::exchange(other.m_entries, nullptr);
+            m_fast_mode_multiplier = std::exchange(other.m_fast_mode_multiplier, 0);
+            m_cap = std::exchange(other.m_cap, 0);
+            m_count = std::exchange(other.m_count, 0);
+            m_free_list = std::exchange(other.m_free_list, 0);
+            m_free_count = std::exchange(other.m_free_count, 0);
         }
 
         Map& operator=(Map&& other) noexcept
@@ -430,8 +427,14 @@ namespace Coplt
     };
 
     template <class TKey, class TValue>
-    Map<TKey, TValue>* ffi_map(FFIMap<TKey, TValue>* list)
+    Map<TKey, TValue>* ffi_map(FFIMap* list)
     {
         return reinterpret_cast<Map<TKey, TValue>*>(list);
+    }
+
+    template <class TKey, class TValue>
+    const Map<TKey, TValue>* ffi_map(const FFIMap* list)
+    {
+        return reinterpret_cast<const Map<TKey, TValue>*>(list);
     }
 }

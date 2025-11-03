@@ -11,10 +11,10 @@ namespace Coplt.UI.Trees.Datas;
 public partial record struct ChildsData
 {
     [Drop]
-    [ComType<FFIOrderedSet<NodeId>>]
+    [ComType<FFIOrderedSet>]
     private NOrderedSet<NodeId> m_childs;
     [Drop]
-    [ComType<FFIMap<uint, NString>>]
+    [ComType<FFIMap>]
     private NativeMap<uint, NString> m_texts;
     private uint m_text_id_inc;
 

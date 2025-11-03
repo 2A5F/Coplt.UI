@@ -16,7 +16,7 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
-    [ComType<Ptr<FFIMap<NodeId, RootData>>>]
+    [ComType<Ptr<FFIMap>>]
     public NativeMap<NodeId, RootData>* roots;
 
     public int* node_buckets;

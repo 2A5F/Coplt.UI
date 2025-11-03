@@ -24,5 +24,7 @@ namespace Coplt
         HResult Impl_Calc(NLayoutContext* ctx);
 
         COPLT_IMPL_END
+
+        HResult Calc(NLayoutContext* ctx);
     };
 } // namespace Coplt

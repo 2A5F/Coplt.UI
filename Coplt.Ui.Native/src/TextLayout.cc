@@ -1,6 +1,9 @@
 #include "TextLayout.h"
+#include "TextLayout.h"
 
 #include "Algorithm.h"
+
+#include "Layout.h"
 
 using namespace Coplt;
 
@@ -17,7 +20,7 @@ void BaseTextLayoutStorage::ClearCache()
     m_scope_stack.clear();
 }
 
-void BaseTextLayoutStorage::AddText(NodeId Parent, const u32 Length)
+void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 {
     if (Length == 0) return;
     if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
@@ -28,6 +31,7 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, const u32 Length)
         .Start = paragraph.LogicTextLength,
         .Length = Length,
         .Scope = scope,
+        .TextIndex = Index,
         .NodeOrParent = Parent,
         .Type = ItemType::Text,
     });
@@ -80,11 +84,11 @@ void BaseTextLayoutStorage::EndScope()
     m_scope_stack.pop_back();
 }
 
-const BaseTextLayoutStorage::Item* BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) const
+i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) const
 {
     const auto& paragraph = m_paragraphs[Paragraph];
-    if (paragraph.Type == ParagraphType::Block) return nullptr;
-    if (Position >= paragraph.LogicTextLength) return nullptr;
+    if (paragraph.Type == ParagraphType::Block) return -1;
+    if (Position >= paragraph.LogicTextLength) return -1;
     const auto index = Algorithm::BinarySearch(
         m_items.data(), static_cast<i32>(paragraph.Start), static_cast<i32>(paragraph.Length), Position,
         [](const Item& item, const u32 pos)
@@ -93,6 +97,23 @@ const BaseTextLayoutStorage::Item* BaseTextLayoutStorage::SearchItem(const u32 P
             if (pos >= item.Start + item.Length) return 1;
             return 0;
         });
-    if (index < 0) return nullptr;
-    return &m_items[index];
+    if (index < 0) return -1;
+    return index;
+}
+
+const char16* Coplt::GetText(NLayoutContext* ctx, const BaseTextLayoutStorage::Item* item)
+{
+    switch (item->Type)
+    {
+    case BaseTextLayoutStorage::ItemType::Text:
+        {
+            const auto node = LayoutCalc::CtxNodeRef(ctx, item->NodeOrParent);
+            const auto text = node.GetText(item->TextIndex);
+            return text.m_str;
+        }
+    case BaseTextLayoutStorage::ItemType::InlineBlock:
+    case BaseTextLayoutStorage::ItemType::Block:
+        return COPLT_STR16("￼");
+    }
+    return nullptr;
 }
