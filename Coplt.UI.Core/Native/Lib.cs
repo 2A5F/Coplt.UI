@@ -31,15 +31,22 @@ public sealed unsafe partial class NativeLib
 
     private NativeLib()
     {
-        [DllImport("Coplt.UI.Native")]
-        static extern ILib* Coplt_CreateLibUi();
-
-        m_lib = new(Coplt_CreateLibUi());
-        if (!m_lib) throw new Exception("Failed to create native lib");
+        LibLoadInfo info = new()
+        {
+            p_dwrite = DWrite.Load(),
+        };
+        ILib* p_lib;
+        new HResult(Coplt_CreateLibUi(&info, &p_lib)).TryThrow();
+        m_lib = new(p_lib);
 
         ILayout* p_layout;
         m_lib.CreateLayout(&p_layout).TryThrowWithMsg();
         m_layout = new(p_layout);
+
+        return;
+
+        [DllImport("Coplt.UI.Native")]
+        static extern HRESULT Coplt_CreateLibUi(LibLoadInfo* info, ILib** lib);
     }
 
     #endregion

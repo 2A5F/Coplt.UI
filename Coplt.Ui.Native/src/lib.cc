@@ -5,8 +5,11 @@
 #include <hb.h>
 #include <icu.h>
 
-#include "dwrite/Layout.h"
 #include "Text.h"
+
+#if _WINDOWS
+#include "dwrite/Layout.h"
+#endif
 
 using namespace Coplt;
 
@@ -30,11 +33,9 @@ extern "C" void* coplt_ui_realloc(void* ptr, const size_t new_size, const size_t
     return mi_realloc_aligned(ptr, new_size, align);
 }
 
-HResult LibUi::Backend()
+LibUi::LibUi(LibLoadInfo* info)
 {
-    if (!m_backend)
-        if (const auto hr = TextBackend::Create(m_backend); hr.IsError()) return hr;
-    return HResultE::Ok;
+    m_backend = TextBackend::Create(info->p_dwrite);
 }
 
 void LibUi::Impl_SetLogger(void* obj, Func<void, void*, LogLevel, i32, char16*>* logger, Func<void, void*>* drop)
@@ -70,7 +71,6 @@ void* LibUi::Impl_ReAlloc(void* ptr, const i32 size, const i32 align) const
 
 HResult LibUi::Impl_GetSystemFontCollection(IFontCollection** fc)
 {
-    if (const auto hr = Backend(); hr.IsError()) return hr;
     return feb([&] -> HResult
     {
         auto out = m_backend->GetSystemFontCollection();
@@ -81,7 +81,6 @@ HResult LibUi::Impl_GetSystemFontCollection(IFontCollection** fc)
 
 HResult LibUi::Impl_GetSystemFontFallback(IFontFallback** ff)
 {
-    if (const auto hr = Backend(); hr.IsError()) return hr;
     return feb([&] -> HResult
     {
         auto out = m_backend->GetSystemFontFallback();
@@ -92,7 +91,6 @@ HResult LibUi::Impl_GetSystemFontFallback(IFontFallback** ff)
 
 HResult LibUi::Impl_CreateLayout(ILayout** layout)
 {
-    if (const auto hr = Backend(); hr.IsError()) return hr;
     return feb([&]
     {
         auto out = Layout::Create(CloneRc(this));
@@ -110,7 +108,11 @@ HResult LibUi::Impl_SplitTexts(NativeList<TextRange>* ranges, char16 const* char
     });
 }
 
-ILib* Coplt::Coplt_CreateLibUi()
+HResultE Coplt::Coplt_CreateLibUi(LibLoadInfo* info, ILib** lib)
 {
-    return new LibUi();
+    return feb([&]
+    {
+        *lib = new LibUi(info);
+        return HResultE::Ok;
+    });
 }

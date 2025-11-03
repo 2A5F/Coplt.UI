@@ -15,6 +15,12 @@ namespace Coplt
             Block,
         };
 
+        enum class ParagraphType
+        {
+            Inline,
+            Block,
+        };
+
         struct Item
         {
             u32 Start;
@@ -29,6 +35,7 @@ namespace Coplt
             u32 Start;
             u32 Length;
             u32 LogicTextLength;
+            ParagraphType Type;
         };
 
         std::vector<Paragraph> m_paragraphs{};

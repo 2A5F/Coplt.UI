@@ -9,9 +9,9 @@ namespace Coplt
     {
         Rc<IDWriteFactory7> m_dw_factory;
 
-        explicit TextBackend(Rc<IDWriteFactory7>&& m_dw_factory);
+        explicit TextBackend(Rc<IDWriteFactory7>&& dw_factory);
 
-        static HResult Create(Rc<TextBackend>& out);
+        static Rc<TextBackend> Create(void* dw_factory);
 
         Rc<IFontCollection> GetSystemFontCollection() const;
 

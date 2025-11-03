@@ -23,10 +23,6 @@
           "name": "TextLayout",
           "impl": "ITextLayout"
         },
-        "dwrite/TextData.h": {
-          "name": "TextDataObj",
-          "impl": "ITextData"
-        },
         "dwrite/SystemFontCollection.h": {
           "name": "SystemFontCollection",
           "impl": "IFontCollection"

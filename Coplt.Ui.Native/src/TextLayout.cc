@@ -15,12 +15,13 @@ void BaseTextLayoutStorage::ClearCache()
     m_items.clear();
     m_scopes.clear();
     m_scope_stack.clear();
-    m_paragraphs.push_back(Paragraph{0, 0, 0});
 }
 
 void BaseTextLayoutStorage::AddText(NodeId Parent, const u32 Length)
 {
     if (Length == 0) return;
+    if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
+        m_paragraphs.push_back(Paragraph{m_items.size(), 0, 0, ParagraphType::Inline});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
@@ -36,6 +37,8 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, const u32 Length)
 
 void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 {
+    if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
+        m_paragraphs.push_back(Paragraph{m_items.size(), 0, 0, ParagraphType::Inline});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
@@ -51,8 +54,10 @@ void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 
 void BaseTextLayoutStorage::AddBlock(const NodeId Node)
 {
-    m_paragraphs.push_back(Paragraph{m_items.size(), 1, 1});
+    if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Block)
+        m_paragraphs.push_back(Paragraph{m_items.size(), 0, 0, ParagraphType::Block});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
+    auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
         .Start = 0,
         .Length = 1,
@@ -60,6 +65,8 @@ void BaseTextLayoutStorage::AddBlock(const NodeId Node)
         .NodeOrParent = Node,
         .Type = ItemType::Block,
     });
+    paragraph.Length++;
+    paragraph.LogicTextLength += 1;
 }
 
 void BaseTextLayoutStorage::StartScope(const NodeId Node)
@@ -76,6 +83,8 @@ void BaseTextLayoutStorage::EndScope()
 const BaseTextLayoutStorage::Item* BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) const
 {
     const auto& paragraph = m_paragraphs[Paragraph];
+    if (paragraph.Type == ParagraphType::Block) return nullptr;
+    if (Position >= paragraph.LogicTextLength) return nullptr;
     const auto index = Algorithm::BinarySearch(
         m_items.data(), static_cast<i32>(paragraph.Start), static_cast<i32>(paragraph.Length), Position,
         [](const Item& item, const u32 pos)

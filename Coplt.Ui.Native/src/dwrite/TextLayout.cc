@@ -4,7 +4,22 @@
 
 using namespace Coplt;
 
-HRESULT TextAnalysisSource::QueryInterface(const IID& riid, void** ppvObject)
+void TextLayout::ReBuild()
+{
+    m_paragraph_datas.clear();
+    m_paragraph_datas.resize(m_paragraphs.size(), TextLayoutCalc::ParagraphData{});
+    for (int i = 0; i < m_paragraphs.size(); ++i)
+    {
+        m_paragraph_datas[i].m_src = Rc(new TextLayoutCalc::TextAnalysisSource(&m_paragraph_datas[i]));
+    }
+}
+
+TextLayoutCalc::TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)
+    : m_paragraph_data(paragraph_data)
+{
+}
+
+HRESULT TextLayoutCalc::TextAnalysisSource::QueryInterface(const IID& riid, void** ppvObject)
 {
     if (!ppvObject)
         return E_INVALIDARG;
@@ -27,39 +42,45 @@ HRESULT TextAnalysisSource::QueryInterface(const IID& riid, void** ppvObject)
     return S_OK;
 }
 
-ULONG TextAnalysisSource::AddRef()
+ULONG TextLayoutCalc::TextAnalysisSource::AddRef()
 {
     return Impl_AddRef();
 }
 
-ULONG TextAnalysisSource::Release()
+ULONG TextLayoutCalc::TextAnalysisSource::Release()
 {
     return Impl_Release();
 }
 
-HRESULT TextAnalysisSource::GetTextAtPosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength)
+HRESULT TextLayoutCalc::TextAnalysisSource::GetTextAtPosition(
+    UINT32 textPosition, const WCHAR** textString, UINT32* textLength
+)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
-HRESULT TextAnalysisSource::GetTextBeforePosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength)
+HRESULT TextLayoutCalc::TextAnalysisSource::GetTextBeforePosition(
+    UINT32 textPosition, const WCHAR** textString, UINT32* textLength
+)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
-DWRITE_READING_DIRECTION TextAnalysisSource::GetParagraphReadingDirection()
+DWRITE_READING_DIRECTION TextLayoutCalc::TextAnalysisSource::GetParagraphReadingDirection()
 {
     return DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
 }
 
-HRESULT TextAnalysisSource::GetLocaleName(UINT32 textPosition, UINT32* textLength, const WCHAR** localeName)
+HRESULT TextLayoutCalc::TextAnalysisSource::GetLocaleName(
+    UINT32 textPosition, UINT32* textLength, const WCHAR** localeName
+)
 {
-    return S_OK;
+    return E_NOTIMPL;
 }
 
-HRESULT TextAnalysisSource::GetNumberSubstitution(
+HRESULT TextLayoutCalc::TextAnalysisSource::GetNumberSubstitution(
     UINT32 textPosition, UINT32* textLength, IDWriteNumberSubstitution** numberSubstitution
 )
 {
-    return S_OK;
+    return E_NOTIMPL;
 }

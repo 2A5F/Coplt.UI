@@ -7,7 +7,6 @@
 #include "../lib.h"
 #include "Error.h"
 #include "TextLayout.h"
-#include "TextData.h"
 
 using namespace Coplt;
 

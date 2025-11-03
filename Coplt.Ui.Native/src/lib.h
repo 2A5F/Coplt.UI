@@ -68,12 +68,17 @@ namespace Coplt
         }
     };
 
+    struct LibLoadInfo
+    {
+        void* p_dwrite;
+    };
+
     struct LibUi final : ComImpl<LibUi, ILib>
     {
         LoggerData m_logger{};
         Rc<TextBackend> m_backend{};
 
-        HResult Backend();
+        explicit LibUi(LibLoadInfo* info);
 
         COPLT_IMPL_START
 
@@ -110,5 +115,5 @@ namespace Coplt
         COPLT_IMPL_END
     };
 
-    extern "C" COPLT_EXPORT ILib* Coplt_CreateLibUi();
+    extern "C" COPLT_EXPORT HResultE Coplt_CreateLibUi(LibLoadInfo* info, ILib** lib);
 }
