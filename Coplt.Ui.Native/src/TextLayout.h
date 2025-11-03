@@ -23,7 +23,7 @@ namespace Coplt
 
         struct Item
         {
-            u32 Start;
+            u32 LogicTextStart;
             u32 Length;
             u32 Scope;
             u32 TextIndex;
@@ -33,8 +33,8 @@ namespace Coplt
 
         struct Paragraph
         {
-            u32 Start;
-            u32 Length;
+            u32 ItemStart;
+            u32 ItemLength;
             u32 LogicTextLength;
             ParagraphType Type;
         };

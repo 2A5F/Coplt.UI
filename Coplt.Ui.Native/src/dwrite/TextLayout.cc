@@ -90,17 +90,19 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetTextAtPosition(
 {
     auto layout = m_paragraph_data->m_text_layout;
     const auto item_index = layout->SearchItem(m_paragraph_data->m_index, textPosition);
-    if (item_index < 0)
-    {
-        *textString = nullptr;
-        *textLength = 0;
-    }
-    else
+    if (item_index >= 0)
     {
         const auto item = &layout->m_items[item_index];
-        *textString = GetText(layout->m_ctx, item);
-        *textLength = item->Length;
+        const auto local_offset = textPosition - item->LogicTextStart;
+        if (local_offset <= item->Length)
+        {
+            *textString = GetText(layout->m_ctx, item) + local_offset;
+            *textLength = item->Length - local_offset;
+            return S_OK;
+        }
     }
+    *textString = nullptr;
+    *textLength = 0;
     return S_OK;
 }
 
@@ -110,17 +112,30 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetTextBeforePosition(
 {
     auto layout = m_paragraph_data->m_text_layout;
     const auto item_index = layout->SearchItem(m_paragraph_data->m_index, textPosition);
-    if (item_index < 1)
+    if (item_index >= 0)
     {
-        *textString = nullptr;
-        *textLength = 0;
+        const auto item = &layout->m_items[item_index];
+        const auto local_offset = textPosition - item->LogicTextStart;
+        if (local_offset <= item->Length)
+        {
+            *textString = GetText(layout->m_ctx, item);
+            *textLength = local_offset;
+            return S_OK;
+        }
+        if (item_index > 0)
+        {
+            const auto pre_item = &layout->m_items[item_index - 1];
+            const auto pre_local_offset = textPosition - pre_item->LogicTextStart;
+            if (pre_local_offset <= item->Length)
+            {
+                *textString = GetText(layout->m_ctx, pre_item);
+                *textLength = pre_local_offset;
+                return S_OK;
+            }
+        }
     }
-    else
-    {
-        const auto item = &layout->m_items[item_index - 1];
-        *textString = GetText(layout->m_ctx, item);
-        *textLength = item->Length;
-    }
+    *textString = nullptr;
+    *textLength = 0;
     return S_OK;
 }
 

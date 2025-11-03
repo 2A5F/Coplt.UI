@@ -28,14 +28,14 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
-        .Start = paragraph.LogicTextLength,
+        .LogicTextStart = paragraph.LogicTextLength,
         .Length = Length,
         .Scope = scope,
         .TextIndex = Index,
         .NodeOrParent = Parent,
         .Type = ItemType::Text,
     });
-    paragraph.Length++;
+    paragraph.ItemLength++;
     paragraph.LogicTextLength += Length;
 }
 
@@ -46,13 +46,13 @@ void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
-        .Start = paragraph.LogicTextLength,
+        .LogicTextStart = paragraph.LogicTextLength,
         .Length = 1,
         .Scope = scope,
         .NodeOrParent = Node,
         .Type = ItemType::InlineBlock,
     });
-    paragraph.Length++;
+    paragraph.ItemLength++;
     paragraph.LogicTextLength += 1;
 }
 
@@ -63,13 +63,13 @@ void BaseTextLayoutStorage::AddBlock(const NodeId Node)
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
-        .Start = 0,
+        .LogicTextStart = 0,
         .Length = 1,
         .Scope = scope,
         .NodeOrParent = Node,
         .Type = ItemType::Block,
     });
-    paragraph.Length++;
+    paragraph.ItemLength++;
     paragraph.LogicTextLength += 1;
 }
 
@@ -90,11 +90,11 @@ i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) c
     if (paragraph.Type == ParagraphType::Block) return -1;
     if (Position >= paragraph.LogicTextLength) return -1;
     const auto index = Algorithm::BinarySearch(
-        m_items.data(), static_cast<i32>(paragraph.Start), static_cast<i32>(paragraph.Length), Position,
+        m_items.data(), static_cast<i32>(paragraph.ItemStart), static_cast<i32>(paragraph.ItemLength), Position,
         [](const Item& item, const u32 pos)
         {
-            if (pos < item.Start) return -1;
-            if (pos >= item.Start + item.Length) return 1;
+            if (pos < item.LogicTextStart) return -1;
+            if (pos >= item.LogicTextStart + item.Length) return 1;
             return 0;
         });
     if (index < 0) return -1;
