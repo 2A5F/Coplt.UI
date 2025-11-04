@@ -93,8 +93,8 @@ i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) c
         m_items.data(), static_cast<i32>(paragraph.ItemStart), static_cast<i32>(paragraph.ItemLength), Position,
         [](const Item& item, const u32 pos)
         {
-            if (pos < item.LogicTextStart) return -1;
-            if (pos >= item.LogicTextStart + item.Length) return 1;
+            if (pos < item.LogicTextStart) return 1;
+            if (pos >= item.LogicTextStart + item.Length) return -1;
             return 0;
         });
     if (index < 0) return -1;

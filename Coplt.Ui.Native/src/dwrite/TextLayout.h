@@ -105,7 +105,8 @@ namespace Coplt
 
             void ReBuild();
 
-            std::vector<BaseTextLayoutStorage::Paragraph>& GetParagraphs() const;
+            std::vector<BaseTextLayoutStorage::Paragraph>& GetTextLayoutParagraphs() const;
+            BaseTextLayoutStorage::Paragraph& GetParagraph() const;
         };
     }
 } // namespace Coplt

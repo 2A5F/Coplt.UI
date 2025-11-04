@@ -2,6 +2,7 @@
 
 #include <icu.h>
 
+#include "../Algorithm.h"
 #include "../Text.h"
 #include "Layout.h"
 #include "Error.h"
@@ -20,9 +21,14 @@ void TextLayoutCalc::ParagraphData::ReBuild()
     m_bidi_ranges.clear();
 }
 
-std::vector<BaseTextLayoutStorage::Paragraph>& TextLayoutCalc::ParagraphData::GetParagraphs() const
+std::vector<BaseTextLayoutStorage::Paragraph>& TextLayoutCalc::ParagraphData::GetTextLayoutParagraphs() const
 {
     return m_text_layout->m_paragraphs;
+}
+
+BaseTextLayoutStorage::Paragraph& TextLayoutCalc::ParagraphData::GetParagraph() const
+{
+    return GetTextLayoutParagraphs()[m_index];
 }
 
 void TextLayout::ReBuild(Layout* layout, NLayoutContext* ctx)
@@ -41,6 +47,10 @@ void TextLayout::ReBuild(Layout* layout, NLayoutContext* ctx)
             data.m_src.get(), 0, paragraph.LogicTextLength, data.m_sink.get()
         ); FAILED(hr))
             throw ComException(hr, "Failed to analyze script");
+        if (const auto hr = layout->m_text_analyzer->AnalyzeBidi(
+            data.m_src.get(), 0, paragraph.LogicTextLength, data.m_sink.get()
+        ); FAILED(hr))
+            throw ComException(hr, "Failed to analyze bidi");
     }
 
     m_ctx = nullptr;
@@ -148,7 +158,39 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetLocaleName(
     UINT32 textPosition, UINT32* textLength, const WCHAR** localeName
 )
 {
-    return E_NOTIMPL;
+    const auto& script_ranges = m_paragraph_data->m_script_ranges;
+    const auto& paragraph = m_paragraph_data->GetParagraph();
+    if (script_ranges.empty() || textPosition >= paragraph.LogicTextLength)
+    {
+        *textLength = 0;
+        *localeName = nullptr;
+        return S_OK;
+    }
+    if (paragraph.Type == TextLayout::ParagraphType::Block)
+    {
+        *textLength = 1;
+        *localeName = nullptr;
+        return S_OK;
+    }
+    const auto index = Algorithm::BinarySearch(
+        script_ranges.data(), static_cast<i32>(script_ranges.size()), textPosition,
+        [](const ScriptRange& item, const u32 pos)
+        {
+            if (pos < item.Start) return 1;
+            if (pos >= item.Start + item.Length) return -1;
+            return 0;
+        });
+    if (index < 0)
+    {
+        *textLength = 0;
+        *localeName = nullptr;
+        return S_OK;
+    }
+    const auto& range = script_ranges[index];
+    const auto offset = textPosition - range.Start;
+    *textLength = range.Length - offset;
+    *localeName = range.Locale;
+    return S_OK;
 }
 
 HRESULT TextLayoutCalc::TextAnalysisSource::GetNumberSubstitution(
