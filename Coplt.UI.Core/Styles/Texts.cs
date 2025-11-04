@@ -1,5 +1,21 @@
 ﻿namespace Coplt.UI.Styles;
 
+/// <summary>
+/// Behavior when locale is not specified
+/// </summary>
+public enum LocaleMode : byte
+{
+    /// <summary>
+    /// It will not attempt to auto determine the locale.
+    /// Generally, the system locale is used, depending on the implementation.
+    /// </summary>
+    Normal,
+    /// <summary>
+    /// The locale will be determined based on the text script.
+    /// </summary>
+    ByScript,
+}
+
 public enum TextAlign : byte
 {
     Auto,

@@ -1682,8 +1682,36 @@ impl SubDoc {
 
         // let text_layout = &mut container_layout.TextLayoutObject;
 
+        let inputs = TextAnalyzeInputs {
+            RunMode: match inputs.run_mode {
+                taffy::RunMode::PerformLayout => CopltLayoutRunMode::PerformLayout,
+                taffy::RunMode::ComputeSize => CopltLayoutRunMode::ComputeSize,
+                taffy::RunMode::PerformHiddenLayout => CopltLayoutRunMode::PerformHiddenLayout,
+            },
+            KnownWidth: known_dimensions.width.unwrap_or_default(),
+            KnownHeight: known_dimensions.height.unwrap_or_default(),
+            HasKnownWidth: known_dimensions.width.is_some(),
+            HasKnownHeight: known_dimensions.height.is_some(),
+            ParentWidth: inputs.parent_size.width.unwrap_or_default(),
+            ParentHeight: inputs.parent_size.height.unwrap_or_default(),
+            HasParentWidth: inputs.parent_size.width.is_some(),
+            HasParentHeight: inputs.parent_size.height.is_some(),
+            AvailableSpaceWidthValue: available_space.width.into_option().unwrap_or_default(),
+            AvailableSpaceHeightValue: available_space.height.into_option().unwrap_or_default(),
+            AvailableSpaceWidth: match available_space.width {
+                taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
+                taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
+                taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
+            },
+            AvailableSpaceHeight: match available_space.height {
+                taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
+                taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
+                taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
+            },
+        };
+
         unsafe {
-            let hr = coplt_ui_layout_analyze_text(self.2, self.0, &id);
+            let hr = coplt_ui_layout_analyze_text(self.2, self.0, &id, &inputs);
             if hr.is_failure() {
                 std::panic::panic_any(hr);
             }
@@ -1700,5 +1728,33 @@ unsafe extern "C" {
         layout: *mut (),
         ctx: *mut NLayoutContext,
         node_index: &NodeId,
+        inputs: &TextAnalyzeInputs,
     ) -> HResult;
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy)]
+enum CopltLayoutRunMode {
+    PerformLayout,
+    ComputeSize,
+    PerformHiddenLayout,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+#[allow(non_snake_case)]
+struct TextAnalyzeInputs {
+    KnownWidth: f32,
+    KnownHeight: f32,
+    ParentWidth: f32,
+    ParentHeight: f32,
+    AvailableSpaceWidthValue: f32,
+    AvailableSpaceHeightValue: f32,
+    HasKnownWidth: bool,
+    HasKnownHeight: bool,
+    HasParentWidth: bool,
+    HasParentHeight: bool,
+    AvailableSpaceWidth: com::AvailableSpaceType,
+    AvailableSpaceHeight: com::AvailableSpaceType,
+    RunMode: CopltLayoutRunMode,
 }

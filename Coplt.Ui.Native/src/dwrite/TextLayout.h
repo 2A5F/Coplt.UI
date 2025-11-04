@@ -1,10 +1,12 @@
 ﻿#pragma once
 
+#include <span>
 #include <icu.h>
 #include <dwrite_3.h>
 
 #include "../Com.h"
 #include "../TextLayout.h"
+#include "../Layout.h"
 
 namespace Coplt
 {
@@ -17,10 +19,10 @@ namespace Coplt
 
     struct TextLayout final : BaseTextLayout<TextLayout>
     {
-        NLayoutContext* m_ctx;
+        LayoutCalc::CtxNodeRef m_node;
         std::vector<TextLayoutCalc::ParagraphData> m_paragraph_datas{};
 
-        void ReBuild(Layout* layout, NLayoutContext* ctx);
+        void ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node);
 
         COPLT_IMPL_START
         COPLT_IMPL_END
@@ -88,6 +90,14 @@ namespace Coplt
             u8 ResolvedLevel;
         };
 
+        struct FontRange
+        {
+            u32 Start;
+            u32 Length;
+            Rc<IDWriteFont> Font;
+            f32 Scale;
+        };
+
         struct ParagraphData
         {
             Layout* m_layout{};
@@ -102,11 +112,19 @@ namespace Coplt
 
             std::vector<ScriptRange> m_script_ranges{};
             std::vector<BidiRange> m_bidi_ranges{};
+            std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
+            std::vector<FontRange> m_font_ranges{};
 
             void ReBuild();
 
             std::vector<BaseTextLayoutStorage::Paragraph>& GetTextLayoutParagraphs() const;
             BaseTextLayoutStorage::Paragraph& GetParagraph() const;
+            std::span<BaseTextLayoutStorage::Item> GetItems() const;
+            std::span<BaseTextLayoutStorage::Item> GetItems(u32 Start, u32 Length) const;
+
+            LayoutCalc::CtxNodeRef GetScope(const BaseTextLayoutStorage::ScopeRange& range) const;
+
+            void AnalyzeFonts();
         };
     }
 } // namespace Coplt

@@ -31,6 +31,10 @@ namespace Coplt::LayoutCalc
         NLayoutContext* ctx;
         NodeId id;
 
+        CtxNodeRef() : ctx(nullptr), id()
+        {
+        }
+
         explicit CtxNodeRef(
             NLayoutContext* ctx, const NodeId id
         ) : ctx(ctx), id(id)
@@ -108,7 +112,7 @@ namespace Coplt::LayoutCalc
 
             if (!is_layout_dirty) return;
 
-            bool need_end_scope = false;
+            bool need_end_scope = false, need_finish_layout_build = false;
             if (cur_text_layout == nullptr)
             {
                 if (style.Container == Container::Text)
@@ -116,11 +120,13 @@ namespace Coplt::LayoutCalc
                     if (data.TextLayoutObject == nullptr)
                     {
                         data.TextLayoutObject = cur_text_layout = new TextLayout();
+                        need_finish_layout_build = true;
                     }
                     else if (is_text_dirty)
                     {
                         cur_text_layout = static_cast<TextLayout*>(data.TextLayoutObject);
                         cur_text_layout->ClearCache();
+                        need_finish_layout_build = true;
                     }
                     else
                     {
@@ -171,6 +177,41 @@ namespace Coplt::LayoutCalc
             {
                 cur_text_layout->EndScope();
             }
+            if (need_finish_layout_build)
+            {
+                cur_text_layout->FinishBuild();
+            }
         }
+    }
+
+    enum class LayoutRunMode : u8
+    {
+        PerformLayout,
+        ComputeSize,
+        PerformHiddenLayout,
+    };
+
+    namespace Texts
+    {
+        struct TextAnalyzeInputs
+        {
+            f32 KnownWidth;
+            f32 KnownHeight;
+            f32 ParentWidth;
+            f32 ParentHeight;
+            f32 AvailableSpaceWidthValue;
+            f32 AvailableSpaceHeightValue;
+            bool HasKnownWidth;
+            bool HasKnownHeight;
+            bool HasParentWidth;
+            bool HasParentHeight;
+            AvailableSpaceType AvailableSpaceWidth;
+            AvailableSpaceType AvailableSpaceHeight;
+            LayoutRunMode RunMode;
+        };
+
+        extern "C" HResultE coplt_ui_layout_analyze_text(
+            void* self, NLayoutContext* ctx, const NodeId& node, const TextAnalyzeInputs& inputs
+        );
     }
 }

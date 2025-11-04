@@ -220,6 +220,13 @@ pub enum GridAutoFlow {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LocaleMode {
+    Normal = 0,
+    ByScript = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Overflow {
     Visible = 0,
     Clip = 1,
@@ -899,7 +906,7 @@ pub struct FontWidth {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct LanguageId {
+pub struct LocaleId {
     pub Name: *mut u16,
 }
 
@@ -972,7 +979,7 @@ pub struct RootData {
 pub struct StyleData {
     pub Grid: NativeArc<GridContainerStyle>,
     pub FontFallback: *mut IFontFallback,
-    pub LanguageId: LanguageId,
+    pub Locale: LocaleId,
     pub ZIndex: i32,
     pub TextColorR: f32,
     pub TextColorG: f32,
@@ -1069,6 +1076,7 @@ pub struct StyleData {
     pub FontWeight: FontWeight,
     pub FontStyle: FontStyle,
     pub FontStretch: FontStretch,
+    pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
     pub WhiteSpaceMerge: WhiteSpaceMerge,

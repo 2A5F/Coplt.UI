@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <span>
 
 #include "Com.h"
 
@@ -24,15 +25,25 @@ namespace Coplt
         struct Item
         {
             u32 LogicTextStart;
-            u32 Length;
+            u32 LogicTextLength;
             u32 Scope;
             u32 TextIndex;
             NodeId NodeOrParent;
             ItemType Type;
         };
 
+        struct ScopeRange
+        {
+            u32 ItemStart;
+            u32 ItemLength;
+            u32 Scope;
+            u32 LogicTextStart;
+            u32 LogicTextLength;
+        };
+
         struct Paragraph
         {
+            std::vector<ScopeRange> ScopeRanges{};
             u32 ItemStart;
             u32 ItemLength;
             u32 LogicTextLength;
@@ -52,6 +63,7 @@ namespace Coplt
         void AddBlock(NodeId Node);
         void StartScope(NodeId Node);
         void EndScope();
+        void FinishBuild();
 
         // return null if not find
         i32 SearchItem(u32 Paragraph, u32 Position) const;

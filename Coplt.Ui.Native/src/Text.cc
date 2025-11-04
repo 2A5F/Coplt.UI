@@ -21,20 +21,34 @@ namespace Coplt::UnicodeUtils
             {
                 const auto script = static_cast<UScriptCode>(sc);
                 const auto src = std::format("und_{}", uscript_getShortName(script));
-                auto dst = std::string(128, 0);
+                char dst[64];
                 UErrorCode e{};
-                const auto len = uloc_addLikelySubtags(src.data(), dst.data(), dst.size(), &e);
+                uloc_addLikelySubtags(src.data(), dst, std::size(dst), &e);
                 if (e > 0) [[unlikely]]
-                {
                     throw Exception(std::format("LikelyLocale failed: {}", u_errorName(e)));
-                }
+
+                char lang[16];
+                const auto lang_len = uloc_getLanguage(dst, lang, std::size(lang), &e);
+                if (e > 0) [[unlikely]]
+                    throw Exception(std::format("LikelyLocale failed: {}", u_errorName(e)));
+
+                char country[16];
+                const auto country_len = uloc_getCountry(dst, country, std::size(country), &e);
+                if (e > 0) [[unlikely]]
+                    throw Exception(std::format("LikelyLocale failed: {}", u_errorName(e)));
+
                 // ReSharper disable once CppDFAMemoryLeak
-                const auto locale = new u16[len + 1];
-                for (auto i = 0; i < len; ++i)
+                const auto locale = new u16[lang_len + country_len + 2];
+                locale[lang_len + country_len + 1] = 0;
+                locale[lang_len] = '_';
+                for (auto i = 0u; i < lang_len; ++i)
                 {
-                    locale[i] = static_cast<u16>(dst[i]);
+                    locale[i] = lang[i];
                 }
-                locale[len] = 0;
+                for (auto i = 0; i < country_len; ++i)
+                {
+                    locale[lang_len + 1 + i] = country[i];
+                }
                 return reinterpret_cast<usize>(locale);
             }));
     }

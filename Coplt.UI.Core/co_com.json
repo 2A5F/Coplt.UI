@@ -27,8 +27,8 @@
           "name": "SystemFontCollection",
           "impl": "IFontCollection"
         },
-        "dwrite/SystemFontFallback.h": {
-          "name": "SystemFontFallback",
+        "dwrite/BaseFontFallback.h": {
+          "name": "BaseFontFallback",
           "impl": "IFontFallback"
         },
         "dwrite/FontFamily.h": {

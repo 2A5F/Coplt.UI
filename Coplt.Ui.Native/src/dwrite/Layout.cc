@@ -11,9 +11,10 @@ using namespace Coplt;
 
 extern "C" int32_t coplt_ui_layout_calc(Layout* self, NLayoutContext* ctx);
 
-Layout::Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& text_analyzer)
+Layout::Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& text_analyzer, Rc<IDWriteFontFallback>& font_fallback)
     : m_lib(std::move(lib)),
-      m_text_analyzer(std::move(text_analyzer))
+      m_text_analyzer(std::move(text_analyzer)),
+      m_system_font_fallback(std::move(font_fallback))
 {
 }
 
@@ -26,7 +27,11 @@ Rc<Layout> Layout::Create(Rc<LibUi> lib)
     if (const auto hr = analyzer->QueryInterface(analyzer1.put()); FAILED(hr))
         throw ComException(hr, "Failed to create text analyzer");
 
-    return Rc(new Layout(std::move(lib), analyzer1));
+    Rc<IDWriteFontFallback> font_fallback;
+    if (const auto hr = lib->m_backend->m_dw_factory->GetSystemFontFallback(font_fallback.put()); FAILED(hr))
+        throw ComException(hr, "Failed to get system font fallback");
+
+    return Rc(new Layout(std::move(lib), analyzer1, font_fallback));
 }
 
 HResult Layout::Impl_Calc(NLayoutContext* ctx)
@@ -53,20 +58,22 @@ HResult Layout::Calc(NLayoutContext* ctx)
 
 namespace Coplt::LayoutCalc::Texts
 {
-    void do_coplt_ui_layout_analyze_text(Layout* self, CtxNodeRef node);
+    void do_coplt_ui_layout_analyze_text(Layout* self, CtxNodeRef node, const TextAnalyzeInputs& inputs);
 
-    extern "C" HResultE coplt_ui_layout_analyze_text(Layout* self, NLayoutContext* ctx, const NodeId& node)
+    extern "C" HResultE coplt_ui_layout_analyze_text(
+        void* self, NLayoutContext* ctx, const NodeId& node, const TextAnalyzeInputs& inputs
+    )
     {
         return feb([&]
         {
             do_coplt_ui_layout_analyze_text(
-                self, CtxNodeRef(ctx, node)
+                static_cast<Layout*>(self), CtxNodeRef(ctx, node), inputs
             );
             return HResultE::Ok;
         });
     }
 
-    void do_coplt_ui_layout_analyze_text(Layout* self, CtxNodeRef node)
+    void do_coplt_ui_layout_analyze_text(Layout* self, CtxNodeRef node, const TextAnalyzeInputs& inputs)
     {
         auto& childs = node.ChildsData();
         auto& data = node.CommonData();
@@ -79,7 +86,7 @@ namespace Coplt::LayoutCalc::Texts
 
         if (is_text_dirty)
         {
-            text_layout->ReBuild(self, node.ctx);
+            text_layout->ReBuild(self, node);
         }
 
         // todo

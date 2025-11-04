@@ -67,7 +67,7 @@ namespace Coplt {
 
     struct FontWidth;
 
-    struct LanguageId;
+    struct LocaleId;
 
     struct FontMetrics;
 
@@ -301,6 +301,12 @@ namespace Coplt {
         Column = 1,
         RowDense = 2,
         ColumnDense = 3,
+    };
+
+    enum class LocaleMode : ::Coplt::u8
+    {
+        Normal = 0,
+        ByScript = 1,
     };
 
     enum class Overflow : ::Coplt::u8
@@ -868,7 +874,7 @@ namespace Coplt {
         ::Coplt::f32 Width;
     };
 
-    struct LanguageId
+    struct LocaleId
     {
         ::Coplt::char16* Name;
     };
@@ -1016,7 +1022,7 @@ namespace Coplt {
     {
         ::Coplt::NativeArc<::Coplt::GridContainerStyle> Grid;
         IFontFallback* FontFallback;
-        ::Coplt::LanguageId LanguageId;
+        ::Coplt::LocaleId Locale;
         ::Coplt::i32 ZIndex;
         ::Coplt::f32 TextColorR;
         ::Coplt::f32 TextColorG;
@@ -1113,6 +1119,7 @@ namespace Coplt {
         ::Coplt::FontWeight FontWeight;
         ::Coplt::FontStyle FontStyle;
         ::Coplt::FontStretch FontStretch;
+        ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;
         ::Coplt::WhiteSpaceMerge WhiteSpaceMerge;

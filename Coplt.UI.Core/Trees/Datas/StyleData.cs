@@ -12,15 +12,15 @@ public partial record struct StyleData()
 {
     [Drop]
     public NativeArc<GridContainerStyle> Grid;
-    
+
     /// <summary>
     /// Optional, default use system font fallback
     /// </summary>
     [Drop]
     [ComType<Ptr<IFontFallback>>]
     public Rc<IFontFallback> FontFallback;
-    public LanguageId LanguageId;
-    
+    public LocaleId Locale;
+
     public int ZIndex;
 
     public float TextColorR = 1;
@@ -77,7 +77,7 @@ public partial record struct StyleData()
 
     public float TextSizeValue = 16;
     public float TabSizeValue = 4;
-    
+
     public GridPlacement GridRowStart = GridPlacement.Auto;
     public GridPlacement GridRowEnd = GridPlacement.Auto;
     public GridPlacement GridColumnStart = GridPlacement.Auto;
@@ -89,10 +89,10 @@ public partial record struct StyleData()
     public TextMode TextMode = TextMode.Block;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
     public FloatInText Float = FloatInText.None; // not support yet
-    
+
     public CursorType Cursor = CursorType.Default;
     public PointerEvents PointerEvents = PointerEvents.Auto;
-    
+
     public Overflow OverflowX = Overflow.Visible;
     public Overflow OverflowY = Overflow.Visible;
 
@@ -149,11 +149,12 @@ public partial record struct StyleData()
 
     public LengthType TextSize = LengthType.Fixed;
     public LengthType TabSize = LengthType.Percent;
-    
+
     public FontWeight FontWeight = FontWeight.Normal;
     public FontStyle FontStyle = FontStyle.Normal;
     public FontStretch FontStretch = FontStretch.Normal;
 
+    public LocaleMode LocaleMode = LocaleMode.Normal;
     public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
     public WhiteSpaceMerge WhiteSpaceMerge = WhiteSpaceMerge.Keep;

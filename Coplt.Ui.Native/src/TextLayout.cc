@@ -24,12 +24,12 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 {
     if (Length == 0) return;
     if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
-        m_paragraphs.push_back(Paragraph{m_items.size(), 0, 0, ParagraphType::Inline});
+        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, ParagraphType::Inline});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
         .LogicTextStart = paragraph.LogicTextLength,
-        .Length = Length,
+        .LogicTextLength = Length,
         .Scope = scope,
         .TextIndex = Index,
         .NodeOrParent = Parent,
@@ -42,12 +42,12 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 {
     if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
-        m_paragraphs.push_back(Paragraph{m_items.size(), 0, 0, ParagraphType::Inline});
+        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, ParagraphType::Inline});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
         .LogicTextStart = paragraph.LogicTextLength,
-        .Length = 1,
+        .LogicTextLength = 1,
         .Scope = scope,
         .NodeOrParent = Node,
         .Type = ItemType::InlineBlock,
@@ -59,12 +59,12 @@ void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 void BaseTextLayoutStorage::AddBlock(const NodeId Node)
 {
     if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Block)
-        m_paragraphs.push_back(Paragraph{m_items.size(), 0, 0, ParagraphType::Block});
+        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, ParagraphType::Block});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(Item{
         .LogicTextStart = 0,
-        .Length = 1,
+        .LogicTextLength = 1,
         .Scope = scope,
         .NodeOrParent = Node,
         .Type = ItemType::Block,
@@ -84,6 +84,68 @@ void BaseTextLayoutStorage::EndScope()
     m_scope_stack.pop_back();
 }
 
+void BaseTextLayoutStorage::FinishBuild()
+{
+    for (auto& paragraph : m_paragraphs)
+    {
+        COPLT_DEBUG_ASSERT(paragraph.ItemLength != 0, "There should be no empty paragraphs.");
+
+        const std::span items(m_items.data() + paragraph.ItemStart, paragraph.ItemLength);
+        if (items.size() == 1)
+        {
+            const auto& item = items.front();
+            paragraph.ScopeRanges.push_back(ScopeRange{
+                .ItemStart = paragraph.ItemStart,
+                .ItemLength = 1,
+                .Scope = item.Scope,
+                .LogicTextStart = item.LogicTextStart,
+                .LogicTextLength = item.LogicTextLength,
+            });
+            continue;
+        }
+
+        std::optional<u32> scope = std::nullopt;
+        u32 logic_text_start = 0, logic_text_length = 0, last_item_index = 0;
+        for (u32 i = 0; i < items.size(); ++i)
+        {
+            const auto& item = items[i];
+            if (scope == item.Scope)
+            {
+                logic_text_length += item.LogicTextLength;
+            }
+            else
+            {
+                if (i != 0)
+                {
+                    COPLT_DEBUG_ASSERT(scope.has_value());
+                    paragraph.ScopeRanges.push_back(ScopeRange{
+                        .ItemStart = paragraph.ItemStart + last_item_index,
+                        .ItemLength = i - last_item_index,
+                        .Scope = scope.value(),
+                        .LogicTextStart = logic_text_start,
+                        .LogicTextLength = logic_text_length,
+                    });
+                }
+                scope = item.Scope;
+                logic_text_length = item.LogicTextLength;
+                logic_text_start = item.LogicTextStart;
+                last_item_index = i;
+            }
+        }
+        if (last_item_index < items.size())
+        {
+            COPLT_DEBUG_ASSERT(scope.has_value());
+            paragraph.ScopeRanges.push_back(ScopeRange{
+                .ItemStart = paragraph.ItemStart + last_item_index,
+                .ItemLength = static_cast<u32>(items.size()) - last_item_index,
+                .Scope = scope.value(),
+                .LogicTextStart = logic_text_start,
+                .LogicTextLength = logic_text_length,
+            });
+        }
+    }
+}
+
 i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) const
 {
     const auto& paragraph = m_paragraphs[Paragraph];
@@ -94,7 +156,7 @@ i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) c
         [](const Item& item, const u32 pos)
         {
             if (pos < item.LogicTextStart) return 1;
-            if (pos >= item.LogicTextStart + item.Length) return -1;
+            if (pos >= item.LogicTextStart + item.LogicTextLength) return -1;
             return 0;
         });
     if (index < 0) return -1;
