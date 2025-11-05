@@ -115,6 +115,12 @@ namespace Coplt
             u32 ScriptRangeIndex;
             u32 BidiRangeIndex;
             u32 FontRangeIndex;
+
+            u32 m_actual_glyph_count;
+            std::vector<u16> m_cluster_map;
+            std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> m_text_props;
+            std::vector<u16> m_glyph_indices;
+            std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> m_glyph_props;
         };
 
         struct ParagraphData

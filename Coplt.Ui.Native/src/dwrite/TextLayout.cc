@@ -237,11 +237,115 @@ void TextLayoutCalc::ParagraphData::CollectRuns()
 
 void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
 {
+    std::vector<u16> cluster_map;
+    std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_props;
+    std::vector<u16> glyph_indices;
+    std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_props;
+
     auto& analyzer = m_layout->m_text_analyzer;
+    const auto& items = m_text_layout->m_items;
+    auto item_index = 0;
     for (auto& run : m_runs)
     {
+        const auto& script = m_script_ranges[run.ScriptRangeIndex];
+        const auto& bidi = m_bidi_ranges[run.BidiRangeIndex];
+        const auto& font = m_font_ranges[run.FontRangeIndex];
+
+        if (!font.Font) continue; // skip if no font find
+
+        const auto is_rtl = bidi.ResolvedLevel % 2 == 1;
+        const auto locale = font.LocaleMode == LocaleMode::ByScript ? script.Locale : font.Locale;
+
+        // todo features from style
+        DWRITE_FONT_FEATURE features[] = {
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_KERNING,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS,
+                .parameter = 1,
+            },
+        };
+        DWRITE_TYPOGRAPHIC_FEATURES typ_features[] = {
+            DWRITE_TYPOGRAPHIC_FEATURES{
+                .features = features,
+                .featureCount = std::size(features)
+            },
+        };
+        const DWRITE_TYPOGRAPHIC_FEATURES* arg_features = typ_features;
+        const u32 feature_range_length = run.Length;
+
+        std::wstring tmp_text;
+        const char16* text;
+
+        auto& item = items[item_index];
+        if (const auto last_text_offset = run.Start - item.LogicTextStart;
+            run.Length > item.LogicTextLength - last_text_offset)
+        {
+            // todo copy to tmp_text
+            throw Exception("TODO");
+        }
+        else
+        {
+            text = GetText(m_text_layout->m_node.ctx, &item) + last_text_offset;
+        }
+
+        auto buf_size = 3 * run.Length / 2 + 16;
+
+        u32 actual_glyph_count{};
+        HRESULT hr;
+        for (;;)
+        {
+            if (cluster_map.size() < buf_size)
+            {
+                cluster_map.resize(buf_size, {});
+                text_props.resize(buf_size, {});
+                glyph_indices.resize(buf_size, {});
+                glyph_props.resize(buf_size, {});
+            }
+            hr = analyzer->GetGlyphs(
+                text,
+                run.Length,
+                font.Font.get(),
+                false, // sideways
+                is_rtl,
+                &script.Analysis,
+                locale,
+                nullptr, // todo number subsitiution
+                &arg_features,
+                &feature_range_length,
+                1,
+                cluster_map.size(),
+                cluster_map.data(),
+                text_props.data(),
+                glyph_indices.data(),
+                glyph_props.data(),
+                &actual_glyph_count
+            );
+            if (hr != ERROR_INSUFFICIENT_BUFFER) break;
+            buf_size *= 2;
+        }
+        if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
+
+        run.m_actual_glyph_count = actual_glyph_count;
+        run.m_cluster_map = std::vector(cluster_map.data(), cluster_map.data() + actual_glyph_count);
+        run.m_text_props = std::vector(text_props.data(), text_props.data() + actual_glyph_count);
+        run.m_glyph_indices = std::vector(glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
+        run.m_glyph_props = std::vector(glyph_props.data(), glyph_props.data() + actual_glyph_count);
     }
-    // todo
 }
 
 TextLayoutCalc::TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)

@@ -12,6 +12,7 @@ namespace TestCore;
 public class Tests1
 {
     [Test]
+    // [Repeat(10)]
     public void Test1()
     {
         using var doc = new Document.Builder()
@@ -36,15 +37,15 @@ public class Tests1
         doc.Update();
         var end = Stopwatch.GetTimestamp();
         var elapsed = Stopwatch.GetElapsedTime(start, end);
-        Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms");
+        Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}us");
         Console.WriteLine(node.Layout.ToString());
         Console.WriteLine(child.Layout.ToString());
     }
 
     [Test]
+    // [Repeat(10)]
     public void Test2()
     {
-        
         using var doc = new Document.Builder()
             .Create();
         var node = new Access.View(doc)
@@ -58,7 +59,7 @@ public class Tests1
         doc.Update();
         var end = Stopwatch.GetTimestamp();
         var elapsed = Stopwatch.GetElapsedTime(start, end);
-        Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms");
+        Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}us");
         Console.WriteLine(node.Layout.ToString());
     }
 }
