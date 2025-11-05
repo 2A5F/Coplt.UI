@@ -12,7 +12,7 @@ namespace Coplt
     {
         explicit SystemFontFallback(
             Rc<IDWriteFactory7> dw_factory,
-            Rc<IDWriteFontFallback>& fallback
+            Rc<IDWriteFontFallback1>& fallback
         );
 
         static Rc<IFontFallback> Create(const TextBackend* backend);

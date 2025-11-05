@@ -1,7 +1,9 @@
-﻿using Coplt.UI.Collections;
+﻿using System.Diagnostics;
+using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
 using Coplt.UI.Native;
 using Coplt.UI.Styles;
+using Coplt.UI.Texts;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
 
@@ -30,7 +32,11 @@ public class Tests1
             GridRow = 2, GridColumn = 2,
         };
         node.Add(child);
+        var start = Stopwatch.GetTimestamp();
         doc.Update();
+        var end = Stopwatch.GetTimestamp();
+        var elapsed = Stopwatch.GetElapsedTime(start, end);
+        Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms");
         Console.WriteLine(node.Layout.ToString());
         Console.WriteLine(child.Layout.ToString());
     }
@@ -38,6 +44,7 @@ public class Tests1
     [Test]
     public void Test2()
     {
+        
         using var doc = new Document.Builder()
             .Create();
         var node = new Access.View(doc)
@@ -47,7 +54,11 @@ public class Tests1
         };
         doc.AddRoot(node.Id);
         node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
+        var start = Stopwatch.GetTimestamp();
         doc.Update();
+        var end = Stopwatch.GetTimestamp();
+        var elapsed = Stopwatch.GetElapsedTime(start, end);
+        Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms");
         Console.WriteLine(node.Layout.ToString());
     }
 }

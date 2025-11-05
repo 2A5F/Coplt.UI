@@ -78,6 +78,9 @@ public partial record struct StyleData()
     public float TextSizeValue = 16;
     public float TabSizeValue = 4;
 
+    public FontWidth FontWidth = new(1);
+    public float FontOblique = -20;
+
     public GridPlacement GridRowStart = GridPlacement.Auto;
     public GridPlacement GridRowEnd = GridPlacement.Auto;
     public GridPlacement GridColumnStart = GridPlacement.Auto;
@@ -151,8 +154,8 @@ public partial record struct StyleData()
     public LengthType TabSize = LengthType.Percent;
 
     public FontWeight FontWeight = FontWeight.Normal;
-    public FontStyle FontStyle = FontStyle.Normal;
-    public FontStretch FontStretch = FontStretch.Normal;
+    public bool FontItalic = false;
+    public bool FontOpticalSizing = true;
 
     public LocaleMode LocaleMode = LocaleMode.Normal;
     public TextDirection TextDirection = TextDirection.Forward;

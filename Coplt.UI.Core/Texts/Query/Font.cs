@@ -28,7 +28,7 @@ public sealed unsafe partial class Font
     public int Index => m_index;
     public FontWidth Width => m_info->Width;
     public FontWeight Weight => m_info->Weight;
-    public FontStyle Style => m_info->Style;
+    // public FontStyle Style => m_info->Style;
 
     public FontFlags Flags => m_info->Flags;
 
@@ -62,7 +62,7 @@ public sealed unsafe partial class Font
     #region ToString
 
     public override string ToString() =>
-        $"Font({m_family.LocalName}, {m_index}) {{ Width = {Width}, Weight = {Weight}, Style = {Style}, Flags = {Flags} }}";
+        $"Font({m_family.LocalName}, {m_index}) {{ Width = {Width}, Weight = {Weight}, Flags = {Flags} }}";
 
     #endregion
 

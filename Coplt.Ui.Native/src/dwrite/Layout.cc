@@ -11,7 +11,7 @@ using namespace Coplt;
 
 extern "C" int32_t coplt_ui_layout_calc(Layout* self, NLayoutContext* ctx);
 
-Layout::Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& text_analyzer, Rc<IDWriteFontFallback>& font_fallback)
+Layout::Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& text_analyzer, Rc<IDWriteFontFallback1>& font_fallback)
     : m_lib(std::move(lib)),
       m_text_analyzer(std::move(text_analyzer)),
       m_system_font_fallback(std::move(font_fallback))
@@ -31,7 +31,11 @@ Rc<Layout> Layout::Create(Rc<LibUi> lib)
     if (const auto hr = lib->m_backend->m_dw_factory->GetSystemFontFallback(font_fallback.put()); FAILED(hr))
         throw ComException(hr, "Failed to get system font fallback");
 
-    return Rc(new Layout(std::move(lib), analyzer1, font_fallback));
+    Rc<IDWriteFontFallback1> font_fallback1;
+    if (const auto hr = font_fallback->QueryInterface(font_fallback1.put()); FAILED(hr))
+        throw ComException(hr, "Failed to get system font fallback");
+
+    return Rc(new Layout(std::move(lib), analyzer1, font_fallback1));
 }
 
 HResult Layout::Impl_Calc(NLayoutContext* ctx)

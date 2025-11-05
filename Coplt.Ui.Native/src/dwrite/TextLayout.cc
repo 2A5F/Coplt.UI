@@ -27,6 +27,7 @@ void TextLayoutCalc::ParagraphData::ReBuild()
     m_bidi_ranges.clear();
     m_line_breakpoints.clear();
     m_font_ranges.clear();
+    m_runs.clear();
 }
 
 std::vector<BaseTextLayoutStorage::Paragraph>& TextLayoutCalc::ParagraphData::GetTextLayoutParagraphs() const
@@ -84,6 +85,8 @@ void TextLayout::ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node)
         ); FAILED(hr))
             throw ComException(hr, "Failed to analyze LineBreakpoints");
         data.AnalyzeFonts();
+        data.CollectRuns();
+        data.AnalyzeGlyphs();
     }
 
     m_node = {};
@@ -104,9 +107,24 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
                 : static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get();
         COPLT_DEBUG_ASSERT(font_fall_back != nullptr, "font_fall_back should not be null");
 
-        const auto font_weight = to_dwrite(style.FontWeight);
-        const auto font_style = to_dwrite(style.FontStyle);
-        const auto font_stretch = to_dwrite(style.FontStretch);
+        const DWRITE_FONT_AXIS_VALUE axis_values[] = {
+            DWRITE_FONT_AXIS_VALUE{
+                .axisTag = DWRITE_FONT_AXIS_TAG_WEIGHT,
+                .value = static_cast<f32>(style.FontWeight),
+            },
+            DWRITE_FONT_AXIS_VALUE{
+                .axisTag = DWRITE_FONT_AXIS_TAG_WIDTH,
+                .value = style.FontWidth.Width * 100,
+            },
+            DWRITE_FONT_AXIS_VALUE{
+                .axisTag = DWRITE_FONT_AXIS_TAG_ITALIC,
+                .value = style.FontItalic ? 1.0f : 0.0f,
+            },
+            DWRITE_FONT_AXIS_VALUE{
+                .axisTag = DWRITE_FONT_AXIS_TAG_SLANT,
+                .value = std::clamp(style.FontOblique, -90.0f, 90.0f),
+            },
+        };
 
         auto text_start = range.LogicTextStart;
         auto text_length = range.LogicTextLength;
@@ -114,14 +132,15 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
         for (;;)
         {
             u32 mapped_length{};
-            Rc<IDWriteFont> mapped_font{};
+            Rc<IDWriteFontFace5> mapped_font{};
             f32 scale{};
 
             if (const auto hr = font_fall_back->MapCharacters(
                 m_src.get(), text_start, text_length,
                 nullptr, nullptr,
-                font_weight, font_style, font_stretch,
-                &mapped_length, mapped_font.put(), &scale
+                axis_values, std::size(axis_values),
+                &mapped_length, &scale,
+                mapped_font.put()
             ); FAILED(hr))
                 throw ComException(hr, "Failed to map characters");
 
@@ -131,8 +150,9 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
                 if (const auto hr = system_font_fallback->MapCharacters(
                     m_src.get(), text_start, text_length,
                     nullptr, nullptr,
-                    font_weight, font_style, font_stretch,
-                    &mapped_length, mapped_font.put(), &scale
+                    axis_values, std::size(axis_values),
+                    &mapped_length, &scale,
+                    mapped_font.put()
                 ); FAILED(hr))
                     throw ComException(hr, "Failed to map characters");
             }
@@ -144,8 +164,11 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
             //     const char16* local{};
             //     m_src->GetLocaleName(text_start, &len, &local);
             //
-            //     const auto name = GetFontFamilyName(mapped_font);
-            //     m_layout->m_lib->m_logger.Log(LogLevel::Debug, fmt::format(L"{} :: {}", local, name));
+            //     const auto name = GetFamilyNames(mapped_font);
+            //     m_layout->m_lib->m_logger.Log(
+            //         LogLevel::Debug,
+            //         fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
+            //     );
             // }
 #endif
 
@@ -154,6 +177,9 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
                 .Length = mapped_length,
                 .Font = std::move(mapped_font),
                 .Scale = scale,
+
+                .Locale = style.Locale.Name,
+                .LocaleMode = style.LocaleMode,
             });
 
             if (mapped_length >= text_length) break;
@@ -161,6 +187,61 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
             text_length -= mapped_length;
         }
     }
+}
+
+void TextLayoutCalc::ParagraphData::CollectRuns()
+{
+    COPLT_DEBUG_ASSERT(!m_script_ranges.empty() && !m_bidi_ranges.empty() && !m_font_ranges.empty());
+
+    u32 logic_text_start = 0;
+    u32 script_range_index = 0, bidi_range_index = 0, font_range_index = 0;
+
+    const auto& script_last = m_script_ranges.back();
+    const auto& bidi_last = m_bidi_ranges.back();
+    const auto& font_last = m_font_ranges.back();
+    const auto script_end = script_last.Start + script_last.Length;
+    const auto bidi_end = bidi_last.Start + bidi_last.Length;
+    const auto font_end = font_last.Start + font_last.Length;
+    COPLT_DEBUG_ASSERT(script_end == bidi_end && script_end == font_end);
+
+    while (
+        script_range_index < m_script_ranges.size()
+        && bidi_range_index < m_bidi_ranges.size()
+        && font_range_index < m_font_ranges.size()
+    )
+    {
+        const auto& script_range = m_script_ranges[script_range_index];
+        const auto& bidi_range = m_bidi_ranges[bidi_range_index];
+        const auto& font_range = m_font_ranges[font_range_index];
+
+        const auto script_len = script_range.Length - (logic_text_start - script_range.Start);
+        const auto bidi_len = bidi_range.Length - (logic_text_start - bidi_range.Start);
+        const auto font_len = font_range.Length - (logic_text_start - font_range.Start);
+
+        const auto min_len = std::min(std::min(script_len, bidi_len), font_len);
+
+        m_runs.push_back(Run{
+            .Start = logic_text_start,
+            .Length = min_len,
+            .ScriptRangeIndex = script_range_index,
+            .BidiRangeIndex = bidi_range_index,
+            .FontRangeIndex = font_range_index,
+        });
+
+        logic_text_start += min_len;
+        if (logic_text_start >= script_range.Start + script_range.Length) script_range_index++;
+        if (logic_text_start >= bidi_range.Start + bidi_range.Length) bidi_range_index++;
+        if (logic_text_start >= font_range.Start + font_range.Length) font_range_index++;
+    }
+}
+
+void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
+{
+    auto& analyzer = m_layout->m_text_analyzer;
+    for (auto& run : m_runs)
+    {
+    }
+    // todo
 }
 
 TextLayoutCalc::TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)
@@ -180,6 +261,10 @@ HRESULT TextLayoutCalc::TextAnalysisSource::QueryInterface(const IID& riid, void
     else if (riid == __uuidof(IDWriteTextAnalysisSource))
     {
         *ppvObject = static_cast<IDWriteTextAnalysisSource*>(this);
+    }
+    else if (riid == __uuidof(IDWriteTextAnalysisSource1))
+    {
+        *ppvObject = static_cast<IDWriteTextAnalysisSource1*>(this);
     }
     else
     {
@@ -335,6 +420,14 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetNumberSubstitution(
     return E_NOTIMPL;
 }
 
+HRESULT TextLayoutCalc::TextAnalysisSource::GetVerticalGlyphOrientation(
+    UINT32 textPosition, UINT32* textLength,
+    DWRITE_VERTICAL_GLYPH_ORIENTATION* glyphOrientation, UINT8* bidiLevel
+)
+{
+    return E_NOTIMPL;
+}
+
 TextLayoutCalc::TextAnalysisSink::TextAnalysisSink(ParagraphData* paragraph_data)
     : m_paragraph_data(paragraph_data)
 {
@@ -349,9 +442,13 @@ HRESULT TextLayoutCalc::TextAnalysisSink::QueryInterface(const IID& riid, void**
     {
         *ppvObject = static_cast<IUnknown*>(this);
     }
-    else if (riid == __uuidof(IDWriteTextAnalysisSource))
+    else if (riid == __uuidof(IDWriteTextAnalysisSink))
     {
         *ppvObject = static_cast<IDWriteTextAnalysisSink*>(this);
+    }
+    else if (riid == __uuidof(IDWriteTextAnalysisSink1))
+    {
+        *ppvObject = static_cast<IDWriteTextAnalysisSink1*>(this);
     }
     else
     {
@@ -422,6 +519,14 @@ HRESULT TextLayoutCalc::TextAnalysisSink::SetBidiLevel(
 
 HRESULT TextLayoutCalc::TextAnalysisSink::SetNumberSubstitution(
     UINT32 textPosition, UINT32 textLength, IDWriteNumberSubstitution* numberSubstitution
+)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT TextLayoutCalc::TextAnalysisSink::SetGlyphOrientation(
+    UINT32 textPosition, UINT32 textLength, DWRITE_GLYPH_ORIENTATION_ANGLE glyphOrientationAngle,
+    UINT8 adjustedBidiLevel, BOOL isSideways, BOOL isRightToLeft
 )
 {
     return E_NOTIMPL;

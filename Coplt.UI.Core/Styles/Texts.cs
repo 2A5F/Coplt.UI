@@ -24,13 +24,6 @@ public enum TextAlign : byte
     Center,
 }
 
-public enum FontStyle : byte
-{
-    Normal,
-    Italic,
-    Oblique,
-}
-
 public enum FontWeight
 {
     None = 0,

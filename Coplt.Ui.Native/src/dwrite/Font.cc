@@ -53,21 +53,6 @@ Font::Font(Rc<IDWriteFont3>& font) : m_font(std::move(font))
         m_info.Width.Width = 1.0;
     }
 
-    switch (m_font->GetStyle())
-    {
-    case DWRITE_FONT_STYLE_NORMAL:
-        m_info.Style = FontStyle::Normal;
-        break;
-    case DWRITE_FONT_STYLE_OBLIQUE:
-        m_info.Style = FontStyle::Oblique;
-        break;
-    case DWRITE_FONT_STYLE_ITALIC:
-        m_info.Style = FontStyle::Italic;
-        break;
-    default:
-        m_info.Style = FontStyle::Normal;
-    }
-
     m_info.Weight = static_cast<FontWeight>(m_font->GetWeight());
 
     if (m_font->IsColorFont())

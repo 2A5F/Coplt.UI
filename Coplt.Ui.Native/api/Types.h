@@ -258,27 +258,6 @@ namespace Coplt {
         End = 2,
     };
 
-    enum class FontStretch : ::Coplt::i32
-    {
-        Undefined = 0,
-        UltraCondensed = 1,
-        ExtraCondensed = 2,
-        Condensed = 3,
-        SemiCondensed = 4,
-        Normal = 5,
-        SemiExpanded = 6,
-        Expanded = 7,
-        ExtraExpanded = 8,
-        UltraExpanded = 9,
-    };
-
-    enum class FontStyle : ::Coplt::u8
-    {
-        Normal = 0,
-        Italic = 1,
-        Oblique = 2,
-    };
-
     enum class FontWeight : ::Coplt::i32
     {
         None = 0,
@@ -933,7 +912,6 @@ namespace Coplt {
         ::Coplt::FontMetrics Metrics;
         ::Coplt::FontWidth Width;
         ::Coplt::FontWeight Weight;
-        ::Coplt::FontStyle Style;
         ::Coplt::FontFlags Flags;
     };
 
@@ -1064,6 +1042,8 @@ namespace Coplt {
         ::Coplt::f32 FlexBasisValue;
         ::Coplt::f32 TextSizeValue;
         ::Coplt::f32 TabSizeValue;
+        ::Coplt::FontWidth FontWidth;
+        ::Coplt::f32 FontOblique;
         ::Coplt::GridPlacement GridRowStart;
         ::Coplt::GridPlacement GridRowEnd;
         ::Coplt::GridPlacement GridColumnStart;
@@ -1117,8 +1097,8 @@ namespace Coplt {
         ::Coplt::LengthType TextSize;
         ::Coplt::LengthType TabSize;
         ::Coplt::FontWeight FontWeight;
-        ::Coplt::FontStyle FontStyle;
-        ::Coplt::FontStretch FontStretch;
+        bool FontItalic;
+        bool FontOpticalSizing;
         ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;

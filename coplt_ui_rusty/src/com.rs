@@ -171,29 +171,6 @@ pub enum FloatInText {
 
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum FontStretch {
-    Undefined = 0,
-    UltraCondensed = 1,
-    ExtraCondensed = 2,
-    Condensed = 3,
-    SemiCondensed = 4,
-    Normal = 5,
-    SemiExpanded = 6,
-    Expanded = 7,
-    ExtraExpanded = 8,
-    UltraExpanded = 9,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum FontStyle {
-    Normal = 0,
-    Italic = 1,
-    Oblique = 2,
-}
-
-#[repr(i32)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontWeight {
     None = 0,
     Thin = 100,
@@ -858,7 +835,6 @@ pub struct NFontInfo {
     pub Metrics: FontMetrics,
     pub Width: FontWidth,
     pub Weight: FontWeight,
-    pub Style: FontStyle,
     pub Flags: FontFlags,
 }
 
@@ -1021,6 +997,8 @@ pub struct StyleData {
     pub FlexBasisValue: f32,
     pub TextSizeValue: f32,
     pub TabSizeValue: f32,
+    pub FontWidth: FontWidth,
+    pub FontOblique: f32,
     pub GridRowStart: GridPlacement,
     pub GridRowEnd: GridPlacement,
     pub GridColumnStart: GridPlacement,
@@ -1074,8 +1052,8 @@ pub struct StyleData {
     pub TextSize: LengthType,
     pub TabSize: LengthType,
     pub FontWeight: FontWeight,
-    pub FontStyle: FontStyle,
-    pub FontStretch: FontStretch,
+    pub FontItalic: bool,
+    pub FontOpticalSizing: bool,
     pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,

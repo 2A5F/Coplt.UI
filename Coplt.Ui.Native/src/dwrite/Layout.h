@@ -13,9 +13,9 @@ namespace Coplt
     {
         Rc<LibUi> m_lib;
         Rc<IDWriteTextAnalyzer1> m_text_analyzer;
-        Rc<IDWriteFontFallback> m_system_font_fallback;
+        Rc<IDWriteFontFallback1> m_system_font_fallback;
 
-        explicit Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& analyzer, Rc<IDWriteFontFallback>& font_fallback);
+        explicit Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& analyzer, Rc<IDWriteFontFallback1>& font_fallback);
 
         static Rc<Layout> Create(Rc<LibUi> lib);
 

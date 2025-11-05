@@ -31,7 +31,7 @@ namespace Coplt
     namespace TextLayoutCalc
     {
         // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
-        struct TextAnalysisSource final : IDWriteTextAnalysisSource, RefCount<TextAnalysisSource>
+        struct TextAnalysisSource final : IDWriteTextAnalysisSource1, RefCount<TextAnalysisSource>
         {
             ParagraphData* m_paragraph_data{};
 
@@ -47,10 +47,14 @@ namespace Coplt
             HRESULT GetNumberSubstitution(
                 UINT32 textPosition, UINT32* textLength, IDWriteNumberSubstitution** numberSubstitution
             ) override;
+            HRESULT GetVerticalGlyphOrientation(
+                UINT32 textPosition, UINT32* textLength,
+                DWRITE_VERTICAL_GLYPH_ORIENTATION* glyphOrientation, UINT8* bidiLevel
+            ) override;
         };
 
         // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
-        struct TextAnalysisSink final : IDWriteTextAnalysisSink, RefCount<TextAnalysisSink>
+        struct TextAnalysisSink final : IDWriteTextAnalysisSink1, RefCount<TextAnalysisSink>
         {
             ParagraphData* m_paragraph_data{};
 
@@ -70,6 +74,10 @@ namespace Coplt
             ) override;
             HRESULT SetNumberSubstitution(
                 UINT32 textPosition, UINT32 textLength, IDWriteNumberSubstitution* numberSubstitution
+            ) override;
+            HRESULT SetGlyphOrientation(
+                UINT32 textPosition, UINT32 textLength, DWRITE_GLYPH_ORIENTATION_ANGLE glyphOrientationAngle,
+                UINT8 adjustedBidiLevel, BOOL isSideways, BOOL isRightToLeft
             ) override;
         };
 
@@ -94,8 +102,19 @@ namespace Coplt
         {
             u32 Start;
             u32 Length;
-            Rc<IDWriteFont> Font;
+            const char16* Locale;
+            Rc<IDWriteFontFace5> Font;
             f32 Scale;
+            LocaleMode LocaleMode;
+        };
+
+        struct Run
+        {
+            u32 Start;
+            u32 Length;
+            u32 ScriptRangeIndex;
+            u32 BidiRangeIndex;
+            u32 FontRangeIndex;
         };
 
         struct ParagraphData
@@ -114,6 +133,7 @@ namespace Coplt
             std::vector<BidiRange> m_bidi_ranges{};
             std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
             std::vector<FontRange> m_font_ranges{};
+            std::vector<Run> m_runs{};
 
             void ReBuild();
 
@@ -125,6 +145,8 @@ namespace Coplt
             LayoutCalc::CtxNodeRef GetScope(const BaseTextLayoutStorage::ScopeRange& range) const;
 
             void AnalyzeFonts();
+            void CollectRuns();
+            void AnalyzeGlyphs();
         };
     }
 } // namespace Coplt

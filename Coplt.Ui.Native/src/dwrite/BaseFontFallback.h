@@ -9,11 +9,11 @@ namespace Coplt
     struct BaseFontFallback : ComImpl<BaseFontFallback, IFontFallback>
     {
         Rc<IDWriteFactory7> m_dw_factory;
-        Rc<IDWriteFontFallback> m_fallback;
+        Rc<IDWriteFontFallback1> m_fallback;
 
         explicit BaseFontFallback(
             Rc<IDWriteFactory7>& dw_factory,
-            Rc<IDWriteFontFallback>& fallback
+            Rc<IDWriteFontFallback1>& fallback
         ) : m_dw_factory(std::move(dw_factory)), m_fallback(std::move(fallback))
         {
         }
