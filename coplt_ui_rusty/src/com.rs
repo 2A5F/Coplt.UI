@@ -570,15 +570,6 @@ pub enum ScriptCode {
     TraditionalHanWithLatin = 212,
 }
 
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum DirtyFlags {
-    None = 0,
-    Layout = 1,
-    Render = 2,
-    TextLayout = 4,
-}
-
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum NodeType {
@@ -921,10 +912,14 @@ pub struct ChildsData {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
     pub TextLayoutObject: *mut ITextLayout,
+    pub TextLayoutBelongTo: *mut ITextLayout,
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
-    pub DirtyFlags: DirtyFlags,
+    pub LastLayoutVersion: u32,
+    pub LastTextLayoutVersion: u32,
+    pub LayoutVersion: u32,
+    pub TextLayoutVersion: u32,
 }
 
 #[repr(C)]

@@ -102,8 +102,8 @@ namespace Coplt::LayoutCalc
             const auto& style = node.StyleData();
             auto& childs = node.ChildsData();
 
-            const auto is_layout_dirty = HasFlags(data.DirtyFlags, DirtyFlags::Layout);
-            const auto is_text_dirty = HasFlags(data.DirtyFlags, DirtyFlags::TextLayout);
+            const auto is_layout_dirty = data.LastLayoutVersion != data.LayoutVersion;
+            const auto is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
 
             COPLT_DEBUG_ASSERT(
                 is_text_dirty ? is_layout_dirty : true,
@@ -115,6 +115,7 @@ namespace Coplt::LayoutCalc
             bool need_end_scope = false, need_finish_layout_build = false;
             if (cur_text_layout == nullptr)
             {
+                data.TextLayoutBelongTo = nullptr;
                 if (style.Container == Container::Text)
                 {
                     if (data.TextLayoutObject == nullptr)
@@ -136,6 +137,7 @@ namespace Coplt::LayoutCalc
             }
             else
             {
+                data.TextLayoutBelongTo = cur_text_layout;
                 if (style.Container == Container::Text)
                 {
                     if (data.TextLayoutObject != nullptr)
@@ -155,30 +157,31 @@ namespace Coplt::LayoutCalc
                     else
                     {
                         cur_text_layout->AddInlineBlock(node.id);
+                        cur_text_layout = nullptr;
                     }
                 }
                 else
                 {
                     cur_text_layout->AddBlock(node.id);
+                    cur_text_layout = nullptr;
                 }
             }
 
-            if (cur_text_layout)
+            // process childs
+            for (auto e = FFIUtils::GetEnumerator<NodeId>(&childs.m_childs); e.MoveNext();)
             {
-                // process childs
-                for (auto e = FFIUtils::GetEnumerator<NodeId>(&childs.m_childs); e.MoveNext();)
-                {
-                    auto child = CtxNodeRef(node.ctx, *e.Current());
-                    Phase1(child, &node.id, &childs, cur_text_layout);
-                }
+                auto child = CtxNodeRef(node.ctx, *e.Current());
+                Phase1(child, &node.id, &childs, cur_text_layout);
             }
 
             if (need_end_scope)
             {
+                COPLT_DEBUG_ASSERT(cur_text_layout);
                 cur_text_layout->EndScope();
             }
             if (need_finish_layout_build)
             {
+                COPLT_DEBUG_ASSERT(cur_text_layout);
                 cur_text_layout->FinishBuild();
             }
         }
@@ -193,7 +196,7 @@ namespace Coplt::LayoutCalc
 
     namespace Texts
     {
-        struct TextAnalyzeInputs
+        struct LayoutInputs
         {
             f32 KnownWidth;
             f32 KnownHeight;
@@ -210,8 +213,25 @@ namespace Coplt::LayoutCalc
             LayoutRunMode RunMode;
         };
 
-        extern "C" HResultE coplt_ui_layout_analyze_text(
-            void* self, NLayoutContext* ctx, const NodeId& node, const TextAnalyzeInputs& inputs
+        struct LayoutOutputs
+        {
+            f32 Width;
+            f32 Height;
+            f32 ContentWidth;
+            f32 ContentHeight;
+            f32 FirstBaselinesX;
+            f32 FirstBaselinesY;
+            f32 TopMarginPositive;
+            f32 TopMarginNegative;
+            f32 BottomMarginPositive;
+            f32 BottomMarginNegative;
+            bool HasFirstBaselinesX;
+            bool HasFirstBaselinesT;
+            bool MarginsCanCollapseThrough;
+        };
+
+        extern "C" HResultE coplt_ui_layout_touch_text(
+            void* self, NLayoutContext* ctx, const NodeId& node
         );
     }
 }

@@ -115,13 +115,8 @@ namespace Coplt
             u32 BidiRangeIndex;
             u32 FontRangeIndex;
 
-            u32 m_actual_glyph_count;
-            std::vector<u16> m_cluster_map;
-            std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> m_text_props;
-            std::vector<u16> m_glyph_indices;
-            std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> m_glyph_props;
-            std::vector<f32> m_glyph_advances;
-            std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets;
+            u32 GlyphStartIndex;
+            u32 ActualGlyphCount;
         };
 
         struct ParagraphData
@@ -136,11 +131,21 @@ namespace Coplt
             Rc<TextAnalysisSource> m_src{};
             Rc<TextAnalysisSink> m_sink{};
 
+            f32 m_single_line_width{};
+            f32 m_single_line_height{};
+
             std::vector<ScriptRange> m_script_ranges{};
             std::vector<BidiRange> m_bidi_ranges{};
             std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
             std::vector<FontRange> m_font_ranges{};
             std::vector<Run> m_runs{};
+
+            std::vector<u16> m_cluster_map{};
+            std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> m_text_props{};
+            std::vector<u16> m_glyph_indices{};
+            std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> m_glyph_props{};
+            std::vector<f32> m_glyph_advances{};
+            std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets{};
 
             void ReBuild();
 
@@ -154,6 +159,8 @@ namespace Coplt
             void AnalyzeFonts();
             void CollectRuns();
             void AnalyzeGlyphs();
+
+            void CalcSingleLineSize();
         };
     }
 } // namespace Coplt

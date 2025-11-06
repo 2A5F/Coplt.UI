@@ -412,8 +412,8 @@ public sealed partial class Document
         while (true)
         {
             ref var data = ref At<CommonData>(id);
-            if ((data.DirtyFlags & DirtyFlags.Layout) != 0) return;
-            data.DirtyFlags |= DirtyFlags.Layout;
+            if (data.LayoutVersion != data.LastLayoutVersion) return;
+            data.LayoutVersion++;
             if (At<ParentData>(id).Parent is { } parent)
             {
                 id = parent;
@@ -425,7 +425,9 @@ public sealed partial class Document
 
     public void DirtyTextLayout(NodeId id)
     {
-        At<CommonData>(id).DirtyFlags |= DirtyFlags.TextLayout;
+        ref var data = ref At<CommonData>(id);
+        if (data.TextLayoutVersion != data.LastTextLayoutVersion) return;
+        data.TextLayoutVersion++;
         DirtyLayout(id);
     }
 

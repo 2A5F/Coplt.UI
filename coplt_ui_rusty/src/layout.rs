@@ -1659,76 +1659,24 @@ impl SubDoc {
         id: NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
-        taffy::compute_leaf_layout(
-            inputs,
-            &StyleHandle(unsafe { &mut *(self as *mut _) }, id),
-            |_, _| 0.0,
-            |known_dimensions, available_space| {
-                self.compute_text_layout_measure(id, inputs, known_dimensions, available_space)
-            },
-        )
-    }
-
-    fn compute_text_layout_measure(
-        &mut self,
-        id: NodeId,
-        inputs: taffy::LayoutInput,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<taffy::AvailableSpace>,
-    ) -> taffy::Size<f32> {
-        // let style = StyleHandle(unsafe { &mut *(self as *mut _) }, id);
-        // let container_layout = unsafe { self.container_layout_mut(id).unwrap_unchecked() };
-        // let container_style = style.container_style();
-
-        // let text_layout = &mut container_layout.TextLayoutObject;
-
-        let inputs = TextAnalyzeInputs {
-            RunMode: match inputs.run_mode {
-                taffy::RunMode::PerformLayout => CopltLayoutRunMode::PerformLayout,
-                taffy::RunMode::ComputeSize => CopltLayoutRunMode::ComputeSize,
-                taffy::RunMode::PerformHiddenLayout => CopltLayoutRunMode::PerformHiddenLayout,
-            },
-            KnownWidth: known_dimensions.width.unwrap_or_default(),
-            KnownHeight: known_dimensions.height.unwrap_or_default(),
-            HasKnownWidth: known_dimensions.width.is_some(),
-            HasKnownHeight: known_dimensions.height.is_some(),
-            ParentWidth: inputs.parent_size.width.unwrap_or_default(),
-            ParentHeight: inputs.parent_size.height.unwrap_or_default(),
-            HasParentWidth: inputs.parent_size.width.is_some(),
-            HasParentHeight: inputs.parent_size.height.is_some(),
-            AvailableSpaceWidthValue: available_space.width.into_option().unwrap_or_default(),
-            AvailableSpaceHeightValue: available_space.height.into_option().unwrap_or_default(),
-            AvailableSpaceWidth: match available_space.width {
-                taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
-                taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
-                taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
-            },
-            AvailableSpaceHeight: match available_space.height {
-                taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
-                taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
-                taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
-            },
-        };
-
         unsafe {
-            let hr = coplt_ui_layout_analyze_text(self.2, self.0, &id, &inputs);
+            let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
             if hr.is_failure() {
                 std::panic::panic_any(hr);
             }
         }
 
         // todo
-        Size::ZERO
+        taffy::LayoutOutput::HIDDEN
     }
 }
 
 unsafe extern "C" {
     #[allow(improper_ctypes)]
-    fn coplt_ui_layout_analyze_text(
+    fn coplt_ui_layout_touch_text(
         layout: *mut (),
         ctx: *mut NLayoutContext,
         node_index: &NodeId,
-        inputs: &TextAnalyzeInputs,
     ) -> HResult;
 }
 
@@ -1743,7 +1691,7 @@ enum CopltLayoutRunMode {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 #[allow(non_snake_case)]
-struct TextAnalyzeInputs {
+struct CopltLayoutInputs {
     KnownWidth: f32,
     KnownHeight: f32,
     ParentWidth: f32,
@@ -1757,4 +1705,23 @@ struct TextAnalyzeInputs {
     AvailableSpaceWidth: com::AvailableSpaceType,
     AvailableSpaceHeight: com::AvailableSpaceType,
     RunMode: CopltLayoutRunMode,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone, Copy)]
+#[allow(non_snake_case)]
+struct CopltLayoutOutput {
+    Width: f32,
+    Height: f32,
+    ContentWidth: f32,
+    ContentHeight: f32,
+    FirstBaselinesX: f32,
+    FirstBaselinesY: f32,
+    TopMarginPositive: f32,
+    TopMarginNegative: f32,
+    BottomMarginPositive: f32,
+    BottomMarginNegative: f32,
+    HasFirstBaselinesX: bool,
+    HasFirstBaselinesT: bool,
+    MarginsCanCollapseThrough: bool,
 }

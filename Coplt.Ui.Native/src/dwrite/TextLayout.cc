@@ -21,6 +21,8 @@ TextLayoutCalc::ParagraphData::ParagraphData(TextLayout* text_layout)
 
 void TextLayoutCalc::ParagraphData::ReBuild()
 {
+    m_single_line_width = 0;
+    m_single_line_height = 0;
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
     if (!m_sink) m_sink = Rc(new TextAnalysisSink(this));
     m_script_ranges.clear();
@@ -28,6 +30,13 @@ void TextLayoutCalc::ParagraphData::ReBuild()
     m_line_breakpoints.clear();
     m_font_ranges.clear();
     m_runs.clear();
+
+    m_cluster_map.clear();
+    m_text_props.clear();
+    m_glyph_indices.clear();
+    m_glyph_props.clear();
+    m_glyph_advances.clear();
+    m_glyph_offsets.clear();
 }
 
 std::vector<BaseTextLayoutStorage::Paragraph>& TextLayoutCalc::ParagraphData::GetTextLayoutParagraphs() const
@@ -87,8 +96,8 @@ void TextLayout::ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node)
         data.AnalyzeFonts();
         data.CollectRuns();
         data.AnalyzeGlyphs();
+        data.CalcSingleLineSize();
     }
-
     m_node = {};
 }
 
@@ -341,8 +350,16 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
         }
         if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
 
-        std::vector<f32> glyph_advances(actual_glyph_count, {});
-        std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(actual_glyph_count, {});
+        run.GlyphStartIndex = m_cluster_map.size();
+        run.ActualGlyphCount = actual_glyph_count;
+
+        m_cluster_map.insert(m_cluster_map.end(), cluster_map.data(), cluster_map.data() + actual_glyph_count);
+        m_text_props.insert(m_text_props.end(), text_props.data(), text_props.data() + actual_glyph_count);
+        m_glyph_indices.insert(m_glyph_indices.end(), glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
+        m_glyph_props.insert(m_glyph_props.end(), glyph_props.data(), glyph_props.data() + actual_glyph_count);
+
+        m_glyph_advances.resize(m_glyph_advances.size() + actual_glyph_count, {});
+        m_glyph_offsets.resize(m_glyph_offsets.size() + actual_glyph_count, {});
 
         hr = analyzer->GetGlyphPlacements(
             text,
@@ -361,19 +378,37 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
             &arg_features,
             &feature_range_length,
             1,
-            glyph_advances.data(),
-            glyph_offsets.data()
+            m_glyph_advances.data() + run.GlyphStartIndex,
+            m_glyph_offsets.data() + run.GlyphStartIndex
         );
         if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
-
-        run.m_actual_glyph_count = actual_glyph_count;
-        run.m_cluster_map = std::vector(cluster_map.data(), cluster_map.data() + actual_glyph_count);
-        run.m_text_props = std::vector(text_props.data(), text_props.data() + actual_glyph_count);
-        run.m_glyph_indices = std::vector(glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
-        run.m_glyph_props = std::vector(glyph_props.data(), glyph_props.data() + actual_glyph_count);
-        run.m_glyph_advances = std::move(glyph_advances);
-        run.m_glyph_offsets = std::move(glyph_offsets);
     }
+}
+
+void TextLayoutCalc::ParagraphData::CalcSingleLineSize()
+{
+    f32 sum_width = 0;
+    f32 max_line_height = 0;
+    const auto& items = GetItems();
+    for (const auto& run : m_runs)
+    {
+        const auto& font = m_font_ranges[run.FontRangeIndex];
+
+        if (!font.Font) continue; // skip if no font find
+
+        DWRITE_FONT_METRICS1 metrics{};
+        font.Font->GetMetrics(&metrics);
+        const auto line_height = (metrics.ascent + metrics.descent + metrics.lineGap) * font.Scale;
+        max_line_height = std::max(max_line_height, line_height);
+
+        const std::span glyph_advances(m_glyph_advances.data() + run.GlyphStartIndex, run.ActualGlyphCount);
+        for (u32 i = 0; i < run.ActualGlyphCount; ++i)
+        {
+            sum_width += glyph_advances[i];
+        }
+    }
+    m_single_line_width = sum_width;
+    m_single_line_height = max_line_height;
 }
 
 TextLayoutCalc::TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)

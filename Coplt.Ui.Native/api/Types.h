@@ -645,14 +645,6 @@ namespace Coplt {
         TraditionalHanWithLatin = 212,
     };
 
-    COPLT_ENUM_FLAGS(DirtyFlags, ::Coplt::u32)
-    {
-        None = 0,
-        Layout = 1,
-        Render = 2,
-        TextLayout = 4,
-    };
-
     enum class NodeType : ::Coplt::u8
     {
         View = 0,
@@ -969,10 +961,14 @@ namespace Coplt {
     struct CommonData
     {
         ITextLayout* TextLayoutObject;
+        ITextLayout* TextLayoutBelongTo;
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutData UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
-        ::Coplt::DirtyFlags DirtyFlags;
+        ::Coplt::u32 LastLayoutVersion;
+        ::Coplt::u32 LastTextLayoutVersion;
+        ::Coplt::u32 LayoutVersion;
+        ::Coplt::u32 TextLayoutVersion;
     };
 
     struct GridContainerStyle

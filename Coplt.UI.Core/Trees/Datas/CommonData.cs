@@ -12,12 +12,17 @@ public partial record struct CommonData()
     [Drop]
     [ComType<Ptr<ITextLayout>>]
     internal Rc<ITextLayout> TextLayoutObject;
+    internal Ptr<ITextLayout> TextLayoutBelongTo;
 
     internal LayoutData FinalLayout;
     internal LayoutData UnRoundedLayout;
     internal LayoutCache LayoutCache;
 
-    public DirtyFlags DirtyFlags;
+    internal uint LastLayoutVersion;
+    internal uint LastTextLayoutVersion;
+    
+    public uint LayoutVersion;
+    public uint TextLayoutVersion;
     
     [UnscopedRef]
     public LayoutView Layout => new(ref this);

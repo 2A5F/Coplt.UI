@@ -62,28 +62,32 @@ HResult Layout::Calc(NLayoutContext* ctx)
 
 namespace Coplt::LayoutCalc::Texts
 {
-    void do_coplt_ui_layout_analyze_text(Layout* self, CtxNodeRef node, const TextAnalyzeInputs& inputs);
+    void do_coplt_ui_layout_touch_text(
+        Layout* self, CtxNodeRef node
+    );
 
-    extern "C" HResultE coplt_ui_layout_analyze_text(
-        void* self, NLayoutContext* ctx, const NodeId& node, const TextAnalyzeInputs& inputs
+    extern "C" HResultE coplt_ui_layout_touch_text(
+        void* self, NLayoutContext* ctx, const NodeId& node
     )
     {
         return feb([&]
         {
-            do_coplt_ui_layout_analyze_text(
-                static_cast<Layout*>(self), CtxNodeRef(ctx, node), inputs
+            do_coplt_ui_layout_touch_text(
+                static_cast<Layout*>(self), CtxNodeRef(ctx, node)
             );
             return HResultE::Ok;
         });
     }
 
-    void do_coplt_ui_layout_analyze_text(Layout* self, CtxNodeRef node, const TextAnalyzeInputs& inputs)
+    void do_coplt_ui_layout_touch_text(
+        Layout* self, CtxNodeRef node
+    )
     {
-        auto& childs = node.ChildsData();
         auto& data = node.CommonData();
-        const auto& style = node.StyleData();
+        auto& style = node.StyleData();
+        if (style.Container != Container::Text || data.TextLayoutObject == nullptr) return;
 
-        const auto is_text_dirty = HasFlags(data.DirtyFlags, DirtyFlags::TextLayout);
+        const auto is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
 
         if (data.TextLayoutObject == nullptr) throw NullPointerError();
         auto text_layout = static_cast<TextLayout*>(data.TextLayoutObject);
@@ -91,8 +95,7 @@ namespace Coplt::LayoutCalc::Texts
         if (is_text_dirty)
         {
             text_layout->ReBuild(self, node);
+            data.LastTextLayoutVersion &= data.TextLayoutVersion;
         }
-
-        // todo
     }
 }
