@@ -105,9 +105,9 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
 
     #region Private
 
-    private static T* Alloc(int size) => (T*)NativeLib.Instance.Alloc(sizeof(T) * size, Utils.AlignOf<T>());
+    private static T* Alloc(int size) => (T*)NativeLib.Alloc(sizeof(T) * size, Utils.AlignOf<T>());
 
-    private static T* ReAlloc(T* ptr, int size) => (T*)NativeLib.Instance.ReAlloc(ptr, sizeof(T) * size, Utils.AlignOf<T>());
+    private static T* ReAlloc(T* ptr, int size) => (T*)NativeLib.ReAlloc(ptr, sizeof(T) * size, Utils.AlignOf<T>());
 
     private void Grow(int capacity)
     {
@@ -201,7 +201,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
     private void Free()
     {
         if (m_items == null) return;
-        NativeLib.Instance.Free(m_items, Utils.AlignOf<T>());
+        NativeLib.Free(m_items, Utils.AlignOf<T>());
         m_items = null;
     }
 

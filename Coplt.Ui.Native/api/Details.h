@@ -825,10 +825,6 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     VirtualTable<::Coplt::IUnknown> b;
     void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
     ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILib*, ::Coplt::Str8*) noexcept;
-    void* (*const COPLT_CDECL f_Alloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
-    void (*const COPLT_CDECL f_Free)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 align) noexcept;
-    void* (*const COPLT_CDECL f_ZAlloc)(const ::Coplt::ILib*, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
-    void* (*const COPLT_CDECL f_ReAlloc)(const ::Coplt::ILib*, void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontFallback)(::Coplt::ILib*, IFontFallback** ff) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_CreateLayout)(::Coplt::ILib*, ILayout** layout) noexcept;
@@ -838,10 +834,6 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
     extern "C" void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
     extern "C" ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept;
-    extern "C" void* COPLT_CDECL Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
-    extern "C" void COPLT_CDECL Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept;
-    extern "C" void* COPLT_CDECL ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
-    extern "C" void* COPLT_CDECL ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept;
     extern "C" ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
     extern "C" ::Coplt::i32 COPLT_CDECL GetSystemFontFallback(::Coplt::ILib* self, IFontFallback** p0) noexcept;
     extern "C" ::Coplt::i32 COPLT_CDECL CreateLayout(::Coplt::ILib* self, ILayout** p0) noexcept;
@@ -880,10 +872,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
             .f_SetLogger = VirtualImpl_Coplt_ILib::SetLogger,
             .f_GetCurrentErrorMessage = VirtualImpl_Coplt_ILib::GetCurrentErrorMessage,
-            .f_Alloc = VirtualImpl_Coplt_ILib::Alloc,
-            .f_Free = VirtualImpl_Coplt_ILib::Free,
-            .f_ZAlloc = VirtualImpl_Coplt_ILib::ZAlloc,
-            .f_ReAlloc = VirtualImpl_Coplt_ILib::ReAlloc,
             .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
             .f_GetSystemFontFallback = VirtualImpl_Coplt_ILib::GetSystemFontFallback,
             .f_CreateLayout = VirtualImpl_Coplt_ILib::CreateLayout,
@@ -897,10 +885,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
 
         virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) = 0;
         virtual ::Coplt::Str8 Impl_GetCurrentErrorMessage() = 0;
-        virtual void* Impl_Alloc(::Coplt::i32 size, ::Coplt::i32 align) const = 0;
-        virtual void Impl_Free(void* ptr, ::Coplt::i32 align) const = 0;
-        virtual void* Impl_ZAlloc(::Coplt::i32 size, ::Coplt::i32 align) const = 0;
-        virtual void* Impl_ReAlloc(void* ptr, ::Coplt::i32 size, ::Coplt::i32 align) const = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontFallback(IFontFallback** ff) = 0;
         virtual ::Coplt::HResult Impl_CreateLayout(ILayout** layout) = 0;
@@ -933,26 +917,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             return r;
         }
 
-        static void* COPLT_CDECL f_Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
-        {
-            return AsImpl(self)->Impl_Alloc(p0, p1);
-        }
-
-        static void COPLT_CDECL f_Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept
-        {
-            AsImpl(self)->Impl_Free(p0, p1);
-        }
-
-        static void* COPLT_CDECL f_ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
-        {
-            return AsImpl(self)->Impl_ZAlloc(p0, p1);
-        }
-
-        static void* COPLT_CDECL f_ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept
-        {
-            return AsImpl(self)->Impl_ReAlloc(p0, p1, p2);
-        }
-
         static ::Coplt::i32 COPLT_CDECL f_GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
         {
             return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_GetSystemFontCollection(p0));
@@ -980,10 +944,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
         .f_SetLogger = VirtualImpl<Impl>::f_SetLogger,
         .f_GetCurrentErrorMessage = VirtualImpl<Impl>::f_GetCurrentErrorMessage,
-        .f_Alloc = VirtualImpl<Impl>::f_Alloc,
-        .f_Free = VirtualImpl<Impl>::f_Free,
-        .f_ZAlloc = VirtualImpl<Impl>::f_ZAlloc,
-        .f_ReAlloc = VirtualImpl<Impl>::f_ReAlloc,
         .f_GetSystemFontCollection = VirtualImpl<Impl>::f_GetSystemFontCollection,
         .f_GetSystemFontFallback = VirtualImpl<Impl>::f_GetSystemFontFallback,
         .f_CreateLayout = VirtualImpl<Impl>::f_CreateLayout,
@@ -1013,57 +973,6 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         *r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_GetCurrentErrorMessage();
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetCurrentErrorMessage, ::Coplt::Str8)
-        #endif
-        return r;
-    }
-
-    extern "C" inline void* COPLT_CDECL Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
-    {
-        void* r;
-        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, Alloc, void*)
-        #endif
-        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_Alloc(p0, p1);
-        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, Alloc, void*)
-        #endif
-        return r;
-    }
-
-    extern "C" inline void COPLT_CDECL Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept
-    {
-        struct { } r;
-        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, Free, void)
-        #endif
-        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_Free(p0, p1);
-        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, Free, void)
-        #endif
-    }
-
-    extern "C" inline void* COPLT_CDECL ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
-    {
-        void* r;
-        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ZAlloc, void*)
-        #endif
-        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_ZAlloc(p0, p1);
-        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ZAlloc, void*)
-        #endif
-        return r;
-    }
-
-    extern "C" inline void* COPLT_CDECL ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept
-    {
-        void* r;
-        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ReAlloc, void*)
-        #endif
-        r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_ReAlloc(p0, p1, p2);
-        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ReAlloc, void*)
         #endif
         return r;
     }
@@ -1137,22 +1046,6 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
     {
         ::Coplt::Str8 r{};
         return *COPLT_COM_PVTB(ILib, self)->f_GetCurrentErrorMessage(self, &r);
-    }
-    static COPLT_FORCE_INLINE void* Alloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
-    {
-        return COPLT_COM_PVTB(ILib, self)->f_Alloc(self, p0, p1);
-    }
-    static COPLT_FORCE_INLINE void Free(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1) noexcept
-    {
-        COPLT_COM_PVTB(ILib, self)->f_Free(self, p0, p1);
-    }
-    static COPLT_FORCE_INLINE void* ZAlloc(const ::Coplt::ILib* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
-    {
-        return COPLT_COM_PVTB(ILib, self)->f_ZAlloc(self, p0, p1);
-    }
-    static COPLT_FORCE_INLINE void* ReAlloc(const ::Coplt::ILib* self, void* p0, ::Coplt::i32 p1, ::Coplt::i32 p2) noexcept
-    {
-        return COPLT_COM_PVTB(ILib, self)->f_ReAlloc(self, p0, p1, p2);
     }
     static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept
     {

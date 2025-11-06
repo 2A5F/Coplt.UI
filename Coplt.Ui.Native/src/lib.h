@@ -89,18 +89,6 @@ namespace Coplt
         Str8 Impl_GetCurrentErrorMessage();
 
         COPLT_FORCE_INLINE
-        void* Impl_Alloc(i32 size, i32 align) const;
-
-        COPLT_FORCE_INLINE
-        void Impl_Free(void* ptr, i32 align) const;
-
-        COPLT_FORCE_INLINE
-        void* Impl_ZAlloc(i32 size, i32 align) const;
-
-        COPLT_FORCE_INLINE
-        void* Impl_ReAlloc(void* ptr, i32 size, i32 align) const;
-
-        COPLT_FORCE_INLINE
         HResult Impl_GetSystemFontCollection(IFontCollection** fc);
 
         COPLT_FORCE_INLINE
@@ -115,5 +103,5 @@ namespace Coplt
         COPLT_IMPL_END
     };
 
-    extern "C" COPLT_EXPORT HResultE Coplt_CreateLibUi(LibLoadInfo* info, ILib** lib);
+    extern "C" COPLT_EXPORT HResultE coplt_ui_create_lib(LibLoadInfo* info, ILib** lib);
 }

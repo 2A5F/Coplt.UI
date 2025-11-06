@@ -33,7 +33,7 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
         {
             DisposeProxy<T>.Dispose(ref *m_ptr);
         }
-        NativeLib.Instance.Free(m_ptr);
+        NativeLib.Free(m_ptr);
         m_ptr = null;
     }
 
@@ -41,12 +41,12 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
 
     #region Ctor
 
-    public NativeBox(T value) : this(NativeLib.Instance.Alloc<T>())
+    public NativeBox(T value) : this(NativeLib.Alloc<T>())
     {
         *m_ptr = value;
     }
 
-    public static NativeBox<T> New() => new(NativeLib.Instance.Alloc<T>());
+    public static NativeBox<T> New() => new(NativeLib.Alloc<T>());
 
     #endregion
 

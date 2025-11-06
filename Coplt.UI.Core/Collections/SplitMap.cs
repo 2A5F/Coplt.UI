@@ -101,7 +101,7 @@ public unsafe partial struct NSplitMapCtrl<K>
     private void Free()
     {
         if (m_buckets == null) return;
-        NativeLib.Instance.Free(m_buckets);
+        NativeLib.Free(m_buckets);
         m_buckets = null;
     }
 
@@ -113,8 +113,7 @@ public unsafe partial struct NSplitMapCtrl<K>
     private int Initialize(int capacity)
     {
         var size = HashHelpers.GetPrime(capacity);
-        var lib = NativeLib.Instance;
-        var buckets = lib.ZAlloc<int>(size);
+        var buckets = NativeLib.ZAlloc<int>(size);
         var ctrls = new NSplitMapData<Ctrl>(size);
 
         // Assign member variables after both arrays are allocated to guard against corruption from OOM if second fails.
@@ -159,9 +158,8 @@ public unsafe partial struct NSplitMapCtrl<K>
 
         m_ctrls.Resize(new_size);
 
-        var lib = NativeLib.Instance;
-        lib.Free(m_buckets);
-        m_buckets = lib.ZAlloc<int>(new_size);
+        NativeLib.Free(m_buckets);
+        m_buckets = NativeLib.ZAlloc<int>(new_size);
         if (m_buckets != null) throw new OutOfMemoryException();
         var count = m_count;
         m_fast_mode_multiplier = HashHelpers.GetFastModMultiplier((uint)new_size);
@@ -461,7 +459,7 @@ public unsafe partial struct NSplitMapData<T>
     private void Free()
     {
         if (m_items == null) return;
-        NativeLib.Instance.Free(m_items);
+        NativeLib.Free(m_items);
         m_items = null;
     }
 
@@ -474,7 +472,7 @@ public unsafe partial struct NSplitMapData<T>
     public NSplitMapData(int capacity)
     {
         m_cap = capacity;
-        m_items = NativeLib.Instance.Alloc<T>(capacity);
+        m_items = NativeLib.Alloc<T>(capacity);
         if (m_items == null) throw new OutOfMemoryException();
     }
 
@@ -496,7 +494,7 @@ public unsafe partial struct NSplitMapData<T>
         Debug.Assert(new_size >= m_cap);
         if (new_size == m_cap) return;
         m_cap = new_size;
-        m_items = NativeLib.Instance.ReAlloc(m_items, m_cap);
+        m_items = NativeLib.ReAlloc(m_items, m_cap);
         if (m_items == null) throw new OutOfMemoryException();
     }
 

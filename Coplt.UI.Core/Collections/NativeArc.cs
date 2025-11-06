@@ -41,7 +41,7 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
             {
                 DisposeProxy<T>.Dispose(ref m_ptr->m_data);
             }
-            NativeLib.Instance.Free(m_ptr);
+            NativeLib.Free(m_ptr);
         }
         m_ptr = null;
     }
@@ -62,14 +62,14 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
 
     public static NativeArc<T> New()
     {
-        var ptr = NativeLib.Instance.Alloc<NativeArcInner<T>>();
+        var ptr = NativeLib.Alloc<NativeArcInner<T>>();
         ptr->m_count = 1;
         return new(ptr);
     }
 
     public static NativeArc<T> New(T value)
     {
-        var ptr = NativeLib.Instance.Alloc<NativeArcInner<T>>();
+        var ptr = NativeLib.Alloc<NativeArcInner<T>>();
         ptr->m_count = 1;
         ptr->m_data = value;
         return new(ptr);

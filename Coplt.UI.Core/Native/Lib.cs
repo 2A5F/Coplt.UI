@@ -36,7 +36,7 @@ public sealed unsafe partial class NativeLib
             p_dwrite = DWrite.Load(),
         };
         ILib* p_lib;
-        new HResult(Coplt_CreateLibUi(&info, &p_lib)).TryThrow();
+        new HResult(coplt_ui_create_lib(&info, &p_lib)).TryThrow();
         m_lib = new(p_lib);
 
         ILayout* p_layout;
@@ -46,7 +46,7 @@ public sealed unsafe partial class NativeLib
         return;
 
         [DllImport("Coplt.UI.Native")]
-        static extern HRESULT Coplt_CreateLibUi(LibLoadInfo* info, ILib** lib);
+        static extern HRESULT coplt_ui_create_lib(LibLoadInfo* info, ILib** lib);
     }
 
     #endregion
@@ -105,15 +105,32 @@ public sealed unsafe partial class NativeLib
 
     #region Alloc
 
-    public void* Alloc(int count, int align) => m_lib.Alloc(count, align);
-    public void* ZAlloc(int count, int align) => m_lib.ZAlloc(count, align);
-    public void* ReAlloc(void* ptr, int count, int align) => m_lib.ReAlloc(ptr, count, align);
-    public void Free(void* ptr, int align) => m_lib.Free(ptr, align);
+    [DllImport("Coplt.UI.Native", EntryPoint = "coplt_ui_malloc")]
+    public static extern void* Alloc(nuint size, nuint align);
+    [DllImport("Coplt.UI.Native", EntryPoint = "coplt_ui_zalloc")]
+    public static extern void* ZAlloc(nuint size, nuint align);
+    [DllImport("Coplt.UI.Native", EntryPoint = "coplt_ui_realloc")]
+    public static extern void* ReAlloc(void* ptr, nuint new_size, nuint align);
+    [DllImport("Coplt.UI.Native", EntryPoint = "coplt_ui_free")]
+    public static extern void Free(void* ptr, nuint align);
 
-    public T* Alloc<T>(int count = 1) => (T*)m_lib.Alloc(count * sizeof(T), Utils.AlignOf<T>());
-    public T* ZAlloc<T>(int count = 1) => (T*)m_lib.ZAlloc(count * sizeof(T), Utils.AlignOf<T>());
-    public T* ReAlloc<T>(T* ptr, int count) => (T*)m_lib.ReAlloc(ptr, count * sizeof(T), Utils.AlignOf<T>());
-    public void Free<T>(T* ptr) => m_lib.Free(ptr, Utils.AlignOf<T>());
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* Alloc(int count, int align) => Alloc((nuint)count, (nuint)align);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* ZAlloc(int count, int align) => ZAlloc((nuint)count, (nuint)align);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void* ReAlloc(void* ptr, int count, int align) => ReAlloc(ptr, (nuint)count, (nuint)align);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Free(void* ptr, int align) => Free(ptr, (nuint)align);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* Alloc<T>(int count = 1) => (T*)Alloc(count * sizeof(T), Utils.AlignOf<T>());
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* ZAlloc<T>(int count = 1) => (T*)ZAlloc(count * sizeof(T), Utils.AlignOf<T>());
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T* ReAlloc<T>(T* ptr, int count) => (T*)ReAlloc(ptr, count * sizeof(T), Utils.AlignOf<T>());
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Free<T>(T* ptr) => Free(ptr, Utils.AlignOf<T>());
 
     #endregion
 

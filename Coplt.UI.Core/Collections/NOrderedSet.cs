@@ -84,15 +84,14 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
 
     private void Drop()
     {
-        var lib = NativeLib.Instance;
         if (m_buckets != null)
         {
-            lib.Free(m_buckets);
+            NativeLib.Free(m_buckets);
             m_buckets = null;
         }
         if (m_nodes != null)
         {
-            lib.Free(m_nodes);
+            NativeLib.Free(m_nodes);
             m_nodes = null;
         }
     }
@@ -104,14 +103,13 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
     private int Initialize(int capacity)
     {
         var size = HashHelpers.GetPrime(capacity);
-        var lib = NativeLib.Instance;
 
         // Assign member variables after both arrays are allocated to guard against corruption from OOM if second fails.
         m_first = -1;
         m_last = -1;
         m_free_list = -1;
-        m_buckets = lib.ZAlloc<int>(size);
-        m_nodes = lib.Alloc<Node>(size);
+        m_buckets = NativeLib.ZAlloc<int>(size);
+        m_nodes = NativeLib.Alloc<Node>(size);
         m_fast_mode_multiplier = HashHelpers.GetFastModMultiplier((uint)size);
         m_cap = size;
 
@@ -139,11 +137,9 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
         Debug.Assert(m_nodes != null, "m_nodes should be non-null");
         Debug.Assert(new_size >= m_cap);
 
-        var lib = NativeLib.Instance;
-
-        m_nodes = lib.ReAlloc(m_nodes, new_size);
-        lib.Free(m_buckets);
-        m_buckets = lib.ZAlloc<int>(new_size);
+        m_nodes = NativeLib.ReAlloc(m_nodes, new_size);
+        NativeLib.Free(m_buckets);
+        m_buckets = NativeLib.ZAlloc<int>(new_size);
 
         var count = m_count;
         m_fast_mode_multiplier = HashHelpers.GetFastModMultiplier((uint)new_size);

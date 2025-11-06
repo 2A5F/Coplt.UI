@@ -84,12 +84,11 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
     private int Initialize(int capacity)
     {
         var size = HashHelpers.GetPrime(capacity);
-        var lib = NativeLib.Instance;
 
         // Assign member variables after both arrays are allocated to guard against corruption from OOM if second fails.
         m_free_list = -1;
-        m_buckets = lib.ZAlloc<int>(size);
-        m_entries = lib.Alloc<Entry>(size);
+        m_buckets = NativeLib.ZAlloc<int>(size);
+        m_entries = NativeLib.Alloc<Entry>(size);
         m_fast_mode_multiplier = HashHelpers.GetFastModMultiplier((uint)size);
         m_cap = size;
 
@@ -120,12 +119,10 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
         Debug.Assert(m_entries != null, "m_nodes should be non-null");
         Debug.Assert(new_size >= m_cap);
 
-        var lib = NativeLib.Instance;
+        m_entries = NativeLib.ReAlloc(m_entries, new_size);
 
-        m_entries = lib.ReAlloc(m_entries, new_size);
-
-        lib.Free(m_buckets);
-        m_buckets = lib.ZAlloc<int>(new_size);
+        NativeLib.Free(m_buckets);
+        m_buckets = NativeLib.ZAlloc<int>(new_size);
 
         var count = m_count;
         m_fast_mode_multiplier = HashHelpers.GetFastModMultiplier((uint)new_size);

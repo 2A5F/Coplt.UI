@@ -200,6 +200,8 @@ void TextLayoutCalc::ParagraphData::CollectRuns()
 {
     COPLT_DEBUG_ASSERT(!m_script_ranges.empty() && !m_bidi_ranges.empty() && !m_font_ranges.empty());
 
+    // todo rewrite
+
     u32 logic_text_start = 0;
     u32 script_range_index = 0, bidi_range_index = 0, font_range_index = 0;
 
@@ -389,7 +391,6 @@ void TextLayoutCalc::ParagraphData::CalcSingleLineSize()
 {
     f32 sum_width = 0;
     f32 max_line_height = 0;
-    const auto& items = GetItems();
     for (const auto& run : m_runs)
     {
         const auto& font = m_font_ranges[run.FontRangeIndex];
