@@ -75,9 +75,9 @@ public partial record struct StyleData()
     public float FlexShrink = 1;
     public float FlexBasisValue = 0;
 
-    public float TextSizeValue = 16;
     public float TabSizeValue = 4;
 
+    public float FontSize = 16;
     public FontWidth FontWidth = new(1);
     public float FontOblique = -20;
 
@@ -149,8 +149,6 @@ public partial record struct StyleData()
     public LengthType FlexBasis = LengthType.Auto;
 
     public TextAlign TextAlign = TextAlign.Auto;
-
-    public LengthType TextSize = LengthType.Fixed;
     public LengthType TabSize = LengthType.Percent;
 
     public FontWeight FontWeight = FontWeight.Normal;

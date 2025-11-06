@@ -1040,8 +1040,8 @@ namespace Coplt {
         ::Coplt::f32 FlexGrow;
         ::Coplt::f32 FlexShrink;
         ::Coplt::f32 FlexBasisValue;
-        ::Coplt::f32 TextSizeValue;
         ::Coplt::f32 TabSizeValue;
+        ::Coplt::f32 FontSize;
         ::Coplt::FontWidth FontWidth;
         ::Coplt::f32 FontOblique;
         ::Coplt::GridPlacement GridRowStart;
@@ -1094,7 +1094,6 @@ namespace Coplt {
         ::Coplt::AlignType JustifySelf;
         ::Coplt::LengthType FlexBasis;
         ::Coplt::TextAlign TextAlign;
-        ::Coplt::LengthType TextSize;
         ::Coplt::LengthType TabSize;
         ::Coplt::FontWeight FontWeight;
         bool FontItalic;

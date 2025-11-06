@@ -177,9 +177,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
                 .Length = mapped_length,
                 .Font = std::move(mapped_font),
                 .Scale = scale,
-
-                .Locale = style.Locale.Name,
-                .LocaleMode = style.LocaleMode,
+                .Scope = scope.id,
             });
 
             if (mapped_length >= text_length) break;
@@ -253,8 +251,11 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
 
         if (!font.Font) continue; // skip if no font find
 
+        const LayoutCalc::CtxNodeRef scope(m_text_layout->m_node.ctx, font.Scope);
+        const auto& style = scope.StyleData();
+
         const auto is_rtl = bidi.ResolvedLevel % 2 == 1;
-        const auto locale = font.LocaleMode == LocaleMode::ByScript ? script.Locale : font.Locale;
+        const auto locale = style.LocaleMode == LocaleMode::ByScript ? script.Locale : style.Locale.Name;
 
         // todo features from style
         DWRITE_FONT_FEATURE features[] = {
@@ -340,11 +341,38 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
         }
         if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
 
+        std::vector<f32> glyph_advances(actual_glyph_count, {});
+        std::vector<DWRITE_GLYPH_OFFSET> glyph_offsets(actual_glyph_count, {});
+
+        hr = analyzer->GetGlyphPlacements(
+            text,
+            cluster_map.data(),
+            text_props.data(),
+            run.Length,
+            glyph_indices.data(),
+            glyph_props.data(),
+            actual_glyph_count,
+            font.Font.get(),
+            style.FontSize,
+            false, // sideways
+            is_rtl,
+            &script.Analysis,
+            locale,
+            &arg_features,
+            &feature_range_length,
+            1,
+            glyph_advances.data(),
+            glyph_offsets.data()
+        );
+        if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
+
         run.m_actual_glyph_count = actual_glyph_count;
         run.m_cluster_map = std::vector(cluster_map.data(), cluster_map.data() + actual_glyph_count);
         run.m_text_props = std::vector(text_props.data(), text_props.data() + actual_glyph_count);
         run.m_glyph_indices = std::vector(glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
         run.m_glyph_props = std::vector(glyph_props.data(), glyph_props.data() + actual_glyph_count);
+        run.m_glyph_advances = std::move(glyph_advances);
+        run.m_glyph_offsets = std::move(glyph_offsets);
     }
 }
 

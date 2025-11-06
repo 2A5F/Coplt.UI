@@ -102,10 +102,9 @@ namespace Coplt
         {
             u32 Start;
             u32 Length;
-            const char16* Locale;
             Rc<IDWriteFontFace5> Font;
             f32 Scale;
-            LocaleMode LocaleMode;
+            NodeId Scope;
         };
 
         struct Run
@@ -121,6 +120,8 @@ namespace Coplt
             std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> m_text_props;
             std::vector<u16> m_glyph_indices;
             std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> m_glyph_props;
+            std::vector<f32> m_glyph_advances;
+            std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets;
         };
 
         struct ParagraphData
