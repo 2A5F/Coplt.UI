@@ -17,8 +17,8 @@ use taffy::{
 use crate::{
     col::{OrderedSet, map::NativeMap, ordered_set},
     com::{
-        self, ChildsData, CommonData, GridName, GridNameType, ILib, NLayoutContext, NodeId,
-        NodeType, RootData, StyleData,
+        self, ChildsData, CommonData, Container, GridName, GridNameType, ILib, NLayoutContext,
+        NodeId, NodeType, RootData, StyleData,
     },
 };
 
@@ -1659,12 +1659,24 @@ impl SubDoc {
         id: NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
-        unsafe {
-            let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
-            if hr.is_failure() {
-                std::panic::panic_any(hr);
+        let data = self.common_data(id);
+        let style = self.style_data(id);
+
+        debug_assert!(matches!(style.Container, Container::Text));
+        debug_assert!(!data.TextLayoutObject.is_null());
+
+        let is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
+        if is_text_dirty {
+            unsafe {
+                let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
+                if hr.is_failure() {
+                    std::panic::panic_any(hr);
+                }
             }
         }
+
+        let tlo = data.TextLayoutObject;
+
 
         // todo
         taffy::LayoutOutput::HIDDEN

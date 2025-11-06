@@ -85,17 +85,14 @@ namespace Coplt::LayoutCalc::Texts
     {
         auto& data = node.CommonData();
         auto& style = node.StyleData();
-        if (style.Container != Container::Text || data.TextLayoutObject == nullptr) return;
+        COPLT_DEBUG_ASSERT(style.Container == Container::Text && data.TextLayoutObject);
 
         const auto is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
+        COPLT_DEBUG_ASSERT(is_text_dirty);
 
-        if (data.TextLayoutObject == nullptr) throw NullPointerError();
-        auto text_layout = static_cast<TextLayout*>(data.TextLayoutObject);
+        const auto text_layout = static_cast<TextLayout*>(data.TextLayoutObject);
 
-        if (is_text_dirty)
-        {
-            text_layout->ReBuild(self, node);
-            data.LastTextLayoutVersion &= data.TextLayoutVersion;
-        }
+        text_layout->ReBuild(self, node);
+        data.LastTextLayoutVersion = data.TextLayoutVersion;
     }
 }
