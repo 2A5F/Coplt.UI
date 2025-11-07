@@ -5,6 +5,7 @@
 #include "FFI.h"
 #include "Map.h"
 #include "TextLayout.h"
+#include "Utils.h"
 
 namespace Coplt::LayoutCalc
 {
@@ -110,12 +111,11 @@ namespace Coplt::LayoutCalc
                 "If is_text_dirty is true, then is_layout_dirty must also be true."
             );
 
-            if (!is_layout_dirty) return;
-
             bool need_end_scope = false, need_finish_layout_build = false;
             if (cur_text_layout == nullptr)
             {
-                data.TextLayoutBelongTo = nullptr;
+                if (!is_layout_dirty) return;
+                data.TextLayoutBelongTo = nullptr; // todo remove , use node id not layout ptr
                 if (style.Container == Container::Text)
                 {
                     if (data.TextLayoutObject == nullptr)
@@ -149,7 +149,34 @@ namespace Coplt::LayoutCalc
                 }
                 if (style.TextMode == TextMode::Inline)
                 {
-                    if (style.Container == Container::Text)
+                    if (
+                        style.Container == Container::Text
+                        && style.Width == LengthType::Auto
+                        && style.Height == LengthType::Auto
+                        && style.MinWidth == LengthType::Auto
+                        && style.MinHeight == LengthType::Auto
+                        && style.MaxWidth == LengthType::Auto
+                        && style.MaxHeight == LengthType::Auto
+                        && !style.HasAspectRatio
+                        && IsZeroLength(style.InsertTop, style.InsertTopValue)
+                        && IsZeroLength(style.InsertRight, style.InsertRightValue)
+                        && IsZeroLength(style.InsertBottom, style.InsertBottomValue)
+                        && IsZeroLength(style.InsertLeft, style.InsertLeftValue)
+                        && IsZeroLength(style.MarginTop, style.MarginTopValue)
+                        && IsZeroLength(style.MarginRight, style.MarginRightValue)
+                        && IsZeroLength(style.MarginBottom, style.MarginBottomValue)
+                        && IsZeroLength(style.MarginLeft, style.MarginLeftValue)
+                        && IsZeroLength(style.PaddingTop, style.PaddingTopValue)
+                        && IsZeroLength(style.PaddingRight, style.PaddingRightValue)
+                        && IsZeroLength(style.PaddingBottom, style.PaddingBottomValue)
+                        && IsZeroLength(style.PaddingLeft, style.PaddingLeftValue)
+                        && IsZeroLength(style.BorderTop, style.BorderTopValue)
+                        && IsZeroLength(style.BorderRight, style.BorderRightValue)
+                        && IsZeroLength(style.BorderBottom, style.BorderBottomValue)
+                        && IsZeroLength(style.BorderLeft, style.BorderLeftValue)
+                        && style.OverflowX == Overflow::Visible
+                        && style.OverflowY == Overflow::Visible
+                    )
                     {
                         need_end_scope = true;
                         cur_text_layout->StartScope(node.id);

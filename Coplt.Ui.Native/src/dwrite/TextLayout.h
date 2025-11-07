@@ -4,6 +4,8 @@
 #include <icu.h>
 #include <dwrite_3.h>
 
+#include <hb.h>
+
 #include "../Com.h"
 #include "../TextLayout.h"
 #include "../Layout.h"
@@ -104,7 +106,17 @@ namespace Coplt
             u32 Length;
             Rc<IDWriteFontFace5> Font;
             f32 Scale;
-            NodeId Scope;
+            // item range only alive when IsInlineBlock is true
+            u32 ItemStart;
+            u32 ItemLength;
+            bool IsInlineBlock;
+        };
+
+        struct SameStyleRange
+        {
+            u32 Start;
+            u32 Length;
+            u32 FirstScope;
         };
 
         struct Run
@@ -114,9 +126,13 @@ namespace Coplt
             u32 ScriptRangeIndex;
             u32 BidiRangeIndex;
             u32 FontRangeIndex;
+            u32 StyleRangeIndex;
 
             u32 GlyphStartIndex;
             u32 ActualGlyphCount;
+
+            f32 SingleLineWidth{};
+            f32 SingleLineHeight{};
         };
 
         struct ParagraphData
@@ -131,13 +147,11 @@ namespace Coplt
             Rc<TextAnalysisSource> m_src{};
             Rc<TextAnalysisSink> m_sink{};
 
-            f32 m_single_line_width{};
-            f32 m_single_line_height{};
-
             std::vector<ScriptRange> m_script_ranges{};
             std::vector<BidiRange> m_bidi_ranges{};
             std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
             std::vector<FontRange> m_font_ranges{};
+            std::vector<SameStyleRange> m_same_style_ranges{};
             std::vector<Run> m_runs{};
 
             std::vector<u16> m_cluster_map{};
@@ -154,9 +168,12 @@ namespace Coplt
             std::span<BaseTextLayoutStorage::Item> GetItems() const;
             std::span<BaseTextLayoutStorage::Item> GetItems(u32 Start, u32 Length) const;
 
+            LayoutCalc::CtxNodeRef GetScope(const BaseTextLayoutStorage::Item& item) const;
             LayoutCalc::CtxNodeRef GetScope(const BaseTextLayoutStorage::ScopeRange& range) const;
+            LayoutCalc::CtxNodeRef GetScope(const SameStyleRange& range) const;
 
             void AnalyzeFonts();
+            void AnalyzeStyles();
             void CollectRuns();
             void AnalyzeGlyphs();
 

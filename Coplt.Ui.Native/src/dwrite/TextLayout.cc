@@ -1,6 +1,5 @@
 #include "TextLayout.h"
 
-#include <icu.h>
 #include <span>
 #include <fmt/xchar.h>
 
@@ -21,14 +20,13 @@ TextLayoutCalc::ParagraphData::ParagraphData(TextLayout* text_layout)
 
 void TextLayoutCalc::ParagraphData::ReBuild()
 {
-    m_single_line_width = 0;
-    m_single_line_height = 0;
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
     if (!m_sink) m_sink = Rc(new TextAnalysisSink(this));
     m_script_ranges.clear();
     m_bidi_ranges.clear();
     m_line_breakpoints.clear();
     m_font_ranges.clear();
+    m_same_style_ranges.clear();
     m_runs.clear();
 
     m_cluster_map.clear();
@@ -60,6 +58,15 @@ std::span<BaseTextLayoutStorage::Item> TextLayoutCalc::ParagraphData::GetItems(c
     return std::span(m_text_layout->m_items.data() + Start, Length);
 }
 
+LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const BaseTextLayoutStorage::Item& item) const
+{
+    const auto root_scope = m_text_layout->m_node;
+    return
+        item.Scope == -1
+            ? root_scope
+            : LayoutCalc::CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
+}
+
 LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const BaseTextLayoutStorage::ScopeRange& range) const
 {
     const auto root_scope = m_text_layout->m_node;
@@ -67,6 +74,15 @@ LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const BaseTextLay
         range.Scope == -1
             ? root_scope
             : LayoutCalc::CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.Scope]);
+}
+
+LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const SameStyleRange& range) const
+{
+    const auto root_scope = m_text_layout->m_node;
+    return
+        range.FirstScope == -1
+            ? root_scope
+            : LayoutCalc::CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.FirstScope]);
 }
 
 void TextLayout::ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node)
@@ -94,6 +110,7 @@ void TextLayout::ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node)
         ); FAILED(hr))
             throw ComException(hr, "Failed to analyze LineBreakpoints");
         data.AnalyzeFonts();
+        data.AnalyzeStyles();
         data.CollectRuns();
         data.AnalyzeGlyphs();
         data.CalcSingleLineSize();
@@ -105,38 +122,54 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
 {
     const auto& system_font_fallback = m_layout->m_system_font_fallback;
 
-    const auto& paragraph = GetParagraph();
-    for (const auto& range : paragraph.ScopeRanges)
+    const auto& items = GetItems();
+    u32 item_start = 0;
+    u32 item_length = 0;
+    u32 logic_text_start = 0;
+    u32 logic_text_length = 0;
+    IDWriteFontFallback1* cur_fall_back{};
+    auto cur_item_type = BaseTextLayoutStorage::ItemType::Block;
+    auto cur_font_weight = FontWeight::Normal;
+    auto cur_font_width = 1.0f;
+    auto cur_font_italic = false;
+    auto cur_font_oblique = 1.0f;
+    const auto add_range = [&]
     {
-        const auto scope = GetScope(range);
-        const auto& style = scope.StyleData();
-        const auto font_fall_back =
-            style.FontFallback == nullptr
-                ? system_font_fallback.get()
-                : static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get();
-        COPLT_DEBUG_ASSERT(font_fall_back != nullptr, "font_fall_back should not be null");
+        if (cur_item_type == BaseTextLayoutStorage::ItemType::InlineBlock)
+        {
+            m_font_ranges.push_back(FontRange{
+                .Start = logic_text_start,
+                .Length = logic_text_length,
+                .Font = nullptr,
+                .Scale = 1,
+                .ItemStart = item_start,
+                .ItemLength = item_length,
+                .IsInlineBlock = true,
+            });
+            return;
+        }
 
         const DWRITE_FONT_AXIS_VALUE axis_values[] = {
             DWRITE_FONT_AXIS_VALUE{
                 .axisTag = DWRITE_FONT_AXIS_TAG_WEIGHT,
-                .value = static_cast<f32>(style.FontWeight),
+                .value = static_cast<f32>(cur_font_weight),
             },
             DWRITE_FONT_AXIS_VALUE{
                 .axisTag = DWRITE_FONT_AXIS_TAG_WIDTH,
-                .value = style.FontWidth.Width * 100,
+                .value = cur_font_width * 100,
             },
             DWRITE_FONT_AXIS_VALUE{
                 .axisTag = DWRITE_FONT_AXIS_TAG_ITALIC,
-                .value = style.FontItalic ? 1.0f : 0.0f,
+                .value = cur_font_italic ? 1.0f : 0.0f,
             },
             DWRITE_FONT_AXIS_VALUE{
                 .axisTag = DWRITE_FONT_AXIS_TAG_SLANT,
-                .value = std::clamp(style.FontOblique, -90.0f, 90.0f),
+                .value = cur_font_oblique,
             },
         };
 
-        auto text_start = range.LogicTextStart;
-        auto text_length = range.LogicTextLength;
+        auto text_start = logic_text_start;
+        auto text_length = logic_text_length;
 
         for (;;)
         {
@@ -144,7 +177,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
             Rc<IDWriteFontFace5> mapped_font{};
             f32 scale{};
 
-            if (const auto hr = font_fall_back->MapCharacters(
+            if (const auto hr = cur_fall_back->MapCharacters(
                 m_src.get(), text_start, text_length,
                 nullptr, nullptr,
                 axis_values, std::size(axis_values),
@@ -154,7 +187,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
                 throw ComException(hr, "Failed to map characters");
 
             // not find, retry use system font fallback
-            if (mapped_font == nullptr && font_fall_back != system_font_fallback)
+            if (mapped_font == nullptr && cur_fall_back != system_font_fallback)
             {
                 if (const auto hr = system_font_fallback->MapCharacters(
                     m_src.get(), text_start, text_length,
@@ -166,7 +199,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
                     throw ComException(hr, "Failed to map characters");
             }
 
-#ifdef _DEBUG
+            #ifdef _DEBUG
             // if (mapped_font)
             // {
             //     u32 len{};
@@ -179,55 +212,171 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
             //         fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
             //     );
             // }
-#endif
+            #endif
 
             m_font_ranges.push_back(FontRange{
                 .Start = text_start,
                 .Length = mapped_length,
                 .Font = std::move(mapped_font),
                 .Scale = scale,
-                .Scope = scope.id,
+                .ItemStart = 0,
+                .ItemLength = 0,
+                .IsInlineBlock = false,
             });
 
             if (mapped_length >= text_length) break;
             text_start += mapped_length;
             text_length -= mapped_length;
         }
+    };
+    for (u32 i = 0; i < items.size(); ++i)
+    {
+        const auto& item = items[i];
+        const auto scope = GetScope(item);
+        const auto& style = scope.StyleData();
+        const auto scope_fallback =
+            style.FontFallback
+                ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
+                : system_font_fallback.get();
+        if (item.Type == BaseTextLayoutStorage::ItemType::Text)
+        {
+            const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
+            if (
+                cur_item_type == item.Type
+                && cur_fall_back == scope_fallback
+                && cur_font_weight == style.FontWeight
+                && cur_font_width == style.FontWidth.Width
+                && cur_font_italic == style.FontItalic
+                && cur_font_oblique == font_oblique
+            )
+            {
+                if (logic_text_length == 0)
+                {
+                    item_start = i;
+                    logic_text_start = item.LogicTextStart;
+                }
+                item_length++;
+                logic_text_length += item.LogicTextLength;
+                continue;
+            }
+            if (logic_text_length != 0) add_range();
+            item_start = i;
+            item_length = 1;
+            logic_text_start = item.LogicTextStart;
+            logic_text_length = item.LogicTextLength;
+            cur_item_type = item.Type;
+            cur_fall_back = scope_fallback;
+            cur_font_weight = style.FontWeight;
+            cur_font_width = style.FontWidth.Width;
+            cur_font_italic = style.FontItalic;
+            cur_font_oblique = font_oblique;
+        }
+        else
+        {
+            if (cur_item_type == item.Type)
+            {
+                if (logic_text_length == 0)
+                {
+                    item_start = i;
+                    logic_text_start = item.LogicTextStart;
+                }
+                item_length++;
+                logic_text_length += item.LogicTextLength;
+                continue;
+            }
+            if (logic_text_length != 0) add_range();
+            item_start = i;
+            item_length = 1;
+            logic_text_start = item.LogicTextStart;
+            logic_text_length = item.LogicTextLength;
+            cur_item_type = item.Type;
+            cur_fall_back = nullptr;
+        }
     }
+    if (logic_text_length != 0) add_range();
+}
+
+void TextLayoutCalc::ParagraphData::AnalyzeStyles()
+{
+    const auto& paragraph = GetParagraph();
+    const auto& scopes = paragraph.ScopeRanges;
+    u32 logic_text_start = 0;
+    u32 logic_text_length = 0;
+    u32 first_scope = -1;
+    f32 font_size = 0;
+    TextOrientation text_orientation{};
+    const auto add_range = [&]
+    {
+        m_same_style_ranges.push_back(SameStyleRange{
+            .Start = logic_text_start,
+            .Length = logic_text_length,
+            .FirstScope = first_scope,
+        });
+    };
+    for (const auto& scope : scopes)
+    {
+        const auto node = GetScope(scope);
+        const auto& style = node.StyleData();
+        if (
+            first_scope == -1
+            || font_size != style.FontSize
+            || text_orientation != style.TextOrientation
+        )
+        {
+            if (logic_text_length != 0) add_range();
+            logic_text_start = scope.LogicTextStart;
+            logic_text_length = scope.LogicTextLength;
+            first_scope = scope.Scope;
+            font_size = style.FontSize;
+            text_orientation = style.TextOrientation;
+        }
+        else
+        {
+            logic_text_length += scope.LogicTextLength;
+        }
+    }
+    if (logic_text_length != 0) add_range();
 }
 
 void TextLayoutCalc::ParagraphData::CollectRuns()
 {
-    COPLT_DEBUG_ASSERT(!m_script_ranges.empty() && !m_bidi_ranges.empty() && !m_font_ranges.empty());
-
-    // todo rewrite
+    COPLT_DEBUG_ASSERT(
+        !m_script_ranges.empty() && !m_bidi_ranges.empty() && !m_font_ranges.empty() && !m_same_style_ranges.empty()
+    );
 
     u32 logic_text_start = 0;
-    u32 script_range_index = 0, bidi_range_index = 0, font_range_index = 0;
+    u32 script_range_index = 0, bidi_range_index = 0, font_range_index = 0, style_range_index = 0;
 
+    #pragma region assert range end all same
     const auto& script_last = m_script_ranges.back();
     const auto& bidi_last = m_bidi_ranges.back();
     const auto& font_last = m_font_ranges.back();
+    const auto& style_last = m_same_style_ranges.back();
     const auto script_end = script_last.Start + script_last.Length;
     const auto bidi_end = bidi_last.Start + bidi_last.Length;
     const auto font_end = font_last.Start + font_last.Length;
-    COPLT_DEBUG_ASSERT(script_end == bidi_end && script_end == font_end);
+    const auto style_end = style_last.Start + style_last.Length;
+    COPLT_DEBUG_ASSERT(script_end == bidi_end && script_end == font_end && script_end == style_end);
+    #pragma endregion
 
     while (
         script_range_index < m_script_ranges.size()
         && bidi_range_index < m_bidi_ranges.size()
         && font_range_index < m_font_ranges.size()
+        && style_range_index < m_same_style_ranges.size()
     )
     {
         const auto& script_range = m_script_ranges[script_range_index];
         const auto& bidi_range = m_bidi_ranges[bidi_range_index];
         const auto& font_range = m_font_ranges[font_range_index];
+        const auto& style_range = m_same_style_ranges[style_range_index];
 
         const auto script_len = script_range.Length - (logic_text_start - script_range.Start);
         const auto bidi_len = bidi_range.Length - (logic_text_start - bidi_range.Start);
         const auto font_len = font_range.Length - (logic_text_start - font_range.Start);
+        const auto style_len = style_range.Length - (logic_text_start - style_range.Start);
 
-        const auto min_len = std::min(std::min(script_len, bidi_len), font_len);
+        const auto min_len = std::min(std::min(script_len, bidi_len), std::min(font_len, style_len));
 
         m_runs.push_back(Run{
             .Start = logic_text_start,
@@ -235,12 +384,14 @@ void TextLayoutCalc::ParagraphData::CollectRuns()
             .ScriptRangeIndex = script_range_index,
             .BidiRangeIndex = bidi_range_index,
             .FontRangeIndex = font_range_index,
+            .StyleRangeIndex = style_range_index,
         });
 
         logic_text_start += min_len;
         if (logic_text_start >= script_range.Start + script_range.Length) script_range_index++;
         if (logic_text_start >= bidi_range.Start + bidi_range.Length) bidi_range_index++;
         if (logic_text_start >= font_range.Start + font_range.Length) font_range_index++;
+        if (logic_text_start >= style_range.Start + style_range.Length) style_range_index++;
     }
 }
 
@@ -251,6 +402,8 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
     std::vector<u16> glyph_indices;
     std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_props;
 
+    const auto& scopes = m_text_layout->m_scopes;
+
     auto& analyzer = m_layout->m_text_analyzer;
     const auto& items = m_text_layout->m_items;
     auto item_index = 0;
@@ -259,10 +412,12 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
         const auto& script = m_script_ranges[run.ScriptRangeIndex];
         const auto& bidi = m_bidi_ranges[run.BidiRangeIndex];
         const auto& font = m_font_ranges[run.FontRangeIndex];
+        const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
 
+        COPLT_DEBUG_ASSERT(font.IsInlineBlock ? !font.Font : true, "inline block definitely no font");
         if (!font.Font) continue; // skip if no font find
 
-        const LayoutCalc::CtxNodeRef scope(m_text_layout->m_node.ctx, font.Scope);
+        const auto scope = GetScope(same_style);
         const auto& style = scope.StyleData();
 
         const auto is_rtl = bidi.ResolvedLevel % 2 == 1;
@@ -389,27 +544,29 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
 
 void TextLayoutCalc::ParagraphData::CalcSingleLineSize()
 {
-    f32 sum_width = 0;
-    f32 max_line_height = 0;
-    for (const auto& run : m_runs)
+    for (auto& run : m_runs)
     {
         const auto& font = m_font_ranges[run.FontRangeIndex];
 
         if (!font.Font) continue; // skip if no font find
 
+        // todo vertical
+
         DWRITE_FONT_METRICS1 metrics{};
         font.Font->GetMetrics(&metrics);
         const auto line_height = (metrics.ascent + metrics.descent + metrics.lineGap) * font.Scale;
-        max_line_height = std::max(max_line_height, line_height);
+
+        f32 sum_width = 0;
 
         const std::span glyph_advances(m_glyph_advances.data() + run.GlyphStartIndex, run.ActualGlyphCount);
         for (u32 i = 0; i < run.ActualGlyphCount; ++i)
         {
             sum_width += glyph_advances[i];
         }
+
+        run.SingleLineWidth = sum_width;
+        run.SingleLineHeight = line_height;
     }
-    m_single_line_width = sum_width;
-    m_single_line_height = max_line_height;
 }
 
 TextLayoutCalc::TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)
@@ -518,7 +675,6 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetLocaleName(
     UINT32 textPosition, UINT32* textLength, const WCHAR** localeName
 )
 {
-    const auto layout = m_paragraph_data->m_text_layout;
     const auto& paragraph = m_paragraph_data->GetParagraph();
     const auto scope_range_index = Algorithm::BinarySearch(
         paragraph.ScopeRanges.data(), paragraph.ScopeRanges.size(), textPosition,

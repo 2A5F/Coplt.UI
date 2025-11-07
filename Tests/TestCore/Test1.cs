@@ -54,7 +54,11 @@ public class Tests1
             Container = Container.Text,
         };
         doc.AddRoot(node.Id);
-        node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
+        // node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
+        node.Add("有朋自远方来");
+        var inline_box = new Access.View(doc) { TextMode = TextMode.Inline, Width = 10, Height = 10 };
+        node.Add(inline_box);
+        node.Add("不亦乐乎");
         var start = Stopwatch.GetTimestamp();
         doc.Update();
         var end = Stopwatch.GetTimestamp();

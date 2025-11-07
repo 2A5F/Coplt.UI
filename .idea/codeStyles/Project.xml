@@ -2,6 +2,7 @@
   <code_scheme name="Project" version="173">
     <RiderCodeStyleSettings>
       <option name="/Default/CodeStyle/EditorConfig/EnableClangFormatSupport/@EntryValue" value="false" type="bool" />
+      <option name="/Default/CodeStyle/CodeFormatting/CppFormatting/INDENT_PREPROCESSOR_DIRECTIVES/@EntryValue" value="Normal" type="string" />
     </RiderCodeStyleSettings>
     <files>
       <extensions>

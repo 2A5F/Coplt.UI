@@ -59,6 +59,12 @@ public static unsafe partial class Access
             set => node.StyleData.Container = value;
         }
 
+        public TextMode TextMode
+        {
+            get => node.StyleData.TextMode;
+            set => node.StyleData.TextMode = value;
+        }
+
         public Visible Visible
         {
             get => node.StyleData.Visible;
