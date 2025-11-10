@@ -6,19 +6,20 @@
 #include "../lib.h"
 #include "../Algorithm.h"
 #include "../Text.h"
+#include "../Layout.h"
 #include "Layout.h"
 #include "Error.h"
 #include "BaseFontFallback.h"
 #include "Utils.h"
 
-using namespace Coplt;
+using namespace Coplt::LayoutCalc::Texts;
 
-TextLayoutCalc::ParagraphData::ParagraphData(TextLayout* text_layout)
+ParagraphData::ParagraphData(TextLayout* text_layout)
     : m_text_layout(text_layout)
 {
 }
 
-void TextLayoutCalc::ParagraphData::ReBuild()
+void ParagraphData::ReBuild()
 {
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
     if (!m_sink) m_sink = Rc(new TextAnalysisSink(this));
@@ -37,62 +38,62 @@ void TextLayoutCalc::ParagraphData::ReBuild()
     m_glyph_offsets.clear();
 }
 
-std::vector<BaseTextLayoutStorage::Paragraph>& TextLayoutCalc::ParagraphData::GetTextLayoutParagraphs() const
+std::vector<TextParagraphImpl>& ParagraphData::GetTextLayoutParagraphs() const
 {
     return m_text_layout->m_paragraphs;
 }
 
-BaseTextLayoutStorage::Paragraph& TextLayoutCalc::ParagraphData::GetParagraph() const
+TextParagraphImpl& ParagraphData::GetParagraph() const
 {
     return GetTextLayoutParagraphs()[m_index];
 }
 
-std::span<BaseTextLayoutStorage::Item> TextLayoutCalc::ParagraphData::GetItems() const
+std::span<TextItem> ParagraphData::GetItems() const
 {
     const auto& paragraph = GetParagraph();
     return GetItems(paragraph.ItemStart, paragraph.ItemLength);
 }
 
-std::span<BaseTextLayoutStorage::Item> TextLayoutCalc::ParagraphData::GetItems(const u32 Start, const u32 Length) const
+std::span<TextItem> ParagraphData::GetItems(const u32 Start, const u32 Length) const
 {
     return std::span(m_text_layout->m_items.data() + Start, Length);
 }
 
-LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const BaseTextLayoutStorage::Item& item) const
+CtxNodeRef ParagraphData::GetScope(const TextItem& item) const
 {
     const auto root_scope = m_text_layout->m_node;
     return
         item.Scope == -1
             ? root_scope
-            : LayoutCalc::CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
+            : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
 }
 
-LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const BaseTextLayoutStorage::ScopeRange& range) const
+CtxNodeRef ParagraphData::GetScope(const TextScopeRange& range) const
 {
     const auto root_scope = m_text_layout->m_node;
     return
         range.Scope == -1
             ? root_scope
-            : LayoutCalc::CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.Scope]);
+            : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.Scope]);
 }
 
-LayoutCalc::CtxNodeRef TextLayoutCalc::ParagraphData::GetScope(const SameStyleRange& range) const
+CtxNodeRef ParagraphData::GetScope(const SameStyleRange& range) const
 {
     const auto root_scope = m_text_layout->m_node;
     return
         range.FirstScope == -1
             ? root_scope
-            : LayoutCalc::CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.FirstScope]);
+            : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.FirstScope]);
 }
 
-void TextLayout::ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node)
+void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
 {
     m_node = node;
-    m_paragraph_datas.resize(m_paragraphs.size(), TextLayoutCalc::ParagraphData(this));
+    m_paragraph_datas.resize(m_paragraphs.size(), ParagraphData(this));
     for (int i = 0; i < m_paragraphs.size(); ++i)
     {
         auto& paragraph = m_paragraphs[i];
-        if (paragraph.Type == ParagraphType::Block) continue;
+        if (paragraph.Type == TextParagraphType::Block) continue;
         auto& data = m_paragraph_datas[i];
         data.m_index = i;
         data.m_layout = layout;
@@ -118,7 +119,7 @@ void TextLayout::ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node)
     m_node = {};
 }
 
-void TextLayoutCalc::ParagraphData::AnalyzeFonts()
+void ParagraphData::AnalyzeFonts()
 {
     const auto& system_font_fallback = m_layout->m_system_font_fallback;
 
@@ -128,14 +129,14 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
     u32 logic_text_start = 0;
     u32 logic_text_length = 0;
     IDWriteFontFallback1* cur_fall_back{};
-    auto cur_item_type = BaseTextLayoutStorage::ItemType::Block;
+    auto cur_item_type = TextItemType::Block;
     auto cur_font_weight = FontWeight::Normal;
     auto cur_font_width = 1.0f;
     auto cur_font_italic = false;
     auto cur_font_oblique = 1.0f;
     const auto add_range = [&]
     {
-        if (cur_item_type == BaseTextLayoutStorage::ItemType::InlineBlock)
+        if (cur_item_type == TextItemType::InlineBlock)
         {
             m_font_ranges.push_back(FontRange{
                 .Start = logic_text_start,
@@ -238,7 +239,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
             style.FontFallback
                 ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
                 : system_font_fallback.get();
-        if (item.Type == BaseTextLayoutStorage::ItemType::Text)
+        if (item.Type == TextItemType::Text)
         {
             const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
             if (
@@ -296,7 +297,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeFonts()
     if (logic_text_length != 0) add_range();
 }
 
-void TextLayoutCalc::ParagraphData::AnalyzeStyles()
+void ParagraphData::AnalyzeStyles()
 {
     const auto& paragraph = GetParagraph();
     const auto& scopes = paragraph.ScopeRanges;
@@ -338,7 +339,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeStyles()
     if (logic_text_length != 0) add_range();
 }
 
-void TextLayoutCalc::ParagraphData::CollectRuns()
+void ParagraphData::CollectRuns()
 {
     COPLT_DEBUG_ASSERT(
         !m_script_ranges.empty() && !m_bidi_ranges.empty() && !m_font_ranges.empty() && !m_same_style_ranges.empty()
@@ -395,7 +396,7 @@ void TextLayoutCalc::ParagraphData::CollectRuns()
     }
 }
 
-void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
+void ParagraphData::AnalyzeGlyphs()
 {
     std::vector<u16> cluster_map;
     std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_props;
@@ -542,7 +543,7 @@ void TextLayoutCalc::ParagraphData::AnalyzeGlyphs()
     }
 }
 
-void TextLayoutCalc::ParagraphData::CalcSingleLineSize()
+void ParagraphData::CalcSingleLineSize()
 {
     for (auto& run : m_runs)
     {
@@ -569,12 +570,12 @@ void TextLayoutCalc::ParagraphData::CalcSingleLineSize()
     }
 }
 
-TextLayoutCalc::TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)
+TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)
     : m_paragraph_data(paragraph_data)
 {
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSource::QueryInterface(const IID& riid, void** ppvObject)
+HRESULT TextAnalysisSource::QueryInterface(const IID& riid, void** ppvObject)
 {
     if (!ppvObject)
         return E_INVALIDARG;
@@ -601,17 +602,17 @@ HRESULT TextLayoutCalc::TextAnalysisSource::QueryInterface(const IID& riid, void
     return S_OK;
 }
 
-ULONG TextLayoutCalc::TextAnalysisSource::AddRef()
+ULONG TextAnalysisSource::AddRef()
 {
     return Impl_AddRef();
 }
 
-ULONG TextLayoutCalc::TextAnalysisSource::Release()
+ULONG TextAnalysisSource::Release()
 {
     return Impl_Release();
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSource::GetTextAtPosition(
+HRESULT TextAnalysisSource::GetTextAtPosition(
     UINT32 textPosition, const WCHAR** textString, UINT32* textLength
 )
 {
@@ -633,7 +634,7 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetTextAtPosition(
     return S_OK;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSource::GetTextBeforePosition(
+HRESULT TextAnalysisSource::GetTextBeforePosition(
     UINT32 textPosition, const WCHAR** textString, UINT32* textLength
 )
 {
@@ -666,19 +667,19 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetTextBeforePosition(
     return S_OK;
 }
 
-DWRITE_READING_DIRECTION TextLayoutCalc::TextAnalysisSource::GetParagraphReadingDirection()
+DWRITE_READING_DIRECTION TextAnalysisSource::GetParagraphReadingDirection()
 {
     return DWRITE_READING_DIRECTION_LEFT_TO_RIGHT;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSource::GetLocaleName(
+HRESULT TextAnalysisSource::GetLocaleName(
     UINT32 textPosition, UINT32* textLength, const WCHAR** localeName
 )
 {
     const auto& paragraph = m_paragraph_data->GetParagraph();
     const auto scope_range_index = Algorithm::BinarySearch(
         paragraph.ScopeRanges.data(), paragraph.ScopeRanges.size(), textPosition,
-        [](const TextLayout::ScopeRange& item, const u32 pos)
+        [](const TextScopeRange& item, const u32 pos)
         {
             if (pos < item.LogicTextStart) return 1;
             if (pos >= item.LogicTextStart + item.LogicTextLength) return -1;
@@ -705,7 +706,7 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetLocaleName(
                 *localeName = nullptr;
                 return S_OK;
             }
-            if (paragraph.Type == TextLayout::ParagraphType::Block)
+            if (paragraph.Type == TextParagraphType::Block)
             {
                 *textLength = 1;
                 *localeName = nullptr;
@@ -737,14 +738,14 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetLocaleName(
     return S_OK;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSource::GetNumberSubstitution(
+HRESULT TextAnalysisSource::GetNumberSubstitution(
     UINT32 textPosition, UINT32* textLength, IDWriteNumberSubstitution** numberSubstitution
 )
 {
     return E_NOTIMPL;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSource::GetVerticalGlyphOrientation(
+HRESULT TextAnalysisSource::GetVerticalGlyphOrientation(
     UINT32 textPosition, UINT32* textLength,
     DWRITE_VERTICAL_GLYPH_ORIENTATION* glyphOrientation, UINT8* bidiLevel
 )
@@ -752,12 +753,12 @@ HRESULT TextLayoutCalc::TextAnalysisSource::GetVerticalGlyphOrientation(
     return E_NOTIMPL;
 }
 
-TextLayoutCalc::TextAnalysisSink::TextAnalysisSink(ParagraphData* paragraph_data)
+TextAnalysisSink::TextAnalysisSink(ParagraphData* paragraph_data)
     : m_paragraph_data(paragraph_data)
 {
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSink::QueryInterface(const IID& riid, void** ppvObject)
+HRESULT TextAnalysisSink::QueryInterface(const IID& riid, void** ppvObject)
 {
     if (!ppvObject)
         return E_INVALIDARG;
@@ -784,17 +785,17 @@ HRESULT TextLayoutCalc::TextAnalysisSink::QueryInterface(const IID& riid, void**
     return S_OK;
 }
 
-ULONG TextLayoutCalc::TextAnalysisSink::AddRef()
+ULONG TextAnalysisSink::AddRef()
 {
     return Impl_AddRef();
 }
 
-ULONG TextLayoutCalc::TextAnalysisSink::Release()
+ULONG TextAnalysisSink::Release()
 {
     return Impl_Release();
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSink::SetScriptAnalysis(
+HRESULT TextAnalysisSink::SetScriptAnalysis(
     UINT32 textPosition, UINT32 textLength, const DWRITE_SCRIPT_ANALYSIS* scriptAnalysis
 )
 {
@@ -819,7 +820,7 @@ HRESULT TextLayoutCalc::TextAnalysisSink::SetScriptAnalysis(
     return S_OK;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSink::SetLineBreakpoints(
+HRESULT TextAnalysisSink::SetLineBreakpoints(
     UINT32 textPosition, UINT32 textLength, const DWRITE_LINE_BREAKPOINT* lineBreakpoints
 )
 {
@@ -828,7 +829,7 @@ HRESULT TextLayoutCalc::TextAnalysisSink::SetLineBreakpoints(
     return S_OK;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSink::SetBidiLevel(
+HRESULT TextAnalysisSink::SetBidiLevel(
     UINT32 textPosition, UINT32 textLength, UINT8 explicitLevel, UINT8 resolvedLevel
 )
 {
@@ -841,17 +842,28 @@ HRESULT TextLayoutCalc::TextAnalysisSink::SetBidiLevel(
     return S_OK;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSink::SetNumberSubstitution(
+HRESULT TextAnalysisSink::SetNumberSubstitution(
     UINT32 textPosition, UINT32 textLength, IDWriteNumberSubstitution* numberSubstitution
 )
 {
     return E_NOTIMPL;
 }
 
-HRESULT TextLayoutCalc::TextAnalysisSink::SetGlyphOrientation(
+HRESULT TextAnalysisSink::SetGlyphOrientation(
     UINT32 textPosition, UINT32 textLength, DWRITE_GLYPH_ORIENTATION_ANGLE glyphOrientationAngle,
     UINT8 adjustedBidiLevel, BOOL isSideways, BOOL isRightToLeft
 )
 {
     return E_NOTIMPL;
+}
+
+void Texts::coplt_ui_layout_text_get_paragraphs(
+    ITextLayout* layout, TextParagraph** out_paragraphs, u32* out_count, u32* out_stride
+)
+{
+    const auto l = static_cast<TextLayout*>(layout);
+    auto& paragraphs = l->m_paragraphs;
+    *out_paragraphs = paragraphs.data();
+    *out_count = paragraphs.size();
+    *out_stride = sizeof(TextParagraphImpl);
 }

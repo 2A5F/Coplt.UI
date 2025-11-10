@@ -74,7 +74,7 @@ HResult LibUi::Impl_CreateLayout(ILayout** layout)
 {
     return feb([&]
     {
-        auto out = Layout::Create(CloneRc(this));
+        auto out = LayoutCalc::CreateLayout(CloneRc(this));
         *layout = out.leak();
         return HResultE::Ok;
     });

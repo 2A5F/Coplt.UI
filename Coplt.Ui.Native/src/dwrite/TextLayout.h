@@ -10,174 +10,172 @@
 #include "../TextLayout.h"
 #include "../Layout.h"
 
-namespace Coplt
+namespace Coplt::LayoutCalc
 {
-    namespace TextLayoutCalc
-    {
-        struct ParagraphData;
-    }
-
     struct Layout;
+}
+
+namespace Coplt::LayoutCalc::Texts
+{
+    struct ParagraphData;
 
     struct TextLayout final : BaseTextLayout<TextLayout>
     {
-        LayoutCalc::CtxNodeRef m_node;
-        std::vector<TextLayoutCalc::ParagraphData> m_paragraph_datas{};
+        CtxNodeRef m_node;
+        std::vector<ParagraphData> m_paragraph_datas{};
 
-        void ReBuild(Layout* layout, LayoutCalc::CtxNodeRef node);
+        void ReBuild(Layout* layout, CtxNodeRef node);
 
         COPLT_IMPL_START
         COPLT_IMPL_END
     };
 
-    namespace TextLayoutCalc
+
+    // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
+    struct TextAnalysisSource final : IDWriteTextAnalysisSource1, RefCount<TextAnalysisSource>
     {
-        // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
-        struct TextAnalysisSource final : IDWriteTextAnalysisSource1, RefCount<TextAnalysisSource>
-        {
-            ParagraphData* m_paragraph_data{};
+        ParagraphData* m_paragraph_data{};
 
-            explicit TextAnalysisSource(ParagraphData* paragraph_data);
+        explicit TextAnalysisSource(ParagraphData* paragraph_data);
 
-            HRESULT QueryInterface(const IID& riid, void** ppvObject) override;
-            ULONG AddRef() override;
-            ULONG Release() override;
-            HRESULT GetTextAtPosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength) override;
-            HRESULT GetTextBeforePosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength) override;
-            DWRITE_READING_DIRECTION GetParagraphReadingDirection() override;
-            HRESULT GetLocaleName(UINT32 textPosition, UINT32* textLength, const WCHAR** localeName) override;
-            HRESULT GetNumberSubstitution(
-                UINT32 textPosition, UINT32* textLength, IDWriteNumberSubstitution** numberSubstitution
-            ) override;
-            HRESULT GetVerticalGlyphOrientation(
-                UINT32 textPosition, UINT32* textLength,
-                DWRITE_VERTICAL_GLYPH_ORIENTATION* glyphOrientation, UINT8* bidiLevel
-            ) override;
-        };
+        HRESULT QueryInterface(const IID& riid, void** ppvObject) override;
+        ULONG AddRef() override;
+        ULONG Release() override;
+        HRESULT GetTextAtPosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength) override;
+        HRESULT GetTextBeforePosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength) override;
+        DWRITE_READING_DIRECTION GetParagraphReadingDirection() override;
+        HRESULT GetLocaleName(UINT32 textPosition, UINT32* textLength, const WCHAR** localeName) override;
+        HRESULT GetNumberSubstitution(
+            UINT32 textPosition, UINT32* textLength, IDWriteNumberSubstitution** numberSubstitution
+        ) override;
+        HRESULT GetVerticalGlyphOrientation(
+            UINT32 textPosition, UINT32* textLength,
+            DWRITE_VERTICAL_GLYPH_ORIENTATION* glyphOrientation, UINT8* bidiLevel
+        ) override;
+    };
 
-        // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
-        struct TextAnalysisSink final : IDWriteTextAnalysisSink1, RefCount<TextAnalysisSink>
-        {
-            ParagraphData* m_paragraph_data{};
+    // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
+    struct TextAnalysisSink final : IDWriteTextAnalysisSink1, RefCount<TextAnalysisSink>
+    {
+        ParagraphData* m_paragraph_data{};
 
-            explicit TextAnalysisSink(ParagraphData* paragraph_data);
+        explicit TextAnalysisSink(ParagraphData* paragraph_data);
 
-            HRESULT QueryInterface(const IID& riid, void** ppvObject) override;
-            ULONG AddRef() override;
-            ULONG Release() override;
-            HRESULT SetScriptAnalysis(
-                UINT32 textPosition, UINT32 textLength, const DWRITE_SCRIPT_ANALYSIS* scriptAnalysis
-            ) override;
-            HRESULT SetLineBreakpoints(
-                UINT32 textPosition, UINT32 textLength, const DWRITE_LINE_BREAKPOINT* lineBreakpoints
-            ) override;
-            HRESULT SetBidiLevel(
-                UINT32 textPosition, UINT32 textLength, UINT8 explicitLevel, UINT8 resolvedLevel
-            ) override;
-            HRESULT SetNumberSubstitution(
-                UINT32 textPosition, UINT32 textLength, IDWriteNumberSubstitution* numberSubstitution
-            ) override;
-            HRESULT SetGlyphOrientation(
-                UINT32 textPosition, UINT32 textLength, DWRITE_GLYPH_ORIENTATION_ANGLE glyphOrientationAngle,
-                UINT8 adjustedBidiLevel, BOOL isSideways, BOOL isRightToLeft
-            ) override;
-        };
+        HRESULT QueryInterface(const IID& riid, void** ppvObject) override;
+        ULONG AddRef() override;
+        ULONG Release() override;
+        HRESULT SetScriptAnalysis(
+            UINT32 textPosition, UINT32 textLength, const DWRITE_SCRIPT_ANALYSIS* scriptAnalysis
+        ) override;
+        HRESULT SetLineBreakpoints(
+            UINT32 textPosition, UINT32 textLength, const DWRITE_LINE_BREAKPOINT* lineBreakpoints
+        ) override;
+        HRESULT SetBidiLevel(
+            UINT32 textPosition, UINT32 textLength, UINT8 explicitLevel, UINT8 resolvedLevel
+        ) override;
+        HRESULT SetNumberSubstitution(
+            UINT32 textPosition, UINT32 textLength, IDWriteNumberSubstitution* numberSubstitution
+        ) override;
+        HRESULT SetGlyphOrientation(
+            UINT32 textPosition, UINT32 textLength, DWRITE_GLYPH_ORIENTATION_ANGLE glyphOrientationAngle,
+            UINT8 adjustedBidiLevel, BOOL isSideways, BOOL isRightToLeft
+        ) override;
+    };
 
-        struct ScriptRange
-        {
-            u32 Start;
-            u32 Length;
-            DWRITE_SCRIPT_ANALYSIS Analysis;
-            UScriptCode Script;
-            const char16* Locale;
-        };
+    struct ScriptRange
+    {
+        u32 Start;
+        u32 Length;
+        DWRITE_SCRIPT_ANALYSIS Analysis;
+        UScriptCode Script;
+        const char16* Locale;
+    };
 
-        struct BidiRange
-        {
-            u32 Start;
-            u32 Length;
-            u8 ExplicitLevel;
-            u8 ResolvedLevel;
-        };
+    struct BidiRange
+    {
+        u32 Start;
+        u32 Length;
+        u8 ExplicitLevel;
+        u8 ResolvedLevel;
+    };
 
-        struct FontRange
-        {
-            u32 Start;
-            u32 Length;
-            Rc<IDWriteFontFace5> Font;
-            f32 Scale;
-            // item range only alive when IsInlineBlock is true
-            u32 ItemStart;
-            u32 ItemLength;
-            bool IsInlineBlock;
-        };
+    struct FontRange
+    {
+        u32 Start;
+        u32 Length;
+        Rc<IDWriteFontFace5> Font;
+        f32 Scale;
+        // item range only alive when IsInlineBlock is true
+        u32 ItemStart;
+        u32 ItemLength;
+        bool IsInlineBlock;
+    };
 
-        struct SameStyleRange
-        {
-            u32 Start;
-            u32 Length;
-            u32 FirstScope;
-        };
+    struct SameStyleRange
+    {
+        u32 Start;
+        u32 Length;
+        u32 FirstScope;
+    };
 
-        struct Run
-        {
-            u32 Start;
-            u32 Length;
-            u32 ScriptRangeIndex;
-            u32 BidiRangeIndex;
-            u32 FontRangeIndex;
-            u32 StyleRangeIndex;
+    struct Run : TextRun
+    {
+        u32 Start;
+        u32 Length;
+        u32 ScriptRangeIndex;
+        u32 BidiRangeIndex;
+        u32 FontRangeIndex;
+        u32 StyleRangeIndex;
 
-            u32 GlyphStartIndex;
-            u32 ActualGlyphCount;
+        u32 GlyphStartIndex;
+        u32 ActualGlyphCount;
 
-            f32 SingleLineWidth{};
-            f32 SingleLineHeight{};
-        };
+        f32 SingleLineWidth{};
+        f32 SingleLineHeight{};
+    };
 
-        struct ParagraphData
-        {
-            Layout* m_layout{};
-            TextLayout* m_text_layout{};
+    struct ParagraphData
+    {
+        Layout* m_layout{};
+        TextLayout* m_text_layout{};
 
-            explicit ParagraphData(TextLayout* text_layout);
+        explicit ParagraphData(TextLayout* text_layout);
 
-            u32 m_index{};
+        u32 m_index{};
 
-            Rc<TextAnalysisSource> m_src{};
-            Rc<TextAnalysisSink> m_sink{};
+        Rc<TextAnalysisSource> m_src{};
+        Rc<TextAnalysisSink> m_sink{};
 
-            std::vector<ScriptRange> m_script_ranges{};
-            std::vector<BidiRange> m_bidi_ranges{};
-            std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
-            std::vector<FontRange> m_font_ranges{};
-            std::vector<SameStyleRange> m_same_style_ranges{};
-            std::vector<Run> m_runs{};
+        std::vector<ScriptRange> m_script_ranges{};
+        std::vector<BidiRange> m_bidi_ranges{};
+        std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
+        std::vector<FontRange> m_font_ranges{};
+        std::vector<SameStyleRange> m_same_style_ranges{};
+        std::vector<Run> m_runs{};
 
-            std::vector<u16> m_cluster_map{};
-            std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> m_text_props{};
-            std::vector<u16> m_glyph_indices{};
-            std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> m_glyph_props{};
-            std::vector<f32> m_glyph_advances{};
-            std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets{};
+        std::vector<u16> m_cluster_map{};
+        std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> m_text_props{};
+        std::vector<u16> m_glyph_indices{};
+        std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> m_glyph_props{};
+        std::vector<f32> m_glyph_advances{};
+        std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets{};
 
-            void ReBuild();
+        void ReBuild();
 
-            std::vector<BaseTextLayoutStorage::Paragraph>& GetTextLayoutParagraphs() const;
-            BaseTextLayoutStorage::Paragraph& GetParagraph() const;
-            std::span<BaseTextLayoutStorage::Item> GetItems() const;
-            std::span<BaseTextLayoutStorage::Item> GetItems(u32 Start, u32 Length) const;
+        std::vector<TextParagraphImpl>& GetTextLayoutParagraphs() const;
+       TextParagraphImpl& GetParagraph() const;
+        std::span<TextItem> GetItems() const;
+        std::span<TextItem> GetItems(u32 Start, u32 Length) const;
 
-            LayoutCalc::CtxNodeRef GetScope(const BaseTextLayoutStorage::Item& item) const;
-            LayoutCalc::CtxNodeRef GetScope(const BaseTextLayoutStorage::ScopeRange& range) const;
-            LayoutCalc::CtxNodeRef GetScope(const SameStyleRange& range) const;
+        CtxNodeRef GetScope(const TextItem& item) const;
+        CtxNodeRef GetScope(const TextScopeRange& range) const;
+        CtxNodeRef GetScope(const SameStyleRange& range) const;
 
-            void AnalyzeFonts();
-            void AnalyzeStyles();
-            void CollectRuns();
-            void AnalyzeGlyphs();
+        void AnalyzeFonts();
+        void AnalyzeStyles();
+        void CollectRuns();
+        void AnalyzeGlyphs();
 
-            void CalcSingleLineSize();
-        };
-    }
+        void CalcSingleLineSize();
+    };
 } // namespace Coplt

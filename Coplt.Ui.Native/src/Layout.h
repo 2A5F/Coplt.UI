@@ -9,6 +9,10 @@
 
 namespace Coplt::LayoutCalc
 {
+    struct Layout;
+
+    Rc<Layout> CreateLayout(Rc<LibUi> lib);
+
     COPLT_FORCE_INLINE
     ChildsData* GetChildsData(NLayoutContext* ctx, u32 index)
     {
@@ -81,7 +85,7 @@ namespace Coplt::LayoutCalc
     void Phase0(CtxNodeRef node);
 
     // rebuild text layout
-    template <class TextLayout> requires std::is_base_of_v<BaseTextLayout<TextLayout>, TextLayout>
+    template <class TextLayout> requires std::is_base_of_v<Texts::BaseTextLayout<TextLayout>, TextLayout>
     void Phase1(
         const CtxNodeRef node,
         const NodeId* parent_id = nullptr,
@@ -221,42 +225,42 @@ namespace Coplt::LayoutCalc
         PerformHiddenLayout,
     };
 
+    struct LayoutInputs
+    {
+        f32 KnownWidth;
+        f32 KnownHeight;
+        f32 ParentWidth;
+        f32 ParentHeight;
+        f32 AvailableSpaceWidthValue;
+        f32 AvailableSpaceHeightValue;
+        bool HasKnownWidth;
+        bool HasKnownHeight;
+        bool HasParentWidth;
+        bool HasParentHeight;
+        AvailableSpaceType AvailableSpaceWidth;
+        AvailableSpaceType AvailableSpaceHeight;
+        LayoutRunMode RunMode;
+    };
+
+    struct LayoutOutputs
+    {
+        f32 Width;
+        f32 Height;
+        f32 ContentWidth;
+        f32 ContentHeight;
+        f32 FirstBaselinesX;
+        f32 FirstBaselinesY;
+        f32 TopMarginPositive;
+        f32 TopMarginNegative;
+        f32 BottomMarginPositive;
+        f32 BottomMarginNegative;
+        bool HasFirstBaselinesX;
+        bool HasFirstBaselinesT;
+        bool MarginsCanCollapseThrough;
+    };
+
     namespace Texts
     {
-        struct LayoutInputs
-        {
-            f32 KnownWidth;
-            f32 KnownHeight;
-            f32 ParentWidth;
-            f32 ParentHeight;
-            f32 AvailableSpaceWidthValue;
-            f32 AvailableSpaceHeightValue;
-            bool HasKnownWidth;
-            bool HasKnownHeight;
-            bool HasParentWidth;
-            bool HasParentHeight;
-            AvailableSpaceType AvailableSpaceWidth;
-            AvailableSpaceType AvailableSpaceHeight;
-            LayoutRunMode RunMode;
-        };
-
-        struct LayoutOutputs
-        {
-            f32 Width;
-            f32 Height;
-            f32 ContentWidth;
-            f32 ContentHeight;
-            f32 FirstBaselinesX;
-            f32 FirstBaselinesY;
-            f32 TopMarginPositive;
-            f32 TopMarginNegative;
-            f32 BottomMarginPositive;
-            f32 BottomMarginNegative;
-            bool HasFirstBaselinesX;
-            bool HasFirstBaselinesT;
-            bool MarginsCanCollapseThrough;
-        };
-
         extern "C" HResultE coplt_ui_layout_touch_text(
             void* self, NLayoutContext* ctx, const NodeId& node
         );

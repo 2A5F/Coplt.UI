@@ -5,7 +5,7 @@
 
 #include "Layout.h"
 
-using namespace Coplt;
+using namespace Coplt::LayoutCalc::Texts;
 
 BaseTextLayoutStorage::BaseTextLayoutStorage()
 {
@@ -23,17 +23,17 @@ void BaseTextLayoutStorage::ClearCache()
 void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 {
     if (Length == 0) return;
-    if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
-        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, ParagraphType::Inline});
+    if (m_paragraphs.empty() || m_paragraphs.back().Type != TextParagraphType::Inline)
+        m_paragraphs.push_back(TextParagraphImpl{{TextParagraphType::Inline}, {}, m_items.size(), 0, 0});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
-    m_items.push_back(Item{
+    m_items.push_back(TextItem{
         .LogicTextStart = paragraph.LogicTextLength,
         .LogicTextLength = Length,
         .Scope = scope,
         .TextIndex = Index,
         .NodeOrParent = Parent,
-        .Type = ItemType::Text,
+        .Type = TextItemType::Text,
     });
     paragraph.ItemLength++;
     paragraph.LogicTextLength += Length;
@@ -41,16 +41,16 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 
 void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 {
-    if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Inline)
-        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, ParagraphType::Inline});
+    if (m_paragraphs.empty() || m_paragraphs.back().Type != TextParagraphType::Inline)
+        m_paragraphs.push_back(TextParagraphImpl{{TextParagraphType::Inline}, {}, m_items.size(), 0, 0});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
-    m_items.push_back(Item{
+    m_items.push_back(TextItem{
         .LogicTextStart = paragraph.LogicTextLength,
         .LogicTextLength = 1,
         .Scope = scope,
         .NodeOrParent = Node,
-        .Type = ItemType::InlineBlock,
+        .Type = TextItemType::InlineBlock,
     });
     paragraph.ItemLength++;
     paragraph.LogicTextLength += 1;
@@ -58,16 +58,16 @@ void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 
 void BaseTextLayoutStorage::AddBlock(const NodeId Node)
 {
-    if (m_paragraphs.empty() || m_paragraphs.back().Type != ParagraphType::Block)
-        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, ParagraphType::Block});
+    if (m_paragraphs.empty() || m_paragraphs.back().Type != TextParagraphType::Block)
+        m_paragraphs.push_back(TextParagraphImpl{{TextParagraphType::Block}, {}, m_items.size(), 0, 0});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
-    m_items.push_back(Item{
+    m_items.push_back(TextItem{
         .LogicTextStart = 0,
         .LogicTextLength = 1,
         .Scope = scope,
         .NodeOrParent = Node,
-        .Type = ItemType::Block,
+        .Type = TextItemType::Block,
     });
     paragraph.ItemLength++;
     paragraph.LogicTextLength += 1;
@@ -94,7 +94,7 @@ void BaseTextLayoutStorage::FinishBuild()
         if (items.size() == 1)
         {
             const auto& item = items.front();
-            paragraph.ScopeRanges.push_back(ScopeRange{
+            paragraph.ScopeRanges.push_back(TextScopeRange{
                 .ItemStart = paragraph.ItemStart,
                 .ItemLength = 1,
                 .Scope = item.Scope,
@@ -118,7 +118,7 @@ void BaseTextLayoutStorage::FinishBuild()
                 if (i != 0)
                 {
                     COPLT_DEBUG_ASSERT(scope.has_value());
-                    paragraph.ScopeRanges.push_back(ScopeRange{
+                    paragraph.ScopeRanges.push_back(TextScopeRange{
                         .ItemStart = paragraph.ItemStart + last_item_index,
                         .ItemLength = i - last_item_index,
                         .Scope = scope.value(),
@@ -135,7 +135,7 @@ void BaseTextLayoutStorage::FinishBuild()
         if (last_item_index < items.size())
         {
             COPLT_DEBUG_ASSERT(scope.has_value());
-            paragraph.ScopeRanges.push_back(ScopeRange{
+            paragraph.ScopeRanges.push_back(TextScopeRange{
                 .ItemStart = paragraph.ItemStart + last_item_index,
                 .ItemLength = static_cast<u32>(items.size()) - last_item_index,
                 .Scope = scope.value(),
@@ -149,11 +149,11 @@ void BaseTextLayoutStorage::FinishBuild()
 i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) const
 {
     const auto& paragraph = m_paragraphs[Paragraph];
-    if (paragraph.Type == ParagraphType::Block) return -1;
+    if (paragraph.Type == TextParagraphType::Block) return -1;
     if (Position >= paragraph.LogicTextLength) return -1;
     const auto index = Algorithm::BinarySearch(
         m_items.data(), static_cast<i32>(paragraph.ItemStart), static_cast<i32>(paragraph.ItemLength), Position,
-        [](const Item& item, const u32 pos)
+        [](const TextItem& item, const u32 pos)
         {
             if (pos < item.LogicTextStart) return 1;
             if (pos >= item.LogicTextStart + item.LogicTextLength) return -1;
@@ -163,18 +163,18 @@ i32 BaseTextLayoutStorage::SearchItem(const u32 Paragraph, const u32 Position) c
     return index;
 }
 
-const char16* Coplt::GetText(NLayoutContext* ctx, const BaseTextLayoutStorage::Item* item)
+const char16* LayoutCalc::Texts::GetText(NLayoutContext* ctx, const TextItem* item)
 {
     switch (item->Type)
     {
-    case BaseTextLayoutStorage::ItemType::Text:
+    case TextItemType::Text:
         {
-            const auto node = LayoutCalc::CtxNodeRef(ctx, item->NodeOrParent);
+            const auto node = CtxNodeRef(ctx, item->NodeOrParent);
             const auto text = node.GetText(item->TextIndex);
             return text.m_str;
         }
-    case BaseTextLayoutStorage::ItemType::InlineBlock:
-    case BaseTextLayoutStorage::ItemType::Block:
+    case TextItemType::InlineBlock:
+    case TextItemType::Block:
         return COPLT_STR16("￼");
     }
     return nullptr;

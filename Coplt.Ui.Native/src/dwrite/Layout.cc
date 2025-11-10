@@ -7,7 +7,7 @@
 #include "Error.h"
 #include "TextLayout.h"
 
-using namespace Coplt;
+using namespace Coplt::LayoutCalc;
 
 extern "C" int32_t coplt_ui_layout_calc(Layout* self, NLayoutContext* ctx);
 
@@ -18,7 +18,7 @@ Layout::Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& text_analyzer, Rc<IDWrit
 {
 }
 
-Rc<Layout> Layout::Create(Rc<LibUi> lib)
+Rc<Layout> LayoutCalc::CreateLayout(Rc<LibUi> lib)
 {
     Rc<IDWriteTextAnalyzer> analyzer;
     if (const auto hr = lib->m_backend->m_dw_factory->CreateTextAnalyzer(analyzer.put()); FAILED(hr))

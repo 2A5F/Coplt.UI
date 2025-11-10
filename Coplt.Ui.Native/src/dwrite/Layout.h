@@ -8,7 +8,10 @@
 namespace Coplt
 {
     struct LibUi;
+}
 
+namespace Coplt::LayoutCalc
+{
     struct Layout final : ComImpl<Layout, ILayout>
     {
         Rc<LibUi> m_lib;
@@ -16,8 +19,6 @@ namespace Coplt
         Rc<IDWriteFontFallback1> m_system_font_fallback;
 
         explicit Layout(Rc<LibUi> lib, Rc<IDWriteTextAnalyzer1>& analyzer, Rc<IDWriteFontFallback1>& font_fallback);
-
-        static Rc<Layout> Create(Rc<LibUi> lib);
 
         COPLT_IMPL_START
 
