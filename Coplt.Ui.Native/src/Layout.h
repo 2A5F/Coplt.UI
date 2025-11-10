@@ -218,47 +218,6 @@ namespace Coplt::LayoutCalc
         }
     }
 
-    enum class LayoutRunMode : u8
-    {
-        PerformLayout,
-        ComputeSize,
-        PerformHiddenLayout,
-    };
-
-    struct LayoutInputs
-    {
-        f32 KnownWidth;
-        f32 KnownHeight;
-        f32 ParentWidth;
-        f32 ParentHeight;
-        f32 AvailableSpaceWidthValue;
-        f32 AvailableSpaceHeightValue;
-        bool HasKnownWidth;
-        bool HasKnownHeight;
-        bool HasParentWidth;
-        bool HasParentHeight;
-        AvailableSpaceType AvailableSpaceWidth;
-        AvailableSpaceType AvailableSpaceHeight;
-        LayoutRunMode RunMode;
-    };
-
-    struct LayoutOutputs
-    {
-        f32 Width;
-        f32 Height;
-        f32 ContentWidth;
-        f32 ContentHeight;
-        f32 FirstBaselinesX;
-        f32 FirstBaselinesY;
-        f32 TopMarginPositive;
-        f32 TopMarginNegative;
-        f32 BottomMarginPositive;
-        f32 BottomMarginNegative;
-        bool HasFirstBaselinesX;
-        bool HasFirstBaselinesT;
-        bool MarginsCanCollapseThrough;
-    };
-
     namespace Texts
     {
         extern "C" HResultE coplt_ui_layout_touch_text(

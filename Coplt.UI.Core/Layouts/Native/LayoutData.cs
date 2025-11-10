@@ -87,15 +87,21 @@ internal struct LayoutCache
     public LayoutCacheEntrySize MeasureEntries6;
     public LayoutCacheEntrySize MeasureEntries7;
     public LayoutCacheEntrySize MeasureEntries8;
-    public bool HasFinalLayoutEntry;
-    public bool HasMeasureEntries0;
-    public bool HasMeasureEntries1;
-    public bool HasMeasureEntries2;
-    public bool HasMeasureEntries3;
-    public bool HasMeasureEntries4;
-    public bool HasMeasureEntries5;
-    public bool HasMeasureEntries6;
-    public bool HasMeasureEntries7;
-    public bool HasMeasureEntries8;
-    public bool IsEmpty;
+    public LayoutCacheFlags Flags;
+}
+
+[Flags]
+public enum LayoutCacheFlags : ushort
+{
+    Empty = 0,
+    Final = 1 << 0,
+    Measure0 = 1 << 1,
+    Measure1 = 1 << 2,
+    Measure2 = 1 << 3,
+    Measure3 = 1 << 4,
+    Measure4 = 1 << 5,
+    Measure5 = 1 << 6,
+    Measure6 = 1 << 7,
+    Measure7 = 1 << 8,
+    Measure8 = 1 << 9,
 }

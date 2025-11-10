@@ -4,26 +4,7 @@
 #include <span>
 
 #include "Com.h"
-
-namespace Coplt::LayoutCalc
-{
-    enum class TextParagraphType
-    {
-        Inline,
-        Block,
-    };
-
-    // opaque
-    struct TextParagraph
-    {
-        TextParagraphType Type;
-    };
-
-    // opaque
-    struct TextRun
-    {
-    };
-}
+#include "LayoutCommon.h"
 
 namespace Coplt::LayoutCalc::Texts
 {
@@ -53,17 +34,24 @@ namespace Coplt::LayoutCalc::Texts
         u32 LogicTextLength;
     };
 
-    struct TextParagraphImpl : TextParagraph
+    enum class TextParagraphType : u8
+    {
+        Inline,
+        Block,
+    };
+
+    struct Paragraph
     {
         std::vector<TextScopeRange> ScopeRanges{};
         u32 ItemStart;
         u32 ItemLength;
         u32 LogicTextLength;
+        TextParagraphType Type;
     };
 
     struct BaseTextLayoutStorage
     {
-        std::vector<TextParagraphImpl> m_paragraphs{};
+        std::vector<Paragraph> m_paragraphs{};
         std::vector<TextItem> m_items{};
         std::vector<NodeId> m_scopes{};
         std::vector<u32> m_scope_stack{};
@@ -89,7 +77,7 @@ namespace Coplt::LayoutCalc::Texts
 
     const char16* GetText(NLayoutContext* ctx, const TextItem* item);
 
-    extern "C" void coplt_ui_layout_text_get_paragraphs(
-        ITextLayout* layout, TextParagraph** out_paragraphs, u32* out_count, u32* out_stride
+    extern "C" HResultE coplt_ui_layout_text_compute(
+        ITextLayout* layout,  const LayoutInputs* inputs, LayoutOutput* outputs
     );
 }

@@ -1,30 +1,33 @@
 use std::{
     hash::Hash,
     hint::unreachable_unchecked,
+    mem::MaybeUninit,
     ops::{Deref, DerefMut},
 };
 
 use cocom::{HResult, HResultE};
 use concat_idents::concat_idents;
 use taffy::{
-    BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CheapCloneStr, CoreStyle,
-    FlexboxContainerStyle, FlexboxItemStyle, GenericRepetition, GridContainerStyle, GridItemStyle,
-    LayoutBlockContainer, LayoutFlexboxContainer, LayoutGridContainer, LayoutOutput,
-    LayoutPartialTree, Point, ResolveOrZero, RoundTree, Size, TraversePartialTree, TraverseTree,
-    prelude::TaffyZero,
+    BlockContainerStyle, BlockItemStyle, Cache, CacheTree, CheapCloneStr, CollapsibleMarginSet,
+    CoreStyle, FlexboxContainerStyle, FlexboxItemStyle, GenericRepetition, GridContainerStyle,
+    GridItemStyle, LayoutBlockContainer, LayoutFlexboxContainer, LayoutGridContainer, LayoutInput,
+    LayoutOutput, LayoutPartialTree, Point, ResolveOrZero, RoundTree, RunMode, Size,
+    TraversePartialTree, TraverseTree, prelude::TaffyZero,
 };
 
 use crate::{
-    col::{OrderedSet, map::NativeMap, ordered_set},
+    col::{OrderedSet, StrideSlice, map::NativeMap, ordered_set},
     com::{
-        self, ChildsData, CommonData, Container, GridName, GridNameType, ILib, NLayoutContext,
-        NodeId, NodeType, RootData, StyleData,
+        self, ChildsData, CommonData, Container, GridName, GridNameType, ILib, LayoutCache,
+        NLayoutContext, NodeId, NodeType, RootData, StyleData,
     },
+    utils::*,
 };
 
 pub mod inline;
 pub use inline::*;
 
+#[macro_export]
 macro_rules! c_option {
     ( #val ; $self:expr => $name:ident  ) => {
         concat_idents!(has_name = Has, $name {
@@ -50,6 +53,7 @@ macro_rules! c_option {
     };
 }
 
+#[macro_export]
 macro_rules! c_available_space {
     ( $self:ident.$name:ident ) => {
         concat_idents!(value_name = $name, Value {
@@ -393,6 +397,7 @@ impl RoundTree for SubDoc {
 }
 
 impl CacheTree for SubDoc {
+    #[inline(always)]
     fn cache_get(
         &self,
         node_id: taffy::NodeId,
@@ -402,126 +407,10 @@ impl CacheTree for SubDoc {
     ) -> Option<taffy::LayoutOutput> {
         let id = NodeId::from(node_id);
         let data = &self.common_data(id).LayoutCache;
-        match run_mode {
-            taffy::RunMode::PerformLayout => {
-                if !data.HasFinalLayoutEntry {
-                    return None;
-                }
-                let entry_known_dimensions = taffy::Size {
-                    width: c_option!(#val; data.FinalLayoutEntry => KnownDimensionsWidth),
-                    height: c_option!(#val; data.FinalLayoutEntry => KnownDimensionsHeight),
-                };
-                let entry_available_space = taffy::Size {
-                    width: c_available_space!(data.FinalLayoutEntry => AvailableSpaceWidth),
-                    height: c_available_space!(data.FinalLayoutEntry => AvailableSpaceHeight),
-                };
-                let c = {
-                    let cached_size = taffy::Size {
-                        width: data.FinalLayoutEntry.Content.Width,
-                        height: data.FinalLayoutEntry.Content.Height,
-                    };
-                    (known_dimensions.width == entry_known_dimensions.width
-                        || known_dimensions.width == Some(cached_size.width))
-                        && (known_dimensions.height == entry_known_dimensions.height
-                            || known_dimensions.height == Some(cached_size.height))
-                        && (known_dimensions.width.is_some()
-                            || entry_available_space
-                                .width
-                                .is_roughly_equal(available_space.width))
-                        && (known_dimensions.height.is_some()
-                            || entry_available_space
-                                .height
-                                .is_roughly_equal(available_space.height))
-                };
-                if !c {
-                    return None;
-                }
-                Some(taffy::LayoutOutput {
-                    size: taffy::Size {
-                        width: data.FinalLayoutEntry.Content.Width,
-                        height: data.FinalLayoutEntry.Content.Height,
-                    },
-                    content_size: taffy::Size {
-                        width: data.FinalLayoutEntry.Content.ContentWidth,
-                        height: data.FinalLayoutEntry.Content.ContentHeight,
-                    },
-                    first_baselines: taffy::Point {
-                        x: c_option!(data.FinalLayoutEntry.Content => FirstBaselinesX),
-                        y: c_option!(data.FinalLayoutEntry.Content => FirstBaselinesY),
-                    },
-                    top_margin: taffy::CollapsibleMarginSet {
-                        positive: data.FinalLayoutEntry.Content.TopMargin.Positive,
-                        negative: data.FinalLayoutEntry.Content.TopMargin.Negative,
-                    },
-                    bottom_margin: taffy::CollapsibleMarginSet {
-                        positive: data.FinalLayoutEntry.Content.BottomMargin.Positive,
-                        negative: data.FinalLayoutEntry.Content.BottomMargin.Negative,
-                    },
-                    margins_can_collapse_through: data
-                        .FinalLayoutEntry
-                        .Content
-                        .MarginsCanCollapseThrough,
-                })
-            }
-            taffy::RunMode::ComputeSize => {
-                let check = |entry: &com::LayoutCacheEntrySize| {
-                    let cached_size = taffy::Size {
-                        width: entry.ContentWidth,
-                        height: entry.ContentHeight,
-                    };
-                    let entry_known_dimensions = taffy::Size {
-                        width: c_option!(#val; entry => KnownDimensionsWidth),
-                        height: c_option!(#val; entry => KnownDimensionsHeight),
-                    };
-                    let entry_available_space = taffy::Size {
-                        width: c_available_space!(entry => AvailableSpaceWidth),
-                        height: c_available_space!(entry => AvailableSpaceHeight),
-                    };
-                    let c = (known_dimensions.width == entry_known_dimensions.width
-                        || known_dimensions.width == Some(cached_size.width))
-                        && (known_dimensions.height == entry_known_dimensions.height
-                            || known_dimensions.height == Some(cached_size.height))
-                        && (known_dimensions.width.is_some()
-                            || entry_available_space
-                                .width
-                                .is_roughly_equal(available_space.width))
-                        && (known_dimensions.height.is_some()
-                            || entry_available_space
-                                .height
-                                .is_roughly_equal(available_space.height));
-                    if c {
-                        return Some(LayoutOutput::from_outer_size(cached_size));
-                    }
-                    None
-                };
-                macro_rules! check {
-                    ( $n:tt ) => {
-                        concat_idents!(has_name = HasMeasureEntries, $n {
-                            if data.has_name {
-                                concat_idents!(val_name = MeasureEntries, $n {
-                                    if let Some(r) = check(&data.val_name) {
-                                        return Some(r);
-                                    }
-                                })
-                            }
-                        })
-                    };
-                }
-                check!(0);
-                check!(1);
-                check!(2);
-                check!(3);
-                check!(4);
-                check!(5);
-                check!(6);
-                check!(7);
-                check!(8);
-                None
-            }
-            taffy::RunMode::PerformHiddenLayout => None,
-        }
+        cache_get(data, known_dimensions, available_space, run_mode)
     }
 
+    #[inline(always)]
     fn cache_store(
         &mut self,
         node_id: taffy::NodeId,
@@ -532,112 +421,20 @@ impl CacheTree for SubDoc {
     ) {
         let id = NodeId::from(node_id);
         let data = &mut self.common_data(id).LayoutCache;
-        match run_mode {
-            taffy::RunMode::PerformLayout => {
-                data.IsEmpty = false;
-                data.HasFinalLayoutEntry = true;
-                data.FinalLayoutEntry = com::LayoutCacheEntryLayoutOutput {
-                    KnownDimensionsWidthValue: known_dimensions.width.unwrap_or_default(),
-                    KnownDimensionsHeightValue: known_dimensions.height.unwrap_or_default(),
-                    AvailableSpaceWidthValue: match available_space.width {
-                        taffy::AvailableSpace::Definite(v) => v,
-                        _ => 0.0,
-                    },
-                    AvailableSpaceHeightValue: match available_space.height {
-                        taffy::AvailableSpace::Definite(v) => v,
-                        _ => 0.0,
-                    },
-                    HasKnownDimensionsWidth: known_dimensions.width.is_some(),
-                    HasKnownDimensionsHeight: known_dimensions.height.is_some(),
-                    AvailableSpaceWidth: match available_space.width {
-                        taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
-                        taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
-                        taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
-                    },
-                    AvailableSpaceHeight: match available_space.height {
-                        taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
-                        taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
-                        taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
-                    },
-                    Content: com::LayoutOutput {
-                        Width: layout_output.size.width,
-                        Height: layout_output.size.height,
-                        ContentWidth: layout_output.content_size.width,
-                        ContentHeight: layout_output.content_size.height,
-                        FirstBaselinesX: layout_output.first_baselines.x.unwrap_or_default(),
-                        FirstBaselinesY: layout_output.first_baselines.y.unwrap_or_default(),
-                        TopMargin: com::LayoutCollapsibleMarginSet {
-                            Positive: layout_output.top_margin.positive,
-                            Negative: layout_output.top_margin.negative,
-                        },
-                        BottomMargin: com::LayoutCollapsibleMarginSet {
-                            Positive: layout_output.bottom_margin.positive,
-                            Negative: layout_output.bottom_margin.negative,
-                        },
-                        HasFirstBaselinesX: layout_output.first_baselines.x.is_some(),
-                        HasFirstBaselinesY: layout_output.first_baselines.y.is_some(),
-                        MarginsCanCollapseThrough: layout_output.margins_can_collapse_through,
-                    },
-                }
-            }
-            taffy::RunMode::ComputeSize => {
-                data.IsEmpty = false;
-                let i = Cache::compute_cache_slot(known_dimensions, available_space);
-                let items = unsafe {
-                    std::slice::from_raw_parts_mut(&mut data.MeasureEntries0 as *mut _, 9)
-                };
-                let has = unsafe {
-                    std::slice::from_raw_parts_mut(&mut data.HasMeasureEntries0 as *mut _, 9)
-                };
-                has[i] = true;
-                items[i] = com::LayoutCacheEntrySize {
-                    KnownDimensionsWidthValue: known_dimensions.width.unwrap_or_default(),
-                    KnownDimensionsHeightValue: known_dimensions.height.unwrap_or_default(),
-                    AvailableSpaceWidthValue: match available_space.width {
-                        taffy::AvailableSpace::Definite(v) => v,
-                        _ => 0.0,
-                    },
-                    AvailableSpaceHeightValue: match available_space.height {
-                        taffy::AvailableSpace::Definite(v) => v,
-                        _ => 0.0,
-                    },
-                    HasKnownDimensionsWidth: known_dimensions.width.is_some(),
-                    HasKnownDimensionsHeight: known_dimensions.height.is_some(),
-                    AvailableSpaceWidth: match available_space.width {
-                        taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
-                        taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
-                        taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
-                    },
-                    AvailableSpaceHeight: match available_space.height {
-                        taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
-                        taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
-                        taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
-                    },
-                    ContentWidth: layout_output.size.width,
-                    ContentHeight: layout_output.size.height,
-                }
-            }
-            taffy::RunMode::PerformHiddenLayout => {}
-        }
+        cache_store(
+            data,
+            known_dimensions,
+            available_space,
+            run_mode,
+            layout_output,
+        )
     }
 
+    #[inline(always)]
     fn cache_clear(&mut self, node_id: taffy::NodeId) {
         let id = NodeId::from(node_id);
         let data = &mut self.common_data(id).LayoutCache;
-        if data.IsEmpty {
-            return;
-        }
-        data.IsEmpty = true;
-        data.HasFinalLayoutEntry = false;
-        data.HasMeasureEntries0 = false;
-        data.HasMeasureEntries1 = false;
-        data.HasMeasureEntries2 = false;
-        data.HasMeasureEntries3 = false;
-        data.HasMeasureEntries4 = false;
-        data.HasMeasureEntries5 = false;
-        data.HasMeasureEntries6 = false;
-        data.HasMeasureEntries7 = false;
-        data.HasMeasureEntries8 = false;
+        cache_clear(data);
     }
 }
 
@@ -1664,22 +1461,25 @@ impl SubDoc {
 
         debug_assert!(matches!(style.Container, Container::Text));
         debug_assert!(!data.TextLayoutObject.is_null());
-
-        let is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
-        if is_text_dirty {
-            unsafe {
+        unsafe {
+            let is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
+            if is_text_dirty {
                 let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
                 if hr.is_failure() {
                     std::panic::panic_any(hr);
                 }
             }
+
+            let tlo: *mut com::ITextLayout = data.TextLayoutObject;
+            let inputs: CopltLayoutInputs = inputs.into();
+            let mut outputs = MaybeUninit::uninit();
+            let hr = coplt_ui_layout_text_compute(tlo, &inputs, outputs.as_mut_ptr());
+            if hr.is_failure() {
+                std::panic::panic_any(hr);
+            }
+
+            unsafe { outputs.assume_init() }.into()
         }
-
-        let tlo = data.TextLayoutObject;
-
-
-        // todo
-        taffy::LayoutOutput::HIDDEN
     }
 }
 
@@ -1689,6 +1489,13 @@ unsafe extern "C" {
         layout: *mut (),
         ctx: *mut NLayoutContext,
         node_index: &NodeId,
+    ) -> HResult;
+
+    #[allow(improper_ctypes)]
+    fn coplt_ui_layout_text_compute(
+        layout: *mut com::ITextLayout,
+        inputs: &CopltLayoutInputs,
+        outputs: *mut com::LayoutOutput,
     ) -> HResult;
 }
 
@@ -1719,21 +1526,70 @@ struct CopltLayoutInputs {
     RunMode: CopltLayoutRunMode,
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-#[allow(non_snake_case)]
-struct CopltLayoutOutput {
-    Width: f32,
-    Height: f32,
-    ContentWidth: f32,
-    ContentHeight: f32,
-    FirstBaselinesX: f32,
-    FirstBaselinesY: f32,
-    TopMarginPositive: f32,
-    TopMarginNegative: f32,
-    BottomMarginPositive: f32,
-    BottomMarginNegative: f32,
-    HasFirstBaselinesX: bool,
-    HasFirstBaselinesT: bool,
-    MarginsCanCollapseThrough: bool,
+impl From<LayoutInput> for CopltLayoutInputs {
+    fn from(value: LayoutInput) -> Self {
+        Self {
+            KnownWidth: value.known_dimensions.width.unwrap_or_default(),
+            KnownHeight: value.known_dimensions.height.unwrap_or_default(),
+            ParentWidth: value.parent_size.width.unwrap_or_default(),
+            ParentHeight: value.parent_size.height.unwrap_or_default(),
+            AvailableSpaceWidthValue: value.available_space.width.unwrap_or(0.0),
+            AvailableSpaceHeightValue: value.available_space.height.unwrap_or(0.0),
+            HasKnownWidth: value.known_dimensions.width.is_some(),
+            HasKnownHeight: value.known_dimensions.height.is_some(),
+            HasParentWidth: value.parent_size.width.is_some(),
+            HasParentHeight: value.parent_size.height.is_some(),
+            AvailableSpaceWidth: match value.available_space.width {
+                taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
+                taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
+                taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
+            },
+            AvailableSpaceHeight: match value.available_space.height {
+                taffy::AvailableSpace::Definite(_) => com::AvailableSpaceType::Definite,
+                taffy::AvailableSpace::MinContent => com::AvailableSpaceType::MinContent,
+                taffy::AvailableSpace::MaxContent => com::AvailableSpaceType::MaxContent,
+            },
+            RunMode: match value.run_mode {
+                RunMode::PerformLayout => CopltLayoutRunMode::PerformLayout,
+                RunMode::ComputeSize => CopltLayoutRunMode::ComputeSize,
+                RunMode::PerformHiddenLayout => CopltLayoutRunMode::PerformHiddenLayout,
+            },
+        }
+    }
+}
+
+impl Into<LayoutOutput> for com::LayoutOutput {
+    fn into(self) -> LayoutOutput {
+        LayoutOutput {
+            size: Size {
+                width: self.Width,
+                height: self.Height,
+            },
+            content_size: Size {
+                width: self.ContentWidth,
+                height: self.ContentHeight,
+            },
+            first_baselines: Point {
+                x: if self.HasFirstBaselinesX {
+                    Some(self.FirstBaselinesX)
+                } else {
+                    None
+                },
+                y: if self.HasFirstBaselinesY {
+                    Some(self.FirstBaselinesY)
+                } else {
+                    None
+                },
+            },
+            top_margin: CollapsibleMarginSet {
+                positive: self.TopMargin.Positive,
+                negative: self.TopMargin.Negative,
+            },
+            bottom_margin: CollapsibleMarginSet {
+                positive: self.TopMargin.Positive,
+                negative: self.TopMargin.Negative,
+            },
+            margins_can_collapse_through: self.MarginsCanCollapseThrough,
+        }
+    }
 }

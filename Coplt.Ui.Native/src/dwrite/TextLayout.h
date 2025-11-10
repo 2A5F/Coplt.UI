@@ -19,6 +19,36 @@ namespace Coplt::LayoutCalc::Texts
 {
     struct ParagraphData;
 
+    struct TextLayoutCache_Final : CacheEntryBase
+    {
+        LayoutOutput Output;
+        // todo other data
+    };
+
+    struct TextLayoutCache_Measure : CacheEntryBase
+    {
+        f32 Width;
+        f32 Height;
+
+        Size<f32> Size() const
+        {
+            return {.Width = Width, .Height = Height};
+        }
+    };
+
+    struct TextLayoutCache
+    {
+        TextLayoutCache_Final Final;
+        TextLayoutCache_Measure Measure[9];
+        LayoutCacheFlags Flags;
+
+        std::optional<LayoutOutput> GetOutput(const LayoutInputs& inputs);
+
+        void StoreFinal(const LayoutInputs& inputs, LayoutOutput output);
+        void StoreMeasure(const LayoutInputs& inputs, f32 width, f32 height);
+        void Clear();
+    };
+
     struct TextLayout final : BaseTextLayout<TextLayout>
     {
         CtxNodeRef m_node;
@@ -28,8 +58,9 @@ namespace Coplt::LayoutCalc::Texts
 
         COPLT_IMPL_START
         COPLT_IMPL_END
-    };
 
+        LayoutOutput Compute(const LayoutInputs& inputs);
+    };
 
     // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
     struct TextAnalysisSource final : IDWriteTextAnalysisSource1, RefCount<TextAnalysisSource>
@@ -118,7 +149,7 @@ namespace Coplt::LayoutCalc::Texts
         u32 FirstScope;
     };
 
-    struct Run : TextRun
+    struct Run
     {
         u32 Start;
         u32 Length;
@@ -129,9 +160,6 @@ namespace Coplt::LayoutCalc::Texts
 
         u32 GlyphStartIndex;
         u32 ActualGlyphCount;
-
-        f32 SingleLineWidth{};
-        f32 SingleLineHeight{};
     };
 
     struct ParagraphData
@@ -160,10 +188,12 @@ namespace Coplt::LayoutCalc::Texts
         std::vector<f32> m_glyph_advances{};
         std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets{};
 
+        TextLayoutCache m_cache{};
+
         void ReBuild();
 
-        std::vector<TextParagraphImpl>& GetTextLayoutParagraphs() const;
-       TextParagraphImpl& GetParagraph() const;
+        std::vector<Paragraph>& GetTextLayoutParagraphs() const;
+        Paragraph& GetParagraph() const;
         std::span<TextItem> GetItems() const;
         std::span<TextItem> GetItems(u32 Start, u32 Length) const;
 

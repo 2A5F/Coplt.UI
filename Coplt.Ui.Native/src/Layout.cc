@@ -24,17 +24,7 @@ namespace Coplt::LayoutCalc
 
         if (!is_layout_dirty) return;
 
-        data.LayoutCache.HasFinalLayoutEntry = false;
-        data.LayoutCache.HasMeasureEntries0 = false;
-        data.LayoutCache.HasMeasureEntries1 = false;
-        data.LayoutCache.HasMeasureEntries2 = false;
-        data.LayoutCache.HasMeasureEntries3 = false;
-        data.LayoutCache.HasMeasureEntries4 = false;
-        data.LayoutCache.HasMeasureEntries5 = false;
-        data.LayoutCache.HasMeasureEntries6 = false;
-        data.LayoutCache.HasMeasureEntries7 = false;
-        data.LayoutCache.HasMeasureEntries8 = false;
-        data.LayoutCache.IsEmpty = true;
+        data.LayoutCache.Flags = LayoutCacheFlags::Empty;
 
         // propagation text layout dirty
         if (cur_data == nullptr)

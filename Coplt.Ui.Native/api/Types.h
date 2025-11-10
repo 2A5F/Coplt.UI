@@ -167,7 +167,7 @@ namespace Coplt {
         FitContent = 6,
     };
 
-    enum class AvailableSpaceType : ::Coplt::i32
+    enum class AvailableSpaceType : ::Coplt::u8
     {
         Definite = 0,
         MinContent = 1,
@@ -182,6 +182,21 @@ namespace Coplt {
         Info = 3,
         Debug = 4,
         Verbose = 5,
+    };
+
+    COPLT_ENUM_FLAGS(LayoutCacheFlags, ::Coplt::u16)
+    {
+        Empty = 0,
+        Final = 1,
+        Measure0 = 2,
+        Measure1 = 4,
+        Measure2 = 8,
+        Measure3 = 16,
+        Measure4 = 32,
+        Measure5 = 64,
+        Measure6 = 128,
+        Measure7 = 256,
+        Measure8 = 512,
     };
 
     enum class BoxSizing : ::Coplt::u8
@@ -802,17 +817,7 @@ namespace Coplt {
         ::Coplt::LayoutCacheEntrySize MeasureEntries6;
         ::Coplt::LayoutCacheEntrySize MeasureEntries7;
         ::Coplt::LayoutCacheEntrySize MeasureEntries8;
-        bool HasFinalLayoutEntry;
-        bool HasMeasureEntries0;
-        bool HasMeasureEntries1;
-        bool HasMeasureEntries2;
-        bool HasMeasureEntries3;
-        bool HasMeasureEntries4;
-        bool HasMeasureEntries5;
-        bool HasMeasureEntries6;
-        bool HasMeasureEntries7;
-        bool HasMeasureEntries8;
-        bool IsEmpty;
+        ::Coplt::LayoutCacheFlags Flags;
     };
 
     struct LayoutData

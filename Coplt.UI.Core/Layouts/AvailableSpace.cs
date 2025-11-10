@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Layouts;
 
-public enum AvailableSpaceType
+public enum AvailableSpaceType : byte
 {
     Definite,
     MinContent,

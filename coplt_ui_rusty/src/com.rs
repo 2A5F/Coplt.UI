@@ -70,7 +70,7 @@ pub enum SizingType {
     FitContent = 6,
 }
 
-#[repr(i32)]
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum AvailableSpaceType {
     Definite = 0,
@@ -87,6 +87,22 @@ pub enum LogLevel {
     Info = 3,
     Debug = 4,
     Verbose = 5,
+}
+
+#[repr(u16)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LayoutCacheFlags {
+    Empty = 0,
+    Final = 1,
+    Measure0 = 2,
+    Measure1 = 4,
+    Measure2 = 8,
+    Measure3 = 16,
+    Measure4 = 32,
+    Measure5 = 64,
+    Measure6 = 128,
+    Measure7 = 256,
+    Measure8 = 512,
 }
 
 #[repr(u8)]
@@ -729,17 +745,7 @@ pub struct LayoutCache {
     pub MeasureEntries6: LayoutCacheEntrySize,
     pub MeasureEntries7: LayoutCacheEntrySize,
     pub MeasureEntries8: LayoutCacheEntrySize,
-    pub HasFinalLayoutEntry: bool,
-    pub HasMeasureEntries0: bool,
-    pub HasMeasureEntries1: bool,
-    pub HasMeasureEntries2: bool,
-    pub HasMeasureEntries3: bool,
-    pub HasMeasureEntries4: bool,
-    pub HasMeasureEntries5: bool,
-    pub HasMeasureEntries6: bool,
-    pub HasMeasureEntries7: bool,
-    pub HasMeasureEntries8: bool,
-    pub IsEmpty: bool,
+    pub Flags: LayoutCacheFlags,
 }
 
 #[repr(C)]

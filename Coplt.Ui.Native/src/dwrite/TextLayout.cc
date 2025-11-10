@@ -14,6 +14,107 @@
 
 using namespace Coplt::LayoutCalc::Texts;
 
+std::optional<LayoutOutput> TextLayoutCache::GetOutput(const LayoutInputs& inputs)
+{
+    switch (inputs.RunMode)
+    {
+    case LayoutRunMode::PerformLayout:
+        {
+            if (!HasFlags(Flags, LayoutCacheFlags::Final)) return std::nullopt;
+            const auto& entry = Final;
+            const auto cached_size = GetSize(entry.Output);
+            const auto input_known_size = GetKnownSize(inputs);
+            const auto cache_known_size = GetKnownSize(entry);
+            const auto input_available_space = GetAvailableSpace(inputs);
+            const auto cache_available_space = GetAvailableSpace(entry);
+
+            if (
+                (input_known_size.Width == cache_known_size.Width || input_known_size.Width == cached_size.Width)
+                && (input_known_size.Height == cache_known_size.Height || input_known_size.Height == cached_size.Height)
+                && (input_known_size.Width.has_value() || IsRoughlyEqual(
+                    cache_available_space.Width, input_available_space.Width))
+                && (input_known_size.Height.has_value() || IsRoughlyEqual(
+                    cache_available_space.Height, input_available_space.Height))
+            )
+                return entry.Output;
+        }
+    case LayoutRunMode::ComputeSize:
+        {
+            if ((Flags & ~LayoutCacheFlags::Final) == 0) return std::nullopt;
+            for (u16 i = 0; i < 9; ++i)
+            {
+                if (!HasFlags(Flags, static_cast<LayoutCacheFlags>(1 << (i + 1)))) continue;
+                const auto& entry = Measure[i];
+                const auto size = entry.Size();
+                const auto input_known_size = GetKnownSize(inputs);
+                const auto cache_known_size = GetKnownSize(entry);
+                const auto input_available_space = GetAvailableSpace(inputs);
+                const auto cache_available_space = GetAvailableSpace(entry);
+                if (
+                    (input_known_size.Width == cache_known_size.Width || input_known_size.Width == size.Width)
+                    && (input_known_size.Height == cache_known_size.Height || input_known_size.Height == size.Height)
+                    && (input_known_size.Width.has_value() || IsRoughlyEqual(
+                        cache_available_space.Width, input_available_space.Width))
+                    && (input_known_size.Height.has_value() || IsRoughlyEqual(
+                        cache_available_space.Height, input_available_space.Height))
+                )
+                    return LayoutOutputFromOuterSize(size);
+            }
+            break;
+        }
+    case LayoutRunMode::PerformHiddenLayout:
+        break;
+    }
+    return std::nullopt;
+}
+
+void TextLayoutCache::StoreFinal(const LayoutInputs& inputs, LayoutOutput output)
+{
+    Flags |= LayoutCacheFlags::Final;
+    Final = {
+        {
+            .KnownWidth = inputs.KnownWidth,
+            .KnownHeight = inputs.KnownHeight,
+            .AvailableSpaceWidthValue = inputs.AvailableSpaceWidthValue,
+            .AvailableSpaceHeightValue = inputs.AvailableSpaceHeightValue,
+            .HasKnownWidth = inputs.HasKnownWidth,
+            .HasKnownHeight = inputs.HasKnownHeight,
+            .AvailableSpaceWidth = inputs.AvailableSpaceWidth,
+            .AvailableSpaceHeight = inputs.AvailableSpaceHeight,
+        },
+        .Output = output,
+    };
+}
+
+void TextLayoutCache::StoreMeasure(const LayoutInputs& inputs, const f32 width, const f32 height)
+{
+    const auto i = ComputeCacheSlot(
+        inputs.HasKnownWidth, inputs.HasKnownHeight,
+        inputs.AvailableSpaceWidth, inputs.AvailableSpaceHeight
+    );
+    Flags |= static_cast<LayoutCacheFlags>(1 << (i + 1));
+    Measure[i] = TextLayoutCache_Measure
+    {
+        {
+            .KnownWidth = inputs.KnownWidth,
+            .KnownHeight = inputs.KnownHeight,
+            .AvailableSpaceWidthValue = inputs.AvailableSpaceWidthValue,
+            .AvailableSpaceHeightValue = inputs.AvailableSpaceHeightValue,
+            .HasKnownWidth = inputs.HasKnownWidth,
+            .HasKnownHeight = inputs.HasKnownHeight,
+            .AvailableSpaceWidth = inputs.AvailableSpaceWidth,
+            .AvailableSpaceHeight = inputs.AvailableSpaceHeight,
+        },
+        .Width = width,
+        .Height = height,
+    };
+}
+
+void TextLayoutCache::Clear()
+{
+    Flags = LayoutCacheFlags::Empty;
+}
+
 ParagraphData::ParagraphData(TextLayout* text_layout)
     : m_text_layout(text_layout)
 {
@@ -38,12 +139,12 @@ void ParagraphData::ReBuild()
     m_glyph_offsets.clear();
 }
 
-std::vector<TextParagraphImpl>& ParagraphData::GetTextLayoutParagraphs() const
+std::vector<Paragraph>& ParagraphData::GetTextLayoutParagraphs() const
 {
     return m_text_layout->m_paragraphs;
 }
 
-TextParagraphImpl& ParagraphData::GetParagraph() const
+Paragraph& ParagraphData::GetParagraph() const
 {
     return GetTextLayoutParagraphs()[m_index];
 }
@@ -564,9 +665,6 @@ void ParagraphData::CalcSingleLineSize()
         {
             sum_width += glyph_advances[i];
         }
-
-        run.SingleLineWidth = sum_width;
-        run.SingleLineHeight = line_height;
     }
 }
 
@@ -857,13 +955,18 @@ HRESULT TextAnalysisSink::SetGlyphOrientation(
     return E_NOTIMPL;
 }
 
-void Texts::coplt_ui_layout_text_get_paragraphs(
-    ITextLayout* layout, TextParagraph** out_paragraphs, u32* out_count, u32* out_stride
-)
+HResultE Texts::coplt_ui_layout_text_compute(ITextLayout* layout, const LayoutInputs* inputs, LayoutOutput* outputs)
 {
-    const auto l = static_cast<TextLayout*>(layout);
-    auto& paragraphs = l->m_paragraphs;
-    *out_paragraphs = paragraphs.data();
-    *out_count = paragraphs.size();
-    *out_stride = sizeof(TextParagraphImpl);
+    return feb([&]
+    {
+        const auto l = static_cast<TextLayout*>(layout);
+        *outputs = l->Compute(*inputs);
+        return HResultE::Ok;
+    });
+}
+
+LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
+{
+    // todo
+    return {};
 }

@@ -24,7 +24,7 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 {
     if (Length == 0) return;
     if (m_paragraphs.empty() || m_paragraphs.back().Type != TextParagraphType::Inline)
-        m_paragraphs.push_back(TextParagraphImpl{{TextParagraphType::Inline}, {}, m_items.size(), 0, 0});
+        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, TextParagraphType::Inline});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(TextItem{
@@ -42,7 +42,7 @@ void BaseTextLayoutStorage::AddText(NodeId Parent, u32 Index, const u32 Length)
 void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 {
     if (m_paragraphs.empty() || m_paragraphs.back().Type != TextParagraphType::Inline)
-        m_paragraphs.push_back(TextParagraphImpl{{TextParagraphType::Inline}, {}, m_items.size(), 0, 0});
+        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, TextParagraphType::Inline});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(TextItem{
@@ -59,7 +59,7 @@ void BaseTextLayoutStorage::AddInlineBlock(const NodeId Node)
 void BaseTextLayoutStorage::AddBlock(const NodeId Node)
 {
     if (m_paragraphs.empty() || m_paragraphs.back().Type != TextParagraphType::Block)
-        m_paragraphs.push_back(TextParagraphImpl{{TextParagraphType::Block}, {}, m_items.size(), 0, 0});
+        m_paragraphs.push_back(Paragraph{{}, m_items.size(), 0, 0, TextParagraphType::Block});
     const auto scope = m_scope_stack.empty() ? -1 : m_scope_stack.back();
     auto& paragraph = m_paragraphs.back();
     m_items.push_back(TextItem{
