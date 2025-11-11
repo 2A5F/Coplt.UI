@@ -1,9 +1,7 @@
 #include "TextLayout.h"
 
 #include <span>
-#include <fmt/xchar.h>
 
-#include "../lib.h"
 #include "../Algorithm.h"
 #include "../Text.h"
 #include "../Layout.h"
@@ -13,107 +11,6 @@
 #include "Utils.h"
 
 using namespace Coplt::LayoutCalc::Texts;
-
-std::optional<LayoutOutput> TextLayoutCache::GetOutput(const LayoutInputs& inputs)
-{
-    switch (inputs.RunMode)
-    {
-    case LayoutRunMode::PerformLayout:
-        {
-            if (!HasFlags(Flags, LayoutCacheFlags::Final)) return std::nullopt;
-            const auto& entry = Final;
-            const auto cached_size = GetSize(entry.Output);
-            const auto input_known_size = GetKnownSize(inputs);
-            const auto cache_known_size = GetKnownSize(entry);
-            const auto input_available_space = GetAvailableSpace(inputs);
-            const auto cache_available_space = GetAvailableSpace(entry);
-
-            if (
-                (input_known_size.Width == cache_known_size.Width || input_known_size.Width == cached_size.Width)
-                && (input_known_size.Height == cache_known_size.Height || input_known_size.Height == cached_size.Height)
-                && (input_known_size.Width.has_value() || IsRoughlyEqual(
-                    cache_available_space.Width, input_available_space.Width))
-                && (input_known_size.Height.has_value() || IsRoughlyEqual(
-                    cache_available_space.Height, input_available_space.Height))
-            )
-                return entry.Output;
-        }
-    case LayoutRunMode::ComputeSize:
-        {
-            if ((Flags & ~LayoutCacheFlags::Final) == 0) return std::nullopt;
-            for (u16 i = 0; i < 9; ++i)
-            {
-                if (!HasFlags(Flags, static_cast<LayoutCacheFlags>(1 << (i + 1)))) continue;
-                const auto& entry = Measure[i];
-                const auto size = entry.Size();
-                const auto input_known_size = GetKnownSize(inputs);
-                const auto cache_known_size = GetKnownSize(entry);
-                const auto input_available_space = GetAvailableSpace(inputs);
-                const auto cache_available_space = GetAvailableSpace(entry);
-                if (
-                    (input_known_size.Width == cache_known_size.Width || input_known_size.Width == size.Width)
-                    && (input_known_size.Height == cache_known_size.Height || input_known_size.Height == size.Height)
-                    && (input_known_size.Width.has_value() || IsRoughlyEqual(
-                        cache_available_space.Width, input_available_space.Width))
-                    && (input_known_size.Height.has_value() || IsRoughlyEqual(
-                        cache_available_space.Height, input_available_space.Height))
-                )
-                    return LayoutOutputFromOuterSize(size);
-            }
-            break;
-        }
-    case LayoutRunMode::PerformHiddenLayout:
-        break;
-    }
-    return std::nullopt;
-}
-
-void TextLayoutCache::StoreFinal(const LayoutInputs& inputs, LayoutOutput output)
-{
-    Flags |= LayoutCacheFlags::Final;
-    Final = {
-        {
-            .KnownWidth = inputs.KnownWidth,
-            .KnownHeight = inputs.KnownHeight,
-            .AvailableSpaceWidthValue = inputs.AvailableSpaceWidthValue,
-            .AvailableSpaceHeightValue = inputs.AvailableSpaceHeightValue,
-            .HasKnownWidth = inputs.HasKnownWidth,
-            .HasKnownHeight = inputs.HasKnownHeight,
-            .AvailableSpaceWidth = inputs.AvailableSpaceWidth,
-            .AvailableSpaceHeight = inputs.AvailableSpaceHeight,
-        },
-        .Output = output,
-    };
-}
-
-void TextLayoutCache::StoreMeasure(const LayoutInputs& inputs, const f32 width, const f32 height)
-{
-    const auto i = ComputeCacheSlot(
-        inputs.HasKnownWidth, inputs.HasKnownHeight,
-        inputs.AvailableSpaceWidth, inputs.AvailableSpaceHeight
-    );
-    Flags |= static_cast<LayoutCacheFlags>(1 << (i + 1));
-    Measure[i] = TextLayoutCache_Measure
-    {
-        {
-            .KnownWidth = inputs.KnownWidth,
-            .KnownHeight = inputs.KnownHeight,
-            .AvailableSpaceWidthValue = inputs.AvailableSpaceWidthValue,
-            .AvailableSpaceHeightValue = inputs.AvailableSpaceHeightValue,
-            .HasKnownWidth = inputs.HasKnownWidth,
-            .HasKnownHeight = inputs.HasKnownHeight,
-            .AvailableSpaceWidth = inputs.AvailableSpaceWidth,
-            .AvailableSpaceHeight = inputs.AvailableSpaceHeight,
-        },
-        .Width = width,
-        .Height = height,
-    };
-}
-
-void TextLayoutCache::Clear()
-{
-    Flags = LayoutCacheFlags::Empty;
-}
 
 ParagraphData::ParagraphData(TextLayout* text_layout)
     : m_text_layout(text_layout)
@@ -165,8 +62,8 @@ CtxNodeRef ParagraphData::GetScope(const TextItem& item) const
     const auto root_scope = m_text_layout->m_node;
     return
         item.Scope == -1
-            ? root_scope
-            : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
+        ? root_scope
+        : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
 }
 
 CtxNodeRef ParagraphData::GetScope(const TextScopeRange& range) const
@@ -174,8 +71,8 @@ CtxNodeRef ParagraphData::GetScope(const TextScopeRange& range) const
     const auto root_scope = m_text_layout->m_node;
     return
         range.Scope == -1
-            ? root_scope
-            : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.Scope]);
+        ? root_scope
+        : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.Scope]);
 }
 
 CtxNodeRef ParagraphData::GetScope(const SameStyleRange& range) const
@@ -183,8 +80,8 @@ CtxNodeRef ParagraphData::GetScope(const SameStyleRange& range) const
     const auto root_scope = m_text_layout->m_node;
     return
         range.FirstScope == -1
-            ? root_scope
-            : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.FirstScope]);
+        ? root_scope
+        : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[range.FirstScope]);
 }
 
 void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
@@ -214,8 +111,7 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         data.AnalyzeFonts();
         data.AnalyzeStyles();
         data.CollectRuns();
-        data.AnalyzeGlyphs();
-        data.CalcSingleLineSize();
+        data.AnalyzeGlyphsFirst();
     }
     m_node = {};
 }
@@ -338,8 +234,8 @@ void ParagraphData::AnalyzeFonts()
         const auto& style = scope.StyleData();
         const auto scope_fallback =
             style.FontFallback
-                ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
-                : system_font_fallback.get();
+            ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
+            : system_font_fallback.get();
         if (item.Type == TextItemType::Text)
         {
             const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
@@ -497,7 +393,7 @@ void ParagraphData::CollectRuns()
     }
 }
 
-void ParagraphData::AnalyzeGlyphs()
+void ParagraphData::AnalyzeGlyphsFirst()
 {
     std::vector<u16> cluster_map;
     std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_props;
@@ -537,10 +433,6 @@ void ParagraphData::AnalyzeGlyphs()
             },
             DWRITE_FONT_FEATURE{
                 .nameTag = DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_KERNING,
                 .parameter = 1,
             },
             DWRITE_FONT_FEATURE{
@@ -641,30 +533,6 @@ void ParagraphData::AnalyzeGlyphs()
             m_glyph_offsets.data() + run.GlyphStartIndex
         );
         if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
-    }
-}
-
-void ParagraphData::CalcSingleLineSize()
-{
-    for (auto& run : m_runs)
-    {
-        const auto& font = m_font_ranges[run.FontRangeIndex];
-
-        if (!font.Font) continue; // skip if no font find
-
-        // todo vertical
-
-        DWRITE_FONT_METRICS1 metrics{};
-        font.Font->GetMetrics(&metrics);
-        const auto line_height = (metrics.ascent + metrics.descent + metrics.lineGap) * font.Scale;
-
-        f32 sum_width = 0;
-
-        const std::span glyph_advances(m_glyph_advances.data() + run.GlyphStartIndex, run.ActualGlyphCount);
-        for (u32 i = 0; i < run.ActualGlyphCount; ++i)
-        {
-            sum_width += glyph_advances[i];
-        }
     }
 }
 
@@ -963,10 +831,4 @@ HResultE Texts::coplt_ui_layout_text_compute(ITextLayout* layout, const LayoutIn
         *outputs = l->Compute(*inputs);
         return HResultE::Ok;
     });
-}
-
-LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
-{
-    // todo
-    return {};
 }

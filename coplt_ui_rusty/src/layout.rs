@@ -1507,6 +1507,21 @@ enum CopltLayoutRunMode {
     PerformHiddenLayout,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy)]
+enum CopltLayoutSizingMode {
+    ContentSize,
+    InherentSize,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy)]
+enum CopltLayoutRequestedAxis {
+    Horizontal,
+    Vertical,
+    Both,
+}
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 #[allow(non_snake_case)]
@@ -1524,6 +1539,8 @@ struct CopltLayoutInputs {
     AvailableSpaceWidth: com::AvailableSpaceType,
     AvailableSpaceHeight: com::AvailableSpaceType,
     RunMode: CopltLayoutRunMode,
+    SizingMode: CopltLayoutSizingMode,
+    Axis: CopltLayoutRequestedAxis,
 }
 
 impl From<LayoutInput> for CopltLayoutInputs {
@@ -1553,6 +1570,15 @@ impl From<LayoutInput> for CopltLayoutInputs {
                 RunMode::PerformLayout => CopltLayoutRunMode::PerformLayout,
                 RunMode::ComputeSize => CopltLayoutRunMode::ComputeSize,
                 RunMode::PerformHiddenLayout => CopltLayoutRunMode::PerformHiddenLayout,
+            },
+            SizingMode: match value.sizing_mode {
+                taffy::SizingMode::ContentSize => CopltLayoutSizingMode::ContentSize,
+                taffy::SizingMode::InherentSize => CopltLayoutSizingMode::InherentSize,
+            },
+            Axis: match value.axis {
+                taffy::RequestedAxis::Horizontal => CopltLayoutRequestedAxis::Horizontal,
+                taffy::RequestedAxis::Vertical => CopltLayoutRequestedAxis::Vertical,
+                taffy::RequestedAxis::Both => CopltLayoutRequestedAxis::Both,
             },
         }
     }

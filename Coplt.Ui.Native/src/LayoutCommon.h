@@ -7,11 +7,36 @@ namespace Coplt::LayoutCalc
 {
     using namespace Coplt::Geometry;
 
+    COPLT_RELEASE_FORCE_INLINE inline Axis ToAxis(const WritingDirection direction)
+    {
+        switch (direction)
+        {
+        case WritingDirection::Horizontal:
+            return Axis::Horizontal;
+        case WritingDirection::Vertical:
+            return Axis::Vertical;
+        }
+        std::unreachable();
+    }
+
     enum class LayoutRunMode : u8
     {
         PerformLayout,
         ComputeSize,
         PerformHiddenLayout,
+    };
+
+    enum class LayoutSizingMode : u8
+    {
+        ContentSize,
+        InherentSize,
+    };
+
+    enum class LayoutRequestedAxis : u8
+    {
+        Horizontal,
+        Vertical,
+        Both,
     };
 
     struct LayoutInputs
@@ -29,6 +54,8 @@ namespace Coplt::LayoutCalc
         AvailableSpaceType AvailableSpaceWidth;
         AvailableSpaceType AvailableSpaceHeight;
         LayoutRunMode RunMode;
+        LayoutSizingMode SizingMode;
+        LayoutRequestedAxis Axis;
     };
 
     struct CacheEntryBase
@@ -43,7 +70,7 @@ namespace Coplt::LayoutCalc
         AvailableSpaceType AvailableSpaceHeight;
     };
 
-    inline u32 ComputeCacheSlot(
+    COPLT_RELEASE_FORCE_INLINE inline u32 ComputeCacheSlot(
         bool HasKnownWidth,
         bool HasKnownHeight,
         AvailableSpaceType AvailableSpaceWidth,
@@ -108,7 +135,7 @@ namespace Coplt::LayoutCalc
     };
 
     template <CacheEntryLike T>
-    Size<std::optional<f32>> GetKnownSize(const T& inputs)
+    COPLT_RELEASE_FORCE_INLINE Size<std::optional<f32>> GetKnownSize(const T& inputs)
     {
         return Size{
             .Width = inputs.HasKnownWidth ? std::optional{inputs.KnownWidth} : std::nullopt,
@@ -116,7 +143,7 @@ namespace Coplt::LayoutCalc
         };
     }
 
-    inline Size<f32> GetSize(const LayoutOutput& output)
+    COPLT_RELEASE_FORCE_INLINE inline Size<f32> GetSize(const LayoutOutput& output)
     {
         return Size{
             .Width = output.Width,
@@ -125,7 +152,7 @@ namespace Coplt::LayoutCalc
     }
 
     template <CacheEntryLike T>
-    Size<std::pair<AvailableSpaceType, f32>> GetAvailableSpace(const T& inputs)
+    COPLT_RELEASE_FORCE_INLINE Size<AvailableSpace> GetAvailableSpace(const T& inputs)
     {
         return Size{
             .Width = std::make_pair(inputs.AvailableSpaceWidth, inputs.AvailableSpaceWidthValue),
@@ -133,7 +160,7 @@ namespace Coplt::LayoutCalc
         };
     }
 
-    inline bool IsRoughlyEqual(const std::pair<AvailableSpaceType, f32> a, const std::pair<AvailableSpaceType, f32> b)
+    COPLT_RELEASE_FORCE_INLINE inline bool IsRoughlyEqual(const AvailableSpace a, const AvailableSpace b)
     {
         if (a.first != b.first) return false;
         switch (a.first)
@@ -147,7 +174,7 @@ namespace Coplt::LayoutCalc
         return false;
     }
 
-    inline LayoutOutput LayoutOutputFromOuterSize(const Size<f32> size)
+    COPLT_RELEASE_FORCE_INLINE inline LayoutOutput LayoutOutputFromOuterSize(const Size<f32> size)
     {
         return LayoutOutput{
             .Width = size.Width,
@@ -162,5 +189,72 @@ namespace Coplt::LayoutCalc
             .HasFirstBaselinesY = false,
             .MarginsCanCollapseThrough = false,
         };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Size<std::optional<f32>> GetParentSize(const LayoutInputs& inputs)
+    {
+        return Size{
+            .Width = inputs.HasParentWidth ? std::optional{inputs.ParentWidth} : std::nullopt,
+            .Height = inputs.HasParentHeight ? std::optional{inputs.ParentHeight} : std::nullopt,
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Rect<Length> GetPadding(const StyleData& style)
+    {
+        return Rect{
+            .Top = std::make_pair(style.PaddingTop, style.PaddingTopValue),
+            .Right = std::make_pair(style.PaddingRight, style.PaddingRightValue),
+            .Bottom = std::make_pair(style.PaddingBottom, style.PaddingBottomValue),
+            .Left = std::make_pair(style.PaddingLeft, style.PaddingLeftValue),
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Rect<Length> GetMargin(const StyleData& style)
+    {
+        return Rect{
+            .Top = std::make_pair(style.MarginTop, style.MarginTopValue),
+            .Right = std::make_pair(style.MarginRight, style.MarginRightValue),
+            .Bottom = std::make_pair(style.MarginBottom, style.MarginBottomValue),
+            .Left = std::make_pair(style.MarginLeft, style.MarginLeftValue),
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Rect<Length> GetBorder(const StyleData& style)
+    {
+        return Rect{
+            .Top = std::make_pair(style.BorderTop, style.BorderTopValue),
+            .Right = std::make_pair(style.BorderRight, style.BorderRightValue),
+            .Bottom = std::make_pair(style.BorderBottom, style.BorderBottomValue),
+            .Left = std::make_pair(style.BorderLeft, style.BorderLeftValue),
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Size<Length> GetSize(const StyleData& style)
+    {
+        return Size{
+            .Width = std::make_pair(style.Width, style.WidthValue),
+            .Height = std::make_pair(style.Height, style.HeightValue),
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Size<Length> GetMinSize(const StyleData& style)
+    {
+        return Size{
+            .Width = std::make_pair(style.MinWidth, style.MinWidthValue),
+            .Height = std::make_pair(style.MinHeight, style.MinHeightValue),
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Size<Length> GetMaxSize(const StyleData& style)
+    {
+        return Size{
+            .Width = std::make_pair(style.MaxWidth, style.MaxWidthValue),
+            .Height = std::make_pair(style.MaxHeight, style.MaxHeightValue),
+        };
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> GetAspectRatio(const StyleData& style)
+    {
+        return style.HasAspectRatio ? std::optional(style.AspectRatioValue) : std::nullopt;
     }
 }

@@ -160,6 +160,13 @@ namespace Coplt::LayoutCalc::Texts
 
         u32 GlyphStartIndex;
         u32 ActualGlyphCount;
+
+        bool HasSingleLineSize;
+        f32 SingleLineWidth;
+        f32 SingleLineHeight;
+
+        bool IsInlineBlock(const ParagraphData& data) const;
+        std::optional<Size<f32>> SingleLineSize(const ParagraphData& data);
     };
 
     struct ParagraphData
@@ -204,8 +211,11 @@ namespace Coplt::LayoutCalc::Texts
         void AnalyzeFonts();
         void AnalyzeStyles();
         void CollectRuns();
-        void AnalyzeGlyphs();
+        void AnalyzeGlyphsFirst();
 
-        void CalcSingleLineSize();
+        LayoutOutput Compute(
+            TextLayout& layout, LayoutRunMode RunMode,
+            Size<AvailableSpace> AvailableSpace, Size<std::optional<f32>> KnownSize
+        );
     };
 } // namespace Coplt

@@ -7,6 +7,11 @@
 #include "TextLayout.h"
 #include "Utils.h"
 
+namespace Coplt
+{
+    struct LibUi;
+}
+
 namespace Coplt::LayoutCalc
 {
     struct Layout;
