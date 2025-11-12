@@ -822,13 +822,3 @@ HRESULT TextAnalysisSink::SetGlyphOrientation(
 {
     return E_NOTIMPL;
 }
-
-HResultE Texts::coplt_ui_layout_text_compute(ITextLayout* layout, const LayoutInputs* inputs, LayoutOutput* outputs)
-{
-    return feb([&]
-    {
-        const auto l = static_cast<TextLayout*>(layout);
-        *outputs = l->Compute(*inputs);
-        return HResultE::Ok;
-    });
-}

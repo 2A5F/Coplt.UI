@@ -16,6 +16,19 @@ using namespace Coplt;
 using namespace Coplt::LayoutCalc;
 using namespace Coplt::LayoutCalc::Texts;
 
+HResultE Texts::coplt_ui_layout_text_compute(
+    ITextLayout* layout, NLayoutContext* ctx, const NodeId& node,
+    const LayoutInputs* inputs, LayoutOutput* outputs
+)
+{
+    return feb([&]
+    {
+        const auto l = static_cast<TextLayout*>(layout);
+        l->Compute(*outputs, *inputs, CtxNodeRef(ctx, node));
+        return HResultE::Ok;
+    });
+}
+
 std::optional<LayoutOutput> TextLayoutCache::GetOutput(const LayoutInputs& inputs)
 {
     switch (inputs.RunMode)
@@ -115,6 +128,13 @@ void TextLayoutCache::StoreMeasure(const LayoutInputs& inputs, const f32 width, 
 void TextLayoutCache::Clear()
 {
     Flags = LayoutCacheFlags::Empty;
+}
+
+void TextLayout::Compute(LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node)
+{
+    m_node = node;
+    out = Compute(inputs);
+    m_node = {};
 }
 
 LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)

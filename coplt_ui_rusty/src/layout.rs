@@ -1473,7 +1473,7 @@ impl SubDoc {
             let tlo: *mut com::ITextLayout = data.TextLayoutObject;
             let inputs: CopltLayoutInputs = inputs.into();
             let mut outputs = MaybeUninit::uninit();
-            let hr = coplt_ui_layout_text_compute(tlo, &inputs, outputs.as_mut_ptr());
+            let hr = coplt_ui_layout_text_compute(tlo, self.0, &id, &inputs, outputs.as_mut_ptr());
             if hr.is_failure() {
                 std::panic::panic_any(hr);
             }
@@ -1488,13 +1488,15 @@ unsafe extern "C" {
     fn coplt_ui_layout_touch_text(
         layout: *mut (),
         ctx: *mut NLayoutContext,
-        node_index: &NodeId,
+        node_index: *const NodeId,
     ) -> HResult;
 
     #[allow(improper_ctypes)]
     fn coplt_ui_layout_text_compute(
         layout: *mut com::ITextLayout,
-        inputs: &CopltLayoutInputs,
+        ctx: *mut NLayoutContext,
+        node_index: *const NodeId,
+        inputs: *const CopltLayoutInputs,
         outputs: *mut com::LayoutOutput,
     ) -> HResult;
 }

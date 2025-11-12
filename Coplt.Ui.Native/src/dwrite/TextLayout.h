@@ -59,6 +59,7 @@ namespace Coplt::LayoutCalc::Texts
         COPLT_IMPL_START
         COPLT_IMPL_END
 
+        void Compute(LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node);
         LayoutOutput Compute(const LayoutInputs& inputs);
     };
 
