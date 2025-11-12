@@ -266,13 +266,6 @@ namespace Coplt {
         WrapReverse = 2,
     };
 
-    enum class FloatInText : ::Coplt::u8
-    {
-        None = 0,
-        Start = 1,
-        End = 2,
-    };
-
     enum class FontWeight : ::Coplt::i32
     {
         None = 0,
@@ -295,6 +288,14 @@ namespace Coplt {
         Column = 1,
         RowDense = 2,
         ColumnDense = 3,
+    };
+
+    enum class LineAlign : ::Coplt::u8
+    {
+        Baseline = 0,
+        Start = 1,
+        End = 2,
+        Center = 3,
     };
 
     enum class LocaleMode : ::Coplt::u8
@@ -324,10 +325,9 @@ namespace Coplt {
 
     enum class TextAlign : ::Coplt::u8
     {
-        Auto = 0,
-        Left = 1,
-        Right = 2,
-        Center = 3,
+        Start = 0,
+        End = 1,
+        Center = 2,
     };
 
     enum class TextDirection : ::Coplt::u8
@@ -1045,6 +1045,7 @@ namespace Coplt {
         ::Coplt::f32 FontSize;
         ::Coplt::FontWidth FontWidth;
         ::Coplt::f32 FontOblique;
+        ::Coplt::f32 LineHeightValue;
         ::Coplt::GridPlacement GridRowStart;
         ::Coplt::GridPlacement GridRowEnd;
         ::Coplt::GridPlacement GridColumnStart;
@@ -1054,7 +1055,6 @@ namespace Coplt {
         ::Coplt::Container Container;
         ::Coplt::TextMode TextMode;
         ::Coplt::BoxSizing BoxSizing;
-        ::Coplt::FloatInText Float;
         ::Coplt::CursorType Cursor;
         ::Coplt::PointerEvents PointerEvents;
         ::Coplt::Overflow OverflowX;
@@ -1094,11 +1094,12 @@ namespace Coplt {
         ::Coplt::AlignType AlignSelf;
         ::Coplt::AlignType JustifySelf;
         ::Coplt::LengthType FlexBasis;
-        ::Coplt::TextAlign TextAlign;
-        ::Coplt::LengthType TabSize;
         ::Coplt::FontWeight FontWeight;
         bool FontItalic;
         bool FontOpticalSizing;
+        ::Coplt::TextAlign TextAlign;
+        ::Coplt::LineAlign LineAlign;
+        ::Coplt::LengthType TabSize;
         ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;
@@ -1108,6 +1109,7 @@ namespace Coplt {
         ::Coplt::WordBreak WordBreak;
         ::Coplt::TextOrientation TextOrientation;
         ::Coplt::TextOverflow TextOverflow;
+        ::Coplt::LengthType LineHeight;
     };
 
 } // namespace Coplt

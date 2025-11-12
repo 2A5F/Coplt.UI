@@ -70,6 +70,23 @@ namespace Coplt::LayoutCalc
         AvailableSpaceType AvailableSpaceHeight;
     };
 
+    struct RunLineSize
+    {
+        // Horizontal is height, Vertical is width
+        f32 LineSize;
+        f32 Ascent;
+        f32 Descent;
+        f32 LineGap;
+    };
+
+    struct RunBreakLine
+    {
+        u32 Start;
+        u32 Length;
+        f32 Size;
+        u32 Line;
+    };
+
     COPLT_RELEASE_FORCE_INLINE inline u32 ComputeCacheSlot(
         bool HasKnownWidth,
         bool HasKnownHeight,
@@ -256,5 +273,10 @@ namespace Coplt::LayoutCalc
     COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> GetAspectRatio(const StyleData& style)
     {
         return style.HasAspectRatio ? std::optional(style.AspectRatioValue) : std::nullopt;
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline Length GetLineHeight(const StyleData& style)
+    {
+        return std::make_pair(style.LineHeight, style.LineHeightValue);
     }
 }

@@ -317,6 +317,22 @@ void ParagraphData::AnalyzeStyles()
         const auto& style = node.StyleData();
         if (
             first_scope == -1
+            || !IsZeroLength(style.InsertTop, style.InsertTopValue)
+            || !IsZeroLength(style.InsertRight, style.InsertRightValue)
+            || !IsZeroLength(style.InsertBottom, style.InsertBottomValue)
+            || !IsZeroLength(style.InsertLeft, style.InsertLeftValue)
+            || !IsZeroLength(style.MarginTop, style.MarginTopValue)
+            || !IsZeroLength(style.MarginRight, style.MarginRightValue)
+            || !IsZeroLength(style.MarginBottom, style.MarginBottomValue)
+            || !IsZeroLength(style.MarginLeft, style.MarginLeftValue)
+            || !IsZeroLength(style.PaddingTop, style.PaddingTopValue)
+            || !IsZeroLength(style.PaddingRight, style.PaddingRightValue)
+            || !IsZeroLength(style.PaddingBottom, style.PaddingBottomValue)
+            || !IsZeroLength(style.PaddingLeft, style.PaddingLeftValue)
+            || !IsZeroLength(style.BorderTop, style.BorderTopValue)
+            || !IsZeroLength(style.BorderRight, style.BorderRightValue)
+            || !IsZeroLength(style.BorderBottom, style.BorderBottomValue)
+            || !IsZeroLength(style.BorderLeft, style.BorderLeftValue)
             || font_size != style.FontSize
             || text_orientation != style.TextOrientation
         )

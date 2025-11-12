@@ -193,7 +193,7 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
     Size<f32> size{};
     for (auto& data : m_paragraph_datas)
     {
-        auto output = data.Compute(*this, inputs.RunMode, last_available_space, known_dimensions);
+        auto output = data.Compute(*this, inputs.RunMode, inputs.Axis, last_available_space, known_dimensions);
         last_available_space = last_available_space.TrySub(GetSize(output));
         if (style.WritingDirection == WritingDirection::Horizontal)
         {
@@ -211,22 +211,46 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
         return LayoutOutputFromOuterSize(size);
     }
     // todo
-    return {};
+    return {
+        .Width = size.Width,
+        .Height = size.Height,
+    };
 }
 
 LayoutOutput ParagraphData::Compute(
-    TextLayout& layout, LayoutRunMode RunMode,
-    Size<AvailableSpace> AvailableSpace, Size<std::optional<f32>> KnownSize
+    TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,
+    const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
 )
 {
     const auto& root_style = layout.m_node.StyleData();
     const auto& paragraph = layout.m_paragraphs[m_index];
     const auto axis = ToAxis(root_style.WritingDirection);
 
+    const auto defined_line_height = Resolve(GetLineHeight(root_style), root_style.FontSize);
+
+    const auto space = AvailableSpace.Or(KnownSize);
+    const auto space_main = space.MainAxis(axis).value_or(0);
+
+    const auto allow_wrap =
+        root_style.TextWrap == TextWrap::Wrap
+        && (
+            root_style.WritingDirection == WritingDirection::Horizontal
+            ? KnownSize.Width.has_value() || AvailableSpace.Width.first != AvailableSpaceType::MinContent
+            : KnownSize.Height.has_value() || AvailableSpace.Height.first != AvailableSpaceType::MinContent
+        );
+
+    Size<f32> result_size{};
+    auto& max_main = result_size.MainAxis(axis);
+    auto& sum_cross = result_size.CrossAxis(axis);
+
+    f32 cur_main = 0;
     if (paragraph.Type == TextParagraphType::Inline)
     {
-        Size<f32> sum_size{};
-        f32 cur_line_height{};
+        u32 nth_line = 0;
+        f32 max_ascent{};
+        f32 max_descent{};
+        f32 max_line_cap{};
+        f32 cur_line_height = defined_line_height;
 
         for (auto& run : m_runs)
         {
@@ -236,27 +260,60 @@ LayoutOutput ParagraphData::Compute(
             }
             else
             {
-                const auto single_line_size = run.SingleLineSize(*this).value();
-                const auto new_size = sum_size.MainAxis(axis) + single_line_size.MainAxis(axis);
-                if (!IsOutOfSize(new_size, AvailableSpace.MainAxis(axis)))
+                const auto& single_line_size = run.GetSingleLineSize(*this);
+
+                max_ascent = std::max(max_ascent, single_line_size.Ascent);
+                max_descent = std::max(max_descent, single_line_size.Descent);
+                max_line_cap = std::max(max_line_cap, single_line_size.LineGap);
+
+                const auto font_line_height = max_ascent + max_line_cap + max_descent;
+
+                const auto new_size = cur_main + single_line_size.LineSize;
+                if (allow_wrap && new_size > space_main)
                 {
-                    sum_size.MainAxis(axis) += single_line_size.MainAxis(axis);
-                    cur_line_height = std::max(cur_line_height, single_line_size.CrossAxis(axis));
+                    u32 cur_nth_line = nth_line;
+                    for (const auto line : run.BreakLines(*this, cur_main, space_main))
+                    {
+                        if (line.Line == 0)
+                        {
+                            const auto final_size = cur_main + line.Size;
+                            max_main = std::max(max_main, final_size);
+                            cur_main = 0;
+                        }
+                        else
+                        {
+                            const auto new_nth_line = nth_line + line.Line;
+                            COPLT_DEBUG_ASSERT(new_nth_line - cur_nth_line == 1, "Should not skip lines");
+                            cur_nth_line = new_nth_line;
+
+                            if (new_nth_line == 1) sum_cross += max_ascent;
+                            sum_cross += std::max(cur_line_height, font_line_height);
+                            max_main = std::max(max_main, line.Size);
+                            cur_main = line.Size;
+                            cur_line_height = defined_line_height;
+                        }
+                    }
+                    COPLT_DEBUG_ASSERT(cur_nth_line - nth_line >= 1, "There should be at least one line");
+                    nth_line = cur_nth_line;
                     continue;
                 }
-                // break line
-                // todo
+                else
+                {
+                    cur_main = new_size;
+                }
             }
         }
 
-        sum_size.CrossAxis(axis) += cur_line_height;
+        if (nth_line == 0) sum_cross += max_ascent;
+        sum_cross += max_descent;
     }
     else
     {
+        //not support float layout yet
         // todo block
     }
 
-    return {};
+    return LayoutOutputFromOuterSize(result_size);
 }
 
 bool Run::IsInlineBlock(const ParagraphData& data) const
@@ -265,29 +322,91 @@ bool Run::IsInlineBlock(const ParagraphData& data) const
     return !font.Font;
 }
 
-std::optional<Size<f32>> Run::SingleLineSize(const ParagraphData& data)
+const RunLineSize& Run::GetSingleLineSize(const ParagraphData& data)
 {
-    if (HasSingleLineSize) return {Size{.Width = SingleLineWidth, .Height = SingleLineHeight}};
+    if (HasSingleLineSize) return SingleLineSize;
     const auto& font = data.m_font_ranges[FontRangeIndex];
-    if (!font.Font) return std::nullopt;
+    const auto& style_range = data.m_same_style_ranges[StyleRangeIndex];
+    const auto& style = data.GetScope(style_range).StyleData();
+    if (!font.Font) return SingleLineSize;
 
-    // todo vertical
+    HasSingleLineSize = true;
+    if (style.WritingDirection == WritingDirection::Horizontal)
+    {
+        DWRITE_FONT_METRICS1 metrics{};
+        font.Font->GetMetrics(&metrics);
+        const auto scale = style.FontSize / metrics.designUnitsPerEm;
+        SingleLineSize.Ascent = metrics.ascent * scale;
+        SingleLineSize.Descent = metrics.descent * scale;
+        SingleLineSize.LineGap = metrics.lineGap * scale;
+    }
+    else
+    {
+        // todo: not sure, need test
+        DWRITE_FONT_METRICS1 metrics{};
+        font.Font->GetMetrics(&metrics);
+        const auto scale = style.FontSize / metrics.designUnitsPerEm;
+        SingleLineSize.LineGap = metrics.lineGap * scale;
+        const auto glyph_box_size = metrics.glyphBoxRight - metrics.glyphBoxLeft;
+        SingleLineSize.Ascent = SingleLineSize.Descent = glyph_box_size * scale * 0.5f;
+    }
 
-    DWRITE_FONT_METRICS1 metrics{};
-    font.Font->GetMetrics(&metrics);
-    const auto line_height = (metrics.ascent + metrics.descent + metrics.lineGap) * font.Scale;
-
-    f32 sum_width = 0;
-
+    f32 sum_size = 0;
     const std::span glyph_advances(data.m_glyph_advances.data() + GlyphStartIndex, ActualGlyphCount);
     for (u32 i = 0; i < ActualGlyphCount; ++i)
     {
-        sum_width += glyph_advances[i];
+        sum_size += glyph_advances[i];
     }
+    SingleLineSize.LineSize = sum_size;
 
-    HasSingleLineSize = true;
-    SingleLineWidth = sum_width;
-    SingleLineHeight = line_height;
+    return SingleLineSize;
+}
 
-    return {Size{.Width = SingleLineWidth, .Height = SingleLineHeight}};
+std::generator<RunBreakLine> Run::BreakLines(
+    const ParagraphData& data, const f32 init_size, const f32 space
+) const
+{
+    f32 cur_space = space - init_size;
+    f32 sum_size = 0;
+    const std::span break_points(data.m_line_breakpoints);
+    const std::span glyph_advances(data.m_glyph_advances.data() + GlyphStartIndex, ActualGlyphCount);
+    u32 pre_i = 0;
+    u32 line = 0;
+    for (u32 i = 0, c = 0; i < ActualGlyphCount; ++i)
+    {
+        // todo check break points
+        const f32 glyph_advance = glyph_advances[i];
+        const f32 new_size = sum_size + glyph_advance;
+        if (new_size < cur_space)
+        {
+            sum_size = new_size;
+            continue;
+        }
+        const u32 len = i - pre_i;
+        if (len == 0)
+        {
+            cur_space = space;
+            line++;
+            continue;
+        }
+        const u32 start = std::exchange(pre_i, i);
+        const f32 size = std::exchange(sum_size, 0);
+        cur_space = space;
+        co_yield RunBreakLine{
+            .Start = start,
+            .Length = len,
+            .Size = size,
+            .Line = line,
+        };
+        line++;
+    }
+    const u32 len = ActualGlyphCount - pre_i;
+    if (len == 0) co_return;
+    co_yield RunBreakLine{
+        .Start = pre_i,
+        .Length = len,
+        .Size = sum_size,
+        .Line = line,
+    };
+    co_return;
 }

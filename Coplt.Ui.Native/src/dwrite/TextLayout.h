@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <span>
+#include <generator>
 #include <icu.h>
 #include <dwrite_3.h>
 
@@ -150,6 +151,8 @@ namespace Coplt::LayoutCalc::Texts
         u32 FirstScope;
     };
 
+    struct RunBreakLineIter;
+
     struct Run
     {
         u32 Start;
@@ -163,11 +166,13 @@ namespace Coplt::LayoutCalc::Texts
         u32 ActualGlyphCount;
 
         bool HasSingleLineSize;
-        f32 SingleLineWidth;
-        f32 SingleLineHeight;
+        RunLineSize SingleLineSize;
 
         bool IsInlineBlock(const ParagraphData& data) const;
-        std::optional<Size<f32>> SingleLineSize(const ParagraphData& data);
+        const RunLineSize& GetSingleLineSize(const ParagraphData& data);
+        std::generator<RunBreakLine> BreakLines(
+            const ParagraphData& data, f32 init_size, f32 space
+        ) const;
     };
 
     struct ParagraphData
@@ -215,8 +220,8 @@ namespace Coplt::LayoutCalc::Texts
         void AnalyzeGlyphsFirst();
 
         LayoutOutput Compute(
-            TextLayout& layout, LayoutRunMode RunMode,
-            Size<AvailableSpace> AvailableSpace, Size<std::optional<f32>> KnownSize
+            TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,
+            const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
         );
     };
 } // namespace Coplt

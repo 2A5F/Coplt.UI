@@ -95,7 +95,8 @@ namespace Coplt::LayoutCalc
         const CtxNodeRef node,
         const NodeId* parent_id = nullptr,
         ChildsData* parent_childs = nullptr,
-        TextLayout* cur_text_layout = nullptr
+        TextLayout* cur_text_layout = nullptr,
+        const StyleData* parent_style = nullptr
     )
     {
         if (node.Type() == NodeType::Text)
@@ -158,33 +159,10 @@ namespace Coplt::LayoutCalc
                 }
                 if (style.TextMode == TextMode::Inline)
                 {
+                    COPLT_DEBUG_ASSERT(parent_style);
                     if (
                         style.Container == Container::Text
-                        && style.Width == LengthType::Auto
-                        && style.Height == LengthType::Auto
-                        && style.MinWidth == LengthType::Auto
-                        && style.MinHeight == LengthType::Auto
-                        && style.MaxWidth == LengthType::Auto
-                        && style.MaxHeight == LengthType::Auto
-                        && !style.HasAspectRatio
-                        && IsZeroLength(style.InsertTop, style.InsertTopValue)
-                        && IsZeroLength(style.InsertRight, style.InsertRightValue)
-                        && IsZeroLength(style.InsertBottom, style.InsertBottomValue)
-                        && IsZeroLength(style.InsertLeft, style.InsertLeftValue)
-                        && IsZeroLength(style.MarginTop, style.MarginTopValue)
-                        && IsZeroLength(style.MarginRight, style.MarginRightValue)
-                        && IsZeroLength(style.MarginBottom, style.MarginBottomValue)
-                        && IsZeroLength(style.MarginLeft, style.MarginLeftValue)
-                        && IsZeroLength(style.PaddingTop, style.PaddingTopValue)
-                        && IsZeroLength(style.PaddingRight, style.PaddingRightValue)
-                        && IsZeroLength(style.PaddingBottom, style.PaddingBottomValue)
-                        && IsZeroLength(style.PaddingLeft, style.PaddingLeftValue)
-                        && IsZeroLength(style.BorderTop, style.BorderTopValue)
-                        && IsZeroLength(style.BorderRight, style.BorderRightValue)
-                        && IsZeroLength(style.BorderBottom, style.BorderBottomValue)
-                        && IsZeroLength(style.BorderLeft, style.BorderLeftValue)
-                        && style.OverflowX == Overflow::Visible
-                        && style.OverflowY == Overflow::Visible
+                        && (!parent_style || parent_style->WritingDirection == style.WritingDirection)
                     )
                     {
                         need_end_scope = true;
@@ -207,7 +185,7 @@ namespace Coplt::LayoutCalc
             for (auto e = FFIUtils::GetEnumerator<NodeId>(&childs.m_childs); e.MoveNext();)
             {
                 auto child = CtxNodeRef(node.ctx, *e.Current());
-                Phase1(child, &node.id, &childs, cur_text_layout);
+                Phase1(child, &node.id, &childs, cur_text_layout, &style);
             }
 
             if (need_end_scope)

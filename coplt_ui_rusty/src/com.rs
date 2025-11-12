@@ -177,14 +177,6 @@ pub enum FlexWrap {
     WrapReverse = 2,
 }
 
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum FloatInText {
-    None = 0,
-    Start = 1,
-    End = 2,
-}
-
 #[repr(i32)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontWeight {
@@ -209,6 +201,15 @@ pub enum GridAutoFlow {
     Column = 1,
     RowDense = 2,
     ColumnDense = 3,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LineAlign {
+    Baseline = 0,
+    Start = 1,
+    End = 2,
+    Center = 3,
 }
 
 #[repr(u8)]
@@ -243,10 +244,9 @@ pub enum Position {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum TextAlign {
-    Auto = 0,
-    Left = 1,
-    Right = 2,
-    Center = 3,
+    Start = 0,
+    End = 1,
+    Center = 2,
 }
 
 #[repr(u8)]
@@ -1000,6 +1000,7 @@ pub struct StyleData {
     pub FontSize: f32,
     pub FontWidth: FontWidth,
     pub FontOblique: f32,
+    pub LineHeightValue: f32,
     pub GridRowStart: GridPlacement,
     pub GridRowEnd: GridPlacement,
     pub GridColumnStart: GridPlacement,
@@ -1009,7 +1010,6 @@ pub struct StyleData {
     pub Container: Container,
     pub TextMode: TextMode,
     pub BoxSizing: BoxSizing,
-    pub Float: FloatInText,
     pub Cursor: CursorType,
     pub PointerEvents: PointerEvents,
     pub OverflowX: Overflow,
@@ -1049,11 +1049,12 @@ pub struct StyleData {
     pub AlignSelf: AlignType,
     pub JustifySelf: AlignType,
     pub FlexBasis: LengthType,
-    pub TextAlign: TextAlign,
-    pub TabSize: LengthType,
     pub FontWeight: FontWeight,
     pub FontItalic: bool,
     pub FontOpticalSizing: bool,
+    pub TextAlign: TextAlign,
+    pub LineAlign: LineAlign,
+    pub TabSize: LengthType,
     pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
@@ -1063,6 +1064,7 @@ pub struct StyleData {
     pub WordBreak: WordBreak,
     pub TextOrientation: TextOrientation,
     pub TextOverflow: TextOverflow,
+    pub LineHeight: LengthType,
 }
 
 #[repr(C)]

@@ -18,9 +18,40 @@ public enum LocaleMode : byte
 
 public enum TextAlign : byte
 {
-    Auto,
-    Left,
-    Right,
+    /// <summary>
+    /// For horizontal text, this is left ; for vertical text, this is top. RTL will not affect this.
+    /// </summary>
+    Start,
+    /// <summary>
+    /// For horizontal text, this is right ; for vertical text, this is bottom. RTL will not affect this.
+    /// </summary>
+    End,
+    /// <summary>
+    /// Center alignment
+    /// </summary>
+    Center,
+}
+
+/// <summary>
+/// How inline box align in text lines
+/// </summary>
+public enum LineAlign : byte
+{
+    /// <summary>
+    /// Inline box bottom align to baseline
+    /// </summary>
+    Baseline,
+    /// <summary>
+    /// Inline box bottom align to line start, for horizontal text, this is top ; for vertical text, this is left. RTL will not affect this.
+    /// </summary>
+    Start,
+    /// <summary>
+    /// Inline box bottom align to line end, for horizontal text, this is bottom ; for vertical text, this is right. RTL will not affect this.
+    /// </summary>
+    End,
+    /// <summary>
+    /// Center alignment
+    /// </summary>
     Center,
 }
 

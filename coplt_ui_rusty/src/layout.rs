@@ -769,9 +769,8 @@ impl<'a> BlockContainerStyle for StyleHandle<'a> {
     #[inline(always)]
     fn text_align(&self) -> taffy::TextAlign {
         match self.TextAlign {
-            com::TextAlign::Auto => taffy::TextAlign::Auto,
-            com::TextAlign::Left => taffy::TextAlign::LegacyLeft,
-            com::TextAlign::Right => taffy::TextAlign::LegacyRight,
+            com::TextAlign::Start => taffy::TextAlign::LegacyLeft,
+            com::TextAlign::End => taffy::TextAlign::LegacyRight,
             com::TextAlign::Center => taffy::TextAlign::LegacyCenter,
         }
     }

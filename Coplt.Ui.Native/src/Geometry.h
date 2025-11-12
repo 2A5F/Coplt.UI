@@ -63,6 +63,20 @@ namespace Coplt::Geometry
         std::unreachable();
     }
 
+    COPLT_RELEASE_FORCE_INLINE inline f32 Resolve(const Length& length, const f32 ctx)
+    {
+        switch (length.first)
+        {
+        case LengthType::Fixed:
+            return length.second;
+        case LengthType::Percent:
+            return ctx * length.second ;
+        case LengthType::Auto:
+            return ctx;
+        }
+        std::unreachable();
+    }
+
     template <class T, class U>
     concept HasResolveOrZero = requires(const T& a, const U& b)
     {
@@ -89,7 +103,8 @@ namespace Coplt::Geometry
         return other;
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMin(const std::optional<f32> value, const std::optional<f32> other)
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMin(const std::optional<f32> value,
+                                                                const std::optional<f32> other)
     {
         if (value.has_value() && other.has_value())
             return std::min(value.value(), other.value());
@@ -98,7 +113,8 @@ namespace Coplt::Geometry
         return std::nullopt;
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMax(const std::optional<f32> value, const std::optional<f32> other)
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMax(const std::optional<f32> value,
+                                                                const std::optional<f32> other)
     {
         if (value.has_value() && other.has_value())
             return std::max(value.value(), other.value());
@@ -118,6 +134,25 @@ namespace Coplt::Geometry
         if (value.has_value() && min.has_value() && !max.has_value())
             return std::max(value.value(), min.value());
         return value;
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> Or(
+        const AvailableSpace value, const std::optional<f32> other
+    )
+    {
+        switch (value.first)
+        {
+        case AvailableSpaceType::Definite:
+            return value.second;
+            break;
+        case AvailableSpaceType::MinContent:
+            if (other.has_value()) return other;
+            return 0;
+        case AvailableSpaceType::MaxContent:
+            if (other.has_value()) return other;
+            return std::nullopt;
+        }
+        std::unreachable();
     }
 
     enum class Axis : u8
@@ -348,6 +383,15 @@ namespace Coplt::Geometry
                 .Height = Height.has_value() ? Height : other.Height,
             };
         }
+
+        COPLT_RELEASE_FORCE_INLINE Size<std::optional<f32>> Or(Size<std::optional<f32>> other) const requires
+            std::same_as<T, AvailableSpace>
+        {
+            return Size<std::optional<f32>>{
+                .Width = Geometry::Or(Width, other.Width),
+                .Height = Geometry::Or(Height, other.Height),
+            };
+        }
     };
 
     template <class T>
@@ -414,18 +458,4 @@ namespace Coplt::Geometry
             };
         }
     };
-
-    COPLT_RELEASE_FORCE_INLINE inline bool IsOutOfSize(const f32 a, const AvailableSpace b)
-    {
-        switch (b.first)
-        {
-        case AvailableSpaceType::Definite:
-            return a > b.second;
-        case AvailableSpaceType::MinContent:
-            return true;
-        case AvailableSpaceType::MaxContent:
-            return false;
-        }
-        std::unreachable();
-    }
 }

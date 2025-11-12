@@ -81,6 +81,8 @@ public partial record struct StyleData()
     public FontWidth FontWidth = new(1);
     public float FontOblique = -20;
 
+    public float LineHeightValue = 1.2f;
+
     public GridPlacement GridRowStart = GridPlacement.Auto;
     public GridPlacement GridRowEnd = GridPlacement.Auto;
     public GridPlacement GridColumnStart = GridPlacement.Auto;
@@ -91,7 +93,7 @@ public partial record struct StyleData()
     public Container Container = Container.Flex;
     public TextMode TextMode = TextMode.Block;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
-    public FloatInText Float = FloatInText.None; // not support yet
+    // public FloatInText Float = FloatInText.None; // not support yet
 
     public CursorType Cursor = CursorType.Default;
     public PointerEvents PointerEvents = PointerEvents.Auto;
@@ -148,13 +150,13 @@ public partial record struct StyleData()
 
     public LengthType FlexBasis = LengthType.Auto;
 
-    public TextAlign TextAlign = TextAlign.Auto;
-    public LengthType TabSize = LengthType.Percent;
-
     public FontWeight FontWeight = FontWeight.Normal;
     public bool FontItalic = false;
     public bool FontOpticalSizing = true;
 
+    public TextAlign TextAlign = TextAlign.Start;
+    public LineAlign LineAlign = LineAlign.Start;
+    public LengthType TabSize = LengthType.Percent;
     public LocaleMode LocaleMode = LocaleMode.Normal;
     public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
@@ -164,6 +166,7 @@ public partial record struct StyleData()
     public WordBreak WordBreak = WordBreak.Auto;
     public TextOrientation TextOrientation = TextOrientation.Mixed;
     public TextOverflow TextOverflow = TextOverflow.Clip;
+    public LengthType LineHeight = LengthType.Percent;
 }
 
 [Dropping]

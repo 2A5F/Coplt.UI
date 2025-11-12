@@ -30,15 +30,15 @@ public enum TextMode : byte
     Inline,
 }
 
-/// <summary>
-/// Similar to CSS float, but behaves differently.
-/// </summary>
-public enum FloatInText : byte
-{
-    None,
-    Start,
-    End,
-}
+// /// <summary>
+// /// Similar to CSS float, but behaves differently.
+// /// </summary>
+// public enum FloatInText : byte
+// {
+//     None,
+//     Start,
+//     End,
+// }
 
 public enum Position : byte
 {

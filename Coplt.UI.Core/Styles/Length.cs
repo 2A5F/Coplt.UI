@@ -75,7 +75,7 @@ public static partial class StyleExtensions
     {
         public Fixed fx => new(v);
         public Fixed px => new(v);
-        public Percent pc => new(v / 100f);
+        public Percent pc => new(v * (1 / 100f));
         public Fraction fr => new(v);
     }
 }
