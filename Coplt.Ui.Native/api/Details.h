@@ -713,23 +713,25 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFontManager>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    ::Coplt::u64 (*const COPLT_CDECL f_SetAssocUpdate)(const ::Coplt::IFontManager*, void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) noexcept;
-    void* (*const COPLT_CDECL f_RemoveAssocUpdate)(const ::Coplt::IFontManager*, ::Coplt::u64 AssocUpdateId) noexcept;
-    void (*const COPLT_CDECL f_SetExpiredFrame)(const ::Coplt::IFontManager*, ::Coplt::u64 FrameCount) noexcept;
+    ::Coplt::u64 (*const COPLT_CDECL f_SetAssocUpdate)(::Coplt::IFontManager*, void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) noexcept;
+    void* (*const COPLT_CDECL f_RemoveAssocUpdate)(::Coplt::IFontManager*, ::Coplt::u64 AssocUpdateId) noexcept;
+    void (*const COPLT_CDECL f_SetExpireFrame)(::Coplt::IFontManager*, ::Coplt::u64 FrameCount) noexcept;
+    void (*const COPLT_CDECL f_SetExpireTime)(::Coplt::IFontManager*, ::Coplt::u64 TimeTicks) noexcept;
     ::Coplt::u64 (*const COPLT_CDECL f_GetCurrentFrame)(const ::Coplt::IFontManager*) noexcept;
-    void (*const COPLT_CDECL f_Update)(const ::Coplt::IFontManager*) noexcept;
-    ::Coplt::u64 (*const COPLT_CDECL f_FontFaceToId)(const ::Coplt::IFontManager*, IFontFace* Face) noexcept;
-    IFontFace* (*const COPLT_CDECL f_IdToFontFace)(const ::Coplt::IFontManager*, ::Coplt::u64 Id) noexcept;
+    void (*const COPLT_CDECL f_Update)(::Coplt::IFontManager*, ::Coplt::u64 CurrentTime) noexcept;
+    ::Coplt::u64 (*const COPLT_CDECL f_FontFaceToId)(::Coplt::IFontManager*, IFontFace* Face) noexcept;
+    IFontFace* (*const COPLT_CDECL f_IdToFontFace)(::Coplt::IFontManager*, ::Coplt::u64 Id) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
 {
-    extern "C" ::Coplt::u64 COPLT_CDECL SetAssocUpdate(const ::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept;
-    extern "C" void* COPLT_CDECL RemoveAssocUpdate(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
-    extern "C" void COPLT_CDECL SetExpiredFrame(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
+    extern "C" ::Coplt::u64 COPLT_CDECL SetAssocUpdate(::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept;
+    extern "C" void* COPLT_CDECL RemoveAssocUpdate(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
+    extern "C" void COPLT_CDECL SetExpireFrame(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
+    extern "C" void COPLT_CDECL SetExpireTime(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
     extern "C" ::Coplt::u64 COPLT_CDECL GetCurrentFrame(const ::Coplt::IFontManager* self) noexcept;
-    extern "C" void COPLT_CDECL Update(const ::Coplt::IFontManager* self) noexcept;
-    extern "C" ::Coplt::u64 COPLT_CDECL FontFaceToId(const ::Coplt::IFontManager* self, IFontFace* p0) noexcept;
-    extern "C" IFontFace* COPLT_CDECL IdToFontFace(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
+    extern "C" void COPLT_CDECL Update(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
+    extern "C" ::Coplt::u64 COPLT_CDECL FontFaceToId(::Coplt::IFontManager* self, IFontFace* p0) noexcept;
+    extern "C" IFontFace* COPLT_CDECL IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
 }
 
 template <>
@@ -764,7 +766,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
             .f_SetAssocUpdate = VirtualImpl_Coplt_IFontManager::SetAssocUpdate,
             .f_RemoveAssocUpdate = VirtualImpl_Coplt_IFontManager::RemoveAssocUpdate,
-            .f_SetExpiredFrame = VirtualImpl_Coplt_IFontManager::SetExpiredFrame,
+            .f_SetExpireFrame = VirtualImpl_Coplt_IFontManager::SetExpireFrame,
+            .f_SetExpireTime = VirtualImpl_Coplt_IFontManager::SetExpireTime,
             .f_GetCurrentFrame = VirtualImpl_Coplt_IFontManager::GetCurrentFrame,
             .f_Update = VirtualImpl_Coplt_IFontManager::Update,
             .f_FontFaceToId = VirtualImpl_Coplt_IFontManager::FontFaceToId,
@@ -776,13 +779,14 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual ::Coplt::u64 Impl_SetAssocUpdate(void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) const = 0;
-        virtual void* Impl_RemoveAssocUpdate(::Coplt::u64 AssocUpdateId) const = 0;
-        virtual void Impl_SetExpiredFrame(::Coplt::u64 FrameCount) const = 0;
+        virtual ::Coplt::u64 Impl_SetAssocUpdate(void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) = 0;
+        virtual void* Impl_RemoveAssocUpdate(::Coplt::u64 AssocUpdateId) = 0;
+        virtual void Impl_SetExpireFrame(::Coplt::u64 FrameCount) = 0;
+        virtual void Impl_SetExpireTime(::Coplt::u64 TimeTicks) = 0;
         virtual ::Coplt::u64 Impl_GetCurrentFrame() const = 0;
-        virtual void Impl_Update() const = 0;
-        virtual ::Coplt::u64 Impl_FontFaceToId(IFontFace* Face) const = 0;
-        virtual IFontFace* Impl_IdToFontFace(::Coplt::u64 Id) const = 0;
+        virtual void Impl_Update(::Coplt::u64 CurrentTime) = 0;
+        virtual ::Coplt::u64 Impl_FontFaceToId(IFontFace* Face) = 0;
+        virtual IFontFace* Impl_IdToFontFace(::Coplt::u64 Id) = 0;
     };
 
     template <std::derived_from<::Coplt::IFontManager> Base = ::Coplt::IFontManager>
@@ -800,19 +804,24 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
         template <class Interface>
         COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
 
-        static ::Coplt::u64 COPLT_CDECL f_SetAssocUpdate(const ::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept
+        static ::Coplt::u64 COPLT_CDECL f_SetAssocUpdate(::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept
         {
             return AsImpl(self)->Impl_SetAssocUpdate(p0, p1, p2);
         }
 
-        static void* COPLT_CDECL f_RemoveAssocUpdate(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+        static void* COPLT_CDECL f_RemoveAssocUpdate(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
         {
             return AsImpl(self)->Impl_RemoveAssocUpdate(p0);
         }
 
-        static void COPLT_CDECL f_SetExpiredFrame(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+        static void COPLT_CDECL f_SetExpireFrame(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
         {
-            AsImpl(self)->Impl_SetExpiredFrame(p0);
+            AsImpl(self)->Impl_SetExpireFrame(p0);
+        }
+
+        static void COPLT_CDECL f_SetExpireTime(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+        {
+            AsImpl(self)->Impl_SetExpireTime(p0);
         }
 
         static ::Coplt::u64 COPLT_CDECL f_GetCurrentFrame(const ::Coplt::IFontManager* self) noexcept
@@ -820,17 +829,17 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
             return AsImpl(self)->Impl_GetCurrentFrame();
         }
 
-        static void COPLT_CDECL f_Update(const ::Coplt::IFontManager* self) noexcept
+        static void COPLT_CDECL f_Update(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
         {
-            AsImpl(self)->Impl_Update();
+            AsImpl(self)->Impl_Update(p0);
         }
 
-        static ::Coplt::u64 COPLT_CDECL f_FontFaceToId(const ::Coplt::IFontManager* self, IFontFace* p0) noexcept
+        static ::Coplt::u64 COPLT_CDECL f_FontFaceToId(::Coplt::IFontManager* self, IFontFace* p0) noexcept
         {
             return AsImpl(self)->Impl_FontFaceToId(p0);
         }
 
-        static IFontFace* COPLT_CDECL f_IdToFontFace(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+        static IFontFace* COPLT_CDECL f_IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
         {
             return AsImpl(self)->Impl_IdToFontFace(p0);
         }
@@ -842,7 +851,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
         .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
         .f_SetAssocUpdate = VirtualImpl<Impl>::f_SetAssocUpdate,
         .f_RemoveAssocUpdate = VirtualImpl<Impl>::f_RemoveAssocUpdate,
-        .f_SetExpiredFrame = VirtualImpl<Impl>::f_SetExpiredFrame,
+        .f_SetExpireFrame = VirtualImpl<Impl>::f_SetExpireFrame,
+        .f_SetExpireTime = VirtualImpl<Impl>::f_SetExpireTime,
         .f_GetCurrentFrame = VirtualImpl<Impl>::f_GetCurrentFrame,
         .f_Update = VirtualImpl<Impl>::f_Update,
         .f_FontFaceToId = VirtualImpl<Impl>::f_FontFaceToId,
@@ -852,7 +862,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
 {
 
-    extern "C" inline ::Coplt::u64 COPLT_CDECL SetAssocUpdate(const ::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept
+    extern "C" inline ::Coplt::u64 COPLT_CDECL SetAssocUpdate(::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept
     {
         ::Coplt::u64 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -865,7 +875,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
         return r;
     }
 
-    extern "C" inline void* COPLT_CDECL RemoveAssocUpdate(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    extern "C" inline void* COPLT_CDECL RemoveAssocUpdate(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         void* r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -878,15 +888,27 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
         return r;
     }
 
-    extern "C" inline void COPLT_CDECL SetExpiredFrame(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    extern "C" inline void COPLT_CDECL SetExpireFrame(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, SetExpiredFrame, void)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, SetExpireFrame, void)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_SetExpiredFrame(p0);
+        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_SetExpireFrame(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, SetExpiredFrame, void)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, SetExpireFrame, void)
+        #endif
+    }
+
+    extern "C" inline void COPLT_CDECL SetExpireTime(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, SetExpireTime, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_SetExpireTime(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, SetExpireTime, void)
         #endif
     }
 
@@ -903,19 +925,19 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
         return r;
     }
 
-    extern "C" inline void COPLT_CDECL Update(const ::Coplt::IFontManager* self) noexcept
+    extern "C" inline void COPLT_CDECL Update(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
         COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, Update, void)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Update();
+        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Update(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, Update, void)
         #endif
     }
 
-    extern "C" inline ::Coplt::u64 COPLT_CDECL FontFaceToId(const ::Coplt::IFontManager* self, IFontFace* p0) noexcept
+    extern "C" inline ::Coplt::u64 COPLT_CDECL FontFaceToId(::Coplt::IFontManager* self, IFontFace* p0) noexcept
     {
         ::Coplt::u64 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -928,7 +950,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
         return r;
     }
 
-    extern "C" inline IFontFace* COPLT_CDECL IdToFontFace(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    extern "C" inline IFontFace* COPLT_CDECL IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         IFontFace* r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -950,31 +972,35 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IFontManager>
 {
-    static COPLT_FORCE_INLINE ::Coplt::u64 SetAssocUpdate(const ::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::u64 SetAssocUpdate(::Coplt::IFontManager* self, void* p0, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p1, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* p2) noexcept
     {
         return COPLT_COM_PVTB(IFontManager, self)->f_SetAssocUpdate(self, p0, p1, p2);
     }
-    static COPLT_FORCE_INLINE void* RemoveAssocUpdate(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    static COPLT_FORCE_INLINE void* RemoveAssocUpdate(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         return COPLT_COM_PVTB(IFontManager, self)->f_RemoveAssocUpdate(self, p0);
     }
-    static COPLT_FORCE_INLINE void SetExpiredFrame(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    static COPLT_FORCE_INLINE void SetExpireFrame(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
-        COPLT_COM_PVTB(IFontManager, self)->f_SetExpiredFrame(self, p0);
+        COPLT_COM_PVTB(IFontManager, self)->f_SetExpireFrame(self, p0);
+    }
+    static COPLT_FORCE_INLINE void SetExpireTime(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    {
+        COPLT_COM_PVTB(IFontManager, self)->f_SetExpireTime(self, p0);
     }
     static COPLT_FORCE_INLINE ::Coplt::u64 GetCurrentFrame(const ::Coplt::IFontManager* self) noexcept
     {
         return COPLT_COM_PVTB(IFontManager, self)->f_GetCurrentFrame(self);
     }
-    static COPLT_FORCE_INLINE void Update(const ::Coplt::IFontManager* self) noexcept
+    static COPLT_FORCE_INLINE void Update(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
-        COPLT_COM_PVTB(IFontManager, self)->f_Update(self);
+        COPLT_COM_PVTB(IFontManager, self)->f_Update(self, p0);
     }
-    static COPLT_FORCE_INLINE ::Coplt::u64 FontFaceToId(const ::Coplt::IFontManager* self, IFontFace* p0) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::u64 FontFaceToId(::Coplt::IFontManager* self, IFontFace* p0) noexcept
     {
         return COPLT_COM_PVTB(IFontManager, self)->f_FontFaceToId(self, p0);
     }
-    static COPLT_FORCE_INLINE IFontFace* IdToFontFace(const ::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    static COPLT_FORCE_INLINE IFontFace* IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         return COPLT_COM_PVTB(IFontManager, self)->f_IdToFontFace(self, p0);
     }

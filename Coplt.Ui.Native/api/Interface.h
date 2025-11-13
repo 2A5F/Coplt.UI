@@ -50,13 +50,14 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontManager
 
-        COPLT_COM_METHOD(SetAssocUpdate, ::Coplt::u64, (void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) const, Data, OnAdd, OnExpired);
-        COPLT_COM_METHOD(RemoveAssocUpdate, void*, (::Coplt::u64 AssocUpdateId) const, AssocUpdateId);
-        COPLT_COM_METHOD(SetExpiredFrame, void, (::Coplt::u64 FrameCount) const, FrameCount);
+        COPLT_COM_METHOD(SetAssocUpdate, ::Coplt::u64, (void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired), Data, OnAdd, OnExpired);
+        COPLT_COM_METHOD(RemoveAssocUpdate, void*, (::Coplt::u64 AssocUpdateId), AssocUpdateId);
+        COPLT_COM_METHOD(SetExpireFrame, void, (::Coplt::u64 FrameCount), FrameCount);
+        COPLT_COM_METHOD(SetExpireTime, void, (::Coplt::u64 TimeTicks), TimeTicks);
         COPLT_COM_METHOD(GetCurrentFrame, ::Coplt::u64, () const);
-        COPLT_COM_METHOD(Update, void, () const);
-        COPLT_COM_METHOD(FontFaceToId, ::Coplt::u64, (IFontFace* Face) const, Face);
-        COPLT_COM_METHOD(IdToFontFace, IFontFace*, (::Coplt::u64 Id) const, Id);
+        COPLT_COM_METHOD(Update, void, (::Coplt::u64 CurrentTime), CurrentTime);
+        COPLT_COM_METHOD(FontFaceToId, ::Coplt::u64, (IFontFace* Face), Face);
+        COPLT_COM_METHOD(IdToFontFace, IFontFace*, (::Coplt::u64 Id), Id);
     };
 
     COPLT_COM_INTERFACE(ILayout, "f1e64bf0-ffb9-42ce-be78-31871d247883", ::Coplt::IUnknown)

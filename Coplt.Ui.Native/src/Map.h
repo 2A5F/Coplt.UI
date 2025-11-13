@@ -104,7 +104,7 @@ namespace Coplt
                 if (entry.Next >= -1)
                 {
                     i32* bucket = GetBucket(entry.HashCode);
-                    entry.Next = bucket - 1; // Value in _buckets is 1-based
+                    entry.Next = *bucket - 1; // Value in _buckets is 1-based
                     *bucket = i + 1;
                 }
             }
@@ -170,9 +170,9 @@ namespace Coplt
             {
                 auto& entry = entries[index];
                 entry.HashCode = hash_code;
-                entry.Next = bucket - 1;
+                entry.Next = *bucket - 1;
                 new(std::addressof(entry.Key)) TKey(std::forward<TKey>(key));
-                new(std::addressof(entry.Value)) TKey(std::forward<TValue>(value));
+                new(std::addressof(entry.Value)) TValue(std::forward<TValue>(value));
                 *bucket = index + 1; // Value in _buckets is 1-based
             }
             return InsertResult::AddNew;
@@ -217,6 +217,11 @@ namespace Coplt
         bool TryAdd(TKey&& key, TValue&& value)
         {
             return TryInsert(std::forward<TKey>(key), std::forward<TValue>(value), false) == InsertResult::AddNew;
+        }
+
+        bool TryAdd(const TKey& key, TValue&& value)
+        {
+            return TryAdd(TKey(key), std::forward<TValue>(value));
         }
 
         bool Set(TKey&& key, TValue&& value)
