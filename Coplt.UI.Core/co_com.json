@@ -15,6 +15,10 @@
           "name": "LibUi",
           "impl": "ILib"
         },
+        "dwrite/FontManager.h": {
+          "name": "DWriteFontManager",
+          "impl": "IFontManager"
+        },
         "dwrite/Layout.h": {
           "name": "Layout",
           "impl": "ILayout"

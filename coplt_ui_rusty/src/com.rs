@@ -1110,6 +1110,13 @@ impl IFontFamily {
 }
 
 #[repr(C)]
+pub struct IFontManager {
+}
+
+impl IFontManager {
+}
+
+#[repr(C)]
 pub struct ILayout {
 }
 

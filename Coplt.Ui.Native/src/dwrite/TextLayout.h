@@ -5,8 +5,6 @@
 #include <icu.h>
 #include <dwrite_3.h>
 
-#include <hb.h>
-
 #include "../Com.h"
 #include "../TextLayout.h"
 #include "../Layout.h"

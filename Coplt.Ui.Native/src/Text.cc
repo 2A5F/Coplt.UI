@@ -3,7 +3,6 @@
 #include <format>
 
 #include <icu.h>
-#include <hb.h>
 
 using namespace Coplt;
 

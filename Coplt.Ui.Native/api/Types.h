@@ -95,6 +95,8 @@ namespace Coplt {
 
     struct IFontFamily;
 
+    struct IFontManager;
+
     struct ILayout;
 
     struct ILib;

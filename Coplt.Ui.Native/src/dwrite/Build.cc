@@ -1,4 +1,5 @@
 #include "Backend.cc"
+#include "FontManager.cc"
 #include "SystemFontCollection.cc"
 #include "SystemFontFallback.cc"
 #include "FontFamily.cc"

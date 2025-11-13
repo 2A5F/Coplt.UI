@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mimalloc.h>
+
 #include "Com.h"
 #include "Hash.h"
 

@@ -46,6 +46,19 @@ namespace Coplt {
         COPLT_COM_METHOD(ClearNativeFontsCache, void, ());
     };
 
+    COPLT_COM_INTERFACE(IFontManager, "15a9651e-4fa2-48f3-9291-df0f9681a7d1", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IFontManager
+
+        COPLT_COM_METHOD(SetAssocUpdate, ::Coplt::u64, (void* Data, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) const, Data, OnAdd, OnExpired);
+        COPLT_COM_METHOD(RemoveAssocUpdate, void*, (::Coplt::u64 AssocUpdateId) const, AssocUpdateId);
+        COPLT_COM_METHOD(SetExpiredFrame, void, (::Coplt::u64 FrameCount) const, FrameCount);
+        COPLT_COM_METHOD(GetCurrentFrame, ::Coplt::u64, () const);
+        COPLT_COM_METHOD(Update, void, () const);
+        COPLT_COM_METHOD(FontFaceToId, ::Coplt::u64, (IFontFace* Face) const, Face);
+        COPLT_COM_METHOD(IdToFontFace, IFontFace*, (::Coplt::u64 Id) const, Id);
+    };
+
     COPLT_COM_INTERFACE(ILayout, "f1e64bf0-ffb9-42ce-be78-31871d247883", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_ILayout

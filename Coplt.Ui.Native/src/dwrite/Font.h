@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <dwrite_3.h>
-#include <hb-directwrite.h>
 
 #include "../Com.h"
 
