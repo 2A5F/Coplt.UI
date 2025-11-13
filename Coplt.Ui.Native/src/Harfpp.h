@@ -2,10 +2,10 @@
 
 #include <utility>
 
-#include "harfbuzz/hb.h"
-#include "harfbuzz/hb-ot.h"
+#include "hb.h"
+#include "hb-ot.h"
 #ifdef _WINDOWS
-#include <harfbuzz/hb-directwrite.h>
+#include "hb-directwrite.h"
 #endif
 
 #include "Com.h"
