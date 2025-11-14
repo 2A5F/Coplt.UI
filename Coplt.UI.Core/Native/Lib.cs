@@ -57,6 +57,14 @@ public sealed unsafe partial class NativeLib
 
     #endregion
 
+    #region MyRegion
+
+    public event Action<Exception> UnhandledException;
+
+    public void EmitUnhandledExceptionEvent(Exception ex) => UnhandledException.Invoke(ex);
+
+    #endregion
+
     #region SetLog
 
     public void SetLogger(
@@ -72,20 +80,21 @@ public sealed unsafe partial class NativeLib
     {
         var gch = GCHandle.Alloc(logger);
         m_lib.SetLogger((void*)GCHandle.ToIntPtr(gch), &ActionLoggerProxyLogger, &ActionLoggerProxyDrop);
-    }
+        return;
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-    private static void ActionLoggerProxyLogger(void* obj, LogLevel level, int len, char* msg)
-    {
-        var gch = GCHandle.FromIntPtr((nint)obj);
-        ((Action<LogLevel, string>)gch.Target!).Invoke(level, new string(msg, 0, len));
-    }
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+        static void ActionLoggerProxyLogger(void* obj, LogLevel level, int len, char* msg)
+        {
+            var gch = GCHandle.FromIntPtr((nint)obj);
+            ((Action<LogLevel, string>)gch.Target!).Invoke(level, new string(msg, 0, len));
+        }
 
-    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-    private static void ActionLoggerProxyDrop(void* obj)
-    {
-        var gch = GCHandle.FromIntPtr((nint)obj);
-        gch.Free();
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+        static void ActionLoggerProxyDrop(void* obj)
+        {
+            var gch = GCHandle.FromIntPtr((nint)obj);
+            gch.Free();
+        }
     }
 
     #endregion

@@ -6,11 +6,10 @@ using Coplt.UI.Styles;
 namespace Coplt.UI.Texts;
 
 [Dropping]
-public sealed unsafe partial class FontFace
+public sealed unsafe partial class FontFace : IEquatable<FontFace>
 {
     #region Fields
 
-    internal readonly Font m_font;
     [Drop]
     internal Rc<IFontFace> m_inner;
 
@@ -19,35 +18,32 @@ public sealed unsafe partial class FontFace
     #region Properties
 
     public ref readonly Rc<IFontFace> Inner => ref m_inner;
-    public Font Font => m_font;
-    public ref readonly FontMetrics Metrics => ref m_font.Metrics;
-    public FontFamily Family => m_font.Family;
-    public int Index => m_font.m_index;
-    public FontWidth Width => m_font.Width;
-    public FontWeight Weight => m_font.Weight;
-    // public FontStyle Style => m_font.Style;
-
-    public FontFlags Flags => m_font.Flags;
-
-    public bool IsColor => m_font.IsColor;
-    public bool IsMonospaced => m_font.IsMonospaced;
 
     #endregion
 
     #region Ctor
 
-    internal FontFace(Rc<IFontFace> inner, Font font)
+    internal FontFace(Rc<IFontFace> inner)
     {
         m_inner = inner;
-        m_font = font;
     }
 
     #endregion
 
-    #region ToString
+    #region Equals
 
-    public override string ToString() =>
-        $"FontFace({m_font.m_family.LocalName}, {m_font.m_index}) {{ Width = {Width}, Weight = {Weight}, Flags = {Flags} }}";
+    public bool Equals(FontFace? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        if (m_inner.Equals(other.m_inner)) return true;
+        return m_inner.Handle->Equals(other.m_inner.Handle);
+    }
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is FontFace other && Equals(other);
+    // ReSharper disable once NonReadonlyMemberInGetHashCode
+    public override int GetHashCode() => m_inner.HashCode();
+    public static bool operator ==(FontFace? left, FontFace? right) => Equals(left, right);
+    public static bool operator !=(FontFace? left, FontFace? right) => !Equals(left, right);
 
     #endregion
 }

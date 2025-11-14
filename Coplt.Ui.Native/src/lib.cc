@@ -50,50 +50,72 @@ Str8 LibUi::Impl_GetCurrentErrorMessage()
     return Str8(reinterpret_cast<u8*>(const_cast<char*>(msg.data())), msg.size());
 }
 
+HResult LibUi::Impl_CreateFontManager(IFontManager** fm)
+{
+    return feb(
+        [&] -> HResult
+        {
+            auto out = m_backend->CreateFontManager();
+            *fm = out.leak();
+            return HResultE::Ok;
+        }
+    );
+}
+
 HResult LibUi::Impl_GetSystemFontCollection(IFontCollection** fc)
 {
-    return feb([&] -> HResult
-    {
-        auto out = m_backend->GetSystemFontCollection();
-        *fc = out.leak();
-        return HResultE::Ok;
-    });
+    return feb(
+        [&] -> HResult
+        {
+            auto out = m_backend->GetSystemFontCollection();
+            *fc = out.leak();
+            return HResultE::Ok;
+        }
+    );
 }
 
 HResult LibUi::Impl_GetSystemFontFallback(IFontFallback** ff)
 {
-    return feb([&] -> HResult
-    {
-        auto out = m_backend->GetSystemFontFallback();
-        *ff = out.leak();
-        return HResultE::Ok;
-    });
+    return feb(
+        [&] -> HResult
+        {
+            auto out = m_backend->GetSystemFontFallback();
+            *ff = out.leak();
+            return HResultE::Ok;
+        }
+    );
 }
 
 HResult LibUi::Impl_CreateLayout(ILayout** layout)
 {
-    return feb([&]
-    {
-        auto out = LayoutCalc::CreateLayout(CloneRc(this));
-        *layout = out.leak();
-        return HResultE::Ok;
-    });
+    return feb(
+        [&]
+        {
+            auto out = LayoutCalc::CreateLayout(CloneRc(this));
+            *layout = out.leak();
+            return HResultE::Ok;
+        }
+    );
 }
 
 HResult LibUi::Impl_SplitTexts(NativeList<TextRange>* ranges, char16 const* chars, const i32 len)
 {
-    return feb([&]
-    {
-        Coplt::SplitTexts(*ffi_list(ranges), chars, len);
-        return HResultE::Ok;
-    });
+    return feb(
+        [&]
+        {
+            Coplt::SplitTexts(*ffi_list(ranges), chars, len);
+            return HResultE::Ok;
+        }
+    );
 }
 
 HResultE Coplt::coplt_ui_create_lib(LibLoadInfo* info, ILib** lib)
 {
-    return feb([&]
-    {
-        *lib = new LibUi(info);
-        return HResultE::Ok;
-    });
+    return feb(
+        [&]
+        {
+            *lib = new LibUi(info);
+            return HResultE::Ok;
+        }
+    );
 }

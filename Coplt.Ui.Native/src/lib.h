@@ -89,6 +89,9 @@ namespace Coplt
         Str8 Impl_GetCurrentErrorMessage();
 
         COPLT_FORCE_INLINE
+        HResult Impl_CreateFontManager(IFontManager** fm);
+
+        COPLT_FORCE_INLINE
         HResult Impl_GetSystemFontCollection(IFontCollection** fc);
 
         COPLT_FORCE_INLINE

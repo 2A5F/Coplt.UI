@@ -8,10 +8,11 @@ public unsafe partial struct IFontManager
 {
     public partial ulong SetAssocUpdate(
         void* Data,
+        delegate* unmanaged[Cdecl]<void*, void> OnDrop,
         delegate* unmanaged[Cdecl]<void*, IFontFace*, ulong, void> OnAdd,
         delegate* unmanaged[Cdecl]<void*, IFontFace*, ulong, void> OnExpired
     );
-    public partial void* RemoveAssocUpdate(ulong AssocUpdateId);
+    public partial void RemoveAssocUpdate(ulong AssocUpdateId);
 
     /// <summary>
     /// Sets the number of frames after which the font expires if no font is used. default is 180 frames, min is 4 frames

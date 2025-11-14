@@ -7,23 +7,135 @@
 
 namespace Coplt
 {
+    struct MapEntryDataOnly
+    {
+        i32 HashCode;
+        /// <summary>
+        /// 0-based index of next entry in chain: -1 means end of chain
+        /// also encodes whether this entry _itself_ is part of the free list by changing sign and subtracting 3,
+        /// so -2 means end of free list, -3 means index 0 but on free list, -4 means index 1 but on free list, etc.
+        /// </summary>
+        i32 Next;
+    };
+
+    template <class TKey>
+    struct MapEntryKeyOnly : MapEntryDataOnly
+    {
+        TKey Key; // Key of entry
+    };
+
+    template <class TKey, class TValue>
+    struct MapEntry : MapEntryKeyOnly<TKey>
+    {
+        TValue Value; // Value of entry
+    };
+
+    template <class TKey, class TValue>
+    struct MapEntryOutput
+    {
+        MapEntry<TKey, TValue>* m_entry;
+        i32 m_index;
+        bool m_exists;
+        bool m_exists_key;
+        bool m_exists_value;
+
+        i32 Index() const { return m_index; }
+
+        bool Exists() const { return m_exists; }
+
+        TKey& GetKey() const
+        {
+            if (!m_entry) throw Exception("Entry is null");
+            if (!m_exists_key) throw Exception("Key is not exists");
+            return m_entry->Key;
+        }
+
+        TValue& GetValue() const
+        {
+            if (!m_entry) throw Exception("Entry is null");
+            if (!m_exists_value) throw Exception("Key is not exists");
+            return m_entry->Value;
+        }
+
+        TKey* PtrKey() const
+        {
+            return std::addressof(m_entry->Key);
+        }
+
+        TValue* PtrValue() const
+        {
+            return std::addressof(m_entry->Value);
+        }
+
+        TKey& SetKey(const TKey& key)
+        {
+            if (!m_entry) throw Exception("Entry is null");
+            if (m_exists_key) m_entry->Key = key;
+            else
+            {
+                new(std::addressof(m_entry->Key)) TKey(key);
+                m_exists_key = true;
+            }
+            return m_entry->Key;
+        }
+
+        TKey& SetKey(TKey&& key)
+        {
+            if (!m_entry) throw Exception("Entry is null");
+            if (m_exists_key) m_entry->Key = std::forward<TKey>(key);
+            else
+            {
+                new(std::addressof(m_entry->Key)) TKey(std::forward<TKey>(key));
+                m_exists_key = true;
+            }
+            return m_entry->Key;
+        }
+
+        TValue& SetValue(const TValue& value)
+        {
+            if (!m_entry) throw Exception("Entry is null");
+            if (m_exists_value) m_entry->Value = value;
+            else
+            {
+                new(std::addressof(m_entry->Value)) TValue(value);
+                m_exists_value = true;
+            }
+            return m_entry->Value;
+        }
+
+        TValue& SetValue(TValue&& value)
+        {
+            if (!m_entry) throw Exception("Entry is null");
+            if (m_exists_value) m_entry->Value = std::forward<TValue>(value);
+            else
+            {
+                new(std::addressof(m_entry->Value)) TValue(std::forward<TValue>(value));
+                m_exists_value = true;
+            }
+            return m_entry->Value;
+        }
+
+        explicit operator bool() const { return m_entry && m_exists; }
+
+        MapEntryOutput() = default;
+
+        MapEntryOutput(MapEntry<TKey, TValue>* entry, const i32 index, const bool exists)
+            : m_entry(entry), m_index(index), m_exists(exists), m_exists_key(exists), m_exists_value(exists)
+        {
+        }
+
+        MapEntryOutput(MapEntry<TKey, TValue>* entry, const i32 index, const bool exists, const bool exists_key, const bool exists_value)
+            : m_entry(entry), m_index(index), m_exists(exists), m_exists_key(exists_key), m_exists_value(exists_value)
+        {
+        }
+    };
+
     template <class TKey, class TValue, Hash<TKey> THash = DefaultHash<TKey>, Eq<TKey> TEq = DefaultEq<TKey>>
     struct Map : FFIMap
     {
-        const i32 StartOfFreeList = -3;
+        using Entry = MapEntry<TKey, TValue>;
 
-        struct Entry
-        {
-            i32 HashCode;
-            /// <summary>
-            /// 0-based index of next entry in chain: -1 means end of chain
-            /// also encodes whether this entry _itself_ is part of the free list by changing sign and subtracting 3,
-            /// so -2 means end of free list, -3 means index 0 but on free list, -4 means index 1 but on free list, etc.
-            /// </summary>
-            i32 Next;
-            TKey Key; // Key of entry
-            TValue Value; // Value of entry
-        };
+        const i32 StartOfFreeList = -3;
 
     private:
         Entry* get_m_entries() const
@@ -32,6 +144,8 @@ namespace Coplt
         }
 
     public:
+        using EntryOutput = MapEntryOutput<TKey, TValue>;
+
         TKey* UnsafeKeyAt(i32 index) const
         {
             return std::addressof(get_m_entries()[index].Key);
@@ -80,8 +194,10 @@ namespace Coplt
         i32* GetBucket(const i32 hash_code) const
         {
             const auto buckets = m_buckets;
-            return &buckets[HashHelpers::FastMod(static_cast<u32>(hash_code), static_cast<u32>(m_cap),
-                                                 m_fast_mode_multiplier)];
+            return &buckets[HashHelpers::FastMod(
+                static_cast<u32>(hash_code), static_cast<u32>(m_cap),
+                m_fast_mode_multiplier
+            )];
         }
 
         void Resize()
@@ -178,15 +294,15 @@ namespace Coplt
             return InsertResult::AddNew;
         }
 
-        Entry* FindValue(const TKey& key) const
+        EntryOutput FindValue(const TKey& key) const
         {
             return FindValue<TKey, THash, TEq>(key);
         }
 
         template <class Q, Hash<Q> QHash = DefaultHash<Q>, Eq<Q> QEq = DefaultEq<Q, TKey>>
-        Entry* FindValue(const Q& key) const
+        EntryOutput FindValue(const Q& key) const
         {
-            if (!m_buckets) return nullptr;
+            if (!m_buckets) return EntryOutput();
 
             auto entries = get_m_entries();
 
@@ -198,11 +314,11 @@ namespace Coplt
             do
             {
                 // Test in if to drop range check for following array access
-                if (static_cast<u32>(i) >= static_cast<u32>(m_cap)) return nullptr;
+                if (static_cast<u32>(i) >= static_cast<u32>(m_cap)) return EntryOutput();
 
                 auto& entry = entries[i];
                 if (entry.HashCode == hash_code && QEq::Equals(key, entry.Key))
-                    return &entry;
+                    return EntryOutput(&entry, i, true);
 
                 i = entry.Next;
 
@@ -214,14 +330,117 @@ namespace Coplt
         }
 
     public:
-        bool TryAdd(TKey&& key, TValue&& value)
+        EntryOutput GetValueRefOrUninitializedValue(TKey&& key)
         {
-            return TryInsert(std::forward<TKey>(key), std::forward<TValue>(value), false) == InsertResult::AddNew;
+            auto r = GetValueRefOrUninitialized(key);
+            r.SetKey(std::forward<TKey>(key));
+            return r;
+        }
+
+        EntryOutput GetValueRefOrUninitializedValue(const TKey& key)
+        {
+            auto r = GetValueRefOrUninitialized(key);
+            r.SetKey(key);
+            return r;
+        }
+
+        EntryOutput GetValueRefOrUninitialized(const TKey& key)
+        {
+            return GetValueRefOrUninitialized<TKey, THash, TEq>(key);
+        }
+
+        template <class Q, Hash<Q> QHash = DefaultHash<Q>, Eq<Q> QEq = DefaultEq<Q, TKey>>
+        EntryOutput GetValueRefOrUninitialized(const Q& key)
+        {
+            if (m_buckets == nullptr) Initialize(0);
+
+            auto entries = get_m_entries();
+
+            const auto hash_code = QHash::GetHashCode(key);
+
+            u32 collision_count = 0;
+            auto bucket = GetBucket(hash_code);
+            auto i = *bucket - 1;
+
+            while (static_cast<u32>(i) < static_cast<u32>(m_cap))
+            {
+                auto& entry = entries[i];
+                if (entry.HashCode == hash_code && QEq::Equals(key, entry.Key))
+                {
+                    return EntryOutput(&entry, i, true);
+                }
+
+                i = entry.Next;
+
+                collision_count++;
+                if (collision_count > static_cast<u32>(m_cap))
+                {
+                    throw Exception("Concurrent operations are not supported");
+                }
+            }
+
+            i32 index;
+            if (m_free_count > 0)
+            {
+                index = m_free_list;
+                m_free_list = StartOfFreeList - entries[m_free_list].Next;
+                m_free_count--;
+            }
+            else
+            {
+                const auto count = m_count;
+                if (count == m_cap)
+                {
+                    Resize();
+                    bucket = GetBucket(hash_code);
+                }
+                index = count;
+                m_count = count + 1;
+                entries = get_m_entries();
+            }
+
+            {
+                auto& entry = entries[index];
+                entry.HashCode = hash_code;
+                entry.Next = *bucket - 1; // Value in _buckets is 1-based
+                *bucket = index + 1; // Value in _buckets is 1-based
+                return EntryOutput(&entry, index, false);
+            }
         }
 
         bool TryAdd(const TKey& key, TValue&& value)
         {
             return TryAdd(TKey(key), std::forward<TValue>(value));
+        }
+
+        bool TryAdd(const TKey& key, const TValue& value)
+        {
+            return TryAdd(TKey(key), TValue(value));
+        }
+
+        bool TryAdd(TKey&& key, const TValue& value)
+        {
+            return TryInsert(std::forward<TKey>(key), TValue(value), false) == InsertResult::AddNew;
+        }
+
+        bool TryAdd(TKey&& key, TValue&& value)
+        {
+            return TryInsert(std::forward<TKey>(key), std::forward<TValue>(value), false) == InsertResult::AddNew;
+        }
+
+        bool Set(const TKey& key, TValue&& value)
+        {
+            return TryInsert(TKey(key), std::forward<TValue>(value), true) == InsertResult::AddNew;
+        }
+
+        bool Set(const TKey& key, const TValue& value)
+        {
+            return TryInsert(TKey(key), TValue(value), true) == InsertResult::AddNew;
+        }
+
+        bool Set(TKey&& key, const TValue& value)
+        {
+            return TryInsert(std::forward<TKey>(key), TValue(value), true) == InsertResult::AddNew;
         }
 
         bool Set(TKey&& key, TValue&& value)
@@ -231,28 +450,24 @@ namespace Coplt
 
         bool Contains(const TKey& key)
         {
-            return FindValue(key) != nullptr;
+            return FindValue(key);
         }
 
         template <class Q, Hash<Q> QHash = DefaultHash<Q>, Eq<Q> QEq = DefaultEq<Q, TKey>>
         bool Contains(const Q& key)
         {
-            return FindValue<Q, QHash, QEq>(key) != nullptr;
+            return FindValue<Q, QHash, QEq>(key);
         }
 
-        std::optional<std::pair<TKey*, TValue*>> TryGet(const TKey& key)
+        EntryOutput TryGet(const TKey& key)
         {
-            const auto entry = FindValue(key);
-            if (entry == nullptr) return std::nullopt;
-            return std::make_pair(std::addressof(entry->Key), std::addressof(entry->Value));
+            return FindValue(key);
         }
 
         template <class Q, Hash<Q> QHash = DefaultHash<Q>, Eq<Q> QEq = DefaultEq<Q, TKey>>
-        std::optional<std::pair<TKey*, TValue*>> TryGet(const Q& key)
+        EntryOutput TryGet(const Q& key)
         {
-            const auto entry = FindValue<Q, QHash, QEq>(key);
-            if (entry == nullptr) return std::nullopt;
-            return std::make_pair(std::addressof(entry->Key), std::addressof(entry->Value));
+            return FindValue<Q, QHash, QEq>(key);
         }
 
         std::optional<std::pair<TKey, TValue>> Remove(const TKey& key)
@@ -289,14 +504,14 @@ namespace Coplt
 
                     entry.Next = StartOfFreeList - m_free_list;
 
-                    const auto r = std::make_pair(TKey(std::move(entry.Key)), TValue(std::move(entry.Value)));
+                    std::pair<TKey, TValue> r = std::make_pair(TKey(std::move(entry.Key)), TValue(std::move(entry.Value)));
                     entry.Key.~TKey();
                     entry.Value.~TValue();
 
                     m_free_list = i;
                     m_free_count++;
 
-                    return r;
+                    return std::optional<std::pair<TKey, TValue>>{std::move(r)};
                 }
 
                 last = i;
@@ -320,7 +535,8 @@ namespace Coplt
             i32 index;
 
         public:
-            explicit Enumerator(const Map* self) : self(self), cur(nullptr), index(0)
+            explicit Enumerator(const Map* self)
+                : self(self), cur(nullptr), index(0)
             {
             }
 

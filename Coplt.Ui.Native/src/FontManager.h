@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <utility>
+#include <functional>
 #include <mutex>
 
 #include "Com.h"
@@ -16,8 +16,8 @@ namespace Coplt
             Rc<IFontFace> m_face{};
             u64 m_last_use_frame{};
             u64 m_last_use_time{};
-            i32 m_newer{};
-            i32 m_older{};
+            i32 m_newer{-1};
+            i32 m_older{-1};
         };
 
         u64 m_expire_frame{180};
@@ -28,11 +28,55 @@ namespace Coplt
         std::mutex m_mutex{};
         u64 m_cur_frame{};
         u64 m_cur_time{};
-        i32 m_newest{};
-        i32 m_oldest{};
+        i32 m_newest{-1};
+        i32 m_oldest{-1};
 
-        void AddNode(u64 id, IFontFace* face);
-        void MakeNewest(Node& node);
+        struct AssocUpdate final
+        {
+            void* Data{};
+            Func<void, void*>* OnDrop{};
+            Func<void, void*, IFontFace*, u64>* OnAdd{};
+            Func<void, void*, IFontFace*, u64>* OnExpired{};
+
+            AssocUpdate() = default;
+            explicit AssocUpdate(void* Data, Func<void, void*>* OnDrop, Func<void, void*, IFontFace*, u64>* OnAdd, Func<void, void*, IFontFace*, u64>* OnExpired);
+
+            ~AssocUpdate();
+
+            AssocUpdate(const AssocUpdate&) = delete;
+            AssocUpdate& operator=(const AssocUpdate&) = delete;
+
+            AssocUpdate(AssocUpdate&& other) noexcept;
+            AssocUpdate& operator=(AssocUpdate&& other) noexcept;
+
+            void swap(AssocUpdate& other) noexcept;
+
+            void InvokeOnAdd(IFontFace* face, u64 id) const;
+            void InvokeOnExpired(IFontFace* face, u64 id) const;
+        };
+
+        Map<u64, AssocUpdate> m_assoc_updates{};
+        u64 m_assoc_update_id_inc{1};
+
+        Node& AddNode(u64 id, Rc<IFontFace> face);
+        void MakeNewest(Node& node, i32 index);
+
+        u64 SetAssocUpdate(
+            void* Data,
+            Func<void, void*>* OnDrop,
+            Func<void, void*, IFontFace*, u64>* OnAdd,
+            Func<void, void*, IFontFace*, u64>* OnExpired
+        );
+        void RemoveAssocUpdate(u64 AssocUpdateId);
+        void SetExpireFrame(u64 FrameCount);
+        void SetExpireTime(u64 TimeTicks);
+        u64 GetCurrentFrame() const;
+        void Update(u64 CurrentTime, const std::function<void(Node* node)>& OnExpired);
+        u64 FontFaceToId(IFontFace* Face, const std::function<void(Node* node)>& OnAdd);
+        IFontFace* IdToFontFace(u64 Id);
+
+        void OnAdd(const Node* node) const;
+        void OnExpired(const Node* node) const;
     };
 
     template <class Self>
@@ -41,10 +85,10 @@ namespace Coplt
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
-        u64 Impl_SetAssocUpdate(void* Data, Func<void, void*, IFontFace*, u64>* OnAdd, Func<void, void*, IFontFace*, u64>* OnExpired);
+        u64 Impl_SetAssocUpdate(void* Data, Func<void, void*>* OnDrop, Func<void, void*, IFontFace*, u64>* OnAdd, Func<void, void*, IFontFace*, u64>* OnExpired);
 
         COPLT_FORCE_INLINE
-        void* Impl_RemoveAssocUpdate(u64 AssocUpdateId);
+        void Impl_RemoveAssocUpdate(u64 AssocUpdateId);
 
         COPLT_FORCE_INLINE
         void Impl_SetExpireFrame(u64 FrameCount);
@@ -70,73 +114,53 @@ namespace Coplt
     template <class Self>
     u64 FontManagerBase<Self>::Impl_SetAssocUpdate(
         void* Data,
+        Func<void, void*>* OnDrop,
         Func<void, void*, IFontFace*, u64>* OnAdd,
         Func<void, void*, IFontFace*, u64>* OnExpired
     )
     {
-        // todo;
-        return 0;
+        return SetAssocUpdate(Data, OnDrop, OnAdd, OnExpired);
     }
 
     template <class Self>
-    void* FontManagerBase<Self>::Impl_RemoveAssocUpdate(u64 AssocUpdateId)
+    void FontManagerBase<Self>::Impl_RemoveAssocUpdate(const u64 AssocUpdateId)
     {
-        // todo
-        return nullptr;
+        return RemoveAssocUpdate(AssocUpdateId);
     }
 
     template <class Self>
     void FontManagerBase<Self>::Impl_SetExpireFrame(const u64 FrameCount)
     {
-        m_expire_frame = std::max<u64>(FrameCount, 4);
+        SetExpireFrame(FrameCount);
+    }
+
+    template <class Self>
+    void FontManagerBase<Self>::Impl_SetExpireTime(const u64 TimeTicks)
+    {
+        SetExpireTime(TimeTicks);
     }
 
     template <class Self>
     u64 FontManagerBase<Self>::Impl_GetCurrentFrame() const
     {
-        return m_cur_frame;
+        return GetCurrentFrame();
     }
 
     template <class Self>
     void FontManagerBase<Self>::Impl_Update(const u64 CurrentTime)
     {
-        std::lock_guard lock(m_mutex);
-        const auto last_frame = m_cur_frame;
-        m_cur_frame++;
-        m_cur_time = CurrentTime;
-        if (last_frame == 0) return;
-        // todo
+        Update(CurrentTime, [self = static_cast<Self*>(this)](auto node) { self->OnExpired(node); });
     }
 
     template <class Self>
     u64 FontManagerBase<Self>::Impl_FontFaceToId(IFontFace* Face)
     {
-        std::lock_guard lock(m_mutex);
-        // todo get or add
-        const auto pair = m_face_to_id.TryGet(reinterpret_cast<usize>(Face));
-        if (pair.has_value())
-        {
-            const auto id = *pair.value().second;
-            const auto node = m_id_to_node.TryGet(id).value().second;
-            MakeNewest(*node);
-            return node->m_id;
-        }
-        else
-        {
-            const auto id = m_id_inc++;
-            AddNode(id, Face);
-            return id;
-        }
+        return FontFaceToId(Face, [self = static_cast<Self*>(this)](auto node) { self->OnAdd(node); });
     }
 
     template <class Self>
-    IFontFace* FontManagerBase<Self>::Impl_IdToFontFace(u64 Id)
+    IFontFace* FontManagerBase<Self>::Impl_IdToFontFace(const u64 Id)
     {
-        std::lock_guard lock(m_mutex);
-        const auto pair = m_id_to_node.TryGet(Id);
-        if (!pair.has_value()) return nullptr;
-        const auto node = pair.value().second;
-        MakeNewest(*node);
-        return node->m_face.get();
+        return IdToFontFace(Id);
     }
 }

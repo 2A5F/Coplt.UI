@@ -72,7 +72,7 @@ public sealed unsafe partial class Font
     {
         IFontFace* face;
         m_inner.CreateFace(&face).TryThrowWithMsg();
-        return new(new(face), this);
+        return new(new(face));
     }
 
     public FontFace GetFace() =>

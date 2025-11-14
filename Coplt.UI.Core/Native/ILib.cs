@@ -18,6 +18,8 @@ public unsafe partial struct ILib
 
     public partial Str8 GetCurrentErrorMessage();
 
+    public partial HResult CreateFontManager(IFontManager** fm);
+
     public partial HResult GetSystemFontCollection(IFontCollection** fc);
     public partial HResult GetSystemFontFallback(IFontFallback** ff);
 

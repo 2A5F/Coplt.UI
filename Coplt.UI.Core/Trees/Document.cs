@@ -27,15 +27,18 @@ public sealed partial class Document
     // ReSharper disable once CollectionNeverQueried.Global
     internal readonly IModule[] m_modules;
     internal readonly Action<Document>[] m_modules_update;
+    [Drop]
+    internal readonly FontManager m_font_manager;
     internal uint m_node_id_inc;
 
     #endregion
 
     #region Ctor
 
-    internal Document(Template template)
+    internal Document(Template template, FontManager? font_manager)
     {
         m_template = template;
+        m_font_manager = font_manager ?? new();
         m_arche = m_template.m_arche.Create();
         m_modules = new IModule[m_template.m_modules.Length];
         m_modules_update = new Action<Document>[m_template.m_modules.Length];
@@ -55,6 +58,7 @@ public sealed partial class Document
     {
         private readonly Dictionary<Type, AModuleTemplate> m_modules = new();
         private readonly Dictionary<Type, AStorageTemplate> m_types = new();
+        private FontManager? m_font_manager;
 
         public Builder()
         {
@@ -63,6 +67,12 @@ public sealed partial class Document
             Attach<CommonData>(storage: StorageType.Pinned);
             Attach<StyleData>(storage: StorageType.Pinned);
             With<LayoutModule>();
+        }
+
+        public Builder WithFontManager(FontManager font_manager)
+        {
+            m_font_manager = font_manager;
+            return this;
         }
 
         public Builder Attach<T>(StorageType storage = StorageType.Default)
@@ -82,7 +92,7 @@ public sealed partial class Document
 
         public Template Build() => new(new ArcheTemplate(m_types), m_modules.Values.ToArray());
 
-        public Document Create() => Build().Create();
+        public Document Create() => Build().Create(m_font_manager);
     }
 
     #endregion
@@ -125,7 +135,7 @@ public sealed partial class Document
             m_modules = modules;
         }
 
-        public Document Create() => new(this);
+        public Document Create(FontManager? font_manager) => new(this, font_manager);
     }
 
     internal sealed class ArcheTemplate
@@ -437,6 +447,7 @@ public sealed partial class Document
 
     public void Update()
     {
+        m_font_manager.Update((ulong)Stopwatch.GetTimestamp());
         foreach (var update in m_modules_update)
         {
             update(this);

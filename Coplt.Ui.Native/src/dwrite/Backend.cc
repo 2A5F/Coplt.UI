@@ -16,6 +16,11 @@ Rc<TextBackend> TextBackend::Create(void* dw_factory)
     return Rc(new TextBackend(Rc(static_cast<IDWriteFactory7*>(dw_factory))));
 }
 
+Rc<DWriteFontManager> TextBackend::CreateFontManager() const
+{
+    return Rc(new DWriteFontManager());
+}
+
 Rc<IFontCollection> TextBackend::GetSystemFontCollection() const
 {
     return SystemFontCollection::Create(this);
