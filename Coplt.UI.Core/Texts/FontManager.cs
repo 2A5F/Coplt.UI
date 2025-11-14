@@ -189,6 +189,15 @@ public sealed unsafe partial class FontManager
 
     #region Managed
 
+    public FontFace? NativeFontFaceToFontFace(IFontFace* Face)
+    {
+        if (Face == null) return null;
+        lock (m_lock)
+        {
+            return m_native_to_manager.GetValueOrDefault(Face);
+        }
+    }
+
     public FontFace? IdToFontFace(ulong Id)
     {
         var face = IdToNativeFontFace(Id);

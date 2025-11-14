@@ -19,5 +19,5 @@ public unsafe partial struct IFont
     [ComType<ConstPtr<NFontInfo>>]
     public readonly partial NFontInfo* Info { get; }
 
-    public readonly partial HResult CreateFace([Out] IFontFace** face);
+    public readonly partial HResult CreateFace([Out] IFontFace** face, IFontManager* manager);
 }

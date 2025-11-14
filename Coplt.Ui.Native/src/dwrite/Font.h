@@ -21,8 +21,10 @@ namespace Coplt
         NFontInfo const* Impl_get_Info() const;
 
         COPLT_FORCE_INLINE
-        HResult Impl_CreateFace(COPLT_OUT IFontFace** face) const;
+        HResult Impl_CreateFace(COPLT_OUT IFontFace** face, IFontManager* manager) const;
 
         COPLT_IMPL_END
+
+        Rc<DWriteFontFace> CreateFace(DWriteFontManager* manager) const;
     };
 }

@@ -16,8 +16,6 @@ public sealed unsafe partial class Font
     internal NFontInfo* m_info;
     internal readonly int m_index;
 
-    internal FontFace? m_face;
-
     #endregion
 
     #region Properties
@@ -68,15 +66,12 @@ public sealed unsafe partial class Font
 
     #region Face
 
-    private FontFace CreateFace()
+    public FontFace CreateFace(FontManager manager)
     {
         IFontFace* face;
-        m_inner.CreateFace(&face).TryThrowWithMsg();
-        return new(new(face));
+        m_inner.CreateFace(&face, manager.m_inner).TryThrowWithMsg();
+        return manager.NativeFontFaceToFontFace(face)!;
     }
-
-    public FontFace GetFace() =>
-        m_face ?? Interlocked.CompareExchange(ref m_face, m_face ?? CreateFace(), null) ?? m_face;
 
     #endregion
 }

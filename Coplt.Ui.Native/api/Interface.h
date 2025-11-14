@@ -13,7 +13,7 @@ namespace Coplt {
         COPLT_COM_INTERFACE_BODY_Coplt_IFont
 
         COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
-        COPLT_COM_METHOD(CreateFace, ::Coplt::HResult, (COPLT_OUT IFontFace** face) const, face);
+        COPLT_COM_METHOD(CreateFace, ::Coplt::HResult, (COPLT_OUT IFontFace** face, IFontManager* manager) const, face, manager);
     };
 
     COPLT_COM_INTERFACE(IFontCollection, "e56d9271-e6fd-4def-b03a-570380e0d560", ::Coplt::IUnknown)
@@ -29,8 +29,11 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFace
 
+        COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
         COPLT_COM_METHOD(Equals, bool, (IFontFace* other) const, other);
         COPLT_COM_METHOD(HashCode, ::Coplt::i32, () const);
+        COPLT_COM_METHOD(GetFamilyNames, ::Coplt::HResult, (void* ctx, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* add) const, ctx, add);
+        COPLT_COM_METHOD(GetFaceNames, ::Coplt::HResult, (void* ctx, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* add) const, ctx, add);
     };
 
     COPLT_COM_INTERFACE(IFontFallback, "b0dbb428-eca1-4784-b27f-629bddf93ea4", ::Coplt::IUnknown)

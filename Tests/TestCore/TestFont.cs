@@ -24,17 +24,17 @@ public class TestFont
     [Test]
     public void Test2()
     {
+        var fm = new FontManager();
         var start = Stopwatch.GetTimestamp();
         var b = FontCollection.SystemCollection;
         var end = Stopwatch.GetTimestamp();
         var elapsed = Stopwatch.GetElapsedTime(start, end);
         var d = b.DefaultFamily;
         var fonts = d.GetFonts();
-        foreach (var font in fonts) font.GetFace();
         Console.WriteLine($"{elapsed}");
         foreach (var font in fonts)
         {
-            Console.WriteLine(font.GetFace());
+            Console.WriteLine(font.CreateFace(fm));
         }
     }
 }

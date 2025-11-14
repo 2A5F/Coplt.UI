@@ -6,7 +6,8 @@
 
 using namespace Coplt;
 
-Font::Font(Rc<IDWriteFont3>& font) : m_font(std::move(font))
+Font::Font(Rc<IDWriteFont3>& font)
+    : m_font(std::move(font))
 {
     DWRITE_FONT_METRICS metrics;
     m_font->GetMetrics(&metrics);
@@ -71,11 +72,25 @@ NFontInfo const* Font::Impl_get_Info() const
     return &m_info;
 }
 
-HResult Font::Impl_CreateFace(IFontFace** face) const
+HResult Font::Impl_CreateFace(IFontFace** face, IFontManager* manager) const
 {
-    return feb([&]
-    {
-        *face = new DWriteFontFace(m_font);
-        return HResultE::Ok;
-    });
+    return feb(
+        [&]
+        {
+            auto out = CreateFace(static_cast<DWriteFontManager*>(manager));
+            *face = out.leak();
+            return HResultE::Ok;
+        }
+    );
+}
+
+Rc<DWriteFontFace> Font::CreateFace(DWriteFontManager* manager) const
+{
+    Rc<IDWriteFontFace3> face3{};
+    Rc<IDWriteFontFace5> face5{};
+    if (const auto hr = m_font->CreateFontFace(face3.put()); FAILED(hr))
+        throw ComException(hr, "Failed to create font face");
+    if (const auto hr = face3->QueryInterface(face5.put()); FAILED(hr))
+        throw ComException(hr, "Failed to create font face");
+    return manager->DwriteFontFaceToFontFace(face5.get());
 }
