@@ -845,6 +845,7 @@ pub struct NFontPair {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
+    pub font_manager: *mut IFontManager,
     pub roots: *mut FFIMap,
     pub node_buckets: *mut i32,
     pub node_ctrl: *mut NNodeIdCtrl,

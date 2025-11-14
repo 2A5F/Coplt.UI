@@ -40,10 +40,12 @@ Rc<Layout> LayoutCalc::CreateLayout(Rc<LibUi> lib)
 
 HResult Layout::Impl_Calc(NLayoutContext* ctx)
 {
-    return feb([&]
-    {
-        return Calc(ctx);
-    });
+    return feb(
+        [&]
+        {
+            return Calc(ctx);
+        }
+    );
 }
 
 HResult Layout::Calc(NLayoutContext* ctx)
@@ -70,13 +72,15 @@ namespace Coplt::LayoutCalc::Texts
         void* self, NLayoutContext* ctx, const NodeId& node
     )
     {
-        return feb([&]
-        {
-            do_coplt_ui_layout_touch_text(
-                static_cast<Layout*>(self), CtxNodeRef(ctx, node)
-            );
-            return HResultE::Ok;
-        });
+        return feb(
+            [&]
+            {
+                do_coplt_ui_layout_touch_text(
+                    static_cast<Layout*>(self), CtxNodeRef(ctx, node)
+                );
+                return HResultE::Ok;
+            }
+        );
     }
 
     void do_coplt_ui_layout_touch_text(

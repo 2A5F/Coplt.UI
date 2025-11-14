@@ -18,6 +18,8 @@ public sealed unsafe class LayoutModule : Document.IModule
         {
             var ctx = new NLayoutContext
             {
+                font_manager = document.m_font_manager.m_inner,
+
                 roots = p_roots,
 
                 node_buckets = document.m_arche.m_ctrl.m_buckets,
@@ -32,6 +34,5 @@ public sealed unsafe class LayoutModule : Document.IModule
             };
             layout.Calc(&ctx).TryThrowWithMsg();
         }
-     
     }
 }

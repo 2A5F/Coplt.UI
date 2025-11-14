@@ -16,6 +16,8 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
+    public IFontManager* font_manager;
+
     [ComType<Ptr<FFIMap>>]
     public NativeMap<NodeId, RootData>* roots;
 

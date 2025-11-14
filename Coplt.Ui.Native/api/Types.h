@@ -922,6 +922,7 @@ namespace Coplt {
 
     struct NLayoutContext
     {
+        IFontManager* font_manager;
         ::Coplt::FFIMap* roots;
         ::Coplt::i32* node_buckets;
         ::Coplt::NNodeIdCtrl* node_ctrl;
