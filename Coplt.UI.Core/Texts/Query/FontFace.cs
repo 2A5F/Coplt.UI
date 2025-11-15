@@ -20,6 +20,7 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
 
     #region Fields
 
+    internal readonly ulong m_id;
     [Drop]
     internal Rc<IFontFace> m_inner;
     internal NFontInfo* m_info;
@@ -30,6 +31,7 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
 
     #region Properties
 
+    public ulong Id => m_id;
     public ref readonly Rc<IFontFace> Inner => ref m_inner;
     public ref readonly FontMetrics Metrics => ref m_info->Metrics;
     public FontWidth Width => m_info->Width;
@@ -65,6 +67,7 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
     internal FontFace(Rc<IFontFace> inner)
     {
         m_inner = inner;
+        m_id = m_inner.Id;
         m_info = m_inner.Info;
     }
 
@@ -127,7 +130,7 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
     #region ToString
 
     public override string ToString() =>
-        $"FontFace({LocalFamilyName}/{LocalFaceName}) {{ Width = {Width}, Weight = {Weight}, Flags = {Flags} }}";
+        $"FontFace({LocalFamilyName}, {LocalFaceName}) {{ Width = {Width}, Weight = {Weight}, Flags = {Flags} }}";
 
     #endregion
 }

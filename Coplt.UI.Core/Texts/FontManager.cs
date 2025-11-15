@@ -15,7 +15,7 @@ public sealed unsafe partial class FontManager
     internal Rc<IFontManager> m_inner;
 
     internal readonly Lock m_lock = new();
-    internal readonly Dictionary<Ptr<IFontFace>, FontFace> m_native_to_manager = new();
+    private readonly ManagedAssocUpdate m_managed_assoc;
 
     #endregion
 
@@ -30,7 +30,8 @@ public sealed unsafe partial class FontManager
     internal FontManager(Rc<IFontManager> inner)
     {
         m_inner = inner;
-        Init();
+        m_managed_assoc = new(m_lock);
+        SetAssocUpdate(m_managed_assoc);
     }
 
     public FontManager()
@@ -39,12 +40,8 @@ public sealed unsafe partial class FontManager
         IFontManager* p_fm;
         lib.m_lib.CreateFontManager(&p_fm).TryThrowWithMsg();
         m_inner = new(p_fm);
-        Init();
-    }
-
-    private void Init()
-    {
-        SetAssocUpdate(new ManagedAssocUpdate(this));
+        m_managed_assoc = new(m_lock);
+        SetAssocUpdate(m_managed_assoc);
     }
 
     #endregion
@@ -139,23 +136,25 @@ public sealed unsafe partial class FontManager
         }
     }
 
-    private sealed class ManagedAssocUpdate(FontManager manager) : IAssocUpdate
+    private sealed class ManagedAssocUpdate(Lock m_lock) : IAssocUpdate
     {
+        public readonly Dictionary<Ptr<IFontFace>, FontFace> m_native_to_manager = new();
+
         public void OnAdd(IFontFace* face, ulong id)
         {
-            lock (manager.m_lock)
+            lock (m_lock)
             {
                 face->AddRef();
-                ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(manager.m_native_to_manager, face, out var exists);
+                ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(m_native_to_manager, face, out var exists);
                 if (!exists) slot = new FontFace(new(face));
             }
         }
 
         public void OnExpired(IFontFace* face, ulong id)
         {
-            lock (manager.m_lock)
+            lock (m_lock)
             {
-                manager.m_native_to_manager.Remove(face);
+                m_native_to_manager.Remove(face);
             }
         }
     }
@@ -194,7 +193,7 @@ public sealed unsafe partial class FontManager
         if (Face == null) return null;
         lock (m_lock)
         {
-            return m_native_to_manager.GetValueOrDefault(Face);
+            return m_managed_assoc.m_native_to_manager.GetValueOrDefault(Face);
         }
     }
 
@@ -204,7 +203,7 @@ public sealed unsafe partial class FontManager
         if (face == null) return null;
         lock (m_lock)
         {
-            return m_native_to_manager.GetValueOrDefault(face);
+            return m_managed_assoc.m_native_to_manager.GetValueOrDefault(face);
         }
     }
 
@@ -213,7 +212,7 @@ public sealed unsafe partial class FontManager
     {
         lock (m_lock)
         {
-            m_native_to_manager.Add(Face.m_inner.Handle, Face);
+            m_managed_assoc.m_native_to_manager.Add(Face.m_inner.Handle, Face);
         }
         return m_inner.FontFaceToId(Face.m_inner);
     }

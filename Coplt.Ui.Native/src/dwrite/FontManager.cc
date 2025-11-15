@@ -18,7 +18,7 @@ u64 DWriteFontManager::DwriteFontFaceToId(IDWriteFontFace5* Face)
     {
         const auto id = m_id_inc++;
         entry.SetValue(id);
-        Rc face(new DWriteFontFace(Rc<IDWriteFontFace5>::UnsafeClone(Face)));
+        Rc face(new DWriteFontFace(Rc<IDWriteFontFace5>::UnsafeClone(Face), id));
         m_face_to_id.Set(reinterpret_cast<usize>(face.get()), id);
         auto& node = AddNode(id, std::move(face));
         OnAdd(&node);
@@ -40,7 +40,7 @@ Rc<DWriteFontFace> DWriteFontManager::DwriteFontFaceToFontFace(IDWriteFontFace5*
     {
         const auto id = m_id_inc++;
         entry.SetValue(id);
-        Rc face(new DWriteFontFace(Rc<IDWriteFontFace5>::UnsafeClone(Face)));
+        Rc face(new DWriteFontFace(Rc<IDWriteFontFace5>::UnsafeClone(Face), id));
         m_face_to_id.Set(reinterpret_cast<usize>(face.get()), id);
         auto& node = AddNode(id, face);
         OnAdd(&node);

@@ -7,15 +7,19 @@ namespace Coplt
 {
     struct DWriteFontFace final : ComImpl<DWriteFontFace, IFontFace>
     {
+        u64 m_id{};
         Rc<IDWriteFontFace5> m_face{};
         NFontInfo m_info{};
 
-        explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face);
-        explicit DWriteFontFace(const Rc<IDWriteFontFace5>& face);
+        explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face, u64 id);
+        explicit DWriteFontFace(const Rc<IDWriteFontFace5>& face, u64 id);
 
         void InitInfo();
 
         COPLT_IMPL_START
+
+        COPLT_FORCE_INLINE
+        u64 Impl_get_Id() const;
 
         COPLT_FORCE_INLINE
         NFontInfo const* Impl_get_Info() const;

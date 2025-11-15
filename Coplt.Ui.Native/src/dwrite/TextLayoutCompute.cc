@@ -11,6 +11,7 @@
 #include "Error.h"
 #include "BaseFontFallback.h"
 #include "Utils.h"
+#include "FontFace.h"
 
 using namespace Coplt;
 using namespace Coplt::LayoutCalc;
@@ -334,7 +335,7 @@ const RunLineSize& Run::GetSingleLineSize(const ParagraphData& data)
     if (style.WritingDirection == WritingDirection::Horizontal)
     {
         DWRITE_FONT_METRICS1 metrics{};
-        font.Font->GetMetrics(&metrics);
+        font.Font->m_face->GetMetrics(&metrics);
         const auto scale = style.FontSize / metrics.designUnitsPerEm;
         SingleLineSize.Ascent = metrics.ascent * scale;
         SingleLineSize.Descent = metrics.descent * scale;
@@ -344,7 +345,7 @@ const RunLineSize& Run::GetSingleLineSize(const ParagraphData& data)
     {
         // todo: not sure, need test
         DWRITE_FONT_METRICS1 metrics{};
-        font.Font->GetMetrics(&metrics);
+        font.Font->m_face->GetMetrics(&metrics);
         const auto scale = style.FontSize / metrics.designUnitsPerEm;
         SingleLineSize.LineGap = metrics.lineGap * scale;
         const auto glyph_box_size = metrics.glyphBoxRight - metrics.glyphBoxLeft;

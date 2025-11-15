@@ -9,6 +9,7 @@
 #include "Error.h"
 #include "BaseFontFallback.h"
 #include "Utils.h"
+#include "FontFace.h"
 
 using namespace Coplt::LayoutCalc::Texts;
 
@@ -118,6 +119,8 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
 
 void ParagraphData::AnalyzeFonts()
 {
+    const auto fm = static_cast<DWriteFontManager*>(m_text_layout->m_node.ctx->font_manager);
+
     const auto& system_font_fallback = m_layout->m_system_font_fallback;
 
     const auto& items = GetItems();
@@ -135,15 +138,17 @@ void ParagraphData::AnalyzeFonts()
     {
         if (cur_item_type == TextItemType::InlineBlock)
         {
-            m_font_ranges.push_back(FontRange{
-                .Start = logic_text_start,
-                .Length = logic_text_length,
-                .Font = nullptr,
-                .Scale = 1,
-                .ItemStart = item_start,
-                .ItemLength = item_length,
-                .IsInlineBlock = true,
-            });
+            m_font_ranges.push_back(
+                FontRange{
+                    .Start = logic_text_start,
+                    .Length = logic_text_length,
+                    .Font = nullptr,
+                    .Scale = 1,
+                    .ItemStart = item_start,
+                    .ItemLength = item_length,
+                    .IsInlineBlock = true,
+                }
+            );
             return;
         }
 
@@ -212,15 +217,17 @@ void ParagraphData::AnalyzeFonts()
             // }
             #endif
 
-            m_font_ranges.push_back(FontRange{
-                .Start = text_start,
-                .Length = mapped_length,
-                .Font = std::move(mapped_font),
-                .Scale = scale,
-                .ItemStart = 0,
-                .ItemLength = 0,
-                .IsInlineBlock = false,
-            });
+            m_font_ranges.push_back(
+                FontRange{
+                    .Start = text_start,
+                    .Length = mapped_length,
+                    .Font = fm->DwriteFontFaceToFontFace(mapped_font.get()),
+                    .Scale = scale,
+                    .ItemStart = 0,
+                    .ItemLength = 0,
+                    .IsInlineBlock = false,
+                }
+            );
 
             if (mapped_length >= text_length) break;
             text_start += mapped_length;
@@ -305,11 +312,13 @@ void ParagraphData::AnalyzeStyles()
     TextOrientation text_orientation{};
     const auto add_range = [&]
     {
-        m_same_style_ranges.push_back(SameStyleRange{
-            .Start = logic_text_start,
-            .Length = logic_text_length,
-            .FirstScope = first_scope,
-        });
+        m_same_style_ranges.push_back(
+            SameStyleRange{
+                .Start = logic_text_start,
+                .Length = logic_text_length,
+                .FirstScope = first_scope,
+            }
+        );
     };
     for (const auto& scope : scopes)
     {
@@ -392,14 +401,16 @@ void ParagraphData::CollectRuns()
 
         const auto min_len = std::min(std::min(script_len, bidi_len), std::min(font_len, style_len));
 
-        m_runs.push_back(Run{
-            .Start = logic_text_start,
-            .Length = min_len,
-            .ScriptRangeIndex = script_range_index,
-            .BidiRangeIndex = bidi_range_index,
-            .FontRangeIndex = font_range_index,
-            .StyleRangeIndex = style_range_index,
-        });
+        m_runs.push_back(
+            Run{
+                .Start = logic_text_start,
+                .Length = min_len,
+                .ScriptRangeIndex = script_range_index,
+                .BidiRangeIndex = bidi_range_index,
+                .FontRangeIndex = font_range_index,
+                .StyleRangeIndex = style_range_index,
+            }
+        );
 
         logic_text_start += min_len;
         if (logic_text_start >= script_range.Start + script_range.Length) script_range_index++;
@@ -496,7 +507,7 @@ void ParagraphData::AnalyzeGlyphsFirst()
             hr = analyzer->GetGlyphs(
                 text,
                 run.Length,
-                font.Font.get(),
+                font.Font->m_face.get(),
                 false, // sideways
                 is_rtl,
                 &script.Analysis,
@@ -536,7 +547,7 @@ void ParagraphData::AnalyzeGlyphsFirst()
             glyph_indices.data(),
             glyph_props.data(),
             actual_glyph_count,
-            font.Font.get(),
+            font.Font->m_face.get(),
             style.FontSize,
             false, // sideways
             is_rtl,
@@ -666,7 +677,8 @@ HRESULT TextAnalysisSource::GetLocaleName(
             if (pos < item.LogicTextStart) return 1;
             if (pos >= item.LogicTextStart + item.LogicTextLength) return -1;
             return 0;
-        });
+        }
+    );
     if (scope_range_index > 0)
     {
         const auto& scope_range = paragraph.ScopeRanges[scope_range_index];
@@ -701,7 +713,8 @@ HRESULT TextAnalysisSource::GetLocaleName(
                     if (pos < item.Start) return 1;
                     if (pos >= item.Start + item.Length) return -1;
                     return 0;
-                });
+                }
+            );
             if (index < 0)
             {
                 *textLength = 0;
@@ -792,13 +805,15 @@ HRESULT TextAnalysisSink::SetScriptAnalysis(
     if (u_script == -1) u_script = USCRIPT_COMMON;
     const auto locale = UnicodeUtils::LikelyLocale(u_script);
 
-    m_paragraph_data->m_script_ranges.push_back(ScriptRange{
-        .Start = textPosition,
-        .Length = textLength,
-        .Analysis = *scriptAnalysis,
-        .Script = u_script,
-        .Locale = locale,
-    });
+    m_paragraph_data->m_script_ranges.push_back(
+        ScriptRange{
+            .Start = textPosition,
+            .Length = textLength,
+            .Analysis = *scriptAnalysis,
+            .Script = u_script,
+            .Locale = locale,
+        }
+    );
     return S_OK;
 }
 
@@ -815,12 +830,14 @@ HRESULT TextAnalysisSink::SetBidiLevel(
     UINT32 textPosition, UINT32 textLength, UINT8 explicitLevel, UINT8 resolvedLevel
 )
 {
-    m_paragraph_data->m_bidi_ranges.push_back(BidiRange{
-        .Start = textPosition,
-        .Length = textLength,
-        .ExplicitLevel = explicitLevel,
-        .ResolvedLevel = resolvedLevel,
-    });
+    m_paragraph_data->m_bidi_ranges.push_back(
+        BidiRange{
+            .Start = textPosition,
+            .Length = textLength,
+            .ExplicitLevel = explicitLevel,
+            .ResolvedLevel = resolvedLevel,
+        }
+    );
     return S_OK;
 }
 

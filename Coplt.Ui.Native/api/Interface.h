@@ -29,6 +29,7 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFace
 
+        COPLT_COM_METHOD(get_Id, ::Coplt::u64, () const);
         COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
         COPLT_COM_METHOD(Equals, bool, (IFontFace* other) const, other);
         COPLT_COM_METHOD(HashCode, ::Coplt::i32, () const);

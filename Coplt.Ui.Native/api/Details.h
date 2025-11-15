@@ -330,6 +330,7 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFace>
 {
     VirtualTable<::Coplt::IUnknown> b;
+    ::Coplt::u64 (*const COPLT_CDECL f_get_Id)(const ::Coplt::IFontFace*) noexcept;
     ::Coplt::NFontInfo const* (*const COPLT_CDECL f_get_Info)(const ::Coplt::IFontFace*) noexcept;
     bool (*const COPLT_CDECL f_Equals)(const ::Coplt::IFontFace*, IFontFace* other) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_HashCode)(const ::Coplt::IFontFace*) noexcept;
@@ -338,6 +339,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFace>
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
 {
+    ::Coplt::u64 COPLT_CDECL get_Id(const ::Coplt::IFontFace* self) noexcept;
     ::Coplt::NFontInfo const* COPLT_CDECL get_Info(const ::Coplt::IFontFace* self) noexcept;
     bool COPLT_CDECL Equals(const ::Coplt::IFontFace* self, IFontFace* p0) noexcept;
     ::Coplt::i32 COPLT_CDECL HashCode(const ::Coplt::IFontFace* self) noexcept;
@@ -375,6 +377,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
         static VirtualTable vtb
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_get_Id = VirtualImpl_Coplt_IFontFace::get_Id,
             .f_get_Info = VirtualImpl_Coplt_IFontFace::get_Info,
             .f_Equals = VirtualImpl_Coplt_IFontFace::Equals,
             .f_HashCode = VirtualImpl_Coplt_IFontFace::HashCode,
@@ -387,6 +390,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
+        virtual ::Coplt::u64 Impl_get_Id() const = 0;
         virtual ::Coplt::NFontInfo const* Impl_get_Info() const = 0;
         virtual bool Impl_Equals(IFontFace* other) const = 0;
         virtual ::Coplt::i32 Impl_HashCode() const = 0;
@@ -408,6 +412,11 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
         COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
         template <class Interface>
         COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+
+        static ::Coplt::u64 COPLT_CDECL f_get_Id(const ::Coplt::IFontFace* self) noexcept
+        {
+            return AsImpl(self)->Impl_get_Id();
+        }
 
         static ::Coplt::NFontInfo const* COPLT_CDECL f_get_Info(const ::Coplt::IFontFace* self) noexcept
         {
@@ -439,6 +448,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
     constexpr static VirtualTable s_vtb
     {
         .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .f_get_Id = VirtualImpl<Impl>::f_get_Id,
         .f_get_Info = VirtualImpl<Impl>::f_get_Info,
         .f_Equals = VirtualImpl<Impl>::f_Equals,
         .f_HashCode = VirtualImpl<Impl>::f_HashCode,
@@ -448,6 +458,19 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
 {
+
+    inline ::Coplt::u64 COPLT_CDECL get_Id(const ::Coplt::IFontFace* self) noexcept
+    {
+        ::Coplt::u64 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFace, get_Id, ::Coplt::u64)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::IFontFace>(self)->Impl_get_Id();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFace, get_Id, ::Coplt::u64)
+        #endif
+        return r;
+    }
 
     inline ::Coplt::NFontInfo const* COPLT_CDECL get_Info(const ::Coplt::IFontFace* self) noexcept
     {
@@ -523,6 +546,10 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFace>
 {
+    static COPLT_FORCE_INLINE ::Coplt::u64 get_Id(const ::Coplt::IFontFace* self) noexcept
+    {
+        return COPLT_COM_PVTB(IFontFace, self)->f_get_Id(self);
+    }
     static COPLT_FORCE_INLINE ::Coplt::NFontInfo const* get_Info(const ::Coplt::IFontFace* self) noexcept
     {
         return COPLT_COM_PVTB(IFontFace, self)->f_get_Info(self);

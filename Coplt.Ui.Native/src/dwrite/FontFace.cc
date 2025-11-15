@@ -4,14 +4,14 @@
 
 using namespace Coplt;
 
-DWriteFontFace::DWriteFontFace(Rc<IDWriteFontFace5>&& face)
-    : m_face(std::forward<Rc<IDWriteFontFace5>>(face))
+DWriteFontFace::DWriteFontFace(Rc<IDWriteFontFace5>&& face, const u64 id)
+    : m_id(id), m_face(std::forward<Rc<IDWriteFontFace5>>(face))
 {
     InitInfo();
 }
 
-DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face)
-    : m_face(face)
+DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face, const u64 id)
+    : m_id(id), m_face(face)
 {
     InitInfo();
 }
@@ -74,6 +74,11 @@ void DWriteFontFace::InitInfo()
     {
         m_info.Flags |= FontFlags::Monospaced;
     }
+}
+
+u64 DWriteFontFace::Impl_get_Id() const
+{
+    return m_id;
 }
 
 NFontInfo const* DWriteFontFace::Impl_get_Info() const

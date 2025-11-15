@@ -9,6 +9,11 @@
 #include "../TextLayout.h"
 #include "../Layout.h"
 
+namespace Coplt
+{
+    struct DWriteFontFace;
+}
+
 namespace Coplt::LayoutCalc
 {
     struct Layout;
@@ -134,7 +139,7 @@ namespace Coplt::LayoutCalc::Texts
     {
         u32 Start;
         u32 Length;
-        Rc<IDWriteFontFace5> Font;
+        Rc<DWriteFontFace> Font;
         f32 Scale;
         // item range only alive when IsInlineBlock is true
         u32 ItemStart;
