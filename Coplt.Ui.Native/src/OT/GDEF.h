@@ -4,6 +4,7 @@
 
 #include "../Com.h"
 #include "Common.h"
+#include "Var.h"
 
 namespace Coplt::OT
 {
@@ -133,12 +134,8 @@ namespace Coplt::OT
         u32 CoverageOffsets[];
     };
 
-    struct GDEF_Header_1_0
+    struct GDEF_Header_1_0 : VersionBase
     {
-        /// Major version of the GDEF table.
-        u16 MajorVersion;
-        /// Minor version of the GDEF table.
-        u16 MinorVersion;
         /// Offset to class definition table for glyph type, from beginning of GDEF header (may be NULL).
         u16 GlyphClassDefOffset;
         /// Offset to attachment point list table, from beginning of GDEF header (may be NULL).

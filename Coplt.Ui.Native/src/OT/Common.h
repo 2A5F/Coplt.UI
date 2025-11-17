@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <span>
 
 #include "../Com.h"
@@ -7,6 +8,54 @@
 
 namespace Coplt::OT
 {
+    struct F2DOT14
+    {
+        u16 value;
+
+        F2DOT14() = default;
+
+        F2DOT14(f32 value)
+            : value(std::round(value * 16384.f))
+        {
+        }
+
+        operator f32() const
+        {
+            return value * (1 / 16384.f);
+        }
+    };
+
+    struct Fixed
+    {
+        u32 value;
+
+        Fixed() = default;
+
+        Fixed(f32 value)
+            : value(std::round(value * 65536.f))
+        {
+        }
+
+        operator f32() const
+        {
+            return value * (1 / 65536.f);
+        }
+    };
+
+    struct VersionBase
+    {
+        /// Major version number
+        u16 MajorVersion;
+        /// Minor version number
+        u16 MinorVersion;
+    };
+
+    struct FormatBase8
+    {
+        /// Format identifier
+        u8 Format;
+    };
+
     struct FormatBase
     {
         /// Format identifier
