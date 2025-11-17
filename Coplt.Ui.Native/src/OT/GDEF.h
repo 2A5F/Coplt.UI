@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "../Com.h"
 #include "Common.h"
 
@@ -68,7 +70,7 @@ namespace Coplt::OT
             return std::span(CaretValueOffsets, CaretCount);
         }
 
-       OtRef_CaretValue CaretValueAt(const u16 offset) const
+        OtRef_CaretValue CaretValueAt(const u16 offset) const
         {
             return OtRef_CaretValue(reinterpret_cast<const FormatBase*>(reinterpret_cast<const u8*>(this) + offset));
         }
@@ -83,14 +85,25 @@ namespace Coplt::OT
         /// Array of offsets to LigGlyph tables, from beginning of LigCaretList table, in Coverage index order.
         u16 LigGlyphOffsets[];
 
+        OtRef_Coverage Coverage() const
+        {
+            return OtRef_Coverage(reinterpret_cast<const FormatBase*>(reinterpret_cast<const u8*>(this) + CoverageOffset));
+        }
+
         std::span<const u16> LigGlyphOffsetsSpan() const
         {
             return std::span(LigGlyphOffsets, LigGlyphCount);
         }
 
-        const LigGlyph* LigGlyphAt(const u16 offset) const
+        const LigGlyph* LigGlyphAtOffset(const u16 offset) const
         {
             return reinterpret_cast<const LigGlyph*>(reinterpret_cast<const u8*>(this) + offset);
+        }
+
+        const LigGlyph* LigGlyphAtIndex(const u16 index) const
+        {
+            if (index > LigGlyphCount) [[unlikely]] return nullptr;
+            return LigGlyphAtOffset(LigGlyphOffsets[index]);
         }
     };
 
@@ -170,12 +183,23 @@ namespace Coplt::OT
             if (m_header == nullptr) return nullptr;
             return m_header->LigCaretListTable();
         }
-
-        // void GetLigCarets()
-        // {
-        //     const auto lig_caret_list = LigCaretListTable();
-        //     if (!lig_caret_list) return;
-        //
-        // }
     };
+
+    inline u16 GetLigCarets(const OtRef_GDEF gdef, const u32 GlyphId, std::vector<u16>& inout_carets)
+    {
+        const auto lig_caret_list = gdef.LigCaretListTable();
+        if (!lig_caret_list) throw NullPointerError();
+        const auto coverage = lig_caret_list->Coverage();
+        const auto index = coverage.GetCoverage(GlyphId);
+        if (index == -1) [[unlikely]] return 0;
+        const auto& lig_glyph = lig_caret_list->LigGlyphAtIndex(index);
+        if (!lig_glyph) [[unlikely]] return 0;
+        if (lig_glyph->CaretCount == 0) [[unlikely]] return 0;
+        const auto init_offset = inout_carets.size();
+        inout_carets.resize(inout_carets.size() + lig_glyph->CaretCount);
+        const std::span carets(inout_carets.data() + init_offset, lig_glyph->CaretCount);
+
+        // todo
+        return lig_glyph->CaretCount;
+    }
 }

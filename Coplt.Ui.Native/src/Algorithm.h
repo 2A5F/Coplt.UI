@@ -31,4 +31,28 @@ namespace Coplt::Algorithm
     {
         return BinarySearch(Start, 0, Length, Value, Comparer);
     }
+
+    template <class T, class K> requires std::three_way_comparable_with<T, K>
+    constexpr i32 BinarySearch(T* Start, const i32 Index, const i32 Length, const K& Value)
+    {
+        return BinarySearch(
+            Start, Index, Length, Value, [](const T& a, const K& b) -> i32
+            {
+                const auto r = a <=> b;
+                return r < 0 ? -1 : r > 0 ? 1 : 0;
+            }
+        );
+    }
+
+    template <class T, class K> requires std::three_way_comparable_with<T, K>
+    constexpr i32 BinarySearch(T* Start, const i32 Length, const K& Value)
+    {
+        return BinarySearch(
+            Start, 0, Length, Value, [](const T& a, const K& b) -> i32
+            {
+                const auto r = a <=> b;
+                return r < 0 ? -1 : r > 0 ? 1 : 0;
+            }
+        );
+    }
 }
