@@ -8,6 +8,34 @@
 
 namespace Coplt::OT
 {
+    struct FontBaseInfo
+    {
+        u16 DesignUnitsPerEm;
+    };
+
+    struct FontStyleInfo
+    {
+        f32 FontSize;
+        bool IsVertical;
+    };
+
+    struct FontCalcCtx
+    {
+        const FontBaseInfo* m_info;
+        const FontStyleInfo* m_style;
+        f32 m_scale;
+        u16 m_ppem;
+
+        FontCalcCtx() = default;
+
+        explicit FontCalcCtx(const FontBaseInfo* info, const FontStyleInfo* style)
+            : m_info(info), m_style(style),
+              m_scale(style->FontSize / info->DesignUnitsPerEm),
+              m_ppem(std::round(m_style->FontSize))
+        {
+        }
+    };
+
     struct F2DOT14
     {
         u16 value;
@@ -158,7 +186,6 @@ namespace Coplt::OT
 
     enum class DeltaFormat : u16
     {
-        None = 0,
         /// Signed 2-bit value, 8 values per uint16.
         Local_2_bit_deltas = 0x0001,
         /// Signed 4-bit value, 4 values per uint16.
@@ -167,8 +194,12 @@ namespace Coplt::OT
         Local_8_bit_deltas = 0x0003,
         /// VariationIndex table, contains a delta-set index pair.
         VariationIndex = 0x8000,
-        /// For future use — set to 0.
-        Reserved = 0x7FFC,
+    };
+
+    struct Device_Or_VariationIndex
+    {
+        u16 _pad[2];
+        DeltaFormat DeltaFormat;
     };
 
     struct Device
@@ -181,6 +212,31 @@ namespace Coplt::OT
         DeltaFormat DeltaFormat;
         /// Array of compressed data.
         u16 DeltaValue[];
+
+        f32 GetDelta(const FontCalcCtx& ctx) const
+        {
+            const u16 ppem = ctx.m_ppem;
+            if (ppem == 0) [[unlikely]] return 0;
+
+            if (ppem < StartSize || ppem > EndSize) [[unlikely]]
+                return 0;
+
+            const u32 f = static_cast<u32>(DeltaFormat);
+            if (f < 1 || f > 3) [[unlikely]] return 0;
+
+            const u32 s = ppem - StartSize;
+
+            const u32 byte = DeltaValue[s >> (4 - f)];
+            const u32 bits = byte >> (16 - (((s & (1 << (4 - f)) - 1) + 1) << f));
+            const u32 mask = 0xFFFFu >> (16 - (1 << f));
+
+            i32 delta = bits & mask;
+
+            if (static_cast<unsigned int>(delta) >= (mask + 1) >> 1)
+                delta -= mask + 1;
+
+            return delta;
+        }
     };
 
     struct VariationIndex
@@ -191,6 +247,23 @@ namespace Coplt::OT
         u16 DeltaSetInnerIndex;
         /// Format, = 0x8000.
         DeltaFormat DeltaFormat;
+    };
+
+    struct OtRef_Device_Or_VariationIndex
+    {
+        union
+        {
+            const Device_Or_VariationIndex* m_unknown;
+            const Device* m_device;
+            const VariationIndex* m_variation;
+        };
+
+        OtRef_Device_Or_VariationIndex() = default;
+
+        explicit OtRef_Device_Or_VariationIndex(const Device_Or_VariationIndex* ptr)
+            : m_unknown(ptr)
+        {
+        }
     };
 
     struct OtRef_Coverage

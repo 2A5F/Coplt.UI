@@ -25,12 +25,23 @@ namespace Coplt::OT
     {
         /// X or Y value, in design units.
         i16 Coordinate;
+
+        f32 GetValue(const FontCalcCtx& ctx) const
+        {
+            return Coordinate * ctx.m_scale;
+        }
     };
 
     struct CaretValueFormat2 : FormatBase
     {
         /// Contour point index on glyph.
         u16 caretValuePointIndex;
+
+        f32 GetValue(const FontCalcCtx& ctx, const u32 glyph_id) const
+        {
+            // todo
+            return 0;
+        }
     };
 
     struct CaretValueFormat3 : CaretValueFormat1
@@ -39,6 +50,17 @@ namespace Coplt::OT
         i16 Coordinate;
         /// Offset to Device table (non-variable font) / VariationIndex table (variable font) for X or Y value-from beginning of CaretValue table.
         u16 DeviceOffset;
+
+        OtRef_Device_Or_VariationIndex GetDevice() const
+        {
+            return OtRef_Device_Or_VariationIndex(reinterpret_cast<const Device_Or_VariationIndex*>(reinterpret_cast<const u8*>(this) + DeviceOffset));
+        }
+
+        f32 GetValue(const FontCalcCtx& ctx, const ItemVariationStore* item_var_store) const
+        {
+            const auto device = GetDevice();
+            return Coordinate * ctx.m_scale + GetDelta(ctx, device, item_var_store);
+        }
     };
 
     struct OtRef_CaretValue
@@ -57,6 +79,18 @@ namespace Coplt::OT
             : m_unknown(ptr)
         {
         }
+
+        f32 GetValue(const FontCalcCtx& ctx, const u32 glyph_id, const ItemVariationStore* item_var_store) const
+        {
+            switch (m_unknown->Format)
+            {
+            case 1: return m_format_1->GetValue(ctx);
+            case 2: return m_format_2->GetValue(ctx, glyph_id);
+            case 3: return m_format_3->GetValue(ctx, item_var_store);
+            default:
+                return 0;
+            }
+        }
     };
 
     struct LigGlyph
@@ -71,7 +105,7 @@ namespace Coplt::OT
             return std::span(CaretValueOffsets, CaretCount);
         }
 
-        OtRef_CaretValue CaretValueAt(const u16 offset) const
+        OtRef_CaretValue CaretValueAtOffset(const u16 offset) const
         {
             return OtRef_CaretValue(reinterpret_cast<const FormatBase*>(reinterpret_cast<const u8*>(this) + offset));
         }
@@ -166,7 +200,12 @@ namespace Coplt::OT
 
     struct OtRef_GDEF
     {
-        const GDEF_Header_1_0* m_header;
+        union
+        {
+            const GDEF_Header_1_0* m_header;
+            const GDEF_Header_1_2* m_header_1_2;
+            const GDEF_Header_1_3* m_header_1_3;
+        };
 
         OtRef_GDEF() = default;
 
@@ -175,28 +214,43 @@ namespace Coplt::OT
         {
         }
 
+        const ItemVariationStore* GetItemVariationStore() const
+        {
+            if (m_header == nullptr) [[unlikely]] return nullptr;
+            if (m_header->MajorVersion != 1 || m_header->MinorVersion < 3) [[unlikely]] return nullptr;
+            if (m_header_1_3->ItemVarStoreOffset == 0) return nullptr;
+            return reinterpret_cast<const ItemVariationStore*>(reinterpret_cast<const u8*>(m_header) + m_header_1_3->ItemVarStoreOffset);
+        }
+
         const LigCaretList* LigCaretListTable() const
         {
-            if (m_header == nullptr) return nullptr;
+            if (m_header == nullptr) [[unlikely]] return nullptr;
             return m_header->LigCaretListTable();
         }
     };
 
-    inline u16 GetLigCarets(const OtRef_GDEF gdef, const u32 GlyphId, std::vector<u16>& inout_carets)
+    inline u16 GetLigCarets(
+        const OtRef_GDEF gdef, const FontCalcCtx& ctx, const u32 glyph_id, std::vector<f32>& inout_carets
+    )
     {
         const auto lig_caret_list = gdef.LigCaretListTable();
         if (!lig_caret_list) throw NullPointerError();
+        const auto item_var_store = gdef.GetItemVariationStore();
         const auto coverage = lig_caret_list->Coverage();
-        const auto index = coverage.GetCoverage(GlyphId);
+        const auto index = coverage.GetCoverage(glyph_id);
         if (index == -1) [[unlikely]] return 0;
         const auto& lig_glyph = lig_caret_list->LigGlyphAtIndex(index);
         if (!lig_glyph) [[unlikely]] return 0;
         if (lig_glyph->CaretCount == 0) [[unlikely]] return 0;
         const auto init_offset = inout_carets.size();
         inout_carets.resize(inout_carets.size() + lig_glyph->CaretCount);
-        const std::span carets(inout_carets.data() + init_offset, lig_glyph->CaretCount);
-
-        // todo
+        const std::span output(inout_carets.data() + init_offset, lig_glyph->CaretCount);
+        const auto value_offsets = lig_glyph->CaretValueOffsetsSpan();
+        for (usize i = 0; i < value_offsets.size(); ++i)
+        {
+            const OtRef_CaretValue value = lig_glyph->CaretValueAtOffset(value_offsets[i]);
+            output[i] = value.GetValue(ctx, glyph_id, item_var_store);
+        }
         return lig_glyph->CaretCount;
     }
 }

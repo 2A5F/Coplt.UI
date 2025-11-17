@@ -150,35 +150,9 @@ namespace Coplt::OT
         VariationRegion VariationRegions[];
     };
 
-    struct ItemVariationStore : FormatBase
-    {
-        u16 _VariationRegionListOffset[2];
-        /// The number of item variation data subtables.
-        u16 ItemVariationDataCount;
-        u8 _ItemVariationDataOffsets[];
-
-        /// Offset in bytes from the start of the item variation store to the variation region list.
-        u32 VariationRegionListOffset() const
-        {
-            return *reinterpret_cast<const u32*>(_VariationRegionListOffset);
-        }
-
-        /// Offsets in bytes from the start of the item variation store to each item variation data subtable.
-        const u32* p_ItemVariationDataOffsets() const
-        {
-            return reinterpret_cast<const u32*>(_ItemVariationDataOffsets);
-        }
-
-        /// Offsets in bytes from the start of the item variation store to each item variation data subtable.
-        std::span<const u32> ItemVariationDataOffsets() const
-        {
-            return std::span(p_ItemVariationDataOffsets(), ItemVariationDataCount);
-        }
-    };
-
     struct PackedWordDeltaCount
     {
-        u16 WordDeltaCount : 15;
+        u16 Count : 15;
         u16 LongWords : 1;
     };
 
@@ -192,5 +166,83 @@ namespace Coplt::OT
         u16 RegionIndexCount;
         /// Array of indices into the variation region list for the regions referenced by this item variation data table.
         u16 RegionIndexes[];
+
+        f32 GetDelta(
+            const FontCalcCtx& ctx, const VariationIndex* vi, const VariationRegionList* range
+        ) const
+        {
+            if (vi->DeltaSetInnerIndex >= ItemCount) [[unlikely]] return 0;
+            const bool is_long = WordDeltaCount.LongWords;
+            const u32 count = RegionIndexCount;
+            const u16 word_count = WordDeltaCount.Count;
+            const u32 scount = is_long ? count : word_count;
+            const u32 lcount = is_long ? word_count : 0;
+
+            // todo
+            return 0;
+        }
     };
+
+    struct ItemVariationStore : FormatBase
+    {
+        u16 _VariationRegionListOffset[2];
+        /// The number of item variation data subtables.
+        u16 ItemVariationDataCount;
+        u8 _ItemVariationDataOffsets[];
+
+        /// Offset in bytes from the start of the item variation store to the variation region list.
+        const VariationRegionList* VariationRegionListOffset() const
+        {
+            return reinterpret_cast<const VariationRegionList*>(
+                reinterpret_cast<const u8*>(this) + *reinterpret_cast<const u32*>(_VariationRegionListOffset)
+            );
+        }
+
+        /// Offsets in bytes from the start of the item variation store to each item variation data subtable.
+        const u32* p_ItemVariationDataOffsets() const
+        {
+            return reinterpret_cast<const u32*>(_ItemVariationDataOffsets);
+        }
+
+        /// Offsets in bytes from the start of the item variation store to each item variation data subtable.
+        std::span<const u32> ItemVariationDataOffsets() const
+        {
+            return std::span(p_ItemVariationDataOffsets(), ItemVariationDataCount);
+        }
+
+        const ItemVariationData* DataAtIndex(const u16 index) const
+        {
+            const auto offset = ItemVariationDataOffsets()[index];
+            return reinterpret_cast<const ItemVariationData*>(reinterpret_cast<const u8*>(this) + offset);
+        }
+
+        f32 GetDelta(const FontCalcCtx& ctx, const VariationIndex* vi) const
+        {
+            const auto range = VariationRegionListOffset();
+            const auto data = DataAtIndex(vi->DeltaSetOuterIndex);
+            if (data->ItemCount == 0) [[likely]] return 0;
+            return data->GetDelta(ctx, vi, range);
+        }
+    };
+
+    inline f32 GetDelta(const FontCalcCtx& ctx, const VariationIndex* vi, const ItemVariationStore* item_var_store)
+    {
+        if (item_var_store == nullptr) [[unlikely]] return 0;
+        return item_var_store->GetDelta(ctx, vi);
+    }
+
+    inline f32 GetDelta(const FontCalcCtx& ctx, const OtRef_Device_Or_VariationIndex device, const ItemVariationStore* item_var_store)
+    {
+        switch (device.m_unknown->DeltaFormat)
+        {
+        case DeltaFormat::Local_2_bit_deltas:
+        case DeltaFormat::Local_4_bit_deltas:
+        case DeltaFormat::Local_8_bit_deltas:
+            return device.m_device->GetDelta(ctx);
+        case DeltaFormat::VariationIndex:
+            return GetDelta(ctx, device.m_variation, item_var_store);
+        default:
+            return 0;
+        }
+    }
 }
