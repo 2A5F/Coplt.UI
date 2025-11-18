@@ -80,6 +80,7 @@ public partial record struct StyleData()
     public float FontSize = 16;
     public FontWidth FontWidth = new(1);
     public float FontOblique = -20;
+    public FontWeight FontWeight = FontWeight.Normal;
 
     public float LineHeightValue = 1.2f;
 
@@ -150,7 +151,6 @@ public partial record struct StyleData()
 
     public LengthType FlexBasis = LengthType.Auto;
 
-    public FontWeight FontWeight = FontWeight.Normal;
     public bool FontItalic = false;
     public bool FontOpticalSizing = true;
 

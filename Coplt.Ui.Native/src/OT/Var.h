@@ -5,6 +5,8 @@
 
 namespace Coplt::OT
 {
+    struct OtRef_fvar;
+
     COPLT_ENUM_FLAGS(TupleIndexFlags, u16)
     {
         None = 0,
@@ -92,8 +94,14 @@ namespace Coplt::OT
         TupleVariationHeader TupleVariationHeaders[];
     };
 
-    struct CVarHeader : VersionBase, GlyphVariationData
+    struct CVarHeader : VersionBase
     {
+        /// A packed field. The high 4 bits are flags, and the low 12 bits are the number of tuple variation tables for this glyph. The count can be any number between 1 and 4095.
+        PackedTupleVariationCount TupleVariationCount;
+        /// Offset from the start of the GlyphVariationData table to the serialized data.
+        u16 DataOffset;
+        /// Array of tuple variation headers.
+        TupleVariationHeader TupleVariationHeaders[];
     };
 
     struct PackedEntryFormat
@@ -148,6 +156,8 @@ namespace Coplt::OT
         u16 RegionCount;
         /// Array of variation regions.
         VariationRegion VariationRegions[];
+
+        f32 Calc(const FontCalcCtx& ctx) const;
     };
 
     struct PackedWordDeltaCount
@@ -167,20 +177,19 @@ namespace Coplt::OT
         /// Array of indices into the variation region list for the regions referenced by this item variation data table.
         u16 RegionIndexes[];
 
-        f32 GetDelta(
-            const FontCalcCtx& ctx, const VariationIndex* vi, const VariationRegionList* range
-        ) const
+        const u8* GetDeltaSetPtr() const
         {
-            if (vi->DeltaSetInnerIndex >= ItemCount) [[unlikely]] return 0;
-            const bool is_long = WordDeltaCount.LongWords;
-            const u32 count = RegionIndexCount;
-            const u16 word_count = WordDeltaCount.Count;
-            const u32 scount = is_long ? count : word_count;
-            const u32 lcount = is_long ? word_count : 0;
-
-            // todo
-            return 0;
+            return reinterpret_cast<const u8*>(RegionIndexes + RegionIndexCount + 1);
         }
+
+        u32 GetRowSize() const
+        {
+            const bool is_long = WordDeltaCount.LongWords;
+            const u16 word_count = WordDeltaCount.Count;
+            return (word_count + RegionIndexCount) * (is_long ? 2 : 1);
+        }
+
+        f32 GetDelta(const FontCalcCtx& ctx, OtRef_fvar fvar, const VariationIndex* vi, const VariationRegionList* range) const;
     };
 
     struct ItemVariationStore : FormatBase
@@ -216,33 +225,10 @@ namespace Coplt::OT
             return reinterpret_cast<const ItemVariationData*>(reinterpret_cast<const u8*>(this) + offset);
         }
 
-        f32 GetDelta(const FontCalcCtx& ctx, const VariationIndex* vi) const
-        {
-            const auto range = VariationRegionListOffset();
-            const auto data = DataAtIndex(vi->DeltaSetOuterIndex);
-            if (data->ItemCount == 0) [[likely]] return 0;
-            return data->GetDelta(ctx, vi, range);
-        }
+        f32 GetDelta(const FontCalcCtx& ctx, OtRef_fvar fvar, const VariationIndex* vi) const;
     };
 
-    inline f32 GetDelta(const FontCalcCtx& ctx, const VariationIndex* vi, const ItemVariationStore* item_var_store)
-    {
-        if (item_var_store == nullptr) [[unlikely]] return 0;
-        return item_var_store->GetDelta(ctx, vi);
-    }
+    f32 GetDelta(const FontCalcCtx& ctx, OtRef_fvar fvar, const VariationIndex* vi, const ItemVariationStore* item_var_store);
 
-    inline f32 GetDelta(const FontCalcCtx& ctx, const OtRef_Device_Or_VariationIndex device, const ItemVariationStore* item_var_store)
-    {
-        switch (device.m_unknown->DeltaFormat)
-        {
-        case DeltaFormat::Local_2_bit_deltas:
-        case DeltaFormat::Local_4_bit_deltas:
-        case DeltaFormat::Local_8_bit_deltas:
-            return device.m_device->GetDelta(ctx);
-        case DeltaFormat::VariationIndex:
-            return GetDelta(ctx, device.m_variation, item_var_store);
-        default:
-            return 0;
-        }
-    }
+    f32 GetDelta(const FontCalcCtx& ctx, OtRef_fvar fvar, OtRef_Device_Or_VariationIndex device, const ItemVariationStore* item_var_store);
 }

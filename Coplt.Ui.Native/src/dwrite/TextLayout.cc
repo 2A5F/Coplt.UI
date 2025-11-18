@@ -167,7 +167,7 @@ void ParagraphData::AnalyzeFonts()
             },
             DWRITE_FONT_AXIS_VALUE{
                 .axisTag = DWRITE_FONT_AXIS_TAG_SLANT,
-                .value = cur_font_oblique,
+                .value = cur_font_italic ? cur_font_oblique : 0.0f,
             },
         };
 

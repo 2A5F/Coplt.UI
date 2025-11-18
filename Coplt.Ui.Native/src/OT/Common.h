@@ -16,6 +16,10 @@ namespace Coplt::OT
     struct FontStyleInfo
     {
         f32 FontSize;
+        FontWidth FontWidth;
+        f32 FontOblique;
+        FontWeight FontWeight;
+        bool IsItalic;
         bool IsVertical;
     };
 
@@ -42,6 +46,11 @@ namespace Coplt::OT
 
         F2DOT14() = default;
 
+        explicit F2DOT14(u16 value)
+            : value(value)
+        {
+        }
+
         F2DOT14(f32 value)
             : value(std::round(value * 16384.f))
         {
@@ -58,6 +67,11 @@ namespace Coplt::OT
         u32 value;
 
         Fixed() = default;
+
+        explicit Fixed(u32 value)
+            : value(value)
+        {
+        }
 
         Fixed(f32 value)
             : value(std::round(value * 65536.f))
