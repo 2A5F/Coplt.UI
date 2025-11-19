@@ -3,10 +3,45 @@
 
 namespace Coplt::OT
 {
-    f32 VariationRegionList::Calc(const FontCalcCtx& ctx) const
+    f32 RegionAxisCoordinates::Calc(const F2DOT14 value) const
     {
-        // todo
-        return 0;
+        const i16 peek = PeakCoord.value;
+        if (peek == 0 || value.value == peek) return 1.0f;
+        if (value.value == 0) return 0.0f;
+
+        const i16 start = StartCoord.value;
+        const i16 end = EndCoord.value;
+
+        if (start > peek || peek > end) [[unlikely]] return 1.0f;
+        if (start < 0 && end > 0) [[unlikely]] return 1.0f;
+
+        if (value.value <= start || end <= value.value) return 0.0f;
+
+        if (value.value < peek)
+            return static_cast<f32>(value.value - start) / (peek - start);
+        else
+            return static_cast<f32>(end - value.value) / (end - peek);
+    }
+
+    f32 VariationRegionList::Calc(u32 index, const std::span<F2DOT14> tuple) const
+    {
+        COPLT_DEBUG_ASSERT(tuple.size() == AxisCount);
+
+        if (index >= RegionCount) [[unlikely]] return 0;
+        const auto axes = AxesSpanAtIndex(index);
+
+        f32 v = 1.0f;
+        const u16 count = AxisCount;
+        for (u16 i = 0; i < count; ++i)
+        {
+            const auto value = tuple[i];
+            const auto& axis = axes[i];
+            const f32 factor = axis.Calc(value);
+            if (factor == 0.0f) return 0.0f;
+            v *= factor;
+        }
+
+        return v;
     }
 
     f32 ItemVariationData::GetDelta(const FontCalcCtx& ctx, const OtRef_fvar fvar, const VariationIndex* vi, const VariationRegionList* range) const
@@ -22,15 +57,38 @@ namespace Coplt::OT
         const u8* delta_sets = GetDeltaSetPtr();
         const u8* row = delta_sets + vi->DeltaSetInnerIndex * row_size;
 
-        Fixed _tuple[fvar.AxisCount()];
-        const auto tuple = std::span(_tuple, fvar.AxisCount());
+        const auto tuple = ctx.GetTuple(fvar);
         fvar.BuildTuple(*ctx.m_style, tuple);
 
         f32 delta = 0.0f;
         u32 i = 0;
 
-        // todo
-        return 0;
+        auto lcursor = reinterpret_cast<const u32*>(row);
+        for (; i < lcount; i++)
+        {
+            const u32 index = RegionIndexes[i];
+            const f32 scalar = range->Calc(index, tuple);
+            if (scalar) delta += scalar * *lcursor;
+            lcursor++;
+        }
+        auto scursor = reinterpret_cast<const u16*>(lcursor);
+        for (; i < scount; i++)
+        {
+            const u32 index = RegionIndexes[i];
+            const f32 scalar = range->Calc(index, tuple);
+            if (scalar) delta += scalar * *scursor;
+            scursor++;
+        }
+        auto bcursor = reinterpret_cast<const u8*>(scursor);
+        for (; i < count; i++)
+        {
+            const u32 index = RegionIndexes[i];
+            const f32 scalar = range->Calc(index, tuple);
+            if (scalar) delta += scalar * *bcursor;
+            bcursor++;
+        }
+
+        return delta;
     }
 
     f32 ItemVariationStore::GetDelta(const FontCalcCtx& ctx, const OtRef_fvar fvar, const VariationIndex* vi) const

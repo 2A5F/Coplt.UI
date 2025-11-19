@@ -8,45 +8,13 @@
 
 namespace Coplt::OT
 {
-    struct FontBaseInfo
-    {
-        u16 DesignUnitsPerEm;
-    };
-
-    struct FontStyleInfo
-    {
-        f32 FontSize;
-        FontWidth FontWidth;
-        f32 FontOblique;
-        FontWeight FontWeight;
-        bool IsItalic;
-        bool IsVertical;
-    };
-
-    struct FontCalcCtx
-    {
-        const FontBaseInfo* m_info;
-        const FontStyleInfo* m_style;
-        f32 m_scale;
-        u16 m_ppem;
-
-        FontCalcCtx() = default;
-
-        explicit FontCalcCtx(const FontBaseInfo* info, const FontStyleInfo* style)
-            : m_info(info), m_style(style),
-              m_scale(style->FontSize / info->DesignUnitsPerEm),
-              m_ppem(std::round(m_style->FontSize))
-        {
-        }
-    };
-
     struct F2DOT14
     {
-        u16 value;
+        i16 value;
 
         F2DOT14() = default;
 
-        explicit F2DOT14(u16 value)
+        explicit F2DOT14(i16 value)
             : value(value)
         {
         }
@@ -64,11 +32,11 @@ namespace Coplt::OT
 
     struct Fixed
     {
-        u32 value;
+        i32 value;
 
         Fixed() = default;
 
-        explicit Fixed(u32 value)
+        explicit Fixed(i32 value)
             : value(value)
         {
         }
@@ -82,6 +50,45 @@ namespace Coplt::OT
         {
             return value * (1 / 65536.f);
         }
+    };
+
+    struct FontBaseInfo
+    {
+        u16 DesignUnitsPerEm;
+    };
+
+    struct FontStyleInfo
+    {
+        f32 FontSize;
+        FontWidth FontWidth;
+        f32 FontOblique;
+        FontWeight FontWeight;
+        bool IsItalic;
+        bool IsVertical;
+    };
+
+    struct OtRef_fvar;
+
+    struct FontCalcCtx
+    {
+        const FontBaseInfo* m_info;
+        const FontStyleInfo* m_style;
+        f32 m_scale;
+        u16 m_ppem;
+
+        mutable u16 m_tuple_size{0};
+        mutable F2DOT14 m_tuple[16]{};
+
+        FontCalcCtx() = default;
+
+        explicit FontCalcCtx(const FontBaseInfo* info, const FontStyleInfo* style)
+            : m_info(info), m_style(style),
+              m_scale(style->FontSize / info->DesignUnitsPerEm),
+              m_ppem(std::round(m_style->FontSize))
+        {
+        }
+
+        std::span<F2DOT14> GetTuple(OtRef_fvar fvar) const;
     };
 
     struct VersionBase

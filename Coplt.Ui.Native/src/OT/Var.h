@@ -140,6 +140,8 @@ namespace Coplt::OT
         F2DOT14 PeakCoord;
         /// The region end coordinate value for the current axis.
         F2DOT14 EndCoord;
+
+        f32 Calc(F2DOT14 value) const;
     };
 
     struct VariationRegion
@@ -157,7 +159,17 @@ namespace Coplt::OT
         /// Array of variation regions.
         VariationRegion VariationRegions[];
 
-        f32 Calc(const FontCalcCtx& ctx) const;
+        const RegionAxisCoordinates* AxesAtIndex(const u16 index) const
+        {
+            return reinterpret_cast<const RegionAxisCoordinates*>(VariationRegions) + index * AxisCount;
+        }
+
+        std::span<const RegionAxisCoordinates> AxesSpanAtIndex(const u16 index) const
+        {
+            return std::span(AxesAtIndex(index), AxisCount);
+        }
+
+        f32 Calc(u32 index, std::span<F2DOT14> tuple) const;
     };
 
     struct PackedWordDeltaCount

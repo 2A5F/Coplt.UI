@@ -3,6 +3,7 @@
 #include <span>
 
 #include "Common.h"
+#include "avar.h"
 #include "../StrideSpan.h"
 
 namespace Coplt::OT
@@ -97,11 +98,12 @@ namespace Coplt::OT
     struct OtRef_fvar
     {
         const fvar_Header* m_header;
+        const AxisVariation* m_avar;
 
         OtRef_fvar() = default;
 
-        explicit OtRef_fvar(const fvar_Header* ptr)
-            : m_header(ptr)
+        explicit OtRef_fvar(const fvar_Header* ptr, const AxisVariation* avar)
+            : m_header(ptr), m_avar(avar)
         {
         }
 
@@ -123,6 +125,6 @@ namespace Coplt::OT
             return StrideSpan(reinterpret_cast<const Instance*>(instances_start), m_header->InstanceSize, m_header->InstanceCount);
         }
 
-        void BuildTuple(const FontStyleInfo& style, std::span<Fixed> tuple) const;
+        void BuildTuple(const FontStyleInfo& style, std::span<F2DOT14> tuple) const;
     };
 }
