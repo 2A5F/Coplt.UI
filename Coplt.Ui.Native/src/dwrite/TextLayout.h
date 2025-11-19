@@ -8,6 +8,8 @@
 #include "../Com.h"
 #include "../TextLayout.h"
 #include "../Layout.h"
+#include "../Utils.h"
+#include "../Harfpp.h"
 
 namespace Coplt
 {
@@ -53,10 +55,71 @@ namespace Coplt::LayoutCalc::Texts
         void Clear();
     };
 
+    struct HBFontKey
+    {
+        Rc<DWriteFontFace> Font{};
+        u32 FontSize{};
+        u32 FontWidth{};
+        i32 FontOblique_x100{};
+        FontWeight FontWeight{};
+        bool FontItalic{};
+
+        HBFontKey() = default;
+
+        explicit HBFontKey(
+            Rc<DWriteFontFace> font,
+            const StyleData& style
+        )
+            : Font(std::move(font)),
+              FontSize(std::round(style.FontSize)),
+              FontWidth(std::round(style.FontWidth.Width)),
+              FontOblique_x100(std::round(style.FontOblique * 100)),
+              FontWeight(style.FontWeight),
+              FontItalic(style.FontItalic)
+        {
+        }
+
+        bool operator==(const HBFontKey& other) const
+        {
+            return
+                Font.get() == other.Font.get()
+                && FontSize == other.FontSize
+                && FontWidth == other.FontWidth
+                && FontOblique_x100 == other.FontOblique_x100
+                && FontWeight == other.FontWeight
+                && FontItalic == other.FontItalic;
+        }
+
+        i32 GetHashCode() const
+        {
+            return HashValues(
+                reinterpret_cast<usize>(Font.get()),
+                FontSize,
+                FontWidth,
+                FontOblique_x100,
+                static_cast<i32>(FontWeight),
+                FontItalic
+            );
+        }
+    };
+
+    struct HBFontValue
+    {
+        Harf::HFont Font{};
+
+        HBFontValue() = default;
+
+        explicit HBFontValue(Harf::HFont font)
+            : Font(std::move(font))
+        {
+        }
+    };
+
     struct TextLayout final : BaseTextLayout<TextLayout>
     {
         CtxNodeRef m_node;
         std::vector<ParagraphData> m_paragraph_datas{};
+        Map<HBFontKey, HBFontValue> m_hb_font_cache{};
 
         void ReBuild(Layout* layout, CtxNodeRef node);
 
@@ -221,6 +284,7 @@ namespace Coplt::LayoutCalc::Texts
         void AnalyzeStyles();
         void CollectRuns();
         void AnalyzeGlyphsFirst();
+        void AnalyzeGlyphsCarets();
 
         LayoutOutput Compute(
             TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,

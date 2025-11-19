@@ -1048,6 +1048,7 @@ namespace Coplt {
         ::Coplt::f32 FontSize;
         ::Coplt::FontWidth FontWidth;
         ::Coplt::f32 FontOblique;
+        ::Coplt::FontWeight FontWeight;
         ::Coplt::f32 LineHeightValue;
         ::Coplt::GridPlacement GridRowStart;
         ::Coplt::GridPlacement GridRowEnd;
@@ -1097,7 +1098,6 @@ namespace Coplt {
         ::Coplt::AlignType AlignSelf;
         ::Coplt::AlignType JustifySelf;
         ::Coplt::LengthType FlexBasis;
-        ::Coplt::FontWeight FontWeight;
         bool FontItalic;
         bool FontOpticalSizing;
         ::Coplt::TextAlign TextAlign;

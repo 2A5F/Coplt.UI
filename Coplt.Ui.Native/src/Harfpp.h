@@ -18,7 +18,7 @@ namespace Coplt::Harf
         using HbType = T;
         using Object = HObject;
 
-        T* m_ptr;
+        T* m_ptr{};
 
         ~HObject() noexcept
         {
@@ -27,7 +27,8 @@ namespace Coplt::Harf
 
         HObject() noexcept = default;
 
-        explicit HObject(T* ptr) noexcept : m_ptr(ptr)
+        explicit HObject(T* ptr) noexcept
+            : m_ptr(ptr)
         {
         }
 
@@ -36,11 +37,13 @@ namespace Coplt::Harf
             std::swap(m_ptr, other.m_ptr);
         }
 
-        HObject(const HObject& other) noexcept : m_ptr(hb_reference(other))
+        HObject(const HObject& other) noexcept
+            : m_ptr(hb_reference(other))
         {
         }
 
-        HObject(HObject&& other) noexcept : m_ptr(std::exchange(other.m_ptr, nullptr))
+        HObject(HObject&& other) noexcept
+            : m_ptr(std::exchange(other.m_ptr, nullptr))
         {
         }
 
@@ -62,12 +65,15 @@ namespace Coplt::Harf
         }
     };
 
+    struct HFont;
+
     struct HFace : HObject<hb_face_t, hb_face_reference, hb_face_destroy>
     {
         using Object::Object;
 
         #ifdef _WINDOWS
-        explicit HFace(IDWriteFontFace* face) : Object(hb_directwrite_face_create(face))
+        explicit HFace(IDWriteFontFace* face)
+            : Object(hb_directwrite_face_create(face))
         {
         }
 
@@ -83,17 +89,14 @@ namespace Coplt::Harf
     {
         using Object::Object;
 
-        static HFont Empty()
-        {
-            return HFont(hb_font_get_empty());
-        }
-
-        explicit HFont(const HFace& face) : Object(hb_font_create(face))
+        explicit HFont(const HFace& face)
+            : Object(hb_font_create(face))
         {
         }
 
         #ifdef _WINDOWS
-        explicit HFont(IDWriteFontFace* face) : Object(hb_directwrite_font_create(face))
+        explicit HFont(IDWriteFontFace* face)
+            : Object(hb_directwrite_font_create(face))
         {
         }
 
@@ -105,6 +108,31 @@ namespace Coplt::Harf
         }
 
         #endif
+
+        HFont CreateSubFont() const
+        {
+            return HFont(hb_font_create_sub_font(m_ptr));
+        }
+
+        void SetPixelsPerEm(const u32 size) const
+        {
+            hb_font_set_ppem(m_ptr, size, size);
+        }
+
+        void SetPixelsPerEm(const u32 x, const u32 y) const
+        {
+            hb_font_set_ppem(m_ptr, x, y);
+        }
+
+        void SetVariations(const std::initializer_list<const hb_variation_t> variations) const
+        {
+            hb_font_set_variations(m_ptr, variations.begin(), variations.size());
+        }
+
+        void SetVariations(const std::span<const hb_variation_t> variations) const
+        {
+            hb_font_set_variations(m_ptr, variations.data(), variations.size());
+        }
 
         u32 GetLigatureCarets(
             const hb_direction_t direction,

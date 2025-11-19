@@ -14,7 +14,7 @@ find_package(cpptrace CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED src/Build.cc src/OT/Build.cc src/dwrite/Compute.cc)
+add_library(${PROJECT_NAME} SHARED src/Build.cc src/dwrite/Compute.cc)
 target_compile_definitions(${PROJECT_NAME} PRIVATE -D COPLT_SOURCE)
 set_property(TARGET ${PROJECT_NAME} PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

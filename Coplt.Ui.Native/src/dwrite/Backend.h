@@ -9,6 +9,7 @@ namespace Coplt
     struct TextBackend : RefCount<TextBackend>
     {
         Rc<IDWriteFactory7> m_dw_factory;
+        Rc<IFontManager> m_font_manager;
 
         explicit TextBackend(Rc<IDWriteFactory7>&& dw_factory);
 

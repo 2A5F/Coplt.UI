@@ -7,16 +7,18 @@ using namespace Coplt;
 DWriteFontFace::DWriteFontFace(Rc<IDWriteFontFace5>&& face, const u64 id)
     : m_id(id), m_face(std::forward<Rc<IDWriteFontFace5>>(face))
 {
-    InitInfo();
-    if (const auto hr = font->CreateFontFace(m_face.put()); FAILED(hr))
-        throw ComException(hr, "Failed to create font face");
-
-    m_hb_font = Harf::HFont(m_face.get());
+    Init();
 }
 
 DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face, const u64 id)
     : m_id(id), m_face(face)
 {
+    Init();
+}
+
+void DWriteFontFace::Init()
+{
+    m_hb_face = Harf::HFace(m_face.get());
     InitInfo();
 }
 

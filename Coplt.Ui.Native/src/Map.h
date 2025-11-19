@@ -589,7 +589,7 @@ namespace Coplt
             m_count = 0;
             m_free_list = -1;
             m_free_count = 0;
-            std::fill_n(get_m_entries(), count, 0);
+            std::fill_n(reinterpret_cast<u8*>(get_m_entries()), count * sizeof(Entry), 0);
         }
 
         ~Map()

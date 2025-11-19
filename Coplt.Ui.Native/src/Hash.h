@@ -12,6 +12,12 @@ namespace Coplt
         Overwrite,
     };
 
+    template <class T>
+    concept SelfHash = requires(const T& value)
+    {
+        { value.GetHashCode() } -> std::convertible_to<i32>;
+    };
+
     template <class Self, class T>
     concept Hash = requires(const T& value)
     {
@@ -29,7 +35,11 @@ namespace Coplt
     {
         static i32 GetHashCode(const T& value)
         {
-            if constexpr (std::is_pointer_v<T>)
+            if constexpr (SelfHash<T>)
+            {
+                return value.GetHashCode();
+            }
+            else if constexpr (std::is_pointer_v<T>)
             {
                 return static_cast<i32>(reinterpret_cast<uintptr_t>(value));
             }

@@ -88,6 +88,7 @@ CtxNodeRef ParagraphData::GetScope(const SameStyleRange& range) const
 void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
 {
     m_node = node;
+    m_hb_font_cache.Clear();
     m_paragraph_datas.resize(m_paragraphs.size(), ParagraphData(this));
     for (int i = 0; i < m_paragraphs.size(); ++i)
     {
@@ -113,6 +114,7 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         data.AnalyzeStyles();
         data.CollectRuns();
         data.AnalyzeGlyphsFirst();
+        data.AnalyzeGlyphsCarets();
     }
     m_node = {};
 }
@@ -427,8 +429,6 @@ void ParagraphData::AnalyzeGlyphsFirst()
     std::vector<u16> glyph_indices;
     std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_props;
 
-    const auto& scopes = m_text_layout->m_scopes;
-
     auto& analyzer = m_layout->m_text_analyzer;
     const auto& items = m_text_layout->m_items;
     auto item_index = 0;
@@ -560,6 +560,40 @@ void ParagraphData::AnalyzeGlyphsFirst()
             m_glyph_offsets.data() + run.GlyphStartIndex
         );
         if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
+    }
+}
+
+void ParagraphData::AnalyzeGlyphsCarets()
+{
+    auto& hb_font_cache = m_text_layout->m_hb_font_cache;
+    for (auto& run : m_runs)
+    {
+        const auto& font = m_font_ranges[run.FontRangeIndex];
+        const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
+
+        if (!font.Font) continue; // skip if no font find
+
+        const auto scope = GetScope(same_style);
+        const auto& style = scope.StyleData();
+
+        auto entry = hb_font_cache.GetValueRefOrUninitializedValue(HBFontKey(font.Font, style));
+        if (!entry.Exists())
+        {
+            const auto& key = entry.GetKey();
+            const auto& value = entry.SetValue(HBFontValue(Harf::HFont(font.Font->m_hb_face)));
+            value.Font.SetPixelsPerEm(key.FontSize);
+            value.Font.SetVariations(
+                {
+                    {HB_OT_TAG_VAR_AXIS_ITALIC, key.FontItalic ? 1.0f : 0.0f},
+                    {HB_OT_TAG_VAR_AXIS_SLANT, key.FontOblique_x100 / 100.0f},
+                    {HB_OT_TAG_VAR_AXIS_WIDTH, static_cast<f32>(key.FontWidth)},
+                    {HB_OT_TAG_VAR_AXIS_WEIGHT, static_cast<f32>(key.FontWeight)},
+                }
+            );
+        }
+        const auto& value = entry.GetValue();
+
+        // todo
     }
 }
 
