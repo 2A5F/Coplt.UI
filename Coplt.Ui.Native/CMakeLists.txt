@@ -11,7 +11,6 @@ add_definitions(-DCPPTRACE_STATIC_DEFINE)
 add_definitions(-DNOMINMAX)
 
 find_package(cpptrace CONFIG REQUIRED)
-find_package(harfbuzz CONFIG REQUIRED)
 find_package(mimalloc CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
@@ -31,7 +30,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         cpptrace::cpptrace
         mimalloc-static
         fmt::fmt-header-only
-        harfbuzz::harfbuzz
+        harfbuzz
 )
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE icuuc.lib)

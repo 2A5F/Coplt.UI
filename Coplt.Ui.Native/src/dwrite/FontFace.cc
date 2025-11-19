@@ -8,6 +8,10 @@ DWriteFontFace::DWriteFontFace(Rc<IDWriteFontFace5>&& face, const u64 id)
     : m_id(id), m_face(std::forward<Rc<IDWriteFontFace5>>(face))
 {
     InitInfo();
+    if (const auto hr = font->CreateFontFace(m_face.put()); FAILED(hr))
+        throw ComException(hr, "Failed to create font face");
+
+    m_hb_font = Harf::HFont(m_face.get());
 }
 
 DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face, const u64 id)

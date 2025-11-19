@@ -1,5 +1,7 @@
 #include "Backend.h"
 
+#include "hb-directwrite.h"
+
 #include "../Error.h"
 #include "SystemFontCollection.h"
 #include "SystemFontFallback.h"
@@ -9,6 +11,8 @@ using namespace Coplt;
 TextBackend::TextBackend(Rc<IDWriteFactory7>&& dw_factory)
     : m_dw_factory(std::forward<Rc<IDWriteFactory7>>(dw_factory))
 {
+    hb_directwrite_set_factory(dw_factory.get());
+    m_font_manager = Rc(new DWriteFontManager());
 }
 
 Rc<TextBackend> TextBackend::Create(void* dw_factory)

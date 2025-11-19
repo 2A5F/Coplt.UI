@@ -1,7 +1,8 @@
-﻿#pragma once
+#pragma once
 
 #include <dwrite_3.h>
 #include "../Com.h"
+#include "../Harfpp.h"
 
 namespace Coplt
 {
@@ -10,6 +11,7 @@ namespace Coplt
         u64 m_id{};
         Rc<IDWriteFontFace5> m_face{};
         NFontInfo m_info{};
+        Harf::HFont m_hb_font;
 
         explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face, u64 id);
         explicit DWriteFontFace(const Rc<IDWriteFontFace5>& face, u64 id);
