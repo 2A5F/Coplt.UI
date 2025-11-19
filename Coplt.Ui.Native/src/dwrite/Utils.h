@@ -182,4 +182,11 @@ namespace Coplt
 
         return name;
     }
+
+    namespace OT
+    {
+        struct FontCalcCtx;
+    }
+
+    bool GetGlyphContourPoint(const OT::FontCalcCtx& ctx, u32 glyph, u32 point_index, u32* out_x, u32* out_y);
 }

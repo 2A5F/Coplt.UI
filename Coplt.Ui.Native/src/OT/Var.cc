@@ -102,7 +102,7 @@ namespace Coplt::OT
     f32 GetDelta(const FontCalcCtx& ctx, const OtRef_fvar fvar, const VariationIndex* vi, const ItemVariationStore* item_var_store)
     {
         if (item_var_store == nullptr) [[unlikely]] return 0;
-        return item_var_store->GetDelta(ctx, fvar, vi);
+        return item_var_store->GetDelta(ctx, fvar, vi) * ctx.m_scale;
     }
 
     f32 GetDelta(const FontCalcCtx& ctx, const OtRef_fvar fvar, const OtRef_Device_Or_VariationIndex device, const ItemVariationStore* item_var_store)
