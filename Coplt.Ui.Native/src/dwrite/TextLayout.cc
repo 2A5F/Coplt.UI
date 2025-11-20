@@ -1,6 +1,7 @@
 #include "TextLayout.h"
 
 #include <span>
+#include <print>
 
 #include "../Algorithm.h"
 #include "../Text.h"
@@ -497,10 +498,13 @@ void ParagraphData::AnalyzeGlyphsFirst()
         HRESULT hr;
         for (;;)
         {
-            if (cluster_map.size() < buf_size)
+            if (cluster_map.size() < run.Length)
             {
-                cluster_map.resize(buf_size, {});
-                text_props.resize(buf_size, {});
+                cluster_map.resize(run.Length, {});
+                text_props.resize(run.Length, {});
+            }
+            if (glyph_indices.size() < buf_size)
+            {
                 glyph_indices.resize(buf_size, {});
                 glyph_props.resize(buf_size, {});
             }
@@ -516,7 +520,7 @@ void ParagraphData::AnalyzeGlyphsFirst()
                 &arg_features,
                 &feature_range_length,
                 1,
-                cluster_map.size(),
+                glyph_indices.size(),
                 cluster_map.data(),
                 text_props.data(),
                 glyph_indices.data(),
@@ -528,11 +532,12 @@ void ParagraphData::AnalyzeGlyphsFirst()
         }
         if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
 
-        run.GlyphStartIndex = m_cluster_map.size();
+        run.ClusterStartIndex = m_cluster_map.size();
+        run.GlyphStartIndex = m_glyph_indices.size();
         run.ActualGlyphCount = actual_glyph_count;
 
-        m_cluster_map.insert(m_cluster_map.end(), cluster_map.data(), cluster_map.data() + actual_glyph_count);
-        m_text_props.insert(m_text_props.end(), text_props.data(), text_props.data() + actual_glyph_count);
+        m_cluster_map.insert(m_cluster_map.end(), cluster_map.data(), cluster_map.data() + run.Length);
+        m_text_props.insert(m_text_props.end(), text_props.data(), text_props.data() + run.Length);
         m_glyph_indices.insert(m_glyph_indices.end(), glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
         m_glyph_props.insert(m_glyph_props.end(), glyph_props.data(), glyph_props.data() + actual_glyph_count);
 
@@ -572,28 +577,55 @@ void ParagraphData::AnalyzeGlyphsCarets()
         const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
 
         if (!font.Font) continue; // skip if no font find
+        if (run.Length <= 1) continue; // one char never ligature
 
         const auto scope = GetScope(same_style);
         const auto& style = scope.StyleData();
 
-        auto entry = hb_font_cache.GetValueRefOrUninitializedValue(HBFontKey(font.Font, style));
-        if (!entry.Exists())
+        Harf::HFont hb_font{};
+        const auto ensure_hb_font = [&]
         {
-            const auto& key = entry.GetKey();
-            const auto& value = entry.SetValue(HBFontValue(Harf::HFont(font.Font->m_hb_face)));
-            value.Font.SetPixelsPerEm(key.FontSize);
-            value.Font.SetVariations(
-                {
-                    {HB_OT_TAG_VAR_AXIS_ITALIC, key.FontItalic ? 1.0f : 0.0f},
-                    {HB_OT_TAG_VAR_AXIS_SLANT, key.FontOblique_x100 / 100.0f},
-                    {HB_OT_TAG_VAR_AXIS_WIDTH, static_cast<f32>(key.FontWidth)},
-                    {HB_OT_TAG_VAR_AXIS_WEIGHT, static_cast<f32>(key.FontWeight)},
-                }
-            );
-        }
-        const auto& value = entry.GetValue();
+            if (hb_font) return;
+            auto entry = hb_font_cache.GetValueRefOrUninitializedValue(HBFontKey(font.Font, style));
+            if (!entry.Exists())
+            {
+                const auto& key = entry.GetKey();
+                const auto& value = entry.SetValue(HBFontValue(Harf::HFont(font.Font->m_hb_face)));
+                value.Font.SetPixelsPerEm(key.FontSize);
+                value.Font.SetVariations(
+                    {
+                        {HB_OT_TAG_VAR_AXIS_ITALIC, key.FontItalic ? 1.0f : 0.0f},
+                        {HB_OT_TAG_VAR_AXIS_SLANT, key.FontOblique_x100 / 100.0f},
+                        {HB_OT_TAG_VAR_AXIS_WIDTH, static_cast<f32>(key.FontWidth)},
+                        {HB_OT_TAG_VAR_AXIS_WEIGHT, static_cast<f32>(key.FontWeight)},
+                    }
+                );
+            }
+            const auto& value = entry.GetValue();
+            hb_font = value.Font;
+        };
 
-        // todo
+        const std::span cluster_map{m_cluster_map.data() + run.ClusterStartIndex, run.Length};
+        const std::span glyph_indices{m_glyph_indices.data() + run.GlyphStartIndex, run.ActualGlyphCount};
+
+        std::vector<hb_position_t> caret_buf{};
+
+        for (u32 ci = 0, i = 1; i < run.Length; ci = i)
+        {
+            const u16 cur = cluster_map[ci];
+            for (; i < run.Length; i++)
+                if (cur != cluster_map[i]) break;
+            const u32 len = i - ci;
+            COPLT_DEBUG_ASSERT(len != 0);
+            if (len == 1) continue;
+            const u16 glyph = glyph_indices[cur];
+            ensure_hb_font();
+            if (caret_buf.size() < len) caret_buf.resize(len, 0);
+            u32 count = len;
+            const auto num = hb_font.GetLigatureCarets(HB_DIRECTION_LTR, glyph, 0, &count, caret_buf.data());
+            // todo
+            std::print("{}", num);
+        }
     }
 }
 

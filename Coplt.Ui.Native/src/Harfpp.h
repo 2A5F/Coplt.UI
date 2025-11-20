@@ -63,6 +63,11 @@ namespace Coplt::Harf
         {
             return m_ptr;
         }
+
+        explicit operator bool() const noexcept
+        {
+            return m_ptr != nullptr;
+        }
     };
 
     struct HFont;

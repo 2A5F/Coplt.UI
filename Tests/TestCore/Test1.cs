@@ -59,7 +59,8 @@ public class Tests1
         // var inline_box = new Access.View(doc) { TextMode = TextMode.Inline, Width = 10, Height = 10 };
         // node.Add(inline_box);
         // node.Add("不亦乐乎");
-        node.Add("Never Gonna Give You Up");
+        // node.Add("Never Gonna Give You Up");
+        node.Add("fia");
         var start = Stopwatch.GetTimestamp();
         doc.Update();
         var end = Stopwatch.GetTimestamp();

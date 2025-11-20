@@ -228,6 +228,7 @@ namespace Coplt::LayoutCalc::Texts
         u32 FontRangeIndex;
         u32 StyleRangeIndex;
 
+        u32 ClusterStartIndex;
         u32 GlyphStartIndex;
         u32 ActualGlyphCount;
 
