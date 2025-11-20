@@ -13,20 +13,26 @@ public sealed unsafe partial class FontFallback
 
     [Drop]
     internal Rc<IFontFallback> m_inner;
+    internal readonly string[] m_family_names;
+    internal readonly bool m_has_system_fallback;
 
     #endregion
 
     #region Props
 
     public ref readonly Rc<IFontFallback> Inner => ref m_inner;
+    public ReadOnlySpan<string> FamilyNames => m_family_names;
+    public bool HasSystemFallback => m_has_system_fallback;
 
     #endregion
 
     #region Ctor
 
-    internal FontFallback(IFontFallback* inner)
+    internal FontFallback(IFontFallback* inner, string[] family_names, bool has_system_fallback)
     {
         m_inner = new(inner);
+        m_family_names = family_names;
+        m_has_system_fallback = has_system_fallback;
     }
 
     #endregion
@@ -38,7 +44,7 @@ public sealed unsafe partial class FontFallback
 
     public static FontFallback Create(bool DisableSystemFallback = false, params ReadOnlySpan<string> FamilyNames)
     {
-        var builder = CreateBuilder();
+        var builder = new Builder(DisableSystemFallback);
         foreach (var name in FamilyNames)
         {
             builder.Add(name);
@@ -55,6 +61,8 @@ public sealed unsafe partial class FontFallback
 
         [Drop]
         internal Rc<IFontFallbackBuilder> m_inner;
+        internal readonly List<string> m_family_names = new();
+        internal bool m_disable_system_fallback;
 
         #endregion
 
@@ -68,6 +76,7 @@ public sealed unsafe partial class FontFallback
 
         internal Builder(bool DisableSystemFallback)
         {
+            m_disable_system_fallback = DisableSystemFallback;
             var lib = NativeLib.Instance;
             IFontFallbackBuilder* ptr;
             FontFallbackBuilderCreateInfo info = new()
@@ -86,7 +95,7 @@ public sealed unsafe partial class FontFallback
         {
             IFontFallback* ptr;
             m_inner.Build(&ptr).TryThrowWithMsg();
-            return new(ptr);
+            return new(ptr, m_family_names.ToArray(), !m_disable_system_fallback);
         }
 
         #endregion
@@ -96,6 +105,7 @@ public sealed unsafe partial class FontFallback
         public Builder Add(string FontFamilyName) => Add(FontFamilyName, out _);
         public Builder Add(string FontFamilyName, out bool exists)
         {
+            m_family_names.Add(FontFamilyName);
             Unsafe.SkipInit(out exists);
             fixed (bool* p_exists = &exists)
             fixed (char* p_family_name = FontFamilyName)
@@ -108,6 +118,7 @@ public sealed unsafe partial class FontFallback
         public Builder Add(LocaleId Locale, string FontFamilyName) => Add(Locale, FontFamilyName, out _);
         public Builder Add(LocaleId Locale, string FontFamilyName, out bool exists)
         {
+            m_family_names.Add(FontFamilyName);
             Unsafe.SkipInit(out exists);
             fixed (bool* p_exists = &exists)
             fixed (char* p_family_name = FontFamilyName)
@@ -119,6 +130,13 @@ public sealed unsafe partial class FontFallback
 
         #endregion
     }
+
+    #endregion
+
+    #region ToString
+
+    public override string ToString() =>
+        $"[{string.Join(", ", m_family_names)}{(m_has_system_fallback ? $"{(m_family_names.Length == 0 ? "" : ", ")}..." : "")}]";
 
     #endregion
 }

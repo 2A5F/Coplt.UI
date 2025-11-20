@@ -23,6 +23,7 @@ public static unsafe partial class Access
         public ref CommonData CommonData => ref Document.At<CommonData>(Id);
         public LayoutView Layout => CommonData.Layout;
         public ref ChildsData ChildsData => ref Document.At<ChildsData>(Id);
+        public ref ManagedData ManagedData => ref Document.At<ManagedData>(Id);
 
         public void Add(string text)
         {
@@ -72,9 +73,14 @@ public static unsafe partial class Access
             set => node.StyleData.Visible = value;
         }
 
-        public FontFallback FontFallback
+        public FontFallback? FontFallback
         {
-            set => node.StyleData.SetFontFallback(value);
+            get => node.ManagedData.FontFallback;
+            set
+            {
+                node.StyleData.SetFontFallback(value);
+                node.ManagedData.FontFallback = value;
+            }
         }
 
         public Length Width

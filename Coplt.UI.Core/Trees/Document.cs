@@ -66,6 +66,7 @@ public sealed partial class Document
             Attach<ChildsData>(storage: StorageType.Pinned);
             Attach<CommonData>(storage: StorageType.Pinned);
             Attach<StyleData>(storage: StorageType.Pinned);
+            Attach<ManagedData>();
             With<LayoutModule>();
         }
 

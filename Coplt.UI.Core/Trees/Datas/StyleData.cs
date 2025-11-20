@@ -169,9 +169,10 @@ public partial record struct StyleData()
     public TextOverflow TextOverflow = TextOverflow.Clip;
     public LengthType LineHeight = LengthType.Percent;
 
-    public void SetFontFallback(FontFallback Fallback)
+    public void SetFontFallback(FontFallback? Fallback)
     {
         FontFallback.Dispose();
+        if (Fallback == null) return;
         Fallback.m_inner.AddRef();
         FontFallback = Fallback.m_inner;
     }
