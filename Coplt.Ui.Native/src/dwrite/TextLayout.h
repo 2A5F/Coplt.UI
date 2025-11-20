@@ -285,7 +285,7 @@ namespace Coplt::LayoutCalc::Texts
         void AnalyzeStyles();
         void CollectRuns();
         void AnalyzeGlyphsFirst();
-        void AnalyzeGlyphsCarets();
+        // void AnalyzeGlyphsCarets();
 
         LayoutOutput Compute(
             TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,

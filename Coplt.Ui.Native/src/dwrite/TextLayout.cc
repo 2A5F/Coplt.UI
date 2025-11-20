@@ -115,7 +115,7 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         data.AnalyzeStyles();
         data.CollectRuns();
         data.AnalyzeGlyphsFirst();
-        data.AnalyzeGlyphsCarets();
+        // data.AnalyzeGlyphsCarets();
     }
     m_node = {};
 }
@@ -452,6 +452,14 @@ void ParagraphData::AnalyzeGlyphsFirst()
         // todo features from style
         DWRITE_FONT_FEATURE features[] = {
             DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
                 .nameTag = DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES,
                 .parameter = 1,
             },
@@ -460,11 +468,23 @@ void ParagraphData::AnalyzeGlyphsFirst()
                 .parameter = 1,
             },
             DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES,
+                .nameTag = DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS,
                 .parameter = 1,
             },
             DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS,
+                .nameTag = DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING,
+                .parameter = 1,
+            },
+            DWRITE_FONT_FEATURE{
+                .nameTag = DWRITE_FONT_FEATURE_TAG_KERNING,
                 .parameter = 1,
             },
         };
@@ -568,66 +588,66 @@ void ParagraphData::AnalyzeGlyphsFirst()
     }
 }
 
-void ParagraphData::AnalyzeGlyphsCarets()
-{
-    auto& hb_font_cache = m_text_layout->m_hb_font_cache;
-    for (auto& run : m_runs)
-    {
-        const auto& font = m_font_ranges[run.FontRangeIndex];
-        const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
-
-        if (!font.Font) continue; // skip if no font find
-        if (run.Length <= 1) continue; // one char never ligature
-
-        const auto scope = GetScope(same_style);
-        const auto& style = scope.StyleData();
-
-        Harf::HFont hb_font{};
-        const auto ensure_hb_font = [&]
-        {
-            if (hb_font) return;
-            auto entry = hb_font_cache.GetValueRefOrUninitializedValue(HBFontKey(font.Font, style));
-            if (!entry.Exists())
-            {
-                const auto& key = entry.GetKey();
-                const auto& value = entry.SetValue(HBFontValue(Harf::HFont(font.Font->m_hb_face)));
-                value.Font.SetPixelsPerEm(key.FontSize);
-                value.Font.SetVariations(
-                    {
-                        {HB_OT_TAG_VAR_AXIS_ITALIC, key.FontItalic ? 1.0f : 0.0f},
-                        {HB_OT_TAG_VAR_AXIS_SLANT, key.FontOblique_x100 / 100.0f},
-                        {HB_OT_TAG_VAR_AXIS_WIDTH, static_cast<f32>(key.FontWidth)},
-                        {HB_OT_TAG_VAR_AXIS_WEIGHT, static_cast<f32>(key.FontWeight)},
-                    }
-                );
-            }
-            const auto& value = entry.GetValue();
-            hb_font = value.Font;
-        };
-
-        const std::span cluster_map{m_cluster_map.data() + run.ClusterStartIndex, run.Length};
-        const std::span glyph_indices{m_glyph_indices.data() + run.GlyphStartIndex, run.ActualGlyphCount};
-
-        std::vector<hb_position_t> caret_buf{};
-
-        for (u32 ci = 0, i = 1; i < run.Length; ci = i)
-        {
-            const u16 cur = cluster_map[ci];
-            for (; i < run.Length; i++)
-                if (cur != cluster_map[i]) break;
-            const u32 len = i - ci;
-            COPLT_DEBUG_ASSERT(len != 0);
-            if (len == 1) continue;
-            const u16 glyph = glyph_indices[cur];
-            ensure_hb_font();
-            if (caret_buf.size() < len) caret_buf.resize(len, 0);
-            u32 count = len;
-            const auto num = hb_font.GetLigatureCarets(HB_DIRECTION_LTR, glyph, 0, &count, caret_buf.data());
-            // todo
-            std::print("{}", num);
-        }
-    }
-}
+// void ParagraphData::AnalyzeGlyphsCarets()
+// {
+//     auto& hb_font_cache = m_text_layout->m_hb_font_cache;
+//     for (auto& run : m_runs)
+//     {
+//         const auto& font = m_font_ranges[run.FontRangeIndex];
+//         const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
+//
+//         if (!font.Font) continue; // skip if no font find
+//         if (run.Length <= 1) continue; // one char never ligature
+//
+//         const auto scope = GetScope(same_style);
+//         const auto& style = scope.StyleData();
+//
+//         Harf::HFont hb_font{};
+//         const auto ensure_hb_font = [&]
+//         {
+//             if (hb_font) return;
+//             auto entry = hb_font_cache.GetValueRefOrUninitializedValue(HBFontKey(font.Font, style));
+//             if (!entry.Exists())
+//             {
+//                 const auto& key = entry.GetKey();
+//                 const auto& value = entry.SetValue(HBFontValue(Harf::HFont(font.Font->m_hb_face)));
+//                 value.Font.SetPixelsPerEm(key.FontSize);
+//                 value.Font.SetVariations(
+//                     {
+//                         {HB_OT_TAG_VAR_AXIS_ITALIC, key.FontItalic ? 1.0f : 0.0f},
+//                         {HB_OT_TAG_VAR_AXIS_SLANT, key.FontOblique_x100 / 100.0f},
+//                         {HB_OT_TAG_VAR_AXIS_WIDTH, static_cast<f32>(key.FontWidth)},
+//                         {HB_OT_TAG_VAR_AXIS_WEIGHT, static_cast<f32>(key.FontWeight)},
+//                     }
+//                 );
+//             }
+//             const auto& value = entry.GetValue();
+//             hb_font = value.Font;
+//         };
+//
+//         const std::span cluster_map{m_cluster_map.data() + run.ClusterStartIndex, run.Length};
+//         const std::span glyph_indices{m_glyph_indices.data() + run.GlyphStartIndex, run.ActualGlyphCount};
+//
+//         std::vector<hb_position_t> caret_buf{};
+//
+//         for (u32 ci = 0, i = 1; i < run.Length; ci = i)
+//         {
+//             const u16 cur = cluster_map[ci];
+//             for (; i < run.Length; i++)
+//                 if (cur != cluster_map[i]) break;
+//             const u32 len = i - ci;
+//             COPLT_DEBUG_ASSERT(len != 0);
+//             if (len == 1) continue;
+//             const u16 glyph = glyph_indices[cur];
+//             ensure_hb_font();
+//             if (caret_buf.size() < len) caret_buf.resize(len, 0);
+//             u32 count = len;
+//             const auto num = hb_font.GetLigatureCarets(HB_DIRECTION_LTR, glyph, 0, &count, caret_buf.data());
+//             // todo ; No font found for this data block
+//             std::print("{}", num);
+//         }
+//     }
+// }
 
 TextAnalysisSource::TextAnalysisSource(ParagraphData* paragraph_data)
     : m_paragraph_data(paragraph_data)

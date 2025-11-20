@@ -1,11 +1,7 @@
 ﻿using System.Diagnostics;
-using Coplt.UI.Collections;
-using Coplt.UI.Core.Styles;
-using Coplt.UI.Native;
 using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees;
-using Coplt.UI.Trees.Datas;
 
 namespace TestCore;
 
@@ -46,7 +42,8 @@ public class Tests1
     // [Repeat(10)]
     public void Test2()
     {
-        var ff = FontFallback.Create("Constantia");
+        var ff = FontFallback.Create("JetBrains Mono");
+        Console.WriteLine(ff);
 
         using var doc = new Document.Builder()
             .Create();
@@ -63,7 +60,10 @@ public class Tests1
         // node.Add(inline_box);
         // node.Add("不亦乐乎");
         // node.Add("Never Gonna Give You Up");
-        node.Add("fia");
+        // node.Add("fia");
+        node.Add("!=");
+        
+        // node.Add("😀");
         var start = Stopwatch.GetTimestamp();
         doc.Update();
         var end = Stopwatch.GetTimestamp();

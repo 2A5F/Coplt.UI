@@ -105,26 +105,26 @@ public sealed unsafe partial class FontFallback
         public Builder Add(string FontFamilyName) => Add(FontFamilyName, out _);
         public Builder Add(string FontFamilyName, out bool exists)
         {
-            m_family_names.Add(FontFamilyName);
             Unsafe.SkipInit(out exists);
             fixed (bool* p_exists = &exists)
             fixed (char* p_family_name = FontFamilyName)
             {
                 m_inner.Add(p_family_name, FontFamilyName.Length, p_exists).TryThrowWithMsg();
             }
+            if (exists) m_family_names.Add(FontFamilyName);
             return this;
         }
 
         public Builder Add(LocaleId Locale, string FontFamilyName) => Add(Locale, FontFamilyName, out _);
         public Builder Add(LocaleId Locale, string FontFamilyName, out bool exists)
         {
-            m_family_names.Add(FontFamilyName);
             Unsafe.SkipInit(out exists);
             fixed (bool* p_exists = &exists)
             fixed (char* p_family_name = FontFamilyName)
             {
                 m_inner.AddLocaled(Locale.Name, p_family_name, FontFamilyName.Length, p_exists).TryThrowWithMsg();
             }
+            if (exists) m_family_names.Add(FontFamilyName);
             return this;
         }
 
