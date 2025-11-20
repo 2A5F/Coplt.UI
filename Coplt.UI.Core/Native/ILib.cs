@@ -23,6 +23,12 @@ public unsafe partial struct ILib
     public partial HResult GetSystemFontCollection(IFontCollection** fc);
     public partial HResult GetSystemFontFallback(IFontFallback** ff);
 
+    public partial HResult CreateFontFallbackBuilder(
+        IFontFallbackBuilder** ffb,
+        [ComType<ConstPtr<FontFallbackBuilderCreateInfo>>]
+        FontFallbackBuilderCreateInfo* info
+    );
+
     public partial HResult CreateLayout(ILayout** layout);
 
     public partial HResult SplitTexts(NativeList<TextRange>* ranges, [ComType<ConstPtr<char>>] char* chars, int len);

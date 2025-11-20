@@ -35,6 +35,10 @@
           "name": "BaseFontFallback",
           "impl": "IFontFallback"
         },
+        "dwrite/FontFallbackBuilder.h": {
+          "name": "FontFallbackBuilder",
+          "impl": "IFontFallbackBuilder"
+        },
         "dwrite/FontFamily.h": {
           "name": "FontFamily",
           "impl": "IFontFamily"

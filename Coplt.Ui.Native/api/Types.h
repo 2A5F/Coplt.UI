@@ -41,6 +41,8 @@ namespace Coplt {
 
     struct FFIOrderedSet;
 
+    struct FontFallbackBuilderCreateInfo;
+
     struct FontFamilyNameInfo;
 
     struct LayoutCache;
@@ -92,6 +94,8 @@ namespace Coplt {
     struct IFontFace;
 
     struct IFontFallback;
+
+    struct IFontFallbackBuilder;
 
     struct IFontFamily;
 
@@ -898,6 +902,11 @@ namespace Coplt {
     {
         ::Coplt::GridTemplateComponentUnion Union;
         ::Coplt::GridTemplateComponentType Type;
+    };
+
+    struct FontFallbackBuilderCreateInfo
+    {
+        bool DisableSystemFallback;
     };
 
     struct FontFamilyNameInfo

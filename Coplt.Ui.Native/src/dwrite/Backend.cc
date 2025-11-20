@@ -34,3 +34,8 @@ Rc<IFontFallback> TextBackend::GetSystemFontFallback() const
 {
     return SystemFontFallback::Create(this);
 }
+
+Rc<IFontFallbackBuilder> TextBackend::CreateFontFallbackBuilder(const FontFallbackBuilderCreateInfo& info) const
+{
+    return Rc(new FontFallbackBuilder(this, info));
+}

@@ -2,6 +2,7 @@
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
 using Coplt.UI.Styles;
+using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
 
 namespace Coplt.UI.Trees;
@@ -69,6 +70,11 @@ public static unsafe partial class Access
         {
             get => node.StyleData.Visible;
             set => node.StyleData.Visible = value;
+        }
+
+        public FontFallback FontFallback
+        {
+            set => node.StyleData.SetFontFallback(value);
         }
 
         public Length Width

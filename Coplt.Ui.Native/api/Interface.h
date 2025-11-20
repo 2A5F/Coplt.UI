@@ -42,6 +42,15 @@ namespace Coplt {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFallback
     };
 
+    COPLT_COM_INTERFACE(IFontFallbackBuilder, "9b4e9893-0ea4-456b-bf54-9563db70eff0", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IFontFallbackBuilder
+
+        COPLT_COM_METHOD(Build, ::Coplt::HResult, (IFontFallback** ff), ff);
+        COPLT_COM_METHOD(Add, ::Coplt::HResult, (::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists), name, length, exists);
+        COPLT_COM_METHOD(AddLocaled, ::Coplt::HResult, (::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists), locale, name, name_length, exists);
+    };
+
     COPLT_COM_INTERFACE(IFontFamily, "f8009d34-9417-4b87-b23b-b7885d27aeab", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFamily
@@ -83,6 +92,7 @@ namespace Coplt {
         COPLT_COM_METHOD(CreateFontManager, ::Coplt::HResult, (IFontManager** fm), fm);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
         COPLT_COM_METHOD(GetSystemFontFallback, ::Coplt::HResult, (IFontFallback** ff), ff);
+        COPLT_COM_METHOD(CreateFontFallbackBuilder, ::Coplt::HResult, (IFontFallbackBuilder** ffb, ::Coplt::FontFallbackBuilderCreateInfo const* info), ffb, info);
         COPLT_COM_METHOD(CreateLayout, ::Coplt::HResult, (ILayout** layout), layout);
         COPLT_COM_METHOD(SplitTexts, ::Coplt::HResult, (::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len), ranges, chars, len);
     };

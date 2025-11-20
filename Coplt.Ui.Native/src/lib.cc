@@ -7,6 +7,7 @@
 
 #include "Error.h"
 #include "Text.h"
+#include "dwrite/FontFallbackBuilder.h"
 
 #if _WINDOWS
 #include "dwrite/Layout.h"
@@ -81,6 +82,18 @@ HResult LibUi::Impl_GetSystemFontFallback(IFontFallback** ff)
         {
             auto out = m_backend->GetSystemFontFallback();
             *ff = out.leak();
+            return HResultE::Ok;
+        }
+    );
+}
+
+HResult LibUi::Impl_CreateFontFallbackBuilder(IFontFallbackBuilder** ffb, FontFallbackBuilderCreateInfo const* info)
+{
+    return feb(
+        [&]
+        {
+            auto out = m_backend->CreateFontFallbackBuilder(*info);
+            *ffb = out.leak();
             return HResultE::Ok;
         }
     );

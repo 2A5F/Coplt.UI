@@ -4,6 +4,7 @@ using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
 using Coplt.UI.Native;
 using Coplt.UI.Styles;
+using Coplt.UI.Texts;
 
 namespace Coplt.UI.Trees.Datas;
 
@@ -167,6 +168,13 @@ public partial record struct StyleData()
     public TextOrientation TextOrientation = TextOrientation.Mixed;
     public TextOverflow TextOverflow = TextOverflow.Clip;
     public LengthType LineHeight = LengthType.Percent;
+
+    public void SetFontFallback(FontFallback Fallback)
+    {
+        FontFallback.Dispose();
+        Fallback.m_inner.AddRef();
+        FontFallback = Fallback.m_inner;
+    }
 }
 
 [Dropping]

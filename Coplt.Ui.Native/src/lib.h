@@ -98,6 +98,9 @@ namespace Coplt
         HResult Impl_GetSystemFontFallback(IFontFallback** ff);
 
         COPLT_FORCE_INLINE
+        HResult Impl_CreateFontFallbackBuilder(IFontFallbackBuilder** ffb, FontFallbackBuilderCreateInfo const* info);
+
+        COPLT_FORCE_INLINE
         HResult Impl_CreateLayout(ILayout** layout);
 
         COPLT_FORCE_INLINE

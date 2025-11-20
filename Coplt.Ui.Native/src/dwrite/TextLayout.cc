@@ -192,32 +192,32 @@ void ParagraphData::AnalyzeFonts()
             ); FAILED(hr))
                 throw ComException(hr, "Failed to map characters");
 
-            // not find, retry use system font fallback
-            if (mapped_font == nullptr && cur_fall_back != system_font_fallback)
-            {
-                if (const auto hr = system_font_fallback->MapCharacters(
-                    m_src.get(), text_start, text_length,
-                    nullptr, nullptr,
-                    axis_values, std::size(axis_values),
-                    &mapped_length, &scale,
-                    mapped_font.put()
-                ); FAILED(hr))
-                    throw ComException(hr, "Failed to map characters");
-            }
+            // // not find, retry use system font fallback
+            // if (mapped_font == nullptr && cur_fall_back != system_font_fallback)
+            // {
+            //     if (const auto hr = system_font_fallback->MapCharacters(
+            //         m_src.get(), text_start, text_length,
+            //         nullptr, nullptr,
+            //         axis_values, std::size(axis_values),
+            //         &mapped_length, &scale,
+            //         mapped_font.put()
+            //     ); FAILED(hr))
+            //         throw ComException(hr, "Failed to map characters");
+            // }
 
             #ifdef _DEBUG
-            // if (mapped_font)
-            // {
-            //     u32 len{};
-            //     const char16* local{};
-            //     m_src->GetLocaleName(text_start, &len, &local);
-            //
-            //     const auto name = GetFamilyNames(mapped_font);
-            //     m_layout->m_lib->m_logger.Log(
-            //         LogLevel::Debug,
-            //         fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
-            //     );
-            // }
+            if (mapped_font)
+            {
+                u32 len{};
+                const char16* local{};
+                m_src->GetLocaleName(text_start, &len, &local);
+
+                const auto name = GetFamilyNames(mapped_font);
+                m_layout->m_lib->m_logger.Log(
+                    LogLevel::Debug,
+                    fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
+                );
+            }
             #endif
 
             m_font_ranges.push_back(

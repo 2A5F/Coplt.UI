@@ -20,5 +20,7 @@ namespace Coplt
         Rc<IFontCollection> GetSystemFontCollection() const;
 
         Rc<IFontFallback> GetSystemFontFallback() const;
+
+        Rc<IFontFallbackBuilder> CreateFontFallbackBuilder(const FontFallbackBuilderCreateInfo& info) const;
     };
 }

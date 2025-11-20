@@ -3,6 +3,8 @@
 #include "FontManager.cc"
 #include "SystemFontCollection.cc"
 #include "SystemFontFallback.cc"
+#include "CustomFontFallback.cc"
+#include "FontFallbackBuilder.cc"
 #include "FontFamily.cc"
 #include "Font.cc"
 #include "FontFace.cc"

@@ -14,6 +14,7 @@ namespace Coplt {
     struct IFontCollection;
     struct IFontFace;
     struct IFontFallback;
+    struct IFontFallbackBuilder;
     struct IFontFamily;
     struct IFontManager;
     struct ILayout;
@@ -656,6 +657,171 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFallback>
 };
 
 template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFallbackBuilder>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    ::Coplt::i32 (*const COPLT_CDECL f_Build)(::Coplt::IFontFallbackBuilder*, IFontFallback** ff) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_Add)(::Coplt::IFontFallbackBuilder*, ::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_AddLocaled)(::Coplt::IFontFallbackBuilder*, ::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IFontFallbackBuilder
+{
+    ::Coplt::i32 COPLT_CDECL Build(::Coplt::IFontFallbackBuilder* self, IFontFallback** p0) noexcept;
+    ::Coplt::i32 COPLT_CDECL Add(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::i32 p1, bool* p2) noexcept;
+    ::Coplt::i32 COPLT_CDECL AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::IFontFallbackBuilder>
+{
+    using VirtualTable = VirtualTable<::Coplt::IFontFallbackBuilder>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("9b4e9893-0ea4-456b-bf54-9563db70eff0");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::IFontFallbackBuilder>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IFontFallbackBuilder*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_Build = VirtualImpl_Coplt_IFontFallbackBuilder::Build,
+            .f_Add = VirtualImpl_Coplt_IFontFallbackBuilder::Add,
+            .f_AddLocaled = VirtualImpl_Coplt_IFontFallbackBuilder::AddLocaled,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual ::Coplt::HResult Impl_Build(IFontFallback** ff) = 0;
+        virtual ::Coplt::HResult Impl_Add(::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists) = 0;
+        virtual ::Coplt::HResult Impl_AddLocaled(::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists) = 0;
+    };
+
+    template <std::derived_from<::Coplt::IFontFallbackBuilder> Base = ::Coplt::IFontFallbackBuilder>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+    template <class Impl>
+    struct VirtualImpl
+    {
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+
+        static ::Coplt::i32 COPLT_CDECL f_Build(::Coplt::IFontFallbackBuilder* self, IFontFallback** p0) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Build(p0));
+        }
+
+        static ::Coplt::i32 COPLT_CDECL f_Add(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::i32 p1, bool* p2) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Add(p0, p1, p2));
+        }
+
+        static ::Coplt::i32 COPLT_CDECL f_AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_AddLocaled(p0, p1, p2, p3));
+        }
+    };
+
+    template<class Impl>
+    constexpr static VirtualTable s_vtb
+    {
+        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .f_Build = VirtualImpl<Impl>::f_Build,
+        .f_Add = VirtualImpl<Impl>::f_Add,
+        .f_AddLocaled = VirtualImpl<Impl>::f_AddLocaled,
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IFontFallbackBuilder
+{
+
+    inline ::Coplt::i32 COPLT_CDECL Build(::Coplt::IFontFallbackBuilder* self, IFontFallback** p0) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFallbackBuilder, Build, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::IFontFallbackBuilder>(self)->Impl_Build(p0));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFallbackBuilder, Build, ::Coplt::i32)
+        #endif
+        return r;
+    }
+
+    inline ::Coplt::i32 COPLT_CDECL Add(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::i32 p1, bool* p2) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFallbackBuilder, Add, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::IFontFallbackBuilder>(self)->Impl_Add(p0, p1, p2));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFallbackBuilder, Add, ::Coplt::i32)
+        #endif
+        return r;
+    }
+
+    inline ::Coplt::i32 COPLT_CDECL AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFallbackBuilder, AddLocaled, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::IFontFallbackBuilder>(self)->Impl_AddLocaled(p0, p1, p2, p3));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFallbackBuilder, AddLocaled, ::Coplt::i32)
+        #endif
+        return r;
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_IFontFallbackBuilder\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::IFontFallbackBuilder;\
+\
+    explicit IFontFallbackBuilder(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFallbackBuilder>
+{
+    static COPLT_FORCE_INLINE ::Coplt::HResult Build(::Coplt::IFontFallbackBuilder* self, IFontFallback** p0) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IFontFallbackBuilder, self)->f_Build(self, p0));
+    }
+    static COPLT_FORCE_INLINE ::Coplt::HResult Add(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::i32 p1, bool* p2) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IFontFallbackBuilder, self)->f_Add(self, p0, p1, p2));
+    }
+    static COPLT_FORCE_INLINE ::Coplt::HResult AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IFontFallbackBuilder, self)->f_AddLocaled(self, p0, p1, p2, p3));
+    }
+};
+
+template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFamily>
 {
     VirtualTable<::Coplt::IUnknown> b;
@@ -1288,6 +1454,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     ::Coplt::i32 (*const COPLT_CDECL f_CreateFontManager)(::Coplt::ILib*, IFontManager** fm) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontFallback)(::Coplt::ILib*, IFontFallback** ff) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_CreateFontFallbackBuilder)(::Coplt::ILib*, IFontFallbackBuilder** ffb, ::Coplt::FontFallbackBuilderCreateInfo const* info) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_CreateLayout)(::Coplt::ILib*, ILayout** layout) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_SplitTexts)(::Coplt::ILib*, ::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len) noexcept;
 };
@@ -1298,6 +1465,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
     ::Coplt::i32 COPLT_CDECL CreateFontManager(::Coplt::ILib* self, IFontManager** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL GetSystemFontFallback(::Coplt::ILib* self, IFontFallback** p0) noexcept;
+    ::Coplt::i32 COPLT_CDECL CreateFontFallbackBuilder(::Coplt::ILib* self, IFontFallbackBuilder** p0, ::Coplt::FontFallbackBuilderCreateInfo const* p1) noexcept;
     ::Coplt::i32 COPLT_CDECL CreateLayout(::Coplt::ILib* self, ILayout** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL SplitTexts(::Coplt::ILib* self, ::Coplt::NativeList<::Coplt::TextRange>* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2) noexcept;
 }
@@ -1337,6 +1505,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             .f_CreateFontManager = VirtualImpl_Coplt_ILib::CreateFontManager,
             .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
             .f_GetSystemFontFallback = VirtualImpl_Coplt_ILib::GetSystemFontFallback,
+            .f_CreateFontFallbackBuilder = VirtualImpl_Coplt_ILib::CreateFontFallbackBuilder,
             .f_CreateLayout = VirtualImpl_Coplt_ILib::CreateLayout,
             .f_SplitTexts = VirtualImpl_Coplt_ILib::SplitTexts,
         };
@@ -1351,6 +1520,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         virtual ::Coplt::HResult Impl_CreateFontManager(IFontManager** fm) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontFallback(IFontFallback** ff) = 0;
+        virtual ::Coplt::HResult Impl_CreateFontFallbackBuilder(IFontFallbackBuilder** ffb, ::Coplt::FontFallbackBuilderCreateInfo const* info) = 0;
         virtual ::Coplt::HResult Impl_CreateLayout(ILayout** layout) = 0;
         virtual ::Coplt::HResult Impl_SplitTexts(::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len) = 0;
     };
@@ -1396,6 +1566,11 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_GetSystemFontFallback(p0));
         }
 
+        static ::Coplt::i32 COPLT_CDECL f_CreateFontFallbackBuilder(::Coplt::ILib* self, IFontFallbackBuilder** p0, ::Coplt::FontFallbackBuilderCreateInfo const* p1) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_CreateFontFallbackBuilder(p0, p1));
+        }
+
         static ::Coplt::i32 COPLT_CDECL f_CreateLayout(::Coplt::ILib* self, ILayout** p0) noexcept
         {
             return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_CreateLayout(p0));
@@ -1416,6 +1591,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         .f_CreateFontManager = VirtualImpl<Impl>::f_CreateFontManager,
         .f_GetSystemFontCollection = VirtualImpl<Impl>::f_GetSystemFontCollection,
         .f_GetSystemFontFallback = VirtualImpl<Impl>::f_GetSystemFontFallback,
+        .f_CreateFontFallbackBuilder = VirtualImpl<Impl>::f_CreateFontFallbackBuilder,
         .f_CreateLayout = VirtualImpl<Impl>::f_CreateLayout,
         .f_SplitTexts = VirtualImpl<Impl>::f_SplitTexts,
     };
@@ -1486,6 +1662,19 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         return r;
     }
 
+    inline ::Coplt::i32 COPLT_CDECL CreateFontFallbackBuilder(::Coplt::ILib* self, IFontFallbackBuilder** p0, ::Coplt::FontFallbackBuilderCreateInfo const* p1) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, CreateFontFallbackBuilder, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_CreateFontFallbackBuilder(p0, p1));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, CreateFontFallbackBuilder, ::Coplt::i32)
+        #endif
+        return r;
+    }
+
     inline ::Coplt::i32 COPLT_CDECL CreateLayout(::Coplt::ILib* self, ILayout** p0) noexcept
     {
         ::Coplt::i32 r;
@@ -1541,6 +1730,10 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
     static COPLT_FORCE_INLINE ::Coplt::HResult GetSystemFontFallback(::Coplt::ILib* self, IFontFallback** p0) noexcept
     {
         return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_GetSystemFontFallback(self, p0));
+    }
+    static COPLT_FORCE_INLINE ::Coplt::HResult CreateFontFallbackBuilder(::Coplt::ILib* self, IFontFallbackBuilder** p0, ::Coplt::FontFallbackBuilderCreateInfo const* p1) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_CreateFontFallbackBuilder(self, p0, p1));
     }
     static COPLT_FORCE_INLINE ::Coplt::HResult CreateLayout(::Coplt::ILib* self, ILayout** p0) noexcept
     {

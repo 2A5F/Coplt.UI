@@ -727,6 +727,12 @@ pub struct FFIOrderedSet {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FontFallbackBuilderCreateInfo {
+    pub DisableSystemFallback: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontFamilyNameInfo {
     pub Name: Str16,
     pub Local: u32,
@@ -1101,6 +1107,13 @@ pub struct IFontFallback {
 }
 
 impl IFontFallback {
+}
+
+#[repr(C)]
+pub struct IFontFallbackBuilder {
+}
+
+impl IFontFallbackBuilder {
 }
 
 #[repr(C)]
