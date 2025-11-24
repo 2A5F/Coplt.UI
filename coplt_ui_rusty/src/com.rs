@@ -297,16 +297,13 @@ pub enum Visible {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum WhiteSpaceMerge {
-    Keep = 0,
-    Merge = 1,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum WhiteSpaceWrap {
-    WrapAll = 0,
-    WrapLine = 1,
+pub enum WhiteSpace {
+    Normal = 0,
+    NoWrap = 1,
+    Pre = 2,
+    PreWrap = 3,
+    PreLine = 4,
+    BreakSpaces = 5,
 }
 
 #[repr(u8)]
@@ -1065,8 +1062,7 @@ pub struct StyleData {
     pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
-    pub WhiteSpaceMerge: WhiteSpaceMerge,
-    pub WhiteSpaceWrap: WhiteSpaceWrap,
+    pub WhiteSpace: WhiteSpace,
     pub TextWrap: TextWrap,
     pub WordBreak: WordBreak,
     pub TextOrientation: TextOrientation,

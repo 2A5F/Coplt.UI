@@ -263,6 +263,26 @@ namespace Coplt::LayoutCalc
         return std::make_pair(style.LineHeight, style.LineHeightValue);
     }
 
+    COPLT_RELEASE_FORCE_INLINE inline bool ShouldMergeSpace(const WhiteSpace white_space)
+    {
+        switch (white_space)
+        {
+        case WhiteSpace::Normal:
+            return true;
+        case WhiteSpace::NoWrap:
+            return true;
+        case WhiteSpace::Pre:
+            return false;
+        case WhiteSpace::PreWrap:
+            return false;
+        case WhiteSpace::PreLine:
+            return true;
+        case WhiteSpace::BreakSpaces:
+            return false;
+        }
+        return false;
+    }
+
     struct ParagraphLineInfo
     {
         f32 Ascent;

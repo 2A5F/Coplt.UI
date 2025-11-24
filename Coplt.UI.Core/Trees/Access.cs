@@ -83,6 +83,12 @@ public static unsafe partial class Access
             }
         }
 
+        public WhiteSpace WhiteSpace
+        {
+            get => node.StyleData.WhiteSpace;
+            set => node.StyleData.WhiteSpace = value;
+        }
+
         public Length Width
         {
             get

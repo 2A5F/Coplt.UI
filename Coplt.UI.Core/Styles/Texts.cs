@@ -148,19 +148,14 @@ public enum WritingDirection : byte
     Vertical,
 }
 
-public enum WhiteSpaceMerge : byte
+public enum WhiteSpace : byte
 {
-    Keep,
-    Merge,
-}
-
-public enum WhiteSpaceWrap : byte
-{
-    WrapAll,
-    /// <summary>
-    /// wrap on <c>\n</c> or <c>\r</c>
-    /// </summary>
-    WrapLine,
+    Normal,
+    NoWrap,
+    Pre,
+    PreWrap,
+    PreLine,
+    BreakSpaces,
 }
 
 public enum TextWrap : byte

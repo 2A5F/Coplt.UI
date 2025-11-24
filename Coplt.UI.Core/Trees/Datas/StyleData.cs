@@ -161,8 +161,7 @@ public partial record struct StyleData()
     public LocaleMode LocaleMode = LocaleMode.Normal;
     public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
-    public WhiteSpaceMerge WhiteSpaceMerge = WhiteSpaceMerge.Keep;
-    public WhiteSpaceWrap WhiteSpaceWrap = WhiteSpaceWrap.WrapLine;
+    public WhiteSpace WhiteSpace = WhiteSpace.Normal;
     public TextWrap TextWrap = TextWrap.Wrap;
     public WordBreak WordBreak = WordBreak.Auto;
     public TextOrientation TextOrientation = TextOrientation.Mixed;
