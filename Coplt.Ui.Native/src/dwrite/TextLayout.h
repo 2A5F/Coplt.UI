@@ -13,6 +13,7 @@
 
 namespace Coplt
 {
+    struct LoggerData;
     struct DWriteFontFace;
 }
 
@@ -268,6 +269,8 @@ namespace Coplt::LayoutCalc::Texts
         TextLayout* m_text_layout{};
 
         explicit ParagraphData(TextLayout* text_layout);
+
+        const LoggerData& Logger() const;
 
         u32 m_index{};
 

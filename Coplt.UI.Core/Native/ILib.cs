@@ -12,9 +12,11 @@ public unsafe partial struct ILib
 {
     public partial void SetLogger(
         void* obj,
-        delegate* unmanaged[Cdecl]<void*, LogLevel, int, char*, void> logger,
+        delegate* unmanaged[Cdecl]<void*, LogLevel, StrKind, int, void*, void> logger,
+        delegate* unmanaged[Cdecl]<void*, LogLevel, byte> is_enabled,
         delegate* unmanaged[Cdecl]<void*, void> drop
     );
+    public partial void ClearLogger();
 
     public partial Str8 GetCurrentErrorMessage();
 

@@ -3,6 +3,13 @@
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum StrKind {
+    Str8 = 0,
+    Str16 = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum AlignType {
     None = 0,
     Start = 1,
@@ -81,12 +88,12 @@ pub enum AvailableSpaceType {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum LogLevel {
-    Fatal = 0,
-    Error = 1,
-    Warning = 2,
-    Info = 3,
-    Debug = 4,
-    Verbose = 5,
+    Trace = 0,
+    Debug = 1,
+    Info = 2,
+    Warn = 3,
+    Error = 4,
+    Fatal = 5,
 }
 
 #[repr(u16)]

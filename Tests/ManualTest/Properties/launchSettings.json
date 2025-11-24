@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ManualTest": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

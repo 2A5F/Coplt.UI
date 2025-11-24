@@ -40,9 +40,14 @@ LibUi::LibUi(LibLoadInfo* info)
     m_backend = TextBackend::Create(info->p_dwrite);
 }
 
-void LibUi::Impl_SetLogger(void* obj, Func<void, void*, LogLevel, i32, char16*>* logger, Func<void, void*>* drop)
+void LibUi::Impl_SetLogger(void* obj, Func<void, void*, LogLevel, StrKind, i32, void*>* logger, Func<u8, void*, LogLevel>* is_enabled, Func<void, void*>* drop)
 {
-    m_logger = LoggerData(obj, reinterpret_cast<Func<void, void*, LogLevel, i32, const char16*>*>(logger), drop);
+    m_logger = LoggerData(obj, logger, is_enabled, drop);
+}
+
+void LibUi::Impl_ClearLogger()
+{
+    m_logger = {};
 }
 
 Str8 LibUi::Impl_GetCurrentErrorMessage()

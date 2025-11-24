@@ -273,7 +273,11 @@ LayoutOutput ParagraphData::Compute(
                 auto break_lines = run.BreakLines(*this, style, ctx);
                 for (const auto span : break_lines)
                 {
-                    fmt::println("{}", span.NthLine);
+                    const char16* text_ptr;
+                    u32 text_len;
+                    m_src->GetTextAtPosition(span.CharStart, &text_ptr, &text_len);
+                    std::wstring text(text_ptr, std::min(text_len, span.CharLength));
+                    Logger().Log(LogLevel::Trace, fmt::format(L"{} {} \t\t {}", span.NthLine, span.Size, text));
                 }
             }
         }

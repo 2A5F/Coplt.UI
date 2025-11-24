@@ -111,6 +111,12 @@ namespace Coplt {
 
     struct ITextLayout;
 
+    enum class StrKind : ::Coplt::u8
+    {
+        Str8 = 0,
+        Str16 = 1,
+    };
+
     enum class AlignType : ::Coplt::u8
     {
         None = 0,
@@ -182,12 +188,12 @@ namespace Coplt {
 
     enum class LogLevel : ::Coplt::u8
     {
-        Fatal = 0,
-        Error = 1,
-        Warning = 2,
-        Info = 3,
-        Debug = 4,
-        Verbose = 5,
+        Trace = 0,
+        Debug = 1,
+        Info = 2,
+        Warn = 3,
+        Error = 4,
+        Fatal = 5,
     };
 
     COPLT_ENUM_FLAGS(LayoutCacheFlags, ::Coplt::u16)

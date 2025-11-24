@@ -9,14 +9,16 @@ namespace Coplt
     struct LoggerData
     {
         void* obj{};
-        Func<void, void*, LogLevel, i32, const char16*>* logger{};
+        Func<void, void*, LogLevel, StrKind, i32, void*>* logger{};
+        Func<u8, void*, LogLevel>* is_enabled{};
         Func<void, void*>* drop{};
 
         LoggerData() = default;
 
         explicit LoggerData(
-            void* obj, Func<void, void*, LogLevel, i32, const char16*>* logger, Func<void, void*>* drop
-        ) : obj(obj), logger(logger), drop(drop)
+            void* obj, Func<void, void*, LogLevel, StrKind, i32, void*>* logger, Func<u8, void*, LogLevel>* is_enabled, Func<void, void*>* drop
+        )
+            : obj(obj), logger(logger), is_enabled(is_enabled), drop(drop)
         {
         }
 
@@ -44,27 +46,70 @@ namespace Coplt
         {
             std::swap(obj, other.obj);
             std::swap(logger, other.logger);
+            std::swap(is_enabled, other.is_enabled);
             std::swap(drop, other.drop);
             return *this;
         }
 
+        bool IsEnabled(const LogLevel level) const
+        {
+            if (logger == nullptr) return false;
+            if (is_enabled == nullptr) return true;
+            return is_enabled(obj, level);
+        }
+
+        void Log(const LogLevel level, const i32 size, const char8* msg) const
+        {
+            if (logger == nullptr) return;
+            logger(obj, level, StrKind::Str8, size, const_cast<void*>(static_cast<const void*>(msg)));
+        }
+
+        void Log(const LogLevel level, const i32 size, const char16* msg) const
+        {
+            if (logger == nullptr) return;
+            logger(obj, level, StrKind::Str16, size, const_cast<void*>(static_cast<const void*>(msg)));
+        }
+
         template <i32 N>
-        void Log(const LogLevel level, const wchar_t (&msg)[N]) const
+        void Log(const LogLevel level, const char8 (&msg)[N]) const
         {
-            if (logger == nullptr) return;
-            logger(obj, level, N - 1, msg);
+            Log(obj, level, N - 1, msg);
         }
 
-        void Log(const LogLevel level, const i32 size, const wchar_t* msg) const
+        template <i32 N>
+        void Log(const LogLevel level, const char16 (&msg)[N]) const
         {
-            if (logger == nullptr) return;
-            logger(obj, level, size, msg);
+            Log(obj, level, N - 1, msg);
         }
 
-        void Log(const LogLevel level, const std::wstring& msg) const
+        template <class S> requires requires(S s) { { s.size() } -> std::convertible_to<i32>; { s.data() } -> std::convertible_to<const char8*>; }
+        void Log(const LogLevel level, const S& msg) const
+        {
+            Log(level, msg.size(), msg.data());
+        }
+
+        template <class S> requires requires(S s) { { s.size() } -> std::convertible_to<i32>; { s.data() } -> std::convertible_to<const char16*>; }
+        void Log(const LogLevel level, const S& msg) const
+        {
+            Log(level, msg.size(), msg.data());
+        }
+
+        template <class F> requires requires(F f) { { f().size() } -> std::convertible_to<i32>; { f().data() } -> std::convertible_to<const char8*>; }
+        void Log(const LogLevel level, F f) const
         {
             if (logger == nullptr) return;
-            logger(obj, level, msg.size(), msg.data());
+            if (!IsEnabled(level)) return;
+            const auto msg = f();
+            Log(level, msg);
+        }
+
+        template <class F> requires requires(F f) { { f().size() } -> std::convertible_to<i32>; { f().data() } -> std::convertible_to<const char16*>; }
+        void Log(const LogLevel level, F f) const
+        {
+            if (logger == nullptr) return;
+            if (!IsEnabled(level)) return;
+            const auto msg = f();
+            Log(level, msg);
         }
     };
 
@@ -83,7 +128,10 @@ namespace Coplt
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
-        void Impl_SetLogger(void* obj, Func<void, void*, LogLevel, i32, char16*>* logger, Func<void, void*>* drop);
+        void Impl_SetLogger(void* obj, Func<void, void*, LogLevel, StrKind, i32, void*>* logger, Func<u8, void*, LogLevel>* is_enabled, Func<void, void*>* drop);
+
+        COPLT_FORCE_INLINE
+        void Impl_ClearLogger();
 
         COPLT_FORCE_INLINE
         Str8 Impl_GetCurrentErrorMessage();

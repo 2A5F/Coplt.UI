@@ -19,6 +19,11 @@ ParagraphData::ParagraphData(TextLayout* text_layout)
 {
 }
 
+const LoggerData& ParagraphData::Logger() const
+{
+    return m_layout->m_lib->m_logger;
+}
+
 void ParagraphData::ReBuild()
 {
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
@@ -206,15 +211,15 @@ void ParagraphData::AnalyzeFonts()
             // }
 
             #ifdef _DEBUG
-            if (mapped_font)
+            if (mapped_font && Logger().IsEnabled(LogLevel::Trace))
             {
                 u32 len{};
                 const char16* local{};
                 m_src->GetLocaleName(text_start, &len, &local);
 
                 const auto name = GetFamilyNames(mapped_font);
-                m_layout->m_lib->m_logger.Log(
-                    LogLevel::Debug,
+                Logger().Log(
+                    LogLevel::Trace,
                     fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
                 );
             }

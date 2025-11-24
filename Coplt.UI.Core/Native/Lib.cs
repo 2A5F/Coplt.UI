@@ -59,38 +59,53 @@ public sealed unsafe partial class NativeLib
 
     #region MyRegion
 
-    public event Action<Exception> UnhandledException;
+    public event Action<Exception>? UnhandledException;
 
-    public void EmitUnhandledExceptionEvent(Exception ex) => UnhandledException.Invoke(ex);
+    public void EmitUnhandledExceptionEvent(Exception ex) => UnhandledException?.Invoke(ex);
 
     #endregion
 
     #region SetLog
 
+    public void ClearLogger() => m_lib.ClearLogger();
+
     public void SetLogger(
         void* obj,
-        delegate* unmanaged[Cdecl]<void*, LogLevel, int, char*, void> logger,
+        delegate* unmanaged[Cdecl]<void*, LogLevel, StrKind, int, void*, void> logger,
+        delegate* unmanaged[Cdecl]<void*, LogLevel, byte> is_enabled,
         delegate* unmanaged[Cdecl]<void*, void> drop
     )
     {
-        m_lib.SetLogger(obj, logger, drop);
+        m_lib.SetLogger(obj, logger, is_enabled, drop);
     }
 
-    public void SetLogger(Action<LogLevel, string> logger)
+    public void SetLogger(Action<LogLevel, string> logger, Func<LogLevel, bool>? is_enable = null)
+    {
+        SetLogger(new ActionLogger(logger, is_enable));
+    }
+
+    public void SetLogger(ILogger logger)
     {
         var gch = GCHandle.Alloc(logger);
-        m_lib.SetLogger((void*)GCHandle.ToIntPtr(gch), &ActionLoggerProxyLogger, &ActionLoggerProxyDrop);
+        m_lib.SetLogger((void*)GCHandle.ToIntPtr(gch), &Logger, &IsEnabled, &Drop);
         return;
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-        static void ActionLoggerProxyLogger(void* obj, LogLevel level, int len, char* msg)
+        static void Logger(void* obj, LogLevel level, StrKind kind, int len, void* msg)
         {
             var gch = GCHandle.FromIntPtr((nint)obj);
-            ((Action<LogLevel, string>)gch.Target!).Invoke(level, new string(msg, 0, len));
+            Unsafe.As<ILogger>(gch.Target)!.Log(level, kind.GetString(msg, len));
         }
 
         [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
-        static void ActionLoggerProxyDrop(void* obj)
+        static byte IsEnabled(void* obj, LogLevel level)
+        {
+            var gch = GCHandle.FromIntPtr((nint)obj);
+            return Unsafe.As<ILogger>(gch.Target)!.IsEnabled(level) ? (byte)1 : (byte)0;
+        }
+
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+        static void Drop(void* obj)
         {
             var gch = GCHandle.FromIntPtr((nint)obj);
             gch.Free();

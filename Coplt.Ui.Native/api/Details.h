@@ -1449,7 +1449,8 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) noexcept;
+    void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* logger, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* is_enabled, ::Coplt::Func<void, void*>* drop) noexcept;
+    void (*const COPLT_CDECL f_ClearLogger)(::Coplt::ILib*) noexcept;
     ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILib*, ::Coplt::Str8*) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_CreateFontManager)(::Coplt::ILib*, IFontManager** fm) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
@@ -1460,7 +1461,8 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
-    void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept;
+    void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* p1, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* p2, ::Coplt::Func<void, void*>* p3) noexcept;
+    void COPLT_CDECL ClearLogger(::Coplt::ILib* self) noexcept;
     ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept;
     ::Coplt::i32 COPLT_CDECL CreateFontManager(::Coplt::ILib* self, IFontManager** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
@@ -1501,6 +1503,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
             .f_SetLogger = VirtualImpl_Coplt_ILib::SetLogger,
+            .f_ClearLogger = VirtualImpl_Coplt_ILib::ClearLogger,
             .f_GetCurrentErrorMessage = VirtualImpl_Coplt_ILib::GetCurrentErrorMessage,
             .f_CreateFontManager = VirtualImpl_Coplt_ILib::CreateFontManager,
             .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
@@ -1515,7 +1518,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop) = 0;
+        virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* logger, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* is_enabled, ::Coplt::Func<void, void*>* drop) = 0;
+        virtual void Impl_ClearLogger() = 0;
         virtual ::Coplt::Str8 Impl_GetCurrentErrorMessage() = 0;
         virtual ::Coplt::HResult Impl_CreateFontManager(IFontManager** fm) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
@@ -1540,9 +1544,14 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         template <class Interface>
         COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
 
-        static void COPLT_CDECL f_SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+        static void COPLT_CDECL f_SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* p1, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* p2, ::Coplt::Func<void, void*>* p3) noexcept
         {
-            AsImpl(self)->Impl_SetLogger(p0, p1, p2);
+            AsImpl(self)->Impl_SetLogger(p0, p1, p2, p3);
+        }
+
+        static void COPLT_CDECL f_ClearLogger(::Coplt::ILib* self) noexcept
+        {
+            AsImpl(self)->Impl_ClearLogger();
         }
 
         static ::Coplt::Str8* COPLT_CDECL f_GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept
@@ -1587,6 +1596,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
     {
         .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
         .f_SetLogger = VirtualImpl<Impl>::f_SetLogger,
+        .f_ClearLogger = VirtualImpl<Impl>::f_ClearLogger,
         .f_GetCurrentErrorMessage = VirtualImpl<Impl>::f_GetCurrentErrorMessage,
         .f_CreateFontManager = VirtualImpl<Impl>::f_CreateFontManager,
         .f_GetSystemFontCollection = VirtualImpl<Impl>::f_GetSystemFontCollection,
@@ -1599,15 +1609,27 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
 namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 {
 
-    inline void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+    inline void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* p1, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* p2, ::Coplt::Func<void, void*>* p3) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
         COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, SetLogger, void)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_SetLogger(p0, p1, p2);
+        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_SetLogger(p0, p1, p2, p3);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, SetLogger, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL ClearLogger(::Coplt::ILib* self) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, ClearLogger, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_ClearLogger();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, ClearLogger, void)
         #endif
     }
 
@@ -1710,9 +1732,13 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
 {
-    static COPLT_FORCE_INLINE void SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* p1, ::Coplt::Func<void, void*>* p2) noexcept
+    static COPLT_FORCE_INLINE void SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* p1, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* p2, ::Coplt::Func<void, void*>* p3) noexcept
     {
-        COPLT_COM_PVTB(ILib, self)->f_SetLogger(self, p0, p1, p2);
+        COPLT_COM_PVTB(ILib, self)->f_SetLogger(self, p0, p1, p2, p3);
+    }
+    static COPLT_FORCE_INLINE void ClearLogger(::Coplt::ILib* self) noexcept
+    {
+        COPLT_COM_PVTB(ILib, self)->f_ClearLogger(self);
     }
     static COPLT_FORCE_INLINE ::Coplt::Str8 GetCurrentErrorMessage(::Coplt::ILib* self) noexcept
     {

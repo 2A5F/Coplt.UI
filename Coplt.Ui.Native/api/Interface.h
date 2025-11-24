@@ -87,7 +87,8 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_ILib
 
-        COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::i32, ::Coplt::char16*>* logger, ::Coplt::Func<void, void*>* drop), obj, logger, drop);
+        COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* logger, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* is_enabled, ::Coplt::Func<void, void*>* drop), obj, logger, is_enabled, drop);
+        COPLT_COM_METHOD(ClearLogger, void, ());
         COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());
         COPLT_COM_METHOD(CreateFontManager, ::Coplt::HResult, (IFontManager** fm), fm);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
