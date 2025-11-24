@@ -42,16 +42,16 @@ public class Tests1
     // [Repeat(10)]
     public void Test2()
     {
-        var ff = FontFallback.Create("JetBrains Mono");
-        Console.WriteLine(ff);
+        // var ff = FontFallback.Create("JetBrains Mono");
+        // Console.WriteLine(ff);
 
         using var doc = new Document.Builder()
             .Create();
         var node = new Access.View(doc)
         {
-            Width = 100, Height = Length.Auto,
+            Width = 1, Height = Length.Auto,
             Container = Container.Text,
-            FontFallback = ff,
+            // FontFallback = ff,
         };
         doc.AddRoot(node.Id);
         // node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
@@ -61,9 +61,9 @@ public class Tests1
         // node.Add("不亦乐乎");
         // node.Add("Never Gonna Give You Up");
         // node.Add("fia");
-        node.Add("!=");
-        
+        // node.Add("!=");
         // node.Add("😀");
+        node.Add("a b c");
         var start = Stopwatch.GetTimestamp();
         doc.Update();
         var end = Stopwatch.GetTimestamp();

@@ -70,23 +70,6 @@ namespace Coplt::LayoutCalc
         AvailableSpaceType AvailableSpaceHeight;
     };
 
-    struct RunLineSize
-    {
-        // Horizontal is height, Vertical is width
-        f32 LineSize;
-        f32 Ascent;
-        f32 Descent;
-        f32 LineGap;
-    };
-
-    struct RunBreakLine
-    {
-        u32 Start;
-        u32 Length;
-        f32 Size;
-        u32 Line;
-    };
-
     COPLT_RELEASE_FORCE_INLINE inline u32 ComputeCacheSlot(
         bool HasKnownWidth,
         bool HasKnownHeight,
@@ -279,4 +262,41 @@ namespace Coplt::LayoutCalc
     {
         return std::make_pair(style.LineHeight, style.LineHeightValue);
     }
+
+    struct ParagraphLineInfo
+    {
+        f32 Ascent;
+        f32 Descent;
+        f32 LineGap;
+    };
+
+    struct ParagraphLineSpan
+    {
+        u32 NthLine;
+        u32 CharStart;
+        u32 CharLength;
+        u32 GlyphStart;
+        u32 GlyphLength;
+        // Horizontal is x, Vertical is y
+        f32 Offset;
+        // Horizontal is width, Vertical is height
+        f32 Size;
+        bool NeedReShape;
+    };
+
+    struct ParagraphLine
+    {
+        ParagraphLineInfo Info{};
+
+        // Horizontal is x, Vertical is y
+        f32 AlignOffset{};
+        // Horizontal is y, Vertical is x
+        f32 LineOffset{};
+        // Horizontal is width, Vertical is height
+        f32 LineSize{};
+        // Horizontal is height, Vertical is width
+        f32 LineHeight{};
+
+        std::vector<ParagraphLineSpan> Spans{}; // todo flat storage in ParagraphData
+    };
 }

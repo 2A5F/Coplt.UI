@@ -70,7 +70,7 @@ namespace Coplt::Geometry
         case LengthType::Fixed:
             return length.second;
         case LengthType::Percent:
-            return ctx * length.second ;
+            return ctx * length.second;
         case LengthType::Auto:
             return ctx;
         }
@@ -103,8 +103,10 @@ namespace Coplt::Geometry
         return other;
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMin(const std::optional<f32> value,
-                                                                const std::optional<f32> other)
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMin(
+        const std::optional<f32> value,
+        const std::optional<f32> other
+    )
     {
         if (value.has_value() && other.has_value())
             return std::min(value.value(), other.value());
@@ -113,8 +115,10 @@ namespace Coplt::Geometry
         return std::nullopt;
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMax(const std::optional<f32> value,
-                                                                const std::optional<f32> other)
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMax(
+        const std::optional<f32> value,
+        const std::optional<f32> other
+    )
     {
         if (value.has_value() && other.has_value())
             return std::max(value.value(), other.value());

@@ -22,12 +22,14 @@ HResultE Texts::coplt_ui_layout_text_compute(
     const LayoutInputs* inputs, LayoutOutput* outputs
 )
 {
-    return feb([&]
-    {
-        const auto l = static_cast<TextLayout*>(layout);
-        l->Compute(*outputs, *inputs, CtxNodeRef(ctx, node));
-        return HResultE::Ok;
-    });
+    return feb(
+        [&]
+        {
+            const auto l = static_cast<TextLayout*>(layout);
+            l->Compute(*outputs, *inputs, CtxNodeRef(ctx, node));
+            return HResultE::Ok;
+        }
+    );
 }
 
 std::optional<LayoutOutput> TextLayoutCache::GetOutput(const LayoutInputs& inputs)
@@ -48,9 +50,11 @@ std::optional<LayoutOutput> TextLayoutCache::GetOutput(const LayoutInputs& input
                 (input_known_size.Width == cache_known_size.Width || input_known_size.Width == cached_size.Width)
                 && (input_known_size.Height == cache_known_size.Height || input_known_size.Height == cached_size.Height)
                 && (input_known_size.Width.has_value() || IsRoughlyEqual(
-                    cache_available_space.Width, input_available_space.Width))
+                    cache_available_space.Width, input_available_space.Width
+                ))
                 && (input_known_size.Height.has_value() || IsRoughlyEqual(
-                    cache_available_space.Height, input_available_space.Height))
+                    cache_available_space.Height, input_available_space.Height
+                ))
             )
                 return entry.Output;
         }
@@ -70,9 +74,11 @@ std::optional<LayoutOutput> TextLayoutCache::GetOutput(const LayoutInputs& input
                     (input_known_size.Width == cache_known_size.Width || input_known_size.Width == size.Width)
                     && (input_known_size.Height == cache_known_size.Height || input_known_size.Height == size.Height)
                     && (input_known_size.Width.has_value() || IsRoughlyEqual(
-                        cache_available_space.Width, input_available_space.Width))
+                        cache_available_space.Width, input_available_space.Width
+                    ))
                     && (input_known_size.Height.has_value() || IsRoughlyEqual(
-                        cache_available_space.Height, input_available_space.Height))
+                        cache_available_space.Height, input_available_space.Height
+                    ))
                 )
                     return LayoutOutputFromOuterSize(size);
             }
@@ -227,18 +233,8 @@ LayoutOutput ParagraphData::Compute(
     const auto& paragraph = layout.m_paragraphs[m_index];
     const auto axis = ToAxis(root_style.WritingDirection);
 
-    const auto defined_line_height = Resolve(GetLineHeight(root_style), root_style.FontSize);
-
     const auto space = AvailableSpace.Or(KnownSize);
-    const auto space_main = space.MainAxis(axis).value_or(0);
-
-    const auto allow_wrap =
-        root_style.TextWrap == TextWrap::Wrap
-        && (
-            root_style.WritingDirection == WritingDirection::Horizontal
-            ? KnownSize.Width.has_value() || AvailableSpace.Width.first != AvailableSpaceType::MinContent
-            : KnownSize.Height.has_value() || AvailableSpace.Height.first != AvailableSpaceType::MinContent
-        );
+    const auto space_main = space.MainAxis(axis).value_or(std::numeric_limits<f32>::infinity());
 
     Size<f32> result_size{};
     auto& max_main = result_size.MainAxis(axis);
@@ -250,63 +246,77 @@ LayoutOutput ParagraphData::Compute(
         u32 nth_line = 0;
         f32 max_ascent{};
         f32 max_descent{};
-        f32 max_line_cap{};
-        f32 cur_line_height = defined_line_height;
+        f32 max_line_gap{};
+
+        RunBreakLineCtx ctx{
+            .AvailableSpace = space_main
+        };
 
         for (auto& run : m_runs)
         {
+            const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
+            const auto scope = GetScope(same_style);
+            const auto& style = scope.StyleData();
+
             if (run.IsInlineBlock(*this))
             {
                 // todo
             }
             else
             {
-                const auto& single_line_size = run.GetSingleLineSize(*this);
-
+                const auto& single_line_size = run.GetLineInfo(*this);
                 max_ascent = std::max(max_ascent, single_line_size.Ascent);
                 max_descent = std::max(max_descent, single_line_size.Descent);
-                max_line_cap = std::max(max_line_cap, single_line_size.LineGap);
+                max_line_gap = std::max(max_line_gap, single_line_size.LineGap);
 
-                const auto font_line_height = max_ascent + max_line_cap + max_descent;
-
-                const auto new_size = cur_main + single_line_size.LineSize;
-                if (allow_wrap && new_size > space_main)
+                for (const auto line : run.BreakLines(*this, style, ctx))
                 {
-                    u32 cur_nth_line = nth_line;
-                    for (const auto line : run.BreakLines(*this, cur_main, space_main))
-                    {
-                        if (line.Line == 0)
-                        {
-                            const auto final_size = cur_main + line.Size;
-                            max_main = std::max(max_main, final_size);
-                            cur_main = 0;
-                        }
-                        else
-                        {
-                            const auto new_nth_line = nth_line + line.Line;
-                            COPLT_DEBUG_ASSERT(new_nth_line - cur_nth_line == 1, "Should not skip lines");
-                            cur_nth_line = new_nth_line;
+                    fmt::println("{}", line.NthLine);
+                }
 
-                            if (new_nth_line == 1) sum_cross += max_ascent;
-                            sum_cross += std::max(cur_line_height, font_line_height);
-                            max_main = std::max(max_main, line.Size);
-                            cur_main = line.Size;
-                            cur_line_height = defined_line_height;
-                        }
-                    }
-                    COPLT_DEBUG_ASSERT(cur_nth_line - nth_line >= 1, "There should be at least one line");
-                    nth_line = cur_nth_line;
-                    continue;
-                }
-                else
-                {
-                    cur_main = new_size;
-                }
+                // const auto& single_line_size = run.GetSingleLineSize(*this);
+                //
+                // max_ascent = std::max(max_ascent, single_line_size.Ascent);
+                // max_descent = std::max(max_descent, single_line_size.Descent);
+                // max_line_cap = std::max(max_line_cap, single_line_size.LineGap);
+                //
+                // const auto font_line_height = max_ascent + max_line_cap + max_descent;
+                //
+                // const auto new_size = cur_main + single_line_size.LineSize;
+                // if (allow_wrap && new_size > space_main)
+                // {
+                //     u32 cur_nth_line = nth_line;
+                //     for (const auto line : run.BreakLines(*this, root_style, style, cur_main, space_main))
+                //     {
+                //         if (line.Line == 0)
+                //         {
+                //             const auto final_size = cur_main + line.Size;
+                //             max_main = std::max(max_main, final_size);
+                //             cur_main = 0;
+                //         }
+                //         else
+                //         {
+                //             const auto new_nth_line = nth_line + line.Line;
+                //             COPLT_DEBUG_ASSERT(new_nth_line - cur_nth_line == 1, "Should not skip lines");
+                //             cur_nth_line = new_nth_line;
+                //
+                //             if (new_nth_line == 1) sum_cross += max_ascent;
+                //             sum_cross += std::max(cur_line_height, font_line_height);
+                //             max_main = std::max(max_main, line.Size);
+                //             cur_main = line.Size;
+                //             cur_line_height = defined_line_height;
+                //         }
+                //     }
+                //     COPLT_DEBUG_ASSERT(cur_nth_line - nth_line >= 1, "There should be at least one line");
+                //     nth_line = cur_nth_line;
+                //     continue;
+                // }
+                // else
+                // {
+                //     cur_main = new_size;
+                // }
             }
         }
-
-        if (nth_line == 0) sum_cross += max_ascent;
-        sum_cross += max_descent;
     }
     else
     {
@@ -317,29 +327,59 @@ LayoutOutput ParagraphData::Compute(
     return LayoutOutputFromOuterSize(result_size);
 }
 
+std::span<const u16> Run::ClusterMap(const ParagraphData& data) const
+{
+    return std::span(data.m_cluster_map.data() + ClusterStartIndex, Length);
+}
+
+std::span<const DWRITE_SHAPING_TEXT_PROPERTIES> Run::TextProps(const ParagraphData& data) const
+{
+    return std::span(data.m_text_props.data() + ClusterStartIndex, Length);
+}
+
+std::span<const u16> Run::GlyphIndices(const ParagraphData& data) const
+{
+    return std::span(data.m_glyph_indices.data() + GlyphStartIndex, ActualGlyphCount);
+}
+
+std::span<const DWRITE_SHAPING_GLYPH_PROPERTIES> Run::GlyphProps(const ParagraphData& data) const
+{
+    return std::span(data.m_glyph_props.data() + GlyphStartIndex, ActualGlyphCount);
+}
+
+std::span<const f32> Run::GlyphAdvances(const ParagraphData& data) const
+{
+    return std::span(data.m_glyph_advances.data() + GlyphStartIndex, ActualGlyphCount);
+}
+
+std::span<const DWRITE_GLYPH_OFFSET> Run::GlyphOffsets(const ParagraphData& data) const
+{
+    return std::span(data.m_glyph_offsets.data() + GlyphStartIndex, ActualGlyphCount);
+}
+
 bool Run::IsInlineBlock(const ParagraphData& data) const
 {
     const auto& font = data.m_font_ranges[FontRangeIndex];
     return !font.Font;
 }
 
-const RunLineSize& Run::GetSingleLineSize(const ParagraphData& data)
+const ParagraphLineInfo& Run::GetLineInfo(const ParagraphData& data)
 {
-    if (HasSingleLineSize) return SingleLineSize;
+    if (HasLineInfo) return LineInfo;
     const auto& font = data.m_font_ranges[FontRangeIndex];
     const auto& style_range = data.m_same_style_ranges[StyleRangeIndex];
     const auto& style = data.GetScope(style_range).StyleData();
-    if (!font.Font) return SingleLineSize;
+    if (!font.Font) return LineInfo;
 
-    HasSingleLineSize = true;
+    HasLineInfo = true;
     if (style.WritingDirection == WritingDirection::Horizontal)
     {
         DWRITE_FONT_METRICS1 metrics{};
         font.Font->m_face->GetMetrics(&metrics);
         const auto scale = style.FontSize / metrics.designUnitsPerEm;
-        SingleLineSize.Ascent = metrics.ascent * scale;
-        SingleLineSize.Descent = metrics.descent * scale;
-        SingleLineSize.LineGap = metrics.lineGap * scale;
+        LineInfo.Ascent = metrics.ascent * scale;
+        LineInfo.Descent = metrics.descent * scale;
+        LineInfo.LineGap = metrics.lineGap * scale;
     }
     else
     {
@@ -347,67 +387,161 @@ const RunLineSize& Run::GetSingleLineSize(const ParagraphData& data)
         DWRITE_FONT_METRICS1 metrics{};
         font.Font->m_face->GetMetrics(&metrics);
         const auto scale = style.FontSize / metrics.designUnitsPerEm;
-        SingleLineSize.LineGap = metrics.lineGap * scale;
+        LineInfo.LineGap = metrics.lineGap * scale;
         const auto glyph_box_size = metrics.glyphBoxRight - metrics.glyphBoxLeft;
-        SingleLineSize.Ascent = SingleLineSize.Descent = glyph_box_size * scale * 0.5f;
+        LineInfo.Ascent = LineInfo.Descent = glyph_box_size * scale * 0.5f;
     }
 
-    f32 sum_size = 0;
-    const std::span glyph_advances(data.m_glyph_advances.data() + GlyphStartIndex, ActualGlyphCount);
-    for (u32 i = 0; i < ActualGlyphCount; ++i)
-    {
-        sum_size += glyph_advances[i];
-    }
-    SingleLineSize.LineSize = sum_size;
-
-    return SingleLineSize;
+    return LineInfo;
 }
 
-std::generator<RunBreakLine> Run::BreakLines(
-    const ParagraphData& data, const f32 init_size, const f32 space
-) const
+#ifdef _DEBUG
+std::vector<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
+#else
+std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
+#endif
 {
-    f32 cur_space = space - init_size;
-    f32 sum_size = 0;
+    #pragma push_macro("YIELD")
+    #pragma push_macro("RETURN")
+    #undef YIELD
+    #undef RETURN
+    #ifdef _DEBUG
+    std::vector<ParagraphLineSpan> result;
+    #define YIELD result.push_back
+    #define RETURN return result
+    #else
+    #define YIELD co_yield
+    #define RETURN co_return
+    #endif
+
+    const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
+    const auto defined_line_height = Resolve(GetLineHeight(style), style.FontSize);
+
+    if (Length == 0 || ActualGlyphCount == 0) [[unlikely]] RETURN;
+
     const std::span break_points(data.m_line_breakpoints);
-    const std::span glyph_advances(data.m_glyph_advances.data() + GlyphStartIndex, ActualGlyphCount);
-    u32 pre_i = 0;
-    u32 line = 0;
-    for (u32 i = 0, c = 0; i < ActualGlyphCount; ++i)
+    const std::span cluster_map = ClusterMap(data);
+    const std::span text_props = TextProps(data);
+    const std::span glyph_props = GlyphProps(data);
+    const std::span glyph_advances = GlyphAdvances(data);
+    const std::span glyph_offsets = GlyphOffsets(data);
+
+    // todo support WordBreak
+
+    u32 nth_line = ctx.NthLine;
+    f32 last_start_offset = ctx.CurrentLineOffset;
+    f32 last_can_break_offset = ctx.CurrentLineOffset;
+    f32 cur_line_offset = ctx.CurrentLineOffset;
+    u32 last_can_break_char = 0;
+    u32 last_span_start_char = 0;
+    u32 c = 0;
+    u16 first_cluster = cluster_map[last_span_start_char];
+    for (;;)
     {
-        // todo check break points
-        const f32 glyph_advance = glyph_advances[i];
-        const f32 new_size = sum_size + glyph_advance;
-        if (new_size < cur_space)
+        const u32 next_char = c + 1;
+        if (next_char < Length)
         {
-            sum_size = new_size;
-            continue;
+            const u16 next_cluster = cluster_map[next_char];
+            if (next_cluster == first_cluster)
+            {
+                c = next_char;
+                continue;
+            }
         }
-        const u32 len = i - pre_i;
-        if (len == 0)
+        const u16 last_cluster = cluster_map[c];
+
+        const auto& break_info = break_points[c];
+        if (
+            break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_MUST_BREAK
+            || break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_CAN_BREAK
+        )
         {
-            cur_space = space;
-            line++;
-            continue;
+            last_can_break_offset = cur_line_offset;
+            last_can_break_char = c;
         }
-        const u32 start = std::exchange(pre_i, i);
-        const f32 size = std::exchange(sum_size, 0);
-        cur_space = space;
-        co_yield RunBreakLine{
-            .Start = start,
-            .Length = len,
-            .Size = size,
-            .Line = line,
-        };
-        line++;
+
+        f32 sum_size = 0;
+        u32 last_glyph = 0;
+        for (u16 i = first_cluster; i <= last_cluster; ++i)
+        {
+            {
+                const auto glyph_advance = glyph_advances[i];
+                const auto& glyph_offset = glyph_offsets[i];
+                sum_size += glyph_advance + glyph_offset.advanceOffset;
+            }
+            if (i == last_cluster)
+            {
+                last_glyph = i;
+                ++i;
+                for (; i < ActualGlyphCount; ++i)
+                {
+                    const auto& glyph_prop = glyph_props[i];
+                    if (glyph_prop.isClusterStart) break;
+                    const auto glyph_advance = glyph_advances[i];
+                    const auto& glyph_offset = glyph_offsets[i];
+                    sum_size += glyph_advance + glyph_offset.advanceOffset;
+                    last_glyph = i;
+                }
+            }
+        }
+
+        if (next_char >= Length)
+        {
+            const u16 first_glyph = cluster_map[last_span_start_char];
+            last_can_break_offset += sum_size;
+            ctx.NthLine = nth_line;
+            ctx.CurrentLineOffset = last_can_break_offset;
+            YIELD(
+                ParagraphLineSpan{
+                    .NthLine = nth_line,
+                    .CharStart = last_span_start_char,
+                    .CharLength = next_char - last_span_start_char,
+                    .GlyphStart = first_glyph,
+                    .GlyphLength = last_glyph + 1 - first_glyph,
+                    .Offset = last_start_offset,
+                    .Size = last_can_break_offset - last_start_offset,
+                    .NeedReShape = false,
+                }
+            );
+            RETURN;
+        }
+
+        const bool should_break =
+            cur_line_offset + sum_size > ctx.AvailableSpace
+            && last_can_break_char > last_span_start_char;
+
+        if (should_break)
+        {
+            const auto& text_prop = text_props[last_can_break_char];
+            const u16 first_glyph = cluster_map[last_span_start_char];
+            ctx.NthLine = nth_line;
+            ctx.CurrentLineOffset = last_can_break_offset;
+            YIELD(
+                ParagraphLineSpan{
+                    .NthLine = nth_line,
+                    .CharStart = last_span_start_char,
+                    .CharLength = c - last_span_start_char,
+                    .GlyphStart = first_glyph,
+                    .GlyphLength = last_glyph - first_glyph,
+                    .Offset = last_start_offset,
+                    .Size = last_can_break_offset - last_start_offset,
+                    .NeedReShape = !text_prop.canBreakShapingAfter,
+                }
+            );
+
+            nth_line++;
+            cur_line_offset -= last_can_break_offset;
+            if (next_char >= Length)
+                RETURN;
+            last_start_offset = last_can_break_offset = 0;
+            last_span_start_char = c;
+        }
+
+        cur_line_offset += sum_size;
+        c = next_char;
+        first_cluster = cluster_map[c];
     }
-    const u32 len = ActualGlyphCount - pre_i;
-    if (len == 0) co_return;
-    co_yield RunBreakLine{
-        .Start = pre_i,
-        .Length = len,
-        .Size = sum_size,
-        .Line = line,
-    };
-    co_return;
+
+    #pragma pop_macro("YIELD")
+    #pragma pop_macro("RETURN")
 }

@@ -219,6 +219,13 @@ namespace Coplt::LayoutCalc::Texts
 
     struct RunBreakLineIter;
 
+    struct RunBreakLineCtx
+    {
+        u32 NthLine{};
+        f32 CurrentLineOffset{};
+        f32 AvailableSpace{};
+    };
+
     struct Run
     {
         u32 Start;
@@ -232,14 +239,27 @@ namespace Coplt::LayoutCalc::Texts
         u32 GlyphStartIndex;
         u32 ActualGlyphCount;
 
-        bool HasSingleLineSize;
-        RunLineSize SingleLineSize;
+        bool HasLineInfo;
+        ParagraphLineInfo LineInfo;
+
+        std::span<const u16> ClusterMap(const ParagraphData& data) const;
+        std::span<const DWRITE_SHAPING_TEXT_PROPERTIES> TextProps(const ParagraphData& data) const;
+        std::span<const u16> GlyphIndices(const ParagraphData& data) const;
+        std::span<const DWRITE_SHAPING_GLYPH_PROPERTIES> GlyphProps(const ParagraphData& data) const;
+        std::span<const f32> GlyphAdvances(const ParagraphData& data) const;
+        std::span<const DWRITE_GLYPH_OFFSET> GlyphOffsets(const ParagraphData& data) const;
 
         bool IsInlineBlock(const ParagraphData& data) const;
-        const RunLineSize& GetSingleLineSize(const ParagraphData& data);
-        std::generator<RunBreakLine> BreakLines(
-            const ParagraphData& data, f32 init_size, f32 space
+        const ParagraphLineInfo& GetLineInfo(const ParagraphData& data);
+        #ifdef _DEBUG
+        std::vector<ParagraphLineSpan> BreakLines(
+            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
         ) const;
+        #else
+        std::generator<ParagraphLineSpan> BreakLines(
+            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
+        ) const;
+        #endif
     };
 
     struct ParagraphData
