@@ -116,16 +116,106 @@ namespace Coplt::LayoutCalc::Texts
         }
     };
 
+    // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
+    struct OneSpaceTextAnalysisSource final : IDWriteTextAnalysisSource1, RefCount<OneSpaceTextAnalysisSource>
+    {
+        explicit OneSpaceTextAnalysisSource() = default;
+
+        HRESULT QueryInterface(const IID& riid, void** ppvObject) override
+        {
+            if (!ppvObject)
+                return E_INVALIDARG;
+
+            if (riid == __uuidof(IUnknown))
+            {
+                *ppvObject = static_cast<IUnknown*>(this);
+            }
+            else if (riid == __uuidof(IDWriteTextAnalysisSource))
+            {
+                *ppvObject = static_cast<IDWriteTextAnalysisSource*>(this);
+            }
+            else if (riid == __uuidof(IDWriteTextAnalysisSource1))
+            {
+                *ppvObject = static_cast<IDWriteTextAnalysisSource1*>(this);
+            }
+            else
+            {
+                *ppvObject = nullptr;
+                return E_NOINTERFACE;
+            }
+
+            AddRef();
+            return S_OK;
+        }
+
+        ULONG AddRef() override { return Impl_AddRef(); }
+        ULONG Release() override { return Impl_Release(); }
+
+        HRESULT GetTextAtPosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength) override
+        {
+            if (textPosition != 0)
+            {
+                *textString = nullptr;
+                *textLength = 0;
+            }
+            else
+            {
+                *textString = L" ";
+                *textLength = 1;
+            }
+            return S_OK;
+        }
+
+        HRESULT GetTextBeforePosition(UINT32 textPosition, const WCHAR** textString, UINT32* textLength) override
+        {
+            if (textPosition != 1)
+            {
+                *textString = nullptr;
+                *textLength = 0;
+            }
+            else
+            {
+                *textString = L" ";
+                *textLength = 1;
+            }
+            return S_OK;
+        }
+
+        DWRITE_READING_DIRECTION GetParagraphReadingDirection() override { return DWRITE_READING_DIRECTION_LEFT_TO_RIGHT; }
+
+        HRESULT GetLocaleName(UINT32 textPosition, UINT32* textLength, const WCHAR** localeName) override
+        {
+            *textLength = 0;
+            *localeName = nullptr;
+            return S_OK;
+        }
+
+        HRESULT GetNumberSubstitution(
+            UINT32 textPosition, UINT32* textLength, IDWriteNumberSubstitution** numberSubstitution
+        ) override { return E_NOTIMPL; }
+
+        HRESULT GetVerticalGlyphOrientation(
+            UINT32 textPosition, UINT32* textLength,
+            DWRITE_VERTICAL_GLYPH_ORIENTATION* glyphOrientation, UINT8* bidiLevel
+        ) override { return E_NOTIMPL; }
+    };
+
     struct TextLayout final : BaseTextLayout<TextLayout>
     {
-        CtxNodeRef m_node;
+        CtxNodeRef m_node{};
+        Layout* m_layout{}; // todo:  init when ctor
+
         std::vector<ParagraphData> m_paragraph_datas{};
         Map<HBFontKey, HBFontValue> m_hb_font_cache{};
 
+        Rc<DWriteFontFace> m_fallback_undef_font{};
+        Rc<OneSpaceTextAnalysisSource> m_one_space_analysis_source{};
         void ReBuild(Layout* layout, CtxNodeRef node);
 
         COPLT_IMPL_START
         COPLT_IMPL_END
+
+        const Rc<DWriteFontFace>& GetFallbackUndefFont();
 
         void Compute(LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node);
         LayoutOutput Compute(const LayoutInputs& inputs);
@@ -204,7 +294,6 @@ namespace Coplt::LayoutCalc::Texts
         u32 Start;
         u32 Length;
         Rc<DWriteFontFace> Font;
-        f32 Scale;
         // item range only alive when IsInlineBlock is true
         u32 ItemStart;
         u32 ItemLength;
@@ -252,6 +341,7 @@ namespace Coplt::LayoutCalc::Texts
 
         bool IsInlineBlock(const ParagraphData& data) const;
         const ParagraphLineInfo& GetLineInfo(const ParagraphData& data);
+        void SplitSpans(std::vector<ParagraphSpan>& spans, const ParagraphData& data, const StyleData& style);
         #ifdef _DEBUG
         std::vector<ParagraphLineSpan> BreakLines(
             const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
@@ -277,11 +367,12 @@ namespace Coplt::LayoutCalc::Texts
         Rc<TextAnalysisSource> m_src{};
         Rc<TextAnalysisSink> m_sink{};
 
-        std::vector<bool> m_char_collapsibles{};
+        std::vector<char16> m_chars{};
         std::vector<ScriptRange> m_script_ranges{};
         std::vector<BidiRange> m_bidi_ranges{};
         std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
         std::vector<FontRange> m_font_ranges{};
+        std::vector<FontRange> m_font_ranges_tmp{};
         std::vector<SameStyleRange> m_same_style_ranges{};
         std::vector<Run> m_runs{};
 
@@ -305,7 +396,7 @@ namespace Coplt::LayoutCalc::Texts
         CtxNodeRef GetScope(const TextScopeRange& range) const;
         CtxNodeRef GetScope(const SameStyleRange& range) const;
 
-        void AnalyzeChars();
+        void CollectChars();
         void AnalyzeFonts();
         void AnalyzeStyles();
         void CollectRuns();

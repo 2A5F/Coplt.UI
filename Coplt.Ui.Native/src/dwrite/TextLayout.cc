@@ -30,11 +30,12 @@ void ParagraphData::ReBuild()
 {
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
     if (!m_sink) m_sink = Rc(new TextAnalysisSink(this));
-    m_char_collapsibles.clear();
+    m_chars.clear();
     m_script_ranges.clear();
     m_bidi_ranges.clear();
     m_line_breakpoints.clear();
     m_font_ranges.clear();
+    m_font_ranges_tmp.clear();
     m_same_style_ranges.clear();
     m_runs.clear();
 
@@ -97,6 +98,7 @@ CtxNodeRef ParagraphData::GetScope(const SameStyleRange& range) const
 void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
 {
     m_node = node;
+    m_layout = layout;
     m_hb_font_cache.Clear();
     m_paragraph_datas.resize(m_paragraphs.size(), ParagraphData(this));
     for (int i = 0; i < m_paragraphs.size(); ++i)
@@ -107,7 +109,7 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         data.m_index = i;
         data.m_layout = layout;
         data.ReBuild();
-        data.AnalyzeChars();
+        data.CollectChars();
         if (const auto hr = layout->m_text_analyzer->AnalyzeScript(
             data.m_src.get(), 0, paragraph.LogicTextLength, data.m_sink.get()
         ); FAILED(hr))
@@ -129,37 +131,42 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
     m_node = {};
 }
 
-void ParagraphData::AnalyzeChars()
+const Rc<DWriteFontFace>& TextLayout::GetFallbackUndefFont()
 {
+    if (m_fallback_undef_font) return m_fallback_undef_font;
+
+    if (!m_one_space_analysis_source) m_one_space_analysis_source = Rc(new OneSpaceTextAnalysisSource());
+
+    const auto fm = static_cast<DWriteFontManager*>(m_node.ctx->font_manager);
+    const auto& system_font_fallback = m_layout->m_system_font_fallback;
+
+    u32 mapped_length{};
+    Rc<IDWriteFontFace5> mapped_font{};
+    f32 scale{};
+
+    if (const auto hr = system_font_fallback->MapCharacters(
+        m_one_space_analysis_source.get(), 0, 1,
+        nullptr, nullptr,
+        nullptr, 0,
+        &mapped_length, &scale,
+        mapped_font.put()
+    ); FAILED(hr) || !mapped_font)
+        throw ComException(hr, "Failed to map characters");
+
+    m_fallback_undef_font = fm->DwriteFontFaceToFontFace(mapped_font.get());
+    return m_fallback_undef_font;
+}
+
+void ParagraphData::CollectChars()
+{
+    const auto items = GetItems();
     const auto& paragraph = GetParagraph();
-    m_char_collapsibles.resize(paragraph.LogicTextLength);
-    for (const auto items = GetItems(); const auto& item : items)
+    m_chars.reserve(paragraph.LogicTextLength);
+    for (const auto& item : items)
     {
-        if (item.Type != TextItemType::Text) continue;
-        const auto p_text = GetText(m_text_layout->m_node.ctx, &item);
+        const auto text = GetText(m_text_layout->m_node.ctx, &item);
         const u32 len = item.LogicTextLength;
-        i32 i = 0;
-        UChar32 c;
-        while (i < len)
-        {
-            const auto li = i;
-            U16_NEXT(p_text, i, len, c);
-            const u32 char_len = i - li;
-            if (char_len != 1) continue;
-            bool collapsible = false;
-            switch (c)
-            {
-            case 0x0009:
-            case 0x000C:
-            case 0x000A:
-            case 0x000D:
-            case 0x0020:
-                collapsible = true;
-                break;
-            default: ;
-            }
-            m_char_collapsibles[li + item.LogicTextStart] = collapsible;
-        }
+        m_chars.insert(m_chars.end(), text, text + len);
     }
 }
 
@@ -189,7 +196,6 @@ void ParagraphData::AnalyzeFonts()
                     .Start = logic_text_start,
                     .Length = logic_text_length,
                     .Font = nullptr,
-                    .Scale = 1,
                     .ItemStart = item_start,
                     .ItemLength = item_length,
                     .IsInlineBlock = true,
@@ -267,8 +273,7 @@ void ParagraphData::AnalyzeFonts()
                 FontRange{
                     .Start = text_start,
                     .Length = mapped_length,
-                    .Font = fm->DwriteFontFaceToFontFace(mapped_font.get()),
-                    .Scale = scale,
+                    .Font = mapped_font ? fm->DwriteFontFaceToFontFace(mapped_font.get()) : nullptr,
                     .ItemStart = 0,
                     .ItemLength = 0,
                     .IsInlineBlock = false,
@@ -345,6 +350,85 @@ void ParagraphData::AnalyzeFonts()
         }
     }
     if (logic_text_length != 0) add_range();
+
+    // Forward merge
+    u32 pre_has_font_text = -1;
+    for (u32 i = 0; i < m_font_ranges.size(); ++i)
+    {
+        auto& range = m_font_ranges[i];
+        if (range.IsInlineBlock) pre_has_font_text = -1;
+        else if (range.Font)
+        {
+            if (pre_has_font_text == -1) pre_has_font_text = i;
+            else
+            {
+                auto& pre_range = m_font_ranges[pre_has_font_text];
+                if (pre_range.Font.get() != range.Font.get()) pre_has_font_text = i;
+                else
+                {
+                    COPLT_DEBUG_ASSERT(pre_range.Start + pre_range.Length == range.Start);
+                    pre_range.Length += range.Length;
+                    range.Length = 0;
+                }
+            }
+        }
+        else if (pre_has_font_text != -1)
+        {
+            auto& pre_range = m_font_ranges[pre_has_font_text];
+            COPLT_DEBUG_ASSERT(pre_range.Start + pre_range.Length == range.Start);
+            pre_range.Length += range.Length;
+            range.Length = 0;
+        }
+    }
+
+    // Reverse merge
+    pre_has_font_text = -1;
+    for (u32 n = m_font_ranges.size(); n > 0; --n)
+    {
+        const auto i = n - 1;
+        auto& range = m_font_ranges[i];
+        if (range.IsInlineBlock || range.Length == 0) pre_has_font_text = -1;
+        else if (range.Font)
+        {
+            if (pre_has_font_text == -1) pre_has_font_text = i;
+            else
+            {
+                auto& pre_range = m_font_ranges[pre_has_font_text];
+                if (pre_range.Font.get() != range.Font.get()) pre_has_font_text = i;
+                else
+                {
+                    COPLT_DEBUG_ASSERT(range.Start + range.Length == pre_range.Start);
+                    pre_range.Start = range.Start;
+                    pre_range.Length += range.Length;
+                    range.Length = 0;
+                }
+            }
+        }
+        else if (pre_has_font_text != -1)
+        {
+            auto& pre_range = m_font_ranges[pre_has_font_text];
+            COPLT_DEBUG_ASSERT(range.Start + range.Length == pre_range.Start);
+            pre_range.Start = range.Start;
+            pre_range.Length += range.Length;
+            range.Length = 0;
+        }
+    }
+
+    // Finally, make sure all text range have fonts, and remove empty range
+    for (u32 i = 0; i < m_font_ranges.size(); ++i)
+    {
+        auto& range = m_font_ranges[i];
+        if (range.IsInlineBlock) m_font_ranges_tmp.push_back(std::move(range));
+        else if (range.Length == 0) continue;
+        else if (range.Font) m_font_ranges_tmp.push_back(std::move(range));
+        else
+        {
+            range.Font = m_text_layout->GetFallbackUndefFont();
+            m_font_ranges_tmp.push_back(std::move(range));
+        }
+    }
+    std::swap(m_font_ranges, m_font_ranges_tmp);
+    m_font_ranges_tmp.clear();
 }
 
 void ParagraphData::AnalyzeStyles()
@@ -540,25 +624,11 @@ void ParagraphData::AnalyzeGlyphsFirst()
         const DWRITE_TYPOGRAPHIC_FEATURES* arg_features = typ_features;
         const u32 feature_range_length = run.Length;
 
-        std::wstring tmp_text;
-        const char16* text;
+        const auto text = m_chars.data() + run.Start;
 
-        auto& item = items[item_index];
-        if (const auto last_text_offset = run.Start - item.LogicTextStart;
-            run.Length > item.LogicTextLength - last_text_offset)
-        {
-            // todo copy to tmp_text
-            throw Exception("TODO");
-        }
-        else
-        {
-            text = GetText(m_text_layout->m_node.ctx, &item) + last_text_offset;
-        }
-
-        auto buf_size = 3 * run.Length / 2 + 16;
-
+        HRESULT hr{};
         u32 actual_glyph_count{};
-        HRESULT hr;
+        auto buf_size = 3 * run.Length / 2 + 16;
         for (;;)
         {
             if (cluster_map.size() < run.Length)
@@ -738,21 +808,17 @@ HRESULT TextAnalysisSource::GetTextAtPosition(
     UINT32 textPosition, const WCHAR** textString, UINT32* textLength
 )
 {
-    auto layout = m_paragraph_data->m_text_layout;
-    const auto item_index = layout->SearchItem(m_paragraph_data->m_index, textPosition);
-    if (item_index >= 0)
+    const auto& chars = m_paragraph_data->m_chars;
+    if (textPosition >= chars.size())
     {
-        const auto item = &layout->m_items[item_index];
-        const auto local_offset = textPosition - item->LogicTextStart;
-        if (local_offset <= item->LogicTextLength)
-        {
-            *textString = GetText(layout->m_node.ctx, item) + local_offset;
-            *textLength = item->LogicTextLength - local_offset;
-            return S_OK;
-        }
+        *textString = nullptr;
+        *textLength = 0;
     }
-    *textString = nullptr;
-    *textLength = 0;
+    else
+    {
+        *textString = chars.data() + textPosition;
+        *textLength = chars.size() - textPosition;
+    }
     return S_OK;
 }
 
@@ -760,32 +826,17 @@ HRESULT TextAnalysisSource::GetTextBeforePosition(
     UINT32 textPosition, const WCHAR** textString, UINT32* textLength
 )
 {
-    auto layout = m_paragraph_data->m_text_layout;
-    const auto item_index = layout->SearchItem(m_paragraph_data->m_index, textPosition);
-    if (item_index >= 0)
+    const auto& chars = m_paragraph_data->m_chars;
+    if (textPosition >= chars.size())
     {
-        const auto item = &layout->m_items[item_index];
-        const auto local_offset = textPosition - item->LogicTextStart;
-        if (local_offset <= item->LogicTextLength)
-        {
-            *textString = GetText(layout->m_node.ctx, item);
-            *textLength = local_offset;
-            return S_OK;
-        }
-        if (item_index > 0)
-        {
-            const auto pre_item = &layout->m_items[item_index - 1];
-            const auto pre_local_offset = textPosition - pre_item->LogicTextStart;
-            if (pre_local_offset <= item->LogicTextLength)
-            {
-                *textString = GetText(layout->m_node.ctx, pre_item);
-                *textLength = pre_local_offset;
-                return S_OK;
-            }
-        }
+        *textString = nullptr;
+        *textLength = 0;
     }
-    *textString = nullptr;
-    *textLength = 0;
+    else
+    {
+        *textString = chars.data();
+        *textLength = textPosition;
+    }
     return S_OK;
 }
 

@@ -283,6 +283,26 @@ namespace Coplt::LayoutCalc
         return false;
     }
 
+    COPLT_RELEASE_FORCE_INLINE inline bool ShouldKeepNewLine(const WhiteSpace white_space)
+    {
+        switch (white_space)
+        {
+        case WhiteSpace::Normal:
+            return false;
+        case WhiteSpace::NoWrap:
+            return false;
+        case WhiteSpace::Pre:
+            return true;
+        case WhiteSpace::PreWrap:
+            return true;
+        case WhiteSpace::PreLine:
+            return true;
+        case WhiteSpace::BreakSpaces:
+            return true;
+        }
+        return false;
+    }
+
     struct ParagraphLineInfo
     {
         f32 Ascent;
@@ -290,11 +310,64 @@ namespace Coplt::LayoutCalc
         f32 LineGap;
     };
 
-    COPLT_ENUM_FLAGS(ParagraphLineSpanFlags, u8)
+    enum class ParagraphSpanType : u8
     {
-        None = 0,
-        NeedReShape = 1 << 0,
-        SpaceSpan = 1 << 1,
+        Common,
+        Space,
+        NewLine,
+    };
+
+    inline const char8* ToStr8(const ParagraphSpanType type)
+    {
+        switch (type)
+        {
+        case ParagraphSpanType::Common:
+            return "Common";
+        case ParagraphSpanType::Space:
+            return "Space";
+        case ParagraphSpanType::NewLine:
+            return "NewLine";
+        }
+        return "Unknown";
+    }
+
+    inline const char16* ToStr16(const ParagraphSpanType type)
+    {
+        switch (type)
+        {
+        case ParagraphSpanType::Common:
+            return COPLT_STR16("Common");
+        case ParagraphSpanType::Space:
+            return COPLT_STR16("Space");
+        case ParagraphSpanType::NewLine:
+            return COPLT_STR16("NewLine");
+        }
+        return COPLT_STR16("Unknown");
+    }
+
+    inline const char16* ToStr16_Pad(const ParagraphSpanType type)
+    {
+        switch (type)
+        {
+        case ParagraphSpanType::Common:
+            return COPLT_STR16("Common  ");
+        case ParagraphSpanType::Space:
+            return COPLT_STR16("Space  ");
+        case ParagraphSpanType::NewLine:
+            return COPLT_STR16("NewLine");
+        }
+        return COPLT_STR16("Unknown");
+    }
+
+    struct ParagraphSpan
+    {
+        u32 CharStart;
+        u32 CharLength;
+        u32 GlyphStart;
+        u32 GlyphLength;
+        // Horizontal is width, Vertical is height
+        f32 Size;
+        ParagraphSpanType Type;
     };
 
     struct ParagraphLineSpan

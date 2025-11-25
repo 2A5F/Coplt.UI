@@ -29,7 +29,7 @@ doc.AddRoot(node.Id);
 // node.Add("fia");
 // node.Add("!=");
 // node.Add("😀");
-node.Add("a    b");
+node.Add("a    b \n c");
 var start = Stopwatch.GetTimestamp();
 doc.Update();
 var end = Stopwatch.GetTimestamp();
