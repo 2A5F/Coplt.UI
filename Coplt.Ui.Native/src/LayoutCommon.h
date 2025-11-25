@@ -263,7 +263,7 @@ namespace Coplt::LayoutCalc
         return std::make_pair(style.LineHeight, style.LineHeightValue);
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline bool ShouldMergeSpace(const WhiteSpace white_space)
+    COPLT_RELEASE_FORCE_INLINE inline bool ShouldCollapseSpace(const WhiteSpace white_space)
     {
         switch (white_space)
         {
@@ -288,6 +288,13 @@ namespace Coplt::LayoutCalc
         f32 Ascent;
         f32 Descent;
         f32 LineGap;
+    };
+
+    COPLT_ENUM_FLAGS(ParagraphLineSpanFlags, u8)
+    {
+        None = 0,
+        NeedReShape = 1 << 0,
+        SpaceSpan = 1 << 1,
     };
 
     struct ParagraphLineSpan

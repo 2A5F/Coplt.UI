@@ -3,6 +3,8 @@
 #include <span>
 #include <print>
 
+#include <icu.h>
+
 #include "../Algorithm.h"
 #include "../Text.h"
 #include "../Layout.h"
@@ -28,6 +30,7 @@ void ParagraphData::ReBuild()
 {
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
     if (!m_sink) m_sink = Rc(new TextAnalysisSink(this));
+    m_char_collapsibles.clear();
     m_script_ranges.clear();
     m_bidi_ranges.clear();
     m_line_breakpoints.clear();
@@ -104,6 +107,7 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         data.m_index = i;
         data.m_layout = layout;
         data.ReBuild();
+        data.AnalyzeChars();
         if (const auto hr = layout->m_text_analyzer->AnalyzeScript(
             data.m_src.get(), 0, paragraph.LogicTextLength, data.m_sink.get()
         ); FAILED(hr))
@@ -123,6 +127,40 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         // data.AnalyzeGlyphsCarets();
     }
     m_node = {};
+}
+
+void ParagraphData::AnalyzeChars()
+{
+    const auto& paragraph = GetParagraph();
+    m_char_collapsibles.resize(paragraph.LogicTextLength);
+    for (const auto items = GetItems(); const auto& item : items)
+    {
+        if (item.Type != TextItemType::Text) continue;
+        const auto p_text = GetText(m_text_layout->m_node.ctx, &item);
+        const u32 len = item.LogicTextLength;
+        i32 i = 0;
+        UChar32 c;
+        while (i < len)
+        {
+            const auto li = i;
+            U16_NEXT(p_text, i, len, c);
+            const u32 char_len = i - li;
+            if (char_len != 1) continue;
+            bool collapsible = false;
+            switch (c)
+            {
+            case 0x0009:
+            case 0x000C:
+            case 0x000A:
+            case 0x000D:
+            case 0x0020:
+                collapsible = true;
+                break;
+            default: ;
+            }
+            m_char_collapsibles[li + item.LogicTextStart] = collapsible;
+        }
+    }
 }
 
 void ParagraphData::AnalyzeFonts()

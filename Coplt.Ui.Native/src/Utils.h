@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "Com.h"
 
 namespace Coplt

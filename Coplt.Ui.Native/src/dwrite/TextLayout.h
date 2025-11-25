@@ -277,6 +277,7 @@ namespace Coplt::LayoutCalc::Texts
         Rc<TextAnalysisSource> m_src{};
         Rc<TextAnalysisSink> m_sink{};
 
+        std::vector<bool> m_char_collapsibles{};
         std::vector<ScriptRange> m_script_ranges{};
         std::vector<BidiRange> m_bidi_ranges{};
         std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};
@@ -304,6 +305,7 @@ namespace Coplt::LayoutCalc::Texts
         CtxNodeRef GetScope(const TextScopeRange& range) const;
         CtxNodeRef GetScope(const SameStyleRange& range) const;
 
+        void AnalyzeChars();
         void AnalyzeFonts();
         void AnalyzeStyles();
         void CollectRuns();

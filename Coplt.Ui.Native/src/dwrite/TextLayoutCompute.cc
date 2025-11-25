@@ -380,11 +380,10 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
 
     if (Length == 0 || ActualGlyphCount == 0) [[unlikely]] RETURN;
 
-    const auto merge_space = ShouldMergeSpace(style.WhiteSpace);
+    const auto collapse_space = ShouldCollapseSpace(style.WhiteSpace);
     const auto wrap_line_only = style.WhiteSpace == WhiteSpace::Pre;
     const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
 
-    const std::span break_points(data.m_line_breakpoints);
     const std::span cluster_map = ClusterMap(data);
     const std::span text_props = TextProps(data);
     const std::span glyph_props = GlyphProps(data);
@@ -459,7 +458,7 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
 
         if (!allow_wrap) goto NEXT;
 
-        const auto& break_info = break_points[c];
+        const auto& break_info = data.m_line_breakpoints[c];
         const bool is_break_point_after = break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_MUST_BREAK
             || (!wrap_line_only && break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_CAN_BREAK);
 
