@@ -272,6 +272,18 @@ namespace Coplt::LayoutCalc::Texts
         ) override;
     };
 
+    enum class RawCharType : u8
+    {
+        AsIs = 0,
+        NewLine = 1,
+        Tab = 2,
+    };
+
+    struct CharMeta
+    {
+        RawCharType RawType;
+    };
+
     struct ScriptRange
     {
         u32 Start;
@@ -341,7 +353,11 @@ namespace Coplt::LayoutCalc::Texts
 
         bool IsInlineBlock(const ParagraphData& data) const;
         const ParagraphLineInfo& GetLineInfo(const ParagraphData& data);
-        void SplitSpans(std::vector<ParagraphSpan>& spans, const ParagraphData& data, const StyleData& style);
+        void SplitSpans(std::vector<ParagraphSpan>& spans, const ParagraphData& data, const StyleData& style) const;
+        void BreakLines(
+            std::vector<ParagraphLineSpan>& output, std::span<ParagraphSpan> input,
+            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
+        ) const;
         #ifdef _DEBUG
         std::vector<ParagraphLineSpan> BreakLines(
             const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
@@ -368,6 +384,7 @@ namespace Coplt::LayoutCalc::Texts
         Rc<TextAnalysisSink> m_sink{};
 
         std::vector<char16> m_chars{};
+        std::vector<CharMeta> m_char_metas{};
         std::vector<ScriptRange> m_script_ranges{};
         std::vector<BidiRange> m_bidi_ranges{};
         std::vector<DWRITE_LINE_BREAKPOINT> m_line_breakpoints{};

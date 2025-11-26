@@ -303,6 +303,26 @@ namespace Coplt::LayoutCalc
         return false;
     }
 
+    COPLT_RELEASE_FORCE_INLINE inline bool AllowWrapOnSpace(const WhiteSpace white_space)
+    {
+        switch (white_space)
+        {
+        case WhiteSpace::Normal:
+            return true;
+        case WhiteSpace::NoWrap:
+            return false;
+        case WhiteSpace::Pre:
+            return false;
+        case WhiteSpace::PreWrap:
+            return true;
+        case WhiteSpace::PreLine:
+            return true;
+        case WhiteSpace::BreakSpaces:
+            return true;
+        }
+        return false;
+    }
+
     struct ParagraphLineInfo
     {
         f32 Ascent;
@@ -310,6 +330,7 @@ namespace Coplt::LayoutCalc
         f32 LineGap;
     };
 
+    // The glyphs of Space and NewLine must be space (0x0020)
     enum class ParagraphSpanType : u8
     {
         Common,
@@ -363,9 +384,7 @@ namespace Coplt::LayoutCalc
     {
         u32 CharStart;
         u32 CharLength;
-        u32 GlyphStart;
-        u32 GlyphLength;
-        // Horizontal is width, Vertical is height
+        // Horizontal is width, Vertical is height; 0 when Type is ParagraphSpanType::Common
         f32 Size;
         ParagraphSpanType Type;
     };
@@ -373,14 +392,18 @@ namespace Coplt::LayoutCalc
     struct ParagraphLineSpan
     {
         u32 NthLine;
-        u32 CharStart;
-        u32 CharLength;
-        u32 GlyphStart;
-        u32 GlyphLength;
+
+        u32 FirstSpan;
+        u32 LastSpan;
+
+        u32 FirstChar; // in FirstSpan
+        u32 LastChar; // in LastSpan
+
         // Horizontal is x, Vertical is y
         f32 Offset;
         // Horizontal is width, Vertical is height
         f32 Size;
+
         bool NeedReShape;
     };
 

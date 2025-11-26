@@ -31,6 +31,7 @@ void ParagraphData::ReBuild()
     if (!m_src) m_src = Rc(new TextAnalysisSource(this));
     if (!m_sink) m_sink = Rc(new TextAnalysisSink(this));
     m_chars.clear();
+    m_char_metas.clear();
     m_script_ranges.clear();
     m_bidi_ranges.clear();
     m_line_breakpoints.clear();
@@ -162,11 +163,34 @@ void ParagraphData::CollectChars()
     const auto items = GetItems();
     const auto& paragraph = GetParagraph();
     m_chars.reserve(paragraph.LogicTextLength);
+    m_char_metas.resize(paragraph.LogicTextLength);
     for (const auto& item : items)
     {
         const auto text = GetText(m_text_layout->m_node.ctx, &item);
         const u32 len = item.LogicTextLength;
+        const u32 start = m_chars.size();
         m_chars.insert(m_chars.end(), text, text + len);
+        const auto str = m_chars.data();
+        for (u32 i = start; i < m_chars.size();)
+        {
+            const u32 li = i;
+            UChar32 c;
+            U16_NEXT(str, i, len, c);
+            switch (c)
+            {
+            case 0x0009:
+            case 0x000B:
+                str[li] = 0x0020;
+                m_char_metas[li].RawType = RawCharType::Tab;
+                break;
+            case 0x000A:
+            case 0x000D:
+                str[li] = 0x0020;
+                m_char_metas[li].RawType = RawCharType::NewLine;
+                break;
+            default: break;
+            }
+        }
     }
 }
 
