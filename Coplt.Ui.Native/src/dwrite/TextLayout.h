@@ -275,8 +275,10 @@ namespace Coplt::LayoutCalc::Texts
     enum class RawCharType : u8
     {
         AsIs = 0,
-        NewLine = 1,
-        Tab = 2,
+        LF = '\n',
+        CR = '\r',
+        HT = '\t',
+        VT = '\v',
     };
 
     struct CharMeta
@@ -354,11 +356,11 @@ namespace Coplt::LayoutCalc::Texts
         bool IsInlineBlock(const ParagraphData& data) const;
         const ParagraphLineInfo& GetLineInfo(const ParagraphData& data);
         #ifdef _DEBUG
-        std::vector<ParagraphLineSpan> BreakLines(
+        std::vector<ParagraphSpan> BreakLines(
             const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
         ) const;
         #else
-        std::generator<ParagraphLineSpan> BreakLines(
+        std::generator<ParagraphSpan> BreakLines(
             const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
         ) const;
         #endif

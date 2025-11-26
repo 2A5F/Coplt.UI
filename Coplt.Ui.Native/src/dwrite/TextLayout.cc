@@ -179,14 +179,20 @@ void ParagraphData::CollectChars()
             switch (c)
             {
             case 0x0009:
+                str[li] = 0x0020;
+                m_char_metas[li].RawType = RawCharType::HT;
+                break;
             case 0x000B:
                 str[li] = 0x0020;
-                m_char_metas[li].RawType = RawCharType::Tab;
+                m_char_metas[li].RawType = RawCharType::VT;
                 break;
             case 0x000A:
+                str[li] = 0x0020;
+                m_char_metas[li].RawType = RawCharType::LF;
+                break;
             case 0x000D:
                 str[li] = 0x0020;
-                m_char_metas[li].RawType = RawCharType::NewLine;
+                m_char_metas[li].RawType = RawCharType::CR;
                 break;
             default: break;
             }

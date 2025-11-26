@@ -1,6 +1,8 @@
 #include "TextLayout.h"
 
 #include <span>
+#include <array>
+#include <deque>
 #include <fmt/xchar.h>
 
 #include "../lib.h"
@@ -277,8 +279,9 @@ LayoutOutput ParagraphData::Compute(
                     Logger().Log(
                         LogLevel::Trace,
                         fmt::format(
-                            L"{} ; {}..{}; \t {:.7f} .. {:.7f}; \t \"{}\"",
-                            span.NthLine, span.CharStart, span.CharStart + span.CharLength, span.Offset, span.Size, text
+                            L"line {:<6} {:>15.7f} .. {:<15.7f}; {} {:>6}..{:<6} \"{}\"",
+                            span.NthLine, span.Offset, span.Offset + span.Size,
+                            ToStr16Pad(span.Type), span.CharStart, span.CharStart + span.CharLength, text
                         )
                     );
                 }
@@ -369,20 +372,30 @@ namespace Coplt::LayoutCalc::Texts::Compute
         u32 Char;
         f32 Offset;
 
+        COPLT_FORCE_INLINE
         Cursor() = default;
 
+        COPLT_FORCE_INLINE
         explicit Cursor(const u32 c, const f32 o)
             : Char(c), Offset(o)
         {
         }
-
-        u16 NextGlyph(const std::span<const u16> cluster_map) const
-        {
-            const auto next_char = Char + 1;
-            if (next_char >= cluster_map.size()) return cluster_map[Char] + 1;
-            return cluster_map[next_char];
-        }
     };
+
+    COPLT_FORCE_INLINE
+    u16 NextGlyph(const u32 next_char, const std::span<const u16> cluster_map)
+    {
+        if (next_char == 0) return 0;
+        if (next_char >= cluster_map.size()) return cluster_map[next_char - 1] + 1;
+        return cluster_map[next_char];
+    }
+
+    COPLT_FORCE_INLINE
+    u16 GlyphLength(const u32 next_char, const std::span<const u16> cluster_map, const u16 first_glyh)
+    {
+        if (next_char == 0) return 0;
+        return NextGlyph(next_char, cluster_map) - first_glyh;
+    }
 
     COPLT_FORCE_INLINE
     u32 StepCluster(const Run& self, const std::span<const u16> cluster_map, const u16 first_cluster, u32& cur_char)
@@ -433,12 +446,28 @@ namespace Coplt::LayoutCalc::Texts::Compute
         }
         return sum_size;
     }
+
+    COPLT_FORCE_INLINE
+    ParagraphSpanType CheckParagraphSpanType(const char16 the_char, const RawCharType char_raw, const bool allow_newline)
+    {
+        switch (char_raw)
+        {
+        case RawCharType::LF:
+        case RawCharType::CR:
+            return allow_newline ? ParagraphSpanType::NewLine : ParagraphSpanType::Space;
+        case RawCharType::HT:
+        case RawCharType::VT:
+        case RawCharType::AsIs:
+        default:
+            return the_char == 0x0020 ? ParagraphSpanType::Space : ParagraphSpanType::Common;
+        }
+    }
 }
 
 #ifdef _DEBUG
-std::vector<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
+std::vector<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
 #else
-std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
+std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
 #endif
 {
     using namespace Coplt::LayoutCalc::Texts::Compute;
@@ -448,7 +477,7 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
     #undef YIELD
     #undef RETURN
     #ifdef _DEBUG
-    std::vector<ParagraphLineSpan> result;
+    std::vector<ParagraphSpan> result;
     #define YIELD result.push_back
     #define RETURN return result
     #else
@@ -458,7 +487,7 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
 
     if (Length == 0 || ActualGlyphCount == 0) [[unlikely]] RETURN;
 
-    const auto newline_as_space = HasFlags(style.WrapFlags, WrapFlags::NewLineAsSpace);
+    const auto allow_newline = HasFlags(style.WrapFlags, WrapFlags::AllowNewLine);
     const auto wrap_in_space = HasFlags(style.WrapFlags, WrapFlags::WrapInSpace);
     const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
 
@@ -474,97 +503,330 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
     u32 nth_line = ctx.NthLine;
     f32 cur_offset = ctx.CurrentLineOffset;
 
-    Cursor span_start(0, cur_offset);
-    Cursor break_after(-1, 0);
-
-    u32 c = 0;
-    for (;;)
+    if (allow_wrap)
     {
-        const u16 first_cluster = cluster_map[span_start.Char];
-        const u32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
-        const u16 last_cluster = cluster_map[c];
-
-        const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
-        const f32 new_line_offset = sum_size + cur_offset;
-
-        if (!allow_wrap) goto NEXT;
-
-        const auto& break_info = data.m_line_breakpoints[c];
-        const bool is_break_point_after = break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_MUST_BREAK
-            || break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_CAN_BREAK;
-
-        const bool should_break =
-            new_line_offset > ctx.AvailableSpace
-            && break_after.Char != -1 && c > break_after.Char;
-        if (should_break)
+        f32 last_sub_span_offset = 0;
+        Cursor span_start(0, cur_offset);
+        Cursor break_after(-1, 0);
+        auto last_type = static_cast<ParagraphSpanType>(-1);
+        struct SubSpan
         {
-            const auto& text_prop = text_props[break_after.Char];
-            const u16 first_glyph = cluster_map[span_start.Char];
-            const u32 char_len = break_after.Char + 1 - span_start.Char;
-            const u32 glyph_length = break_after.NextGlyph(cluster_map) - first_glyph;
-            const f32 size = break_after.Offset - span_start.Offset;
-            ctx.NthLine = nth_line;
-            ctx.CurrentLineOffset = break_after.Offset;
-            YIELD(
-                ParagraphLineSpan{
-                    .NthLine = nth_line,
-                    .CharStart = span_start.Char,
-                    .CharLength = char_len,
-                    .GlyphStart = first_glyph,
-                    .GlyphLength = glyph_length,
-                    .Offset = span_start.Offset,
-                    .Size = size,
-                    .NeedReShape = !text_prop.canBreakShapingAfter,
-                }
-            );
+            u32 EndChar; // not include
+            f32 Size;
+            ParagraphSpanType Type;
+        };
+        std::deque<SubSpan> sub_spans{};
 
-            nth_line++;
-            const f32 rem_offset = cur_offset - break_after.Offset;
-            cur_offset = rem_offset + sum_size;
-            COPLT_DEBUG_ASSERT(break_after.Char + 1 <= c);
-            span_start = Cursor(break_after.Char + 1, 0);
+        u32 c = span_start.Char;
+        for (;;)
+        {
+            const char16 the_char = data.m_chars[c];
+            const RawCharType char_raw = data.m_char_metas[c].RawType;
 
-            if (is_break_point_after)
+            const u32 start_char = c;
+            const u16 first_cluster = cluster_map[c];
+            const u32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
+            const u16 last_cluster = cluster_map[c];
+
+            const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
+            const f32 new_line_offset = sum_size + cur_offset;
+
+            const ParagraphSpanType type = CheckParagraphSpanType(the_char, char_raw, allow_newline);
+            if (last_type == static_cast<ParagraphSpanType>(-1)) last_type = type;
+            else if (last_type != type)
             {
-                break_after = Cursor(c, cur_offset);
+                const f32 size = sub_spans.empty() ? cur_offset : cur_offset - last_sub_span_offset;
+                sub_spans.push_back(
+                    SubSpan{
+                        .EndChar = start_char,
+                        .Size = size,
+                        .Type = last_type,
+                    }
+                );
+                last_type = type;
+                last_sub_span_offset = cur_offset;
+            }
+
+            const auto& break_info = data.m_line_breakpoints[c];
+            const bool is_break_point_after =
+                (wrap_in_space && the_char == 0x0020)
+                || break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_MUST_BREAK
+                || break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_CAN_BREAK;
+
+            if (allow_newline && char_raw == RawCharType::LF)
+            {
+                for (const auto& sub_span : sub_spans)
+                {
+                    const u16 first_glyph = cluster_map[span_start.Char];
+                    const u32 char_len = sub_span.EndChar - span_start.Char;
+                    const u32 glyph_length = GlyphLength(sub_span.EndChar, cluster_map, first_glyph);
+                    const f32 size = sub_span.Size;
+                    const f32 next_offset = span_start.Offset + sub_span.Size;
+                    ctx.NthLine = nth_line;
+                    ctx.CurrentLineOffset = next_offset;
+                    YIELD(
+                        ParagraphSpan{
+                            .NthLine = nth_line,
+                            .CharStart = span_start.Char,
+                            .CharLength = char_len,
+                            .GlyphStart = first_glyph,
+                            .GlyphLength = glyph_length,
+                            .Offset = span_start.Offset,
+                            .Size = size,
+                            .Type = sub_span.Type,
+                            .NeedReShape = false,
+                        }
+                    );
+                    span_start = Cursor(sub_span.EndChar, next_offset);
+                }
+                sub_spans.clear();
+                {
+                    cur_offset = new_line_offset;
+                    const u16 first_glyph = cluster_map[span_start.Char];
+                    const u32 char_len = next_char - span_start.Char;
+                    const u32 glyph_length = GlyphLength(next_char, cluster_map, first_glyph);
+                    const f32 size = cur_offset - span_start.Offset;
+                    ctx.NthLine = nth_line;
+                    ctx.CurrentLineOffset = cur_offset;
+                    YIELD(
+                        ParagraphSpan{
+                            .NthLine = nth_line,
+                            .CharStart = span_start.Char,
+                            .CharLength = char_len,
+                            .GlyphStart = first_glyph,
+                            .GlyphLength = glyph_length,
+                            .Offset = span_start.Offset,
+                            .Size = size,
+                            .Type = ParagraphSpanType::NewLine,
+                            .NeedReShape = false,
+                        }
+                    );
+                }
+
+                nth_line++;
+                last_sub_span_offset = cur_offset = 0;
+                span_start = Cursor(next_char, 0);
+                break_after = Cursor(-1, 0);
+                last_type = static_cast<ParagraphSpanType>(-1);
+            }
+            else if (new_line_offset > ctx.AvailableSpace && break_after.Char != -1 && c > break_after.Char)
+            {
+                u32 i = 0;
+                for (; i < sub_spans.size(); ++i)
+                {
+                    const auto& sub_span = sub_spans[i];
+                    if (sub_span.EndChar > break_after.Char) break;
+                    const u16 first_glyph = cluster_map[span_start.Char];
+                    const u32 char_len = sub_span.EndChar - span_start.Char;
+                    const u32 glyph_length = GlyphLength(sub_span.EndChar, cluster_map, first_glyph);
+                    const f32 size = sub_span.Size;
+                    const f32 next_offset = span_start.Offset + sub_span.Size;
+                    ctx.NthLine = nth_line;
+                    ctx.CurrentLineOffset = next_offset;
+                    YIELD(
+                        ParagraphSpan{
+                            .NthLine = nth_line,
+                            .CharStart = span_start.Char,
+                            .CharLength = char_len,
+                            .GlyphStart = first_glyph,
+                            .GlyphLength = glyph_length,
+                            .Offset = span_start.Offset,
+                            .Size = size,
+                            .Type = sub_span.Type,
+                            .NeedReShape = false,
+                        }
+                    );
+                    span_start = Cursor(sub_span.EndChar, next_offset);
+                }
+                sub_spans.erase(sub_spans.begin(), sub_spans.begin() + i);
+
+                {
+                    const auto break_span_type = sub_spans.empty() ? type : sub_spans.back().Type;
+                    const auto& text_prop = text_props[break_after.Char];
+                    const u16 first_glyph = cluster_map[span_start.Char];
+                    const u32 break_next_char = break_after.Char + 1;
+                    const u32 char_len = break_next_char - span_start.Char;
+                    const u32 glyph_length = GlyphLength(break_next_char, cluster_map, first_glyph);
+                    const f32 size = break_after.Offset - span_start.Offset;
+                    ctx.NthLine = nth_line;
+                    ctx.CurrentLineOffset = break_after.Offset;
+                    YIELD(
+                        ParagraphSpan{
+                            .NthLine = nth_line,
+                            .CharStart = span_start.Char,
+                            .CharLength = char_len,
+                            .GlyphStart = first_glyph,
+                            .GlyphLength = glyph_length,
+                            .Offset = span_start.Offset,
+                            .Size = size,
+                            .Type = break_span_type,
+                            .NeedReShape = !text_prop.canBreakShapingAfter,
+                        }
+                    );
+
+                    nth_line++;
+                    if (!sub_spans.empty())
+                    {
+                        auto& sub_span = sub_spans.back();
+                        if (sub_span.EndChar == break_next_char)
+                        {
+                            sub_spans.pop_front();
+                        }
+                        else
+                        {
+                            const f32 next_offset = span_start.Offset + sub_span.Size;
+                            sub_span.Size = next_offset - break_after.Offset;
+                        }
+                    }
+                    const f32 rem_offset = cur_offset - break_after.Offset;
+                    last_sub_span_offset = cur_offset = rem_offset + sum_size;
+                    span_start = Cursor(break_next_char, 0);
+                }
+
+                if (is_break_point_after)
+                {
+                    break_after = Cursor(c, cur_offset);
+                }
+                else
+                {
+                    break_after = Cursor(-1, 0);
+                }
             }
             else
             {
-                break_after = Cursor(-1, 0);
-            }
-        }
-        else
-        {
-            cur_offset = new_line_offset;
+                cur_offset = new_line_offset;
 
-            if (is_break_point_after)
-            {
-                break_after = Cursor(c, cur_offset);
-            }
-        }
-
-    NEXT:
-        if (next_char >= Length)
-        {
-            const u16 first_glyph = cluster_map[span_start.Char];
-            ctx.NthLine = nth_line;
-            ctx.CurrentLineOffset = cur_offset;
-            YIELD(
-                ParagraphLineSpan{
-                    .NthLine = nth_line,
-                    .CharStart = span_start.Char,
-                    .CharLength = next_char - span_start.Char,
-                    .GlyphStart = first_glyph,
-                    .GlyphLength = ActualGlyphCount - first_glyph,
-                    .Offset = span_start.Offset,
-                    .Size = cur_offset - span_start.Offset,
-                    .NeedReShape = false,
+                if (is_break_point_after)
+                {
+                    break_after = Cursor(c, cur_offset);
                 }
-            );
-            RETURN;
-        }
+            }
 
-        c = next_char;
+            if (next_char >= Length)
+            {
+                for (const auto& sub_span : sub_spans)
+                {
+                    const u16 first_glyph = cluster_map[span_start.Char];
+                    const u32 char_len = sub_span.EndChar - span_start.Char;
+                    const u32 glyph_length = GlyphLength(sub_span.EndChar, cluster_map, first_glyph);
+                    const f32 size = sub_span.Size;
+                    const f32 next_offset = span_start.Offset + sub_span.Size;
+                    ctx.NthLine = nth_line;
+                    ctx.CurrentLineOffset = next_offset;
+                    YIELD(
+                        ParagraphSpan{
+                            .NthLine = nth_line,
+                            .CharStart = span_start.Char,
+                            .CharLength = char_len,
+                            .GlyphStart = first_glyph,
+                            .GlyphLength = glyph_length,
+                            .Offset = span_start.Offset,
+                            .Size = size,
+                            .Type = sub_span.Type,
+                            .NeedReShape = false,
+                        }
+                    );
+                    span_start = Cursor(sub_span.EndChar, next_offset);
+                }
+                {
+                    const u16 first_glyph = cluster_map[span_start.Char];
+                    const u32 char_len = next_char - span_start.Char;
+                    const u32 glyph_length = GlyphLength(next_char, cluster_map, first_glyph);
+                    const f32 size = cur_offset - span_start.Offset;
+                    ctx.NthLine = nth_line;
+                    ctx.CurrentLineOffset = cur_offset;
+                    YIELD(
+                        ParagraphSpan{
+                            .NthLine = nth_line,
+                            .CharStart = span_start.Char,
+                            .CharLength = char_len,
+                            .GlyphStart = first_glyph,
+                            .GlyphLength = glyph_length,
+                            .Offset = span_start.Offset,
+                            .Size = size,
+                            .Type = type,
+                            .NeedReShape = false,
+                        }
+                    );
+                }
+                RETURN;
+            }
+
+            c = next_char;
+        }
+    }
+    else
+    {
+        Cursor span_start(0, cur_offset);
+        auto last_type = static_cast<ParagraphSpanType>(-1);
+        u32 c = span_start.Char;
+        for (;;)
+        {
+            const char16 the_char = data.m_chars[c];
+            const RawCharType char_raw = data.m_char_metas[c].RawType;
+
+            const u32 start_char = c;
+            const u16 first_cluster = cluster_map[c];
+            const u32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
+            const u16 last_cluster = cluster_map[c];
+
+            const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
+            const f32 new_line_offset = sum_size + cur_offset;
+
+            const ParagraphSpanType type = CheckParagraphSpanType(the_char, char_raw, allow_newline);
+            if (last_type == static_cast<ParagraphSpanType>(-1)) last_type = type;
+            else if (last_type != type)
+            {
+                const u32 char_len = start_char - span_start.Char;
+                COPLT_DEBUG_ASSERT(char_len > 0);
+                const u16 first_glyph = cluster_map[span_start.Char];
+                const u32 glyph_length = GlyphLength(start_char, cluster_map, first_glyph);
+                const f32 size = cur_offset - span_start.Offset;
+                ctx.CurrentLineOffset = cur_offset;
+                YIELD(
+                    ParagraphSpan{
+                        .NthLine = nth_line,
+                        .CharStart = span_start.Char,
+                        .CharLength = char_len,
+                        .GlyphStart = first_glyph,
+                        .GlyphLength = glyph_length,
+                        .Offset = span_start.Offset,
+                        .Size = size,
+                        .Type = last_type,
+                        .NeedReShape = false,
+                    }
+                );
+
+                span_start = Cursor(start_char, cur_offset);
+                last_type = type;
+            }
+
+            cur_offset = new_line_offset;
+            if (next_char >= Length)
+            {
+                const u32 char_len = next_char - span_start.Char;
+                COPLT_DEBUG_ASSERT(char_len > 0);
+                const u16 first_glyph = cluster_map[span_start.Char];
+                const u32 glyph_length = GlyphLength(next_char, cluster_map, first_glyph);
+                const f32 size = cur_offset - span_start.Offset;
+                ctx.CurrentLineOffset = cur_offset;
+                YIELD(
+                    ParagraphSpan{
+                        .NthLine = nth_line,
+                        .CharStart = span_start.Char,
+                        .CharLength = char_len,
+                        .GlyphStart = first_glyph,
+                        .GlyphLength = glyph_length,
+                        .Offset = span_start.Offset,
+                        .Size = size,
+                        .Type = last_type,
+                        .NeedReShape = false,
+                    }
+                );
+                RETURN;
+            }
+            c = next_char;
+        }
     }
 
     #pragma pop_macro("YIELD")

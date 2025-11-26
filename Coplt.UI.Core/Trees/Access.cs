@@ -83,6 +83,12 @@ public static unsafe partial class Access
             }
         }
 
+        public TextWrap TextWrap
+        {
+            get => node.StyleData.TextWrap;
+            set => node.StyleData.TextWrap = value;
+        }
+
         public WrapFlags WrapFlags
         {
             get => node.StyleData.WrapFlags;

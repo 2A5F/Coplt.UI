@@ -392,7 +392,7 @@ namespace Coplt {
     COPLT_ENUM_FLAGS(WrapFlags, ::Coplt::u8)
     {
         None = 0,
-        NewLineAsSpace = 1,
+        AllowNewLine = 1,
         WrapInSpace = 2,
         TrimStart = 4,
         TrimEnd = 8,

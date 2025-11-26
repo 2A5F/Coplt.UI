@@ -18,6 +18,7 @@ var node = new Access.View(doc)
     Width = 100, Height = Length.Auto,
     Container = Container.Text,
     FontFallback = ff,
+    WrapFlags = WrapFlags.AllowNewLine,
 };
 doc.AddRoot(node.Id);
 // node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
@@ -25,11 +26,11 @@ doc.AddRoot(node.Id);
 // var inline_box = new Access.View(doc) { TextMode = TextMode.Inline, Width = 10, Height = 10 };
 // node.Add(inline_box);
 // node.Add("不亦乐乎");
-// node.Add("Never Gonna Give You Up");
+node.Add("Never Gonna Give You Up");
 // node.Add("fia");
 // node.Add("!=");
 // node.Add("😀");
-node.Add("a\nc");
+// node.Add("a c");
 var start = Stopwatch.GetTimestamp();
 doc.Update();
 var end = Stopwatch.GetTimestamp();

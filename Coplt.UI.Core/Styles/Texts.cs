@@ -153,9 +153,9 @@ public enum WrapFlags : byte
 {
     None = 0,
     /// <summary>
-    /// If set, newline <c>\n</c> | <c>\r</c> will be treated as spaces (0x0020).
+    /// If not set, newline <c>\n</c> | <c>\r</c> will be treated as spaces (0x0020).
     /// </summary>
-    NewLineAsSpace = 1 << 0,
+    AllowNewLine = 1 << 0,
     /// <summary>
     /// If set, it allows line breaks within spaces (0x0020), not just word boundaries.
     /// </summary>

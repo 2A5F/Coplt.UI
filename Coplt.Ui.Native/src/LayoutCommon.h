@@ -270,7 +270,28 @@ namespace Coplt::LayoutCalc
         f32 LineGap;
     };
 
-    struct ParagraphLineSpan
+    enum class ParagraphSpanType : u8
+    {
+        Common,
+        Space,
+        NewLine,
+    };
+
+    inline const char16* ToStr16Pad(const ParagraphSpanType type)
+    {
+        switch (type)
+        {
+        case ParagraphSpanType::Common:
+            return COPLT_STR16("Common ");
+        case ParagraphSpanType::Space:
+            return COPLT_STR16("Space  ");
+        case ParagraphSpanType::NewLine:
+            return COPLT_STR16("NewLine");
+        }
+        std::unreachable();
+    }
+
+    struct ParagraphSpan
     {
         u32 NthLine;
         u32 CharStart;
@@ -281,6 +302,7 @@ namespace Coplt::LayoutCalc
         f32 Offset;
         // Horizontal is width, Vertical is height
         f32 Size;
+        ParagraphSpanType Type;
         bool NeedReShape;
     };
 
@@ -297,6 +319,6 @@ namespace Coplt::LayoutCalc
         // Horizontal is height, Vertical is width
         f32 LineHeight{};
 
-        std::vector<ParagraphLineSpan> Spans{}; // todo flat storage in ParagraphData
+        std::vector<ParagraphSpan> Spans{}; // todo flat storage in ParagraphData
     };
 }
