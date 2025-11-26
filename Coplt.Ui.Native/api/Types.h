@@ -382,21 +382,21 @@ namespace Coplt {
         Remove = 2,
     };
 
-    enum class WhiteSpace : ::Coplt::u8
-    {
-        Normal = 0,
-        NoWrap = 1,
-        Pre = 2,
-        PreWrap = 3,
-        PreLine = 4,
-        BreakSpaces = 5,
-    };
-
     enum class WordBreak : ::Coplt::u8
     {
         Auto = 0,
         BreakAll = 1,
         KeepAll = 2,
+    };
+
+    COPLT_ENUM_FLAGS(WrapFlags, ::Coplt::u8)
+    {
+        None = 0,
+        NewLineAsSpace = 1,
+        WrapInSpace = 2,
+        TrimStart = 4,
+        TrimEnd = 8,
+        Trim = 12,
     };
 
     enum class WritingDirection : ::Coplt::u8
@@ -1119,7 +1119,7 @@ namespace Coplt {
         ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;
-        ::Coplt::WhiteSpace WhiteSpace;
+        ::Coplt::WrapFlags WrapFlags;
         ::Coplt::TextWrap TextWrap;
         ::Coplt::WordBreak WordBreak;
         ::Coplt::TextOrientation TextOrientation;

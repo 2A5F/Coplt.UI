@@ -353,11 +353,6 @@ namespace Coplt::LayoutCalc::Texts
 
         bool IsInlineBlock(const ParagraphData& data) const;
         const ParagraphLineInfo& GetLineInfo(const ParagraphData& data);
-        void SplitSpans(std::vector<ParagraphSpan>& spans, const ParagraphData& data, const StyleData& style) const;
-        void BreakLines(
-            std::vector<ParagraphLineSpan>& output, std::span<ParagraphSpan> input,
-            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
-        ) const;
         #ifdef _DEBUG
         std::vector<ParagraphLineSpan> BreakLines(
             const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx

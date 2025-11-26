@@ -240,9 +240,6 @@ LayoutOutput ParagraphData::Compute(
     auto& max_main = result_size.MainAxis(axis);
     auto& sum_cross = result_size.CrossAxis(axis);
 
-    std::vector<ParagraphSpan> spans{};
-    std::vector<ParagraphLineSpan> line_spans{};
-
     f32 cur_main = 0;
     if (paragraph.Type == TextParagraphType::Inline)
     {
@@ -273,28 +270,15 @@ LayoutOutput ParagraphData::Compute(
                 max_descent = std::max(max_descent, single_line_size.Descent);
                 max_line_gap = std::max(max_line_gap, single_line_size.LineGap);
 
-                const u32 span_start = spans.size();
-                run.SplitSpans(spans, *this, style);
-                const std::span span_span(spans.data() + span_start, spans.size() - span_start);
-                const u32 line_span_start = line_spans.size();
-                run.BreakLines(line_spans, span_span, *this, style, ctx);
-                const std::span line_span_span(line_spans.data() + line_span_start, line_spans.size() - line_span_start);
-
-                // debug
-                for (const auto& span : line_span_span)
+                const auto spans = run.BreakLines(*this, style, ctx);
+                for (const auto& span : spans)
                 {
-                    const auto& start_span = span_span[span.FirstSpan];
-                    const auto& end_span = span_span[span.LastSpan];
-
-                    const auto start_char = run.Start + start_span.CharStart + span.FirstChar;
-                    const auto end_char = run.Start + end_span.CharStart + span.LastChar;
-
-                    std::wstring text(m_chars.data() + start_char, m_chars.data() + end_char);
+                    std::wstring text(m_chars.data() + span.CharStart, span.CharLength);
                     Logger().Log(
                         LogLevel::Trace,
                         fmt::format(
                             L"{} ; {}..{}; \t {:.7f} .. {:.7f}; \t \"{}\"",
-                            span.NthLine, start_char, end_char, span.Offset, span.Size, text
+                            span.NthLine, span.CharStart, span.CharStart + span.CharLength, span.Offset, span.Size, text
                         )
                     );
                 }
@@ -451,165 +435,6 @@ namespace Coplt::LayoutCalc::Texts::Compute
     }
 }
 
-void Run::SplitSpans(std::vector<ParagraphSpan>& spans, const ParagraphData& data, const StyleData& style) const
-{
-    using namespace Coplt::LayoutCalc::Texts::Compute;
-
-    if (Length == 0 || ActualGlyphCount == 0) [[unlikely]] return;
-
-    const auto collapse_space = ShouldCollapseSpace(style.WhiteSpace);
-    const auto keep_newline = ShouldKeepNewLine(style.WhiteSpace);
-
-    const std::span cluster_map = ClusterMap(data);
-    const std::span glyph_props = GlyphProps(data);
-    const std::span glyph_advances = GlyphAdvances(data);
-    const std::span glyph_offsets = GlyphOffsets(data);
-
-    u32 span_start = 0;
-    u32 cur_char = 0;
-    f32 cur_size = 0;
-    auto cur_type = ParagraphSpanType::Common;
-
-    for (;;)
-    {
-        ParagraphSpanType type;
-
-        const auto meta = data.m_char_metas[Start + cur_char];
-        switch (meta.RawType)
-        {
-        case RawCharType::NewLine:
-            type = keep_newline ? ParagraphSpanType::NewLine : ParagraphSpanType::Space;
-            break;
-        case RawCharType::Tab:
-            type = ParagraphSpanType::Space;
-            break;
-        default:
-            {
-                const auto text = data.m_chars.data() + Start + cur_char;
-                u32 ci = 0;
-                UChar32 uc;
-                U16_NEXT(text, ci, Length, uc);
-
-                switch (uc)
-                {
-                case 0x000A: // LF \n
-                case 0x000D: // CR \r
-                    type = keep_newline ? ParagraphSpanType::NewLine : ParagraphSpanType::Space;
-                    break;
-                case 0x0009: // HT \t
-                case 0x000B: // VT \v
-                case 0x0020: // Space
-                    type = ParagraphSpanType::Space;
-                    break;
-                default:
-                    type = ParagraphSpanType::Common;
-                    break;
-                }
-                break;
-            }
-        }
-
-        if (type != cur_type)
-        {
-            if (cur_char != span_start)
-            {
-                spans.push_back(
-                    ParagraphSpan{
-                        .CharStart = span_start,
-                        .CharLength = cur_char - span_start,
-                        .Size = cur_size,
-                        .Type = cur_type,
-                    }
-                );
-                span_start = cur_char;
-                cur_size = 0;
-            }
-            cur_type = type;
-        }
-
-        const u16 first_cluster = cluster_map[cur_char];
-        const u32 next_char = StepCluster(*this, cluster_map, first_cluster, cur_char);
-        const u16 last_cluster = cluster_map[cur_char];
-
-        if (type != ParagraphSpanType::Common)
-        {
-            f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
-            if (collapse_space) cur_size = std::max(cur_size, sum_size);
-            else cur_size += sum_size;
-        }
-
-        if (next_char >= Length)
-        {
-            spans.push_back(
-                ParagraphSpan{
-                    .CharStart = span_start,
-                    .CharLength = next_char - span_start,
-                    .Size = cur_size,
-                    .Type = cur_type,
-                }
-            );
-            return;
-        }
-
-        cur_char = next_char;
-    }
-}
-
-void Run::BreakLines(
-    std::vector<ParagraphLineSpan>& output, std::span<ParagraphSpan> input,
-    const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
-) const
-{
-    using namespace Coplt::LayoutCalc::Texts::Compute;
-
-    if (Length == 0 || ActualGlyphCount == 0) [[unlikely]] return;
-
-    const bool allow_wrap = style.TextWrap != TextWrap::NoWrap;
-    const bool allow_wrap_on_space = AllowWrapOnSpace(style.WhiteSpace);
-    const bool allow_wrap_on_new_line = style.WhiteSpace != WhiteSpace::NoWrap;
-
-    const std::span cluster_map = ClusterMap(data);
-    const std::span text_props = TextProps(data);
-    const std::span glyph_props = GlyphProps(data);
-    const std::span glyph_advances = GlyphAdvances(data);
-    const std::span glyph_offsets = GlyphOffsets(data);
-
-    // todo support WordBreak
-
-    if (allow_wrap)
-    {
-        u32 nth_line = ctx.NthLine;
-        f32 cur_offset = ctx.CurrentLineOffset;
-
-        u32 first_span = 0, last_span = 0, first_char = 0, last_char = 0;
-        f32 start_offset = cur_offset;
-
-        for (u32 s = 0; s < input.size(); ++s)
-        {
-            const auto& span = input[s];
-            if (span.Type == ParagraphSpanType::Common)
-            {
-                u32 cur_char = span.CharStart;
-
-                const u16 first_cluster = cluster_map[cur_char];
-                const u32 next_char = StepCluster(*this, cluster_map, first_cluster, cur_char);
-                const u16 last_cluster = cluster_map[cur_char];
-
-                const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
-                const f32 new_line_offset = sum_size + cur_offset;
-            }
-            else
-            {
-                // todo
-            }
-        }
-    }
-    else
-    {
-        // todo
-    }
-}
-
 #ifdef _DEBUG
 std::vector<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
 #else
@@ -633,8 +458,8 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
 
     if (Length == 0 || ActualGlyphCount == 0) [[unlikely]] RETURN;
 
-    const auto collapse_space = ShouldCollapseSpace(style.WhiteSpace);
-    const auto wrap_line_only = style.WhiteSpace == WhiteSpace::Pre;
+    const auto newline_as_space = HasFlags(style.WrapFlags, WrapFlags::NewLineAsSpace);
+    const auto wrap_in_space = HasFlags(style.WrapFlags, WrapFlags::WrapInSpace);
     const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
 
     const std::span cluster_map = ClusterMap(data);
@@ -644,6 +469,7 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
     const std::span glyph_offsets = GlyphOffsets(data);
 
     // todo support WordBreak
+    // todo support trim
 
     u32 nth_line = ctx.NthLine;
     f32 cur_offset = ctx.CurrentLineOffset;
@@ -652,48 +478,20 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
     Cursor break_after(-1, 0);
 
     u32 c = 0;
-    u16 first_cluster = cluster_map[span_start.Char];
     for (;;)
     {
-        const u32 next_char = c + 1;
-        if (next_char < Length)
-        {
-            const u16 next_cluster = cluster_map[next_char];
-            if (next_cluster == first_cluster)
-            {
-                c = next_char;
-                continue;
-            }
-        }
+        const u16 first_cluster = cluster_map[span_start.Char];
+        const u32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
         const u16 last_cluster = cluster_map[c];
 
-        f32 sum_size = 0;
-        {
-            u16 i = first_cluster;
-            for (; i <= last_cluster; ++i)
-            {
-                const auto glyph_advance = glyph_advances[i];
-                const auto& glyph_offset = glyph_offsets[i];
-                sum_size += glyph_advance + glyph_offset.advanceOffset;
-            }
-            i = last_cluster + 1;
-            for (; i < ActualGlyphCount; ++i)
-            {
-                const auto& glyph_prop = glyph_props[i];
-                if (glyph_prop.isClusterStart) break;
-                const auto glyph_advance = glyph_advances[i];
-                const auto& glyph_offset = glyph_offsets[i];
-                sum_size += glyph_advance + glyph_offset.advanceOffset;
-            }
-        }
-
+        const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
         const f32 new_line_offset = sum_size + cur_offset;
 
         if (!allow_wrap) goto NEXT;
 
         const auto& break_info = data.m_line_breakpoints[c];
         const bool is_break_point_after = break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_MUST_BREAK
-            || (!wrap_line_only && break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_CAN_BREAK);
+            || break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_CAN_BREAK;
 
         const bool should_break =
             new_line_offset > ctx.AvailableSpace
@@ -707,18 +505,18 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
             const f32 size = break_after.Offset - span_start.Offset;
             ctx.NthLine = nth_line;
             ctx.CurrentLineOffset = break_after.Offset;
-            // YIELD(
-            //     ParagraphLineSpan{
-            //         .NthLine = nth_line,
-            //         .CharStart = span_start.Char,
-            //         .CharLength = char_len,
-            //         .GlyphStart = first_glyph,
-            //         .GlyphLength = glyph_length,
-            //         .Offset = span_start.Offset,
-            //         .Size = size,
-            //         .NeedReShape = !text_prop.canBreakShapingAfter,
-            //     }
-            // );
+            YIELD(
+                ParagraphLineSpan{
+                    .NthLine = nth_line,
+                    .CharStart = span_start.Char,
+                    .CharLength = char_len,
+                    .GlyphStart = first_glyph,
+                    .GlyphLength = glyph_length,
+                    .Offset = span_start.Offset,
+                    .Size = size,
+                    .NeedReShape = !text_prop.canBreakShapingAfter,
+                }
+            );
 
             nth_line++;
             const f32 rem_offset = cur_offset - break_after.Offset;
@@ -751,23 +549,22 @@ std::generator<ParagraphLineSpan> Run::BreakLines(const ParagraphData& data, con
             const u16 first_glyph = cluster_map[span_start.Char];
             ctx.NthLine = nth_line;
             ctx.CurrentLineOffset = cur_offset;
-            // YIELD(
-            //     ParagraphLineSpan{
-            //         .NthLine = nth_line,
-            //         .CharStart = span_start.Char,
-            //         .CharLength = next_char - span_start.Char,
-            //         .GlyphStart = first_glyph,
-            //         .GlyphLength = ActualGlyphCount - first_glyph,
-            //         .Offset = span_start.Offset,
-            //         .Size = cur_offset - span_start.Offset,
-            //         .NeedReShape = false,
-            //     }
-            // );
+            YIELD(
+                ParagraphLineSpan{
+                    .NthLine = nth_line,
+                    .CharStart = span_start.Char,
+                    .CharLength = next_char - span_start.Char,
+                    .GlyphStart = first_glyph,
+                    .GlyphLength = ActualGlyphCount - first_glyph,
+                    .Offset = span_start.Offset,
+                    .Size = cur_offset - span_start.Offset,
+                    .NeedReShape = false,
+                }
+            );
             RETURN;
         }
 
         c = next_char;
-        first_cluster = cluster_map[c];
     }
 
     #pragma pop_macro("YIELD")

@@ -83,10 +83,10 @@ public static unsafe partial class Access
             }
         }
 
-        public WhiteSpace WhiteSpace
+        public WrapFlags WrapFlags
         {
-            get => node.StyleData.WhiteSpace;
-            set => node.StyleData.WhiteSpace = value;
+            get => node.StyleData.WrapFlags;
+            set => node.StyleData.WrapFlags = value;
         }
 
         public Length Width

@@ -148,14 +148,27 @@ public enum WritingDirection : byte
     Vertical,
 }
 
-public enum WhiteSpace : byte
+[Flags]
+public enum WrapFlags : byte
 {
-    Normal,
-    NoWrap,
-    Pre,
-    PreWrap,
-    PreLine,
-    BreakSpaces,
+    None = 0,
+    /// <summary>
+    /// If set, newline <c>\n</c> | <c>\r</c> will be treated as spaces (0x0020).
+    /// </summary>
+    NewLineAsSpace = 1 << 0,
+    /// <summary>
+    /// If set, it allows line breaks within spaces (0x0020), not just word boundaries.
+    /// </summary>
+    WrapInSpace = 1 << 1,
+    /// <summary>
+    /// Remove leading spaces from each line; not support yet
+    /// </summary>
+    TrimStart = 1 << 2,
+    /// <summary>
+    /// Remove trailing spaces from each line; not support yet
+    /// </summary>
+    TrimEnd = 1 << 3,
+    Trim = TrimStart | TrimEnd,
 }
 
 public enum TextWrap : byte

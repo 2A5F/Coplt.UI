@@ -263,66 +263,6 @@ namespace Coplt::LayoutCalc
         return std::make_pair(style.LineHeight, style.LineHeightValue);
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline bool ShouldCollapseSpace(const WhiteSpace white_space)
-    {
-        switch (white_space)
-        {
-        case WhiteSpace::Normal:
-            return true;
-        case WhiteSpace::NoWrap:
-            return true;
-        case WhiteSpace::Pre:
-            return false;
-        case WhiteSpace::PreWrap:
-            return false;
-        case WhiteSpace::PreLine:
-            return true;
-        case WhiteSpace::BreakSpaces:
-            return false;
-        }
-        return false;
-    }
-
-    COPLT_RELEASE_FORCE_INLINE inline bool ShouldKeepNewLine(const WhiteSpace white_space)
-    {
-        switch (white_space)
-        {
-        case WhiteSpace::Normal:
-            return false;
-        case WhiteSpace::NoWrap:
-            return false;
-        case WhiteSpace::Pre:
-            return true;
-        case WhiteSpace::PreWrap:
-            return true;
-        case WhiteSpace::PreLine:
-            return true;
-        case WhiteSpace::BreakSpaces:
-            return true;
-        }
-        return false;
-    }
-
-    COPLT_RELEASE_FORCE_INLINE inline bool AllowWrapOnSpace(const WhiteSpace white_space)
-    {
-        switch (white_space)
-        {
-        case WhiteSpace::Normal:
-            return true;
-        case WhiteSpace::NoWrap:
-            return false;
-        case WhiteSpace::Pre:
-            return false;
-        case WhiteSpace::PreWrap:
-            return true;
-        case WhiteSpace::PreLine:
-            return true;
-        case WhiteSpace::BreakSpaces:
-            return true;
-        }
-        return false;
-    }
-
     struct ParagraphLineInfo
     {
         f32 Ascent;
@@ -330,80 +270,17 @@ namespace Coplt::LayoutCalc
         f32 LineGap;
     };
 
-    // The glyphs of Space and NewLine must be space (0x0020)
-    enum class ParagraphSpanType : u8
-    {
-        Common,
-        Space,
-        NewLine,
-    };
-
-    inline const char8* ToStr8(const ParagraphSpanType type)
-    {
-        switch (type)
-        {
-        case ParagraphSpanType::Common:
-            return "Common";
-        case ParagraphSpanType::Space:
-            return "Space";
-        case ParagraphSpanType::NewLine:
-            return "NewLine";
-        }
-        return "Unknown";
-    }
-
-    inline const char16* ToStr16(const ParagraphSpanType type)
-    {
-        switch (type)
-        {
-        case ParagraphSpanType::Common:
-            return COPLT_STR16("Common");
-        case ParagraphSpanType::Space:
-            return COPLT_STR16("Space");
-        case ParagraphSpanType::NewLine:
-            return COPLT_STR16("NewLine");
-        }
-        return COPLT_STR16("Unknown");
-    }
-
-    inline const char16* ToStr16_Pad(const ParagraphSpanType type)
-    {
-        switch (type)
-        {
-        case ParagraphSpanType::Common:
-            return COPLT_STR16("Common  ");
-        case ParagraphSpanType::Space:
-            return COPLT_STR16("Space  ");
-        case ParagraphSpanType::NewLine:
-            return COPLT_STR16("NewLine");
-        }
-        return COPLT_STR16("Unknown");
-    }
-
-    struct ParagraphSpan
-    {
-        u32 CharStart;
-        u32 CharLength;
-        // Horizontal is width, Vertical is height; 0 when Type is ParagraphSpanType::Common
-        f32 Size;
-        ParagraphSpanType Type;
-    };
-
     struct ParagraphLineSpan
     {
         u32 NthLine;
-
-        u32 FirstSpan;
-        u32 LastSpan;
-
-        u32 FirstChar; // in FirstSpan
-        u32 LastChar; // in LastSpan
-
+        u32 CharStart;
+        u32 CharLength;
+        u32 GlyphStart;
+        u32 GlyphLength;
         // Horizontal is x, Vertical is y
         f32 Offset;
         // Horizontal is width, Vertical is height
         f32 Size;
-
         bool NeedReShape;
     };
 

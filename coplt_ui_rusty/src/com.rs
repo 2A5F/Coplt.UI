@@ -304,21 +304,21 @@ pub enum Visible {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum WhiteSpace {
-    Normal = 0,
-    NoWrap = 1,
-    Pre = 2,
-    PreWrap = 3,
-    PreLine = 4,
-    BreakSpaces = 5,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum WordBreak {
     Auto = 0,
     BreakAll = 1,
     KeepAll = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum WrapFlags {
+    None = 0,
+    NewLineAsSpace = 1,
+    WrapInSpace = 2,
+    TrimStart = 4,
+    TrimEnd = 8,
+    Trim = 12,
 }
 
 #[repr(u8)]
@@ -1069,7 +1069,7 @@ pub struct StyleData {
     pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
-    pub WhiteSpace: WhiteSpace,
+    pub WrapFlags: WrapFlags,
     pub TextWrap: TextWrap,
     pub WordBreak: WordBreak,
     pub TextOrientation: TextOrientation,
