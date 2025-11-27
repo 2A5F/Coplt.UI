@@ -46,6 +46,10 @@ void ParagraphData::ReBuild()
     m_glyph_props.clear();
     m_glyph_advances.clear();
     m_glyph_offsets.clear();
+
+    m_cache.Clear();
+    m_final_spans.clear();
+    m_final_lines.clear();
 }
 
 std::vector<Paragraph>& ParagraphData::GetTextLayoutParagraphs() const
@@ -285,18 +289,18 @@ void ParagraphData::AnalyzeFonts()
             // }
 
             #ifdef _DEBUG
-            if (mapped_font && Logger().IsEnabled(LogLevel::Trace))
-            {
-                u32 len{};
-                const char16* local{};
-                m_src->GetLocaleName(text_start, &len, &local);
-
-                const auto name = GetFamilyNames(mapped_font);
-                Logger().Log(
-                    LogLevel::Trace,
-                    fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
-                );
-            }
+            // if (mapped_font && Logger().IsEnabled(LogLevel::Trace))
+            // {
+            //     u32 len{};
+            //     const char16* local{};
+            //     m_src->GetLocaleName(text_start, &len, &local);
+            //
+            //     const auto name = GetFamilyNames(mapped_font);
+            //     Logger().Log(
+            //         LogLevel::Trace,
+            //         fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
+            //     );
+            // }
             #endif
 
             m_font_ranges.push_back(

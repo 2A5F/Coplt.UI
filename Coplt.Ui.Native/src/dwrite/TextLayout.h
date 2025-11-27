@@ -346,6 +346,9 @@ namespace Coplt::LayoutCalc::Texts
         bool HasLineInfo;
         ParagraphLineInfo LineInfo;
 
+        std::span<const char16> Chars(const ParagraphData& data) const;
+        std::span<const CharMeta> CharMetas(const ParagraphData& data) const;
+        std::span<const DWRITE_LINE_BREAKPOINT> LineBreakpoints(const ParagraphData& data) const;
         std::span<const u16> ClusterMap(const ParagraphData& data) const;
         std::span<const DWRITE_SHAPING_TEXT_PROPERTIES> TextProps(const ParagraphData& data) const;
         std::span<const u16> GlyphIndices(const ParagraphData& data) const;
@@ -398,6 +401,8 @@ namespace Coplt::LayoutCalc::Texts
         std::vector<DWRITE_GLYPH_OFFSET> m_glyph_offsets{};
 
         TextLayoutCache m_cache{};
+        std::vector<ParagraphSpan> m_final_spans{};
+        std::vector<ParagraphLine> m_final_lines{};
 
         void ReBuild();
 
@@ -417,7 +422,7 @@ namespace Coplt::LayoutCalc::Texts
         void AnalyzeGlyphsFirst();
         // void AnalyzeGlyphsCarets();
 
-        LayoutOutput Compute(
+        LayoutOutput ComputeContent(
             TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,
             const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
         );

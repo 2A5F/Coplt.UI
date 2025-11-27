@@ -265,9 +265,9 @@ namespace Coplt::LayoutCalc
 
     struct ParagraphLineInfo
     {
-        f32 Ascent;
-        f32 Descent;
-        f32 LineGap;
+        f32 Ascent{};
+        f32 Descent{};
+        f32 LineGap{};
     };
 
     enum class ParagraphSpanType : u8
@@ -275,6 +275,7 @@ namespace Coplt::LayoutCalc
         Common,
         Space,
         NewLine,
+        Block,
     };
 
     inline const char16* ToStr16Pad(const ParagraphSpanType type)
@@ -287,6 +288,8 @@ namespace Coplt::LayoutCalc
             return COPLT_STR16("Space  ");
         case ParagraphSpanType::NewLine:
             return COPLT_STR16("NewLine");
+        case ParagraphSpanType::Block:
+            return COPLT_STR16("Block  ");
         }
         std::unreachable();
     }
@@ -294,10 +297,20 @@ namespace Coplt::LayoutCalc
     struct ParagraphSpan
     {
         u32 NthLine;
-        u32 CharStart;
-        u32 CharLength;
-        u32 GlyphStart;
-        u32 GlyphLength;
+
+        union
+        {
+            struct
+            {
+                u32 CharStart;
+                u32 CharLength;
+                u32 GlyphStart;
+                u32 GlyphLength;
+            };
+
+            u32 InlineBlockIndex;
+        };
+
         // Horizontal is x, Vertical is y
         f32 Offset;
         // Horizontal is width, Vertical is height
@@ -306,19 +319,20 @@ namespace Coplt::LayoutCalc
         bool NeedReShape;
     };
 
-    struct ParagraphLine
+    struct ParagraphLine : ParagraphLineInfo
     {
-        ParagraphLineInfo Info{};
+        u32 NthLine;
 
         // Horizontal is x, Vertical is y
-        f32 AlignOffset{};
+        f32 MainOffset{};
         // Horizontal is y, Vertical is x
-        f32 LineOffset{};
+        f32 CrossOffset{};
         // Horizontal is width, Vertical is height
-        f32 LineSize{};
+        f32 MainSize{};
         // Horizontal is height, Vertical is width
-        f32 LineHeight{};
+        f32 CrossSize{};
 
-        std::vector<ParagraphSpan> Spans{}; // todo flat storage in ParagraphData
+        u32 SpanStart{};
+        u32 SpanLength{};
     };
 }

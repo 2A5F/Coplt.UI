@@ -202,7 +202,7 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
     Size<f32> size{};
     for (auto& data : m_paragraph_datas)
     {
-        auto output = data.Compute(*this, inputs.RunMode, inputs.Axis, last_available_space, known_dimensions);
+        auto output = data.ComputeContent(*this, inputs.RunMode, inputs.Axis, last_available_space, known_dimensions);
         last_available_space = last_available_space.TrySub(GetSize(output));
         if (style.WritingDirection == WritingDirection::Horizontal)
         {
@@ -226,7 +226,7 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
     };
 }
 
-LayoutOutput ParagraphData::Compute(
+LayoutOutput ParagraphData::ComputeContent(
     TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,
     const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
 )
@@ -242,24 +242,33 @@ LayoutOutput ParagraphData::Compute(
     auto& max_main = result_size.MainAxis(axis);
     auto& sum_cross = result_size.CrossAxis(axis);
 
-    f32 cur_main = 0;
     if (paragraph.Type == TextParagraphType::Inline)
     {
-        u32 nth_line = 0;
-        f32 max_ascent{};
-        f32 max_descent{};
-        f32 max_line_gap{};
+        std::vector<ParagraphSpan> spans{};
+        std::vector<ParagraphLine> lines{};
+        if (RunMode == LayoutRunMode::ComputeSize)
+        {
+            spans = std::move(m_final_spans);
+            lines = std::move(m_final_lines);
+            spans.clear();
+            lines.clear();
+        }
 
+        ParagraphLine cur_line{};
+
+        u32 cur_nth_line = 0;
         RunBreakLineCtx ctx{
+            .NthLine = 0,
             .AvailableSpace = space_main
         };
 
+        f32 defined_line_height = Resolve(GetLineHeight(root_style), root_style.FontSize);
         for (auto& run : m_runs)
         {
             const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
             const auto scope = GetScope(same_style);
             const auto& style = scope.StyleData();
-            const auto defined_line_height = Resolve(GetLineHeight(style), style.FontSize);
+            defined_line_height = Resolve(GetLineHeight(style), style.FontSize);
 
             if (run.IsInlineBlock(*this))
             {
@@ -268,29 +277,83 @@ LayoutOutput ParagraphData::Compute(
             else
             {
                 const auto& single_line_size = run.GetLineInfo(*this);
-                max_ascent = std::max(max_ascent, single_line_size.Ascent);
-                max_descent = std::max(max_descent, single_line_size.Descent);
-                max_line_gap = std::max(max_line_gap, single_line_size.LineGap);
+                cur_line.Ascent = std::max(cur_line.Ascent, single_line_size.Ascent);
+                cur_line.Descent = std::max(cur_line.Descent, single_line_size.Descent);
+                cur_line.LineGap = std::max(cur_line.LineGap, single_line_size.LineGap);
 
-                auto spans = run.BreakLines(*this, style, ctx);
-                for (const auto& span : spans)
+                auto spans_iter = run.BreakLines(*this, style, ctx);
+                for (const auto& span : spans_iter)
                 {
                     #ifdef _DEBUG
-                    if (Logger().IsEnabled(LogLevel::Trace))
-                    {
-                        std::wstring text(m_chars.data() + run.Start + span.CharStart, span.CharLength);
-                        Logger().Log(
-                            LogLevel::Trace,
-                            fmt::format(
-                                L"line {:<6} {:>15.7f} .. {:<15.7f} {:>15.7f} ; {} {:>6}..{:<6} \"{}\"",
-                                span.NthLine, span.Offset, span.Offset + span.Size, span.Size,
-                                ToStr16Pad(span.Type), run.Start + span.CharStart, run.Start + span.CharStart + span.CharLength, text
-                            )
-                        );
-                    }
+                    // if (Logger().IsEnabled(LogLevel::Trace))
+                    // {
+                    //     std::wstring text(m_chars.data() + run.Start + span.CharStart, span.CharLength);
+                    //     Logger().Log(
+                    //         LogLevel::Trace,
+                    //         fmt::format(
+                    //             L"line {:<6} {:>15.7f} .. {:<15.7f} {:>15.7f} ; {} {:>6}..{:<6} \"{}\"",
+                    //             span.NthLine, span.Offset, span.Offset + span.Size, span.Size,
+                    //             ToStr16Pad(span.Type), run.Start + span.CharStart, run.Start + span.CharStart + span.CharLength, text
+                    //         )
+                    //     );
+                    // }
                     #endif
+
+                    if (span.NthLine != cur_nth_line)
+                    {
+                        cur_line.NthLine = cur_nth_line;
+                        cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
+                        cur_line.SpanLength = spans.size() - cur_line.SpanStart;
+                        cur_line.CrossSize = std::max(cur_line.Ascent + cur_line.Descent + cur_line.LineGap, defined_line_height);
+                        max_main = std::max(max_main, cur_line.MainSize);
+                        sum_cross += cur_line.CrossSize;
+                        lines.push_back(cur_line);
+                        cur_line = ParagraphLine{
+                            .CrossOffset = sum_cross,
+                            .SpanStart = static_cast<u32>(spans.size()),
+                        };
+                        cur_nth_line = span.NthLine;
+                    }
+                    spans.push_back(span);
                 }
             }
+        }
+
+        if (spans.size() != cur_line.SpanStart)
+        {
+            cur_line.NthLine = cur_nth_line;
+            cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
+            cur_line.SpanLength = spans.size() - cur_line.SpanStart;
+            cur_line.CrossSize = std::max(cur_line.Ascent + cur_line.Descent + cur_line.LineGap, defined_line_height);
+            max_main = std::max(max_main, cur_line.MainSize);
+            sum_cross += cur_line.CrossSize;
+            lines.push_back(cur_line);
+        }
+
+        if (RunMode == LayoutRunMode::PerformLayout)
+        {
+            if (!std::isinf(space_main)) max_main = space_main;
+            switch (root_style.TextAlign)
+            {
+            case TextAlign::End:
+                for (auto& line : lines)
+                {
+                    line.MainOffset = max_main - line.MainSize;
+                }
+                break;
+
+            case TextAlign::Center:
+                for (auto& line : lines)
+                {
+                    line.MainOffset = (max_main - line.MainSize) / 2;
+                }
+                break;
+            case TextAlign::Start:
+            default:
+                break;
+            }
+            m_final_spans = std::move(spans);
+            m_final_lines = std::move(lines);
         }
     }
     else
@@ -300,6 +363,21 @@ LayoutOutput ParagraphData::Compute(
     }
 
     return LayoutOutputFromOuterSize(result_size);
+}
+
+std::span<const char16> Run::Chars(const ParagraphData& data) const
+{
+    return std::span(data.m_chars.data() + Start, Length);
+}
+
+std::span<const CharMeta> Run::CharMetas(const ParagraphData& data) const
+{
+    return std::span(data.m_char_metas.data() + Start, Length);
+}
+
+std::span<const DWRITE_LINE_BREAKPOINT> Run::LineBreakpoints(const ParagraphData& data) const
+{
+    return std::span(data.m_line_breakpoints.data() + Start, Length);
 }
 
 std::span<const u16> Run::ClusterMap(const ParagraphData& data) const
@@ -496,9 +574,9 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
     const auto wrap_in_space = HasFlags(style.WrapFlags, WrapFlags::WrapInSpace);
     const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
 
-    const std::span chars = std::span(data.m_chars).subspan(Start, Length);
-    const std::span char_metas = std::span(data.m_char_metas).subspan(Start, Length);
-    const std::span line_breakpoints = std::span(data.m_line_breakpoints).subspan(Start, Length);
+    const std::span chars = Chars(data);
+    const std::span char_metas = CharMetas(data);
+    const std::span line_breakpoints = LineBreakpoints(data);
     const std::span cluster_map = ClusterMap(data);
     const std::span text_props = TextProps(data);
     const std::span glyph_props = GlyphProps(data);
@@ -506,7 +584,6 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
     const std::span glyph_offsets = GlyphOffsets(data);
 
     // todo support WordBreak
-    // todo support trim
 
     u32 nth_line = ctx.NthLine;
     f32 cur_offset = ctx.CurrentLineOffset;
