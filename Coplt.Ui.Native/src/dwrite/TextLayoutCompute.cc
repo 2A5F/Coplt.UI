@@ -272,18 +272,23 @@ LayoutOutput ParagraphData::Compute(
                 max_descent = std::max(max_descent, single_line_size.Descent);
                 max_line_gap = std::max(max_line_gap, single_line_size.LineGap);
 
-                const auto spans = run.BreakLines(*this, style, ctx);
+                auto spans = run.BreakLines(*this, style, ctx);
                 for (const auto& span : spans)
                 {
-                    std::wstring text(m_chars.data() + span.CharStart, span.CharLength);
-                    Logger().Log(
-                        LogLevel::Trace,
-                        fmt::format(
-                            L"line {:<6} {:>15.7f} .. {:<15.7f}; {} {:>6}..{:<6} \"{}\"",
-                            span.NthLine, span.Offset, span.Offset + span.Size,
-                            ToStr16Pad(span.Type), span.CharStart, span.CharStart + span.CharLength, text
-                        )
-                    );
+                    #ifdef _DEBUG
+                    if (Logger().IsEnabled(LogLevel::Trace))
+                    {
+                        std::wstring text(m_chars.data() + run.Start + span.CharStart, span.CharLength);
+                        Logger().Log(
+                            LogLevel::Trace,
+                            fmt::format(
+                                L"line {:<6} {:>15.7f} .. {:<15.7f} {:>15.7f} ; {} {:>6}..{:<6} \"{}\"",
+                                span.NthLine, span.Offset, span.Offset + span.Size, span.Size,
+                                ToStr16Pad(span.Type), run.Start + span.CharStart, run.Start + span.CharStart + span.CharLength, text
+                            )
+                        );
+                    }
+                    #endif
                 }
             }
         }
@@ -369,14 +374,14 @@ namespace Coplt::LayoutCalc::Texts::Compute
 {
     struct Cursor
     {
-        u32 Char;
+        i32 Char;
         f32 Offset;
 
         COPLT_FORCE_INLINE
         Cursor() = default;
 
         COPLT_FORCE_INLINE
-        explicit Cursor(const u32 c, const f32 o)
+        explicit Cursor(const i32 c, const f32 o)
             : Char(c), Offset(o)
         {
         }
@@ -398,11 +403,11 @@ namespace Coplt::LayoutCalc::Texts::Compute
     }
 
     COPLT_FORCE_INLINE
-    u32 StepCluster(const Run& self, const std::span<const u16> cluster_map, const u16 first_cluster, u32& cur_char)
+    i32 StepCluster(const Run& self, const std::span<const u16> cluster_map, const u16 first_cluster, i32& cur_char)
     {
         for (;;)
         {
-            const u32 next_char = cur_char + 1;
+            const i32 next_char = cur_char + 1;
             if (next_char < self.Length)
             {
                 const u16 next_cluster = cluster_map[next_char];
@@ -491,6 +496,9 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
     const auto wrap_in_space = HasFlags(style.WrapFlags, WrapFlags::WrapInSpace);
     const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
 
+    const std::span chars = std::span(data.m_chars).subspan(Start, Length);
+    const std::span char_metas = std::span(data.m_char_metas).subspan(Start, Length);
+    const std::span line_breakpoints = std::span(data.m_line_breakpoints).subspan(Start, Length);
     const std::span cluster_map = ClusterMap(data);
     const std::span text_props = TextProps(data);
     const std::span glyph_props = GlyphProps(data);
@@ -507,25 +515,25 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
     {
         f32 last_sub_span_offset = 0;
         Cursor span_start(0, cur_offset);
-        Cursor break_after(-1, 0);
+        std::optional<Cursor> break_after = cur_offset == 0 ? std::nullopt : std::optional(Cursor(-1, cur_offset));
         auto last_type = static_cast<ParagraphSpanType>(-1);
         struct SubSpan
         {
-            u32 EndChar; // not include
+            i32 EndChar; // not include
             f32 Size;
             ParagraphSpanType Type;
         };
         std::deque<SubSpan> sub_spans{};
 
-        u32 c = span_start.Char;
+        i32 c = span_start.Char;
         for (;;)
         {
-            const char16 the_char = data.m_chars[c];
-            const RawCharType char_raw = data.m_char_metas[c].RawType;
+            const char16 the_char = chars[c];
+            const RawCharType char_raw = char_metas[c].RawType;
 
-            const u32 start_char = c;
+            const i32 start_char = c;
             const u16 first_cluster = cluster_map[c];
-            const u32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
+            const i32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
             const u16 last_cluster = cluster_map[c];
 
             const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
@@ -547,7 +555,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                 last_sub_span_offset = cur_offset;
             }
 
-            const auto& break_info = data.m_line_breakpoints[c];
+            const auto& break_info = line_breakpoints[c];
             const bool is_break_point_after =
                 (wrap_in_space && the_char == 0x0020)
                 || break_info.breakConditionAfter == DWRITE_BREAK_CONDITION_MUST_BREAK
@@ -567,7 +575,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                     YIELD(
                         ParagraphSpan{
                             .NthLine = nth_line,
-                            .CharStart = span_start.Char,
+                            .CharStart = static_cast<u32>(span_start.Char),
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
@@ -591,7 +599,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                     YIELD(
                         ParagraphSpan{
                             .NthLine = nth_line,
-                            .CharStart = span_start.Char,
+                            .CharStart = static_cast<u32>(span_start.Char),
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
@@ -606,16 +614,16 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                 nth_line++;
                 last_sub_span_offset = cur_offset = 0;
                 span_start = Cursor(next_char, 0);
-                break_after = Cursor(-1, 0);
+                break_after = std::nullopt;
                 last_type = static_cast<ParagraphSpanType>(-1);
             }
-            else if (new_line_offset > ctx.AvailableSpace && break_after.Char != -1 && c > break_after.Char)
+            else if (new_line_offset > ctx.AvailableSpace && break_after.has_value() && static_cast<i32>(c) > break_after.value().Char)
             {
                 u32 i = 0;
                 for (; i < sub_spans.size(); ++i)
                 {
                     const auto& sub_span = sub_spans[i];
-                    if (sub_span.EndChar > break_after.Char) break;
+                    if (sub_span.EndChar > break_after.value().Char) break;
                     const u16 first_glyph = cluster_map[span_start.Char];
                     const u32 char_len = sub_span.EndChar - span_start.Char;
                     const u32 glyph_length = GlyphLength(sub_span.EndChar, cluster_map, first_glyph);
@@ -626,7 +634,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                     YIELD(
                         ParagraphSpan{
                             .NthLine = nth_line,
-                            .CharStart = span_start.Char,
+                            .CharStart = static_cast<u32>(span_start.Char),
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
@@ -640,20 +648,28 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                 }
                 sub_spans.erase(sub_spans.begin(), sub_spans.begin() + i);
 
+                if (break_after.value().Char == -1)
+                {
+                    nth_line++;
+                    const f32 rem_offset = cur_offset - break_after.value().Offset;
+                    last_sub_span_offset = cur_offset = rem_offset + sum_size;
+                    span_start.Offset = 0;
+                }
+                else
                 {
                     const auto break_span_type = sub_spans.empty() ? type : sub_spans.back().Type;
-                    const auto& text_prop = text_props[break_after.Char];
+                    const auto& text_prop = text_props[break_after.value().Char];
                     const u16 first_glyph = cluster_map[span_start.Char];
-                    const u32 break_next_char = break_after.Char + 1;
+                    const u32 break_next_char = break_after.value().Char + 1;
                     const u32 char_len = break_next_char - span_start.Char;
                     const u32 glyph_length = GlyphLength(break_next_char, cluster_map, first_glyph);
-                    const f32 size = break_after.Offset - span_start.Offset;
+                    const f32 size = break_after.value().Offset - span_start.Offset;
                     ctx.NthLine = nth_line;
-                    ctx.CurrentLineOffset = break_after.Offset;
+                    ctx.CurrentLineOffset = break_after.value().Offset;
                     YIELD(
                         ParagraphSpan{
                             .NthLine = nth_line,
-                            .CharStart = span_start.Char,
+                            .CharStart = static_cast<u32>(span_start.Char),
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
@@ -675,10 +691,10 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                         else
                         {
                             const f32 next_offset = span_start.Offset + sub_span.Size;
-                            sub_span.Size = next_offset - break_after.Offset;
+                            sub_span.Size = next_offset - break_after.value().Offset;
                         }
                     }
-                    const f32 rem_offset = cur_offset - break_after.Offset;
+                    const f32 rem_offset = cur_offset - break_after.value().Offset;
                     last_sub_span_offset = cur_offset = rem_offset + sum_size;
                     span_start = Cursor(break_next_char, 0);
                 }
@@ -689,7 +705,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                 }
                 else
                 {
-                    break_after = Cursor(-1, 0);
+                    break_after = std::nullopt;
                 }
             }
             else
@@ -716,7 +732,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                     YIELD(
                         ParagraphSpan{
                             .NthLine = nth_line,
-                            .CharStart = span_start.Char,
+                            .CharStart = static_cast<u32>(span_start.Char),
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
@@ -738,7 +754,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                     YIELD(
                         ParagraphSpan{
                             .NthLine = nth_line,
-                            .CharStart = span_start.Char,
+                            .CharStart = static_cast<u32>(span_start.Char),
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
@@ -759,15 +775,15 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
     {
         Cursor span_start(0, cur_offset);
         auto last_type = static_cast<ParagraphSpanType>(-1);
-        u32 c = span_start.Char;
+        i32 c = span_start.Char;
         for (;;)
         {
-            const char16 the_char = data.m_chars[c];
-            const RawCharType char_raw = data.m_char_metas[c].RawType;
+            const char16 the_char = chars[c];
+            const RawCharType char_raw = char_metas[c].RawType;
 
-            const u32 start_char = c;
+            const i32 start_char = c;
             const u16 first_cluster = cluster_map[c];
-            const u32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
+            const i32 next_char = StepCluster(*this, cluster_map, first_cluster, c);
             const u16 last_cluster = cluster_map[c];
 
             const f32 sum_size = SumSize(*this, glyph_props, glyph_advances, glyph_offsets, first_cluster, last_cluster);
@@ -786,7 +802,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                 YIELD(
                     ParagraphSpan{
                         .NthLine = nth_line,
-                        .CharStart = span_start.Char,
+                        .CharStart = static_cast<u32>(span_start.Char),
                         .CharLength = char_len,
                         .GlyphStart = first_glyph,
                         .GlyphLength = glyph_length,
@@ -813,7 +829,7 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                 YIELD(
                     ParagraphSpan{
                         .NthLine = nth_line,
-                        .CharStart = span_start.Char,
+                        .CharStart = static_cast<u32>(span_start.Char),
                         .CharLength = char_len,
                         .GlyphStart = first_glyph,
                         .GlyphLength = glyph_length,

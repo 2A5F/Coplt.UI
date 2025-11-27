@@ -10,6 +10,7 @@ using Coplt.UI.Trees;
 NativeLib.Instance.SetLogger((l, msg) => Console.WriteLine($"[{l}] {msg}"));
 
 var ff = FontFallback.Create("Calibri");
+// var ff = FontFallback.Create("Microsoft YaHei UI");
 Console.WriteLine(ff);
 
 using var doc = new Document.Builder().Create();
@@ -26,11 +27,12 @@ doc.AddRoot(node.Id);
 // var inline_box = new Access.View(doc) { TextMode = TextMode.Inline, Width = 10, Height = 10 };
 // node.Add(inline_box);
 // node.Add("不亦乐乎");
-node.Add("Never Gonna Give You Up");
+// node.Add("Never Gonna Give You Up");
 // node.Add("fia");
 // node.Add("!=");
 // node.Add("😀");
 // node.Add("a c");
+node.Add("123 阿斯顿 asd");
 var start = Stopwatch.GetTimestamp();
 doc.Update();
 var end = Stopwatch.GetTimestamp();
