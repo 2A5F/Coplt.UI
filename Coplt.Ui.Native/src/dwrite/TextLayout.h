@@ -423,7 +423,7 @@ namespace Coplt::LayoutCalc::Texts
         // void AnalyzeGlyphsCarets();
 
         LayoutOutput ComputeContent(
-            TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,
+            TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis, Size<bool> MaxOnly,
             const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
         );
     };

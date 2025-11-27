@@ -96,11 +96,11 @@ namespace Coplt::Geometry
         return other;
     }
 
-    COPLT_RELEASE_FORCE_INLINE inline f32 TryMax(const std::optional<f32> value, const f32 other)
+    COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMax(const std::optional<f32> value, const f32 other)
     {
         if (value.has_value())
             return std::max(value.value(), other);
-        return other;
+        return std::nullopt;
     }
 
     COPLT_RELEASE_FORCE_INLINE inline std::optional<f32> TryMin(
@@ -157,6 +157,17 @@ namespace Coplt::Geometry
             return std::nullopt;
         }
         std::unreachable();
+    }
+
+    COPLT_RELEASE_FORCE_INLINE inline AvailableSpace Normalize(
+        AvailableSpace self, std::optional<f32> size, std::optional<f32> min, std::optional<f32> max
+    )
+    {
+        if (self.first == AvailableSpaceType::Definite) return self;
+        if (size.has_value()) return std::make_pair(AvailableSpaceType::Definite, size.value());
+        if (max.has_value()) return std::make_pair(AvailableSpaceType::Definite, max.value());
+        if (min.has_value()) return std::make_pair(AvailableSpaceType::MaxContent, 0);
+        return self;
     }
 
     enum class Axis : u8
@@ -323,6 +334,16 @@ namespace Coplt::Geometry
                 std::make_pair(Width.first, std::max(Width.second - other.Width, 0.0f)) : Width,
                 .Height = Height.first == AvailableSpaceType::Definite ?
                 std::make_pair(Height.first, std::max(Height.second - other.Height, 0.0f)) : Height,
+            };
+        }
+
+        COPLT_RELEASE_FORCE_INLINE Size Normalize(
+            Size<std::optional<f32>> size, Size<std::optional<f32>> min, Size<std::optional<f32>> max
+        ) const requires std::same_as<T, AvailableSpace>
+        {
+            return Size{
+                .Width = Geometry::Normalize(Width, size.Width, min.Width, max.Width),
+                .Height = Geometry::Normalize(Height, size.Height, min.Height, max.Height),
             };
         }
 

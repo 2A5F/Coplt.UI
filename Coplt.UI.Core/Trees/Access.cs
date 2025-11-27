@@ -128,6 +128,72 @@ public static unsafe partial class Access
             }
         }
 
+        public Length MinWidth
+        {
+            get
+            {
+                ref var style = ref node.StyleData;
+                return new(style.MinWidth, style.MinWidthValue);
+            }
+            set
+            {
+                ref var style = ref node.StyleData;
+                var type = value.Type;
+                var val = value.Value;
+                style.MinWidth = type;
+                style.MinWidthValue = val;
+            }
+        }
+        public Length MinHeight
+        {
+            get
+            {
+                ref var style = ref node.StyleData;
+                return new(style.MinHeight, style.MinHeightValue);
+            }
+            set
+            {
+                ref var style = ref node.StyleData;
+                var type = value.Type;
+                var val = value.Value;
+                style.MinHeight = type;
+                style.MinHeightValue = val;
+            }
+        }
+
+        public Length MaxWidth
+        {
+            get
+            {
+                ref var style = ref node.StyleData;
+                return new(style.MaxWidth, style.MaxWidthValue);
+            }
+            set
+            {
+                ref var style = ref node.StyleData;
+                var type = value.Type;
+                var val = value.Value;
+                style.MaxWidth = type;
+                style.MaxWidthValue = val;
+            }
+        }
+        public Length MaxHeight
+        {
+            get
+            {
+                ref var style = ref node.StyleData;
+                return new(style.MaxHeight, style.MaxHeightValue);
+            }
+            set
+            {
+                ref var style = ref node.StyleData;
+                var type = value.Type;
+                var val = value.Value;
+                style.MaxHeight = type;
+                style.MaxHeightValue = val;
+            }
+        }
+
         public GridPlacement GridColumn
         {
             set

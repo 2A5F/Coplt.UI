@@ -196,13 +196,18 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
         }
     }
 
+    Size max_only{
+        .Width = !clamped_size.Width.has_value() && !min_size.Width.has_value() && max_size.Width.has_value(),
+        .Height = !clamped_size.Height.has_value() && !min_size.Height.has_value() && max_size.Height.has_value(),
+    };
+
     #pragma endregion
 
-    auto last_available_space = available_space;
+    auto last_available_space = available_space.Normalize(clamped_size, min_size, max_size);
     Size<f32> size{};
     for (auto& data : m_paragraph_datas)
     {
-        auto output = data.ComputeContent(*this, inputs.RunMode, inputs.Axis, last_available_space, known_dimensions);
+        auto output = data.ComputeContent(*this, inputs.RunMode, inputs.Axis, max_only, last_available_space, known_dimensions);
         last_available_space = last_available_space.TrySub(GetSize(output));
         if (style.WritingDirection == WritingDirection::Horizontal)
         {
@@ -227,7 +232,7 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
 }
 
 LayoutOutput ParagraphData::ComputeContent(
-    TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis,
+    TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis, Size<bool> MaxOnly,
     const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
 )
 {
@@ -235,6 +240,7 @@ LayoutOutput ParagraphData::ComputeContent(
     const auto& paragraph = layout.m_paragraphs[m_index];
     const auto axis = ToAxis(root_style.WritingDirection);
 
+    const bool is_max_only = MaxOnly.MainAxis(axis);
     const auto space = AvailableSpace.Or(KnownSize);
     const auto space_main = space.MainAxis(axis).value_or(std::numeric_limits<f32>::infinity());
 
@@ -332,7 +338,7 @@ LayoutOutput ParagraphData::ComputeContent(
 
         if (RunMode == LayoutRunMode::PerformLayout)
         {
-            if (!std::isinf(space_main)) max_main = space_main;
+            if (!std::isinf(space_main) && !is_max_only) max_main = space_main;
             switch (root_style.TextAlign)
             {
             case TextAlign::End:
