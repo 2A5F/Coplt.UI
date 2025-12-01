@@ -19,6 +19,24 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeList;
 
+    struct AABB2D;
+
+    struct AABB2DF;
+
+    union PathBuilderCmd;
+
+    struct PathBuilderCmdArc;
+
+    struct PathBuilderCmdCubicBezierTo;
+
+    struct PathBuilderCmdQuadraticBezierTo;
+
+    struct PathBuilderCmdXToPoint;
+
+    struct TessFillOptions;
+
+    struct TessStrokeOptions;
+
     struct GridName;
 
     struct GridPlacement;
@@ -87,6 +105,8 @@ namespace Coplt {
 
     struct NodeId;
 
+    struct IAtlasAllocator;
+
     struct IFont;
 
     struct IFontCollection;
@@ -105,7 +125,13 @@ namespace Coplt {
 
     struct ILib;
 
+    struct IPath;
+
+    struct IPathBuilder;
+
     struct IStub;
+
+    struct ITessellator;
 
     struct ITextData;
 
@@ -115,6 +141,43 @@ namespace Coplt {
     {
         Str8 = 0,
         Str16 = 1,
+    };
+
+    enum class FillRule : ::Coplt::u8
+    {
+        EvenOdd = 0,
+        NonZero = 1,
+    };
+
+    enum class LineCap : ::Coplt::u8
+    {
+        Butt = 0,
+        Square = 1,
+        Round = 2,
+    };
+
+    enum class LineJoin : ::Coplt::u8
+    {
+        Miter = 0,
+        MiterClip = 1,
+        Round = 2,
+        Bevel = 3,
+    };
+
+    enum class PathBuilderCmdType : ::Coplt::u32
+    {
+        Close = 0,
+        MoveTo = 1,
+        LineTo = 2,
+        QuadraticBezierTo = 3,
+        CubicBezierTo = 4,
+        Arc = 5,
+    };
+
+    enum class Orientation : ::Coplt::u8
+    {
+        Horizontal = 0,
+        Vertical = 1,
     };
 
     enum class AlignType : ::Coplt::u8
@@ -766,6 +829,44 @@ namespace Coplt {
         ::Coplt::NativeArcInner<T0>* m_ptr;
     };
 
+    struct PathBuilderCmdArc
+    {
+        ::Coplt::PathBuilderCmdType Type;
+        ::Coplt::f32 CenterX;
+        ::Coplt::f32 CenterY;
+        ::Coplt::f32 RadiiX;
+        ::Coplt::f32 RadiiY;
+        ::Coplt::f32 SweepAngle;
+        ::Coplt::f32 XRotation;
+    };
+
+    struct PathBuilderCmdCubicBezierTo
+    {
+        ::Coplt::PathBuilderCmdType Type;
+        ::Coplt::f32 Ctrl0X;
+        ::Coplt::f32 Ctrl0Y;
+        ::Coplt::f32 Ctrl1X;
+        ::Coplt::f32 Ctrl1Y;
+        ::Coplt::f32 ToX;
+        ::Coplt::f32 ToY;
+    };
+
+    struct PathBuilderCmdQuadraticBezierTo
+    {
+        ::Coplt::PathBuilderCmdType Type;
+        ::Coplt::f32 CtrlX;
+        ::Coplt::f32 CtrlY;
+        ::Coplt::f32 ToX;
+        ::Coplt::f32 ToY;
+    };
+
+    struct PathBuilderCmdXToPoint
+    {
+        ::Coplt::PathBuilderCmdType Type;
+        ::Coplt::f32 X;
+        ::Coplt::f32 Y;
+    };
+
     struct GridName
     {
         ::Coplt::i32 Id;
@@ -891,6 +992,49 @@ namespace Coplt {
     {
         ::Coplt::u64 m_count;
         T0 m_data;
+    };
+
+    struct AABB2D
+    {
+        ::Coplt::u32 MinX;
+        ::Coplt::u32 MinY;
+        ::Coplt::u32 MaxX;
+        ::Coplt::u32 MaxY;
+    };
+
+    struct AABB2DF
+    {
+        ::Coplt::f32 MinX;
+        ::Coplt::f32 MinY;
+        ::Coplt::f32 MaxX;
+        ::Coplt::f32 MaxY;
+    };
+
+    union PathBuilderCmd
+    {
+        ::Coplt::PathBuilderCmdType Type;
+        ::Coplt::PathBuilderCmdXToPoint XTo;
+        ::Coplt::PathBuilderCmdQuadraticBezierTo QuadraticBezierTo;
+        ::Coplt::PathBuilderCmdCubicBezierTo CubicBezierTo;
+        ::Coplt::PathBuilderCmdArc Arc;
+    };
+
+    struct TessFillOptions
+    {
+        ::Coplt::f32 ToLerance;
+        ::Coplt::FillRule FillRule;
+        ::Coplt::Orientation SweepOrientation;
+        bool HandleIntersections;
+    };
+
+    struct TessStrokeOptions
+    {
+        ::Coplt::f32 ToLerance;
+        ::Coplt::f32 LineWidth;
+        ::Coplt::f32 MiterLimit;
+        ::Coplt::LineCap StartCap;
+        ::Coplt::LineCap EndCap;
+        ::Coplt::LineJoin LineJoin;
     };
 
     struct GridTemplateArea

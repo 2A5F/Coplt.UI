@@ -7,4 +7,5 @@ resolver = "3"
 cocom = {path = "Coplt.Com2/cocom_rs"}
 concat-idents = "1"
 dashmap = "6.1"
+etagere = "0.2"
 taffy = {path = "taffy"}

@@ -10,6 +10,7 @@ namespace Coplt {
     using IUnknown = ::Coplt::IUnknown;
     using IWeak = ::Coplt::IWeak;
 
+    struct IAtlasAllocator;
     struct IFont;
     struct IFontCollection;
     struct IFontFace;
@@ -19,11 +20,256 @@ namespace Coplt {
     struct IFontManager;
     struct ILayout;
     struct ILib;
+    struct IPath;
+    struct IPathBuilder;
     struct IStub;
+    struct ITessellator;
     struct ITextData;
     struct ITextLayout;
 
 } // namespace Coplt
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::IAtlasAllocator>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    void (*const COPLT_CDECL f_Clear)(::Coplt::IAtlasAllocator*) noexcept;
+    bool (*const COPLT_CDECL f_get_IsEmpty)(::Coplt::IAtlasAllocator*) noexcept;
+    void (*const COPLT_CDECL f_GetSize)(::Coplt::IAtlasAllocator*, ::Coplt::i32* out_width, ::Coplt::i32* out_height) noexcept;
+    bool (*const COPLT_CDECL f_Allocate)(::Coplt::IAtlasAllocator*, ::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2D* out_rect) noexcept;
+    void (*const COPLT_CDECL f_Deallocate)(::Coplt::IAtlasAllocator*, ::Coplt::u32 id) noexcept;
+    void (*const COPLT_CDECL f_GetRect)(::Coplt::IAtlasAllocator*, ::Coplt::u32 id, ::Coplt::AABB2D* out_rect) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IAtlasAllocator
+{
+    void COPLT_CDECL Clear(::Coplt::IAtlasAllocator* self) noexcept;
+    bool COPLT_CDECL get_IsEmpty(::Coplt::IAtlasAllocator* self) noexcept;
+    void COPLT_CDECL GetSize(::Coplt::IAtlasAllocator* self, ::Coplt::i32* p0, ::Coplt::i32* p1) noexcept;
+    bool COPLT_CDECL Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept;
+    void COPLT_CDECL Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept;
+    void COPLT_CDECL GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::IAtlasAllocator>
+{
+    using VirtualTable = VirtualTable<::Coplt::IAtlasAllocator>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("32b30623-411e-4fd5-a009-ae7e9ed88e78");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::IAtlasAllocator>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IAtlasAllocator*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_Clear = VirtualImpl_Coplt_IAtlasAllocator::Clear,
+            .f_get_IsEmpty = VirtualImpl_Coplt_IAtlasAllocator::get_IsEmpty,
+            .f_GetSize = VirtualImpl_Coplt_IAtlasAllocator::GetSize,
+            .f_Allocate = VirtualImpl_Coplt_IAtlasAllocator::Allocate,
+            .f_Deallocate = VirtualImpl_Coplt_IAtlasAllocator::Deallocate,
+            .f_GetRect = VirtualImpl_Coplt_IAtlasAllocator::GetRect,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual void Impl_Clear() = 0;
+        virtual bool Impl_get_IsEmpty() = 0;
+        virtual void Impl_GetSize(::Coplt::i32* out_width, ::Coplt::i32* out_height) = 0;
+        virtual bool Impl_Allocate(::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2D* out_rect) = 0;
+        virtual void Impl_Deallocate(::Coplt::u32 id) = 0;
+        virtual void Impl_GetRect(::Coplt::u32 id, ::Coplt::AABB2D* out_rect) = 0;
+    };
+
+    template <std::derived_from<::Coplt::IAtlasAllocator> Base = ::Coplt::IAtlasAllocator>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+    template <class Impl>
+    struct VirtualImpl
+    {
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+
+        static void COPLT_CDECL f_Clear(::Coplt::IAtlasAllocator* self) noexcept
+        {
+            AsImpl(self)->Impl_Clear();
+        }
+
+        static bool COPLT_CDECL f_get_IsEmpty(::Coplt::IAtlasAllocator* self) noexcept
+        {
+            return AsImpl(self)->Impl_get_IsEmpty();
+        }
+
+        static void COPLT_CDECL f_GetSize(::Coplt::IAtlasAllocator* self, ::Coplt::i32* p0, ::Coplt::i32* p1) noexcept
+        {
+            AsImpl(self)->Impl_GetSize(p0, p1);
+        }
+
+        static bool COPLT_CDECL f_Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept
+        {
+            return AsImpl(self)->Impl_Allocate(p0, p1, p2, p3);
+        }
+
+        static void COPLT_CDECL f_Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept
+        {
+            AsImpl(self)->Impl_Deallocate(p0);
+        }
+
+        static void COPLT_CDECL f_GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept
+        {
+            AsImpl(self)->Impl_GetRect(p0, p1);
+        }
+    };
+
+    template<class Impl>
+    constexpr static VirtualTable s_vtb
+    {
+        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .f_Clear = VirtualImpl<Impl>::f_Clear,
+        .f_get_IsEmpty = VirtualImpl<Impl>::f_get_IsEmpty,
+        .f_GetSize = VirtualImpl<Impl>::f_GetSize,
+        .f_Allocate = VirtualImpl<Impl>::f_Allocate,
+        .f_Deallocate = VirtualImpl<Impl>::f_Deallocate,
+        .f_GetRect = VirtualImpl<Impl>::f_GetRect,
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IAtlasAllocator
+{
+
+    inline void COPLT_CDECL Clear(::Coplt::IAtlasAllocator* self) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Clear, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_Clear();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Clear, void)
+        #endif
+    }
+
+    inline bool COPLT_CDECL get_IsEmpty(::Coplt::IAtlasAllocator* self) noexcept
+    {
+        bool r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, get_IsEmpty, bool)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_get_IsEmpty();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, get_IsEmpty, bool)
+        #endif
+        return r;
+    }
+
+    inline void COPLT_CDECL GetSize(::Coplt::IAtlasAllocator* self, ::Coplt::i32* p0, ::Coplt::i32* p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, GetSize, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_GetSize(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, GetSize, void)
+        #endif
+    }
+
+    inline bool COPLT_CDECL Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept
+    {
+        bool r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Allocate, bool)
+        #endif
+        r = ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_Allocate(p0, p1, p2, p3);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Allocate, bool)
+        #endif
+        return r;
+    }
+
+    inline void COPLT_CDECL Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Deallocate, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_Deallocate(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Deallocate, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, GetRect, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_GetRect(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, GetRect, void)
+        #endif
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_IAtlasAllocator\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::IAtlasAllocator;\
+\
+    explicit IAtlasAllocator(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::IAtlasAllocator>
+{
+    static COPLT_FORCE_INLINE void Clear(::Coplt::IAtlasAllocator* self) noexcept
+    {
+        COPLT_COM_PVTB(IAtlasAllocator, self)->f_Clear(self);
+    }
+    static COPLT_FORCE_INLINE bool get_IsEmpty(::Coplt::IAtlasAllocator* self) noexcept
+    {
+        return COPLT_COM_PVTB(IAtlasAllocator, self)->f_get_IsEmpty(self);
+    }
+    static COPLT_FORCE_INLINE void GetSize(::Coplt::IAtlasAllocator* self, ::Coplt::i32* p0, ::Coplt::i32* p1) noexcept
+    {
+        COPLT_COM_PVTB(IAtlasAllocator, self)->f_GetSize(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE bool Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept
+    {
+        return COPLT_COM_PVTB(IAtlasAllocator, self)->f_Allocate(self, p0, p1, p2, p3);
+    }
+    static COPLT_FORCE_INLINE void Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept
+    {
+        COPLT_COM_PVTB(IAtlasAllocator, self)->f_Deallocate(self, p0);
+    }
+    static COPLT_FORCE_INLINE void GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept
+    {
+        COPLT_COM_PVTB(IAtlasAllocator, self)->f_GetRect(self, p0, p1);
+    }
+};
 
 template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFont>
@@ -1772,6 +2018,435 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
 };
 
 template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::IPath>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    void (*const COPLT_CDECL f_CalcAABB)(::Coplt::IPath*, ::Coplt::AABB2DF* out_aabb) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IPath
+{
+    void COPLT_CDECL CalcAABB(::Coplt::IPath* self, ::Coplt::AABB2DF* p0) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::IPath>
+{
+    using VirtualTable = VirtualTable<::Coplt::IPath>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("dac7a459-b942-4a96-b7d6-ee5c74eca806");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::IPath>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IPath*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_CalcAABB = VirtualImpl_Coplt_IPath::CalcAABB,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual void Impl_CalcAABB(::Coplt::AABB2DF* out_aabb) = 0;
+    };
+
+    template <std::derived_from<::Coplt::IPath> Base = ::Coplt::IPath>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+    template <class Impl>
+    struct VirtualImpl
+    {
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+
+        static void COPLT_CDECL f_CalcAABB(::Coplt::IPath* self, ::Coplt::AABB2DF* p0) noexcept
+        {
+            AsImpl(self)->Impl_CalcAABB(p0);
+        }
+    };
+
+    template<class Impl>
+    constexpr static VirtualTable s_vtb
+    {
+        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .f_CalcAABB = VirtualImpl<Impl>::f_CalcAABB,
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IPath
+{
+
+    inline void COPLT_CDECL CalcAABB(::Coplt::IPath* self, ::Coplt::AABB2DF* p0) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPath, CalcAABB, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPath>(self)->Impl_CalcAABB(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPath, CalcAABB, void)
+        #endif
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_IPath\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::IPath;\
+\
+    explicit IPath(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::IPath>
+{
+    static COPLT_FORCE_INLINE void CalcAABB(::Coplt::IPath* self, ::Coplt::AABB2DF* p0) noexcept
+    {
+        COPLT_COM_PVTB(IPath, self)->f_CalcAABB(self, p0);
+    }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::IPathBuilder>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    ::Coplt::i32 (*const COPLT_CDECL f_Build)(::Coplt::IPathBuilder*, IPath** path) noexcept;
+    void (*const COPLT_CDECL f_Reserve)(::Coplt::IPathBuilder*, ::Coplt::i32 Endpoints, ::Coplt::i32 CtrlPoints) noexcept;
+    void (*const COPLT_CDECL f_Batch)(::Coplt::IPathBuilder*, ::Coplt::PathBuilderCmd const* cmds, ::Coplt::i32 num_cmds) noexcept;
+    void (*const COPLT_CDECL f_Close)(::Coplt::IPathBuilder*) noexcept;
+    void (*const COPLT_CDECL f_MoveTo)(::Coplt::IPathBuilder*, ::Coplt::f32 x, ::Coplt::f32 y) noexcept;
+    void (*const COPLT_CDECL f_LineTo)(::Coplt::IPathBuilder*, ::Coplt::f32 x, ::Coplt::f32 y) noexcept;
+    void (*const COPLT_CDECL f_QuadraticBezierTo)(::Coplt::IPathBuilder*, ::Coplt::f32 ctrl_x, ::Coplt::f32 ctrl_y, ::Coplt::f32 to_x, ::Coplt::f32 to_y) noexcept;
+    void (*const COPLT_CDECL f_CubicBezierTo)(::Coplt::IPathBuilder*, ::Coplt::f32 ctrl0_x, ::Coplt::f32 ctrl0_y, ::Coplt::f32 ctrl1_x, ::Coplt::f32 ctrl1_y, ::Coplt::f32 to_x, ::Coplt::f32 to_y) noexcept;
+    void (*const COPLT_CDECL f_Arc)(::Coplt::IPathBuilder*, ::Coplt::f32 center_x, ::Coplt::f32 center_y, ::Coplt::f32 radii_x, ::Coplt::f32 radii_y, ::Coplt::f32 sweep_angle, ::Coplt::f32 x_rotation) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IPathBuilder
+{
+    ::Coplt::i32 COPLT_CDECL Build(::Coplt::IPathBuilder* self, IPath** p0) noexcept;
+    void COPLT_CDECL Reserve(::Coplt::IPathBuilder* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept;
+    void COPLT_CDECL Batch(::Coplt::IPathBuilder* self, ::Coplt::PathBuilderCmd const* p0, ::Coplt::i32 p1) noexcept;
+    void COPLT_CDECL Close(::Coplt::IPathBuilder* self) noexcept;
+    void COPLT_CDECL MoveTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept;
+    void COPLT_CDECL LineTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept;
+    void COPLT_CDECL QuadraticBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3) noexcept;
+    void COPLT_CDECL CubicBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept;
+    void COPLT_CDECL Arc(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::IPathBuilder>
+{
+    using VirtualTable = VirtualTable<::Coplt::IPathBuilder>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("ee1c5b1d-b22d-446a-9eef-128cec82e6c0");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::IPathBuilder>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::IPathBuilder*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_Build = VirtualImpl_Coplt_IPathBuilder::Build,
+            .f_Reserve = VirtualImpl_Coplt_IPathBuilder::Reserve,
+            .f_Batch = VirtualImpl_Coplt_IPathBuilder::Batch,
+            .f_Close = VirtualImpl_Coplt_IPathBuilder::Close,
+            .f_MoveTo = VirtualImpl_Coplt_IPathBuilder::MoveTo,
+            .f_LineTo = VirtualImpl_Coplt_IPathBuilder::LineTo,
+            .f_QuadraticBezierTo = VirtualImpl_Coplt_IPathBuilder::QuadraticBezierTo,
+            .f_CubicBezierTo = VirtualImpl_Coplt_IPathBuilder::CubicBezierTo,
+            .f_Arc = VirtualImpl_Coplt_IPathBuilder::Arc,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual ::Coplt::HResult Impl_Build(IPath** path) = 0;
+        virtual void Impl_Reserve(::Coplt::i32 Endpoints, ::Coplt::i32 CtrlPoints) = 0;
+        virtual void Impl_Batch(::Coplt::PathBuilderCmd const* cmds, ::Coplt::i32 num_cmds) = 0;
+        virtual void Impl_Close() = 0;
+        virtual void Impl_MoveTo(::Coplt::f32 x, ::Coplt::f32 y) = 0;
+        virtual void Impl_LineTo(::Coplt::f32 x, ::Coplt::f32 y) = 0;
+        virtual void Impl_QuadraticBezierTo(::Coplt::f32 ctrl_x, ::Coplt::f32 ctrl_y, ::Coplt::f32 to_x, ::Coplt::f32 to_y) = 0;
+        virtual void Impl_CubicBezierTo(::Coplt::f32 ctrl0_x, ::Coplt::f32 ctrl0_y, ::Coplt::f32 ctrl1_x, ::Coplt::f32 ctrl1_y, ::Coplt::f32 to_x, ::Coplt::f32 to_y) = 0;
+        virtual void Impl_Arc(::Coplt::f32 center_x, ::Coplt::f32 center_y, ::Coplt::f32 radii_x, ::Coplt::f32 radii_y, ::Coplt::f32 sweep_angle, ::Coplt::f32 x_rotation) = 0;
+    };
+
+    template <std::derived_from<::Coplt::IPathBuilder> Base = ::Coplt::IPathBuilder>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+    template <class Impl>
+    struct VirtualImpl
+    {
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+
+        static ::Coplt::i32 COPLT_CDECL f_Build(::Coplt::IPathBuilder* self, IPath** p0) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Build(p0));
+        }
+
+        static void COPLT_CDECL f_Reserve(::Coplt::IPathBuilder* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+        {
+            AsImpl(self)->Impl_Reserve(p0, p1);
+        }
+
+        static void COPLT_CDECL f_Batch(::Coplt::IPathBuilder* self, ::Coplt::PathBuilderCmd const* p0, ::Coplt::i32 p1) noexcept
+        {
+            AsImpl(self)->Impl_Batch(p0, p1);
+        }
+
+        static void COPLT_CDECL f_Close(::Coplt::IPathBuilder* self) noexcept
+        {
+            AsImpl(self)->Impl_Close();
+        }
+
+        static void COPLT_CDECL f_MoveTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept
+        {
+            AsImpl(self)->Impl_MoveTo(p0, p1);
+        }
+
+        static void COPLT_CDECL f_LineTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept
+        {
+            AsImpl(self)->Impl_LineTo(p0, p1);
+        }
+
+        static void COPLT_CDECL f_QuadraticBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3) noexcept
+        {
+            AsImpl(self)->Impl_QuadraticBezierTo(p0, p1, p2, p3);
+        }
+
+        static void COPLT_CDECL f_CubicBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept
+        {
+            AsImpl(self)->Impl_CubicBezierTo(p0, p1, p2, p3, p4, p5);
+        }
+
+        static void COPLT_CDECL f_Arc(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept
+        {
+            AsImpl(self)->Impl_Arc(p0, p1, p2, p3, p4, p5);
+        }
+    };
+
+    template<class Impl>
+    constexpr static VirtualTable s_vtb
+    {
+        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .f_Build = VirtualImpl<Impl>::f_Build,
+        .f_Reserve = VirtualImpl<Impl>::f_Reserve,
+        .f_Batch = VirtualImpl<Impl>::f_Batch,
+        .f_Close = VirtualImpl<Impl>::f_Close,
+        .f_MoveTo = VirtualImpl<Impl>::f_MoveTo,
+        .f_LineTo = VirtualImpl<Impl>::f_LineTo,
+        .f_QuadraticBezierTo = VirtualImpl<Impl>::f_QuadraticBezierTo,
+        .f_CubicBezierTo = VirtualImpl<Impl>::f_CubicBezierTo,
+        .f_Arc = VirtualImpl<Impl>::f_Arc,
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_IPathBuilder
+{
+
+    inline ::Coplt::i32 COPLT_CDECL Build(::Coplt::IPathBuilder* self, IPath** p0) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, Build, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_Build(p0));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, Build, ::Coplt::i32)
+        #endif
+        return r;
+    }
+
+    inline void COPLT_CDECL Reserve(::Coplt::IPathBuilder* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, Reserve, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_Reserve(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, Reserve, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL Batch(::Coplt::IPathBuilder* self, ::Coplt::PathBuilderCmd const* p0, ::Coplt::i32 p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, Batch, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_Batch(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, Batch, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL Close(::Coplt::IPathBuilder* self) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, Close, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_Close();
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, Close, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL MoveTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, MoveTo, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_MoveTo(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, MoveTo, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL LineTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, LineTo, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_LineTo(p0, p1);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, LineTo, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL QuadraticBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, QuadraticBezierTo, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_QuadraticBezierTo(p0, p1, p2, p3);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, QuadraticBezierTo, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL CubicBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, CubicBezierTo, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_CubicBezierTo(p0, p1, p2, p3, p4, p5);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, CubicBezierTo, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL Arc(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IPathBuilder, Arc, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IPathBuilder>(self)->Impl_Arc(p0, p1, p2, p3, p4, p5);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IPathBuilder, Arc, void)
+        #endif
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_IPathBuilder\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::IPathBuilder;\
+\
+    explicit IPathBuilder(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::IPathBuilder>
+{
+    static COPLT_FORCE_INLINE ::Coplt::HResult Build(::Coplt::IPathBuilder* self, IPath** p0) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IPathBuilder, self)->f_Build(self, p0));
+    }
+    static COPLT_FORCE_INLINE void Reserve(::Coplt::IPathBuilder* self, ::Coplt::i32 p0, ::Coplt::i32 p1) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_Reserve(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void Batch(::Coplt::IPathBuilder* self, ::Coplt::PathBuilderCmd const* p0, ::Coplt::i32 p1) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_Batch(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void Close(::Coplt::IPathBuilder* self) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_Close(self);
+    }
+    static COPLT_FORCE_INLINE void MoveTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_MoveTo(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void LineTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_LineTo(self, p0, p1);
+    }
+    static COPLT_FORCE_INLINE void QuadraticBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_QuadraticBezierTo(self, p0, p1, p2, p3);
+    }
+    static COPLT_FORCE_INLINE void CubicBezierTo(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_CubicBezierTo(self, p0, p1, p2, p3, p4, p5);
+    }
+    static COPLT_FORCE_INLINE void Arc(::Coplt::IPathBuilder* self, ::Coplt::f32 p0, ::Coplt::f32 p1, ::Coplt::f32 p2, ::Coplt::f32 p3, ::Coplt::f32 p4, ::Coplt::f32 p5) noexcept
+    {
+        COPLT_COM_PVTB(IPathBuilder, self)->f_Arc(self, p0, p1, p2, p3, p4, p5);
+    }
+};
+
+template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IStub>
 {
     VirtualTable<::Coplt::IUnknown> b;
@@ -1878,6 +2553,144 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IStub>
     static COPLT_FORCE_INLINE void Some(::Coplt::IStub* self, ::Coplt::NodeType p0, ::Coplt::RootData* p1, ::Coplt::NString* p2) noexcept
     {
         COPLT_COM_PVTB(IStub, self)->f_Some(self, p0, p1, p2);
+    }
+};
+
+template <>
+struct ::Coplt::Internal::VirtualTable<::Coplt::ITessellator>
+{
+    VirtualTable<::Coplt::IUnknown> b;
+    ::Coplt::i32 (*const COPLT_CDECL f_Fill)(::Coplt::ITessellator*, IPath* path, ::Coplt::TessFillOptions* options) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_Stroke)(::Coplt::ITessellator*, IPath* path, ::Coplt::TessStrokeOptions* options) noexcept;
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ITessellator
+{
+    ::Coplt::i32 COPLT_CDECL Fill(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessFillOptions* p1) noexcept;
+    ::Coplt::i32 COPLT_CDECL Stroke(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessStrokeOptions* p1) noexcept;
+}
+
+template <>
+struct ::Coplt::Internal::ComProxy<::Coplt::ITessellator>
+{
+    using VirtualTable = VirtualTable<::Coplt::ITessellator>;
+
+    static COPLT_FORCE_INLINE constexpr inline const ::Coplt::Guid& get_Guid()
+    {
+        static ::Coplt::Guid s_guid("acf5d52e-a656-4c00-a528-09aa4d86b2b2");
+        return s_guid;
+    }
+
+    template <class Self>
+    COPLT_FORCE_INLINE
+    static HResult QueryInterface(const Self* self, const ::Coplt::Guid& guid, COPLT_OUT void*& object)
+    {
+        if (guid == guid_of<::Coplt::ITessellator>())
+        {
+            object = const_cast<void*>(static_cast<const void*>(static_cast<const ::Coplt::ITessellator*>(self)));
+            self->AddRef();
+            return ::Coplt::HResultE::Ok;
+        }
+        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+    }
+
+    COPLT_FORCE_INLINE
+    static const VirtualTable& GetVtb()
+    {
+        static VirtualTable vtb
+        {
+            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .f_Fill = VirtualImpl_Coplt_ITessellator::Fill,
+            .f_Stroke = VirtualImpl_Coplt_ITessellator::Stroke,
+        };
+        return vtb;
+    };
+
+    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    {
+
+        virtual ::Coplt::HResult Impl_Fill(IPath* path, ::Coplt::TessFillOptions* options) = 0;
+        virtual ::Coplt::HResult Impl_Stroke(IPath* path, ::Coplt::TessStrokeOptions* options) = 0;
+    };
+
+    template <std::derived_from<::Coplt::ITessellator> Base = ::Coplt::ITessellator>
+    struct Proxy : Impl, Base
+    {
+        explicit Proxy(const ::Coplt::Internal::VirtualTable<Base>* vtb) : Base(vtb) {}
+
+        explicit Proxy() : Base(&GetVtb()) {}
+    };
+    template <class Impl>
+    struct VirtualImpl
+    {
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(const Interface* self) { return static_cast<const Impl*>(self); }
+        template <class Interface>
+        COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
+
+        static ::Coplt::i32 COPLT_CDECL f_Fill(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessFillOptions* p1) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Fill(p0, p1));
+        }
+
+        static ::Coplt::i32 COPLT_CDECL f_Stroke(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessStrokeOptions* p1) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Stroke(p0, p1));
+        }
+    };
+
+    template<class Impl>
+    constexpr static VirtualTable s_vtb
+    {
+        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .f_Fill = VirtualImpl<Impl>::f_Fill,
+        .f_Stroke = VirtualImpl<Impl>::f_Stroke,
+    };
+};
+namespace Coplt::Internal::VirtualImpl_Coplt_ITessellator
+{
+
+    inline ::Coplt::i32 COPLT_CDECL Fill(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessFillOptions* p1) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ITessellator, Fill, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ITessellator>(self)->Impl_Fill(p0, p1));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ITessellator, Fill, ::Coplt::i32)
+        #endif
+        return r;
+    }
+
+    inline ::Coplt::i32 COPLT_CDECL Stroke(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessStrokeOptions* p1) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ITessellator, Stroke, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ITessellator>(self)->Impl_Stroke(p0, p1));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ITessellator, Stroke, ::Coplt::i32)
+        #endif
+        return r;
+    }
+}
+#define COPLT_COM_INTERFACE_BODY_Coplt_ITessellator\
+    using Super = ::Coplt::IUnknown;\
+    using Self = ::Coplt::ITessellator;\
+\
+    explicit ITessellator(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}
+
+template <>
+struct ::Coplt::Internal::CallComMethod<::Coplt::ITessellator>
+{
+    static COPLT_FORCE_INLINE ::Coplt::HResult Fill(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessFillOptions* p1) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ITessellator, self)->f_Fill(self, p0, p1));
+    }
+    static COPLT_FORCE_INLINE ::Coplt::HResult Stroke(::Coplt::ITessellator* self, IPath* p0, ::Coplt::TessStrokeOptions* p1) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ITessellator, self)->f_Stroke(self, p0, p1));
     }
 };
 

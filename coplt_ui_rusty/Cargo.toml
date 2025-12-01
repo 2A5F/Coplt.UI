@@ -10,4 +10,5 @@ crate-type = ["staticlib"]
 cocom = {workspace = true}
 concat-idents = {workspace = true}
 dashmap = {workspace = true}
+etagere = {workspace = true}
 taffy = {workspace = true}

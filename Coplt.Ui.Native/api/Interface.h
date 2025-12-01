@@ -8,6 +8,18 @@
 
 namespace Coplt {
 
+    COPLT_COM_INTERFACE(IAtlasAllocator, "32b30623-411e-4fd5-a009-ae7e9ed88e78", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IAtlasAllocator
+
+        COPLT_COM_METHOD(Clear, void, ());
+        COPLT_COM_METHOD(get_IsEmpty, bool, ());
+        COPLT_COM_METHOD(GetSize, void, (::Coplt::i32* out_width, ::Coplt::i32* out_height), out_width, out_height);
+        COPLT_COM_METHOD(Allocate, bool, (::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2D* out_rect), width, height, out_id, out_rect);
+        COPLT_COM_METHOD(Deallocate, void, (::Coplt::u32 id), id);
+        COPLT_COM_METHOD(GetRect, void, (::Coplt::u32 id, ::Coplt::AABB2D* out_rect), id, out_rect);
+    };
+
     COPLT_COM_INTERFACE(IFont, "09c443bc-9736-4aac-8117-6890555005ff", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFont
@@ -98,11 +110,41 @@ namespace Coplt {
         COPLT_COM_METHOD(SplitTexts, ::Coplt::HResult, (::Coplt::NativeList<::Coplt::TextRange>* ranges, ::Coplt::char16 const* chars, ::Coplt::i32 len), ranges, chars, len);
     };
 
+    COPLT_COM_INTERFACE(IPath, "dac7a459-b942-4a96-b7d6-ee5c74eca806", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IPath
+
+        COPLT_COM_METHOD(CalcAABB, void, (::Coplt::AABB2DF* out_aabb), out_aabb);
+    };
+
+    COPLT_COM_INTERFACE(IPathBuilder, "ee1c5b1d-b22d-446a-9eef-128cec82e6c0", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IPathBuilder
+
+        COPLT_COM_METHOD(Build, ::Coplt::HResult, (IPath** path), path);
+        COPLT_COM_METHOD(Reserve, void, (::Coplt::i32 Endpoints, ::Coplt::i32 CtrlPoints), Endpoints, CtrlPoints);
+        COPLT_COM_METHOD(Batch, void, (::Coplt::PathBuilderCmd const* cmds, ::Coplt::i32 num_cmds), cmds, num_cmds);
+        COPLT_COM_METHOD(Close, void, ());
+        COPLT_COM_METHOD(MoveTo, void, (::Coplt::f32 x, ::Coplt::f32 y), x, y);
+        COPLT_COM_METHOD(LineTo, void, (::Coplt::f32 x, ::Coplt::f32 y), x, y);
+        COPLT_COM_METHOD(QuadraticBezierTo, void, (::Coplt::f32 ctrl_x, ::Coplt::f32 ctrl_y, ::Coplt::f32 to_x, ::Coplt::f32 to_y), ctrl_x, ctrl_y, to_x, to_y);
+        COPLT_COM_METHOD(CubicBezierTo, void, (::Coplt::f32 ctrl0_x, ::Coplt::f32 ctrl0_y, ::Coplt::f32 ctrl1_x, ::Coplt::f32 ctrl1_y, ::Coplt::f32 to_x, ::Coplt::f32 to_y), ctrl0_x, ctrl0_y, ctrl1_x, ctrl1_y, to_x, to_y);
+        COPLT_COM_METHOD(Arc, void, (::Coplt::f32 center_x, ::Coplt::f32 center_y, ::Coplt::f32 radii_x, ::Coplt::f32 radii_y, ::Coplt::f32 sweep_angle, ::Coplt::f32 x_rotation), center_x, center_y, radii_x, radii_y, sweep_angle, x_rotation);
+    };
+
     COPLT_COM_INTERFACE(IStub, "a998ec87-868d-4320-a30a-638c291f5562", ::Coplt::IUnknown)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IStub
 
         COPLT_COM_METHOD(Some, void, (::Coplt::NodeType a, ::Coplt::RootData* b, ::Coplt::NString* c), a, b, c);
+    };
+
+    COPLT_COM_INTERFACE(ITessellator, "acf5d52e-a656-4c00-a528-09aa4d86b2b2", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_ITessellator
+
+        COPLT_COM_METHOD(Fill, ::Coplt::HResult, (IPath* path, ::Coplt::TessFillOptions* options), path, options);
+        COPLT_COM_METHOD(Stroke, ::Coplt::HResult, (IPath* path, ::Coplt::TessStrokeOptions* options), path, options);
     };
 
     COPLT_COM_INTERFACE(ITextData, "bd0c7402-1de8-4547-860d-c78fd70ff203", ::Coplt::IUnknown)

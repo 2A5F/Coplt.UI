@@ -10,6 +10,48 @@ pub enum StrKind {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum FillRule {
+    EvenOdd = 0,
+    NonZero = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LineCap {
+    Butt = 0,
+    Square = 1,
+    Round = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LineJoin {
+    Miter = 0,
+    MiterClip = 1,
+    Round = 2,
+    Bevel = 3,
+}
+
+#[repr(u32)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum PathBuilderCmdType {
+    Close = 0,
+    MoveTo = 1,
+    LineTo = 2,
+    QuadraticBezierTo = 3,
+    CubicBezierTo = 4,
+    Arc = 5,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum Orientation {
+    Horizontal = 0,
+    Vertical = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum AlignType {
     None = 0,
     Start = 1,
@@ -634,6 +676,96 @@ pub struct NativeList<T0 /* T */> {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct AABB2D {
+    pub MinX: u32,
+    pub MinY: u32,
+    pub MaxX: u32,
+    pub MaxY: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct AABB2DF {
+    pub MinX: f32,
+    pub MinY: f32,
+    pub MaxX: f32,
+    pub MaxY: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub union PathBuilderCmd {
+    pub Type: PathBuilderCmdType,
+    pub XTo: PathBuilderCmdXToPoint,
+    pub QuadraticBezierTo: PathBuilderCmdQuadraticBezierTo,
+    pub CubicBezierTo: PathBuilderCmdCubicBezierTo,
+    pub Arc: PathBuilderCmdArc,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct PathBuilderCmdArc {
+    pub Type: PathBuilderCmdType,
+    pub CenterX: f32,
+    pub CenterY: f32,
+    pub RadiiX: f32,
+    pub RadiiY: f32,
+    pub SweepAngle: f32,
+    pub XRotation: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct PathBuilderCmdCubicBezierTo {
+    pub Type: PathBuilderCmdType,
+    pub Ctrl0X: f32,
+    pub Ctrl0Y: f32,
+    pub Ctrl1X: f32,
+    pub Ctrl1Y: f32,
+    pub ToX: f32,
+    pub ToY: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct PathBuilderCmdQuadraticBezierTo {
+    pub Type: PathBuilderCmdType,
+    pub CtrlX: f32,
+    pub CtrlY: f32,
+    pub ToX: f32,
+    pub ToY: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct PathBuilderCmdXToPoint {
+    pub Type: PathBuilderCmdType,
+    pub X: f32,
+    pub Y: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TessFillOptions {
+    pub ToLerance: f32,
+    pub FillRule: FillRule,
+    pub SweepOrientation: Orientation,
+    pub HandleIntersections: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TessStrokeOptions {
+    pub ToLerance: f32,
+    pub LineWidth: f32,
+    pub MiterLimit: f32,
+    pub StartCap: LineCap,
+    pub EndCap: LineCap,
+    pub LineJoin: LineJoin,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridName {
     pub Id: i32,
     pub Type: GridNameType,
@@ -1085,6 +1217,13 @@ pub struct NodeId {
 }
 
 #[repr(C)]
+pub struct IAtlasAllocator {
+}
+
+impl IAtlasAllocator {
+}
+
+#[repr(C)]
 pub struct IFont {
 }
 
@@ -1148,10 +1287,31 @@ impl ILib {
 }
 
 #[repr(C)]
+pub struct IPath {
+}
+
+impl IPath {
+}
+
+#[repr(C)]
+pub struct IPathBuilder {
+}
+
+impl IPathBuilder {
+}
+
+#[repr(C)]
 pub struct IStub {
 }
 
 impl IStub {
+}
+
+#[repr(C)]
+pub struct ITessellator {
+}
+
+impl ITessellator {
 }
 
 #[repr(C)]

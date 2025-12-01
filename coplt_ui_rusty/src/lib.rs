@@ -61,6 +61,7 @@ mod coplt_alloc {
 
 use coplt_alloc::*;
 
+mod atlas;
 mod col;
 mod com;
 mod layout;
