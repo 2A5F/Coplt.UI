@@ -13,6 +13,3 @@
 [submodule "ThirdParty/corrosion"]
 	path = ThirdParty/corrosion
 	url = https://github.com/corrosion-rs/corrosion
-[submodule "harfbuzz"]
-	path = harfbuzz
-	url = https://github.com/coplt/harfbuzz

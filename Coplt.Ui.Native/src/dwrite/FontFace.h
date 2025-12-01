@@ -2,7 +2,6 @@
 
 #include <dwrite_3.h>
 #include "../Com.h"
-#include "../Harfpp.h"
 
 namespace Coplt
 {
@@ -10,7 +9,6 @@ namespace Coplt
     {
         u64 m_id{};
         Rc<IDWriteFontFace5> m_face{};
-        Harf::HFace m_hb_face{};
         NFontInfo m_info{};
 
         explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face, u64 id);

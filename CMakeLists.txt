@@ -19,13 +19,6 @@ add_definitions(-Wno-everything)
 add_subdirectory(ThirdParty/emhash)
 add_subdirectory(ThirdParty/corrosion)
 
-set(HB_BUILD_SUBSET OFF)
-if (WIN32)
-    set(HB_HAVE_DIRECTWRITE ON)
-endif ()
-add_subdirectory(harfbuzz)
-target_compile_options(harfbuzz PRIVATE -w)
-
 add_subdirectory(Coplt.Com2)
 add_subdirectory(Coplt.Ui.Native)
 

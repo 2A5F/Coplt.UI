@@ -18,7 +18,6 @@ DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face, const u64 id)
 
 void DWriteFontFace::Init()
 {
-    m_hb_face = Harf::HFace(m_face.get());
     InitInfo();
 }
 

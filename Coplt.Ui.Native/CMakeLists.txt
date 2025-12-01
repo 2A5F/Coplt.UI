@@ -30,7 +30,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
         cpptrace::cpptrace
         mimalloc-static
         fmt::fmt-header-only
-        harfbuzz
 )
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE icuuc.lib)

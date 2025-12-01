@@ -104,7 +104,6 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
 {
     m_node = node;
     m_layout = layout;
-    m_hb_font_cache.Clear();
     m_paragraph_datas.resize(m_paragraphs.size(), ParagraphData(this));
     for (int i = 0; i < m_paragraphs.size(); ++i)
     {
