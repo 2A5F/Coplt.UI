@@ -4,6 +4,126 @@
 
 use cocom::{Guid, Interface, IUnknown, IWeak};
 
+#[cocom::interface("32b30623-411e-4fd5-a009-ae7e9ed88e78")]
+pub trait IAtlasAllocator : IUnknown {
+    fn Clear(&mut self) -> ();
+    fn get_IsEmpty(&mut self) -> bool;
+    fn GetSize(&mut self, out_width: *mut i32, out_height: *mut i32) -> ();
+    fn Allocate(&mut self, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2D) -> bool;
+    fn Deallocate(&mut self, id: u32) -> ();
+    fn GetRect(&mut self, id: u32, out_rect: *mut AABB2D) -> ();
+}
+
+#[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
+pub trait IFont : IUnknown {
+    fn get_Info(&self) -> *const NFontInfo;
+    fn CreateFace(&self, /* out */ face: *mut *mut IFontFace, manager: *mut IFontManager) -> ::cocom::HResult;
+}
+
+#[cocom::interface("e56d9271-e6fd-4def-b03a-570380e0d560")]
+pub trait IFontCollection : IUnknown {
+    fn GetFamilies(&self, /* out */ count: *mut u32) -> *const *mut IFontFamily;
+    fn ClearNativeFamiliesCache(&mut self) -> ();
+    fn FindDefaultFamily(&mut self) -> u32;
+}
+
+#[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
+pub trait IFontFace : IUnknown {
+    fn get_Id(&self) -> u64;
+    fn get_Info(&self) -> *const NFontInfo;
+    fn Equals(&self, other: *mut IFontFace) -> bool;
+    fn HashCode(&self) -> i32;
+    fn GetFamilyNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> ::cocom::HResult;
+    fn GetFaceNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> ::cocom::HResult;
+}
+
+#[cocom::interface("b0dbb428-eca1-4784-b27f-629bddf93ea4")]
+pub trait IFontFallback : IUnknown {
+}
+
+#[cocom::interface("9b4e9893-0ea4-456b-bf54-9563db70eff0")]
+pub trait IFontFallbackBuilder : IUnknown {
+    fn Build(&mut self, ff: *mut *mut IFontFallback) -> ::cocom::HResult;
+    fn Add(&mut self, name: *const u16, length: i32, exists: *mut bool) -> ::cocom::HResult;
+    fn AddLocaled(&mut self, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> ::cocom::HResult;
+}
+
+#[cocom::interface("f8009d34-9417-4b87-b23b-b7885d27aeab")]
+pub trait IFontFamily : IUnknown {
+    fn GetLocalNames(&self, /* out */ length: *mut u32) -> *const Str16;
+    fn GetNames(&self, /* out */ length: *mut u32) -> *const FontFamilyNameInfo;
+    fn ClearNativeNamesCache(&mut self) -> ();
+    fn GetFonts(&mut self, /* out */ length: *mut u32, /* out */ pair: *mut *const NFontPair) -> ::cocom::HResult;
+    fn ClearNativeFontsCache(&mut self) -> ();
+}
+
+#[cocom::interface("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
+pub trait IFontManager : IUnknown {
+    fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64;
+    fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
+    fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
+    fn SetExpireTime(&mut self, TimeTicks: u64) -> ();
+    fn GetCurrentFrame(&self) -> u64;
+    fn Update(&mut self, CurrentTime: u64) -> ();
+    fn FontFaceToId(&mut self, Face: *mut IFontFace) -> u64;
+    fn IdToFontFace(&mut self, Id: u64) -> *mut IFontFace;
+}
+
+#[cocom::interface("f1e64bf0-ffb9-42ce-be78-31871d247883")]
+pub trait ILayout : IUnknown {
+    fn Calc(&mut self, ctx: *mut NLayoutContext) -> ::cocom::HResult;
+}
+
+#[cocom::interface("778be1fe-18f2-4aa5-8d1f-52d83b132cff")]
+pub trait ILib : IUnknown {
+    fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> ();
+    fn ClearLogger(&mut self) -> ();
+    fn GetCurrentErrorMessage(&mut self) -> Str8;
+    fn CreateFontManager(&mut self, fm: *mut *mut IFontManager) -> ::cocom::HResult;
+    fn GetSystemFontCollection(&mut self, fc: *mut *mut IFontCollection) -> ::cocom::HResult;
+    fn GetSystemFontFallback(&mut self, ff: *mut *mut IFontFallback) -> ::cocom::HResult;
+    fn CreateFontFallbackBuilder(&mut self, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> ::cocom::HResult;
+    fn CreateLayout(&mut self, layout: *mut *mut ILayout) -> ::cocom::HResult;
+    fn SplitTexts(&mut self, ranges: *mut NativeList<TextRange>, chars: *const u16, len: i32) -> ::cocom::HResult;
+}
+
+#[cocom::interface("dac7a459-b942-4a96-b7d6-ee5c74eca806")]
+pub trait IPath : IUnknown {
+    fn CalcAABB(&mut self, out_aabb: *mut AABB2DF) -> ();
+}
+
+#[cocom::interface("ee1c5b1d-b22d-446a-9eef-128cec82e6c0")]
+pub trait IPathBuilder : IUnknown {
+    fn Build(&mut self, path: *mut *mut IPath) -> ::cocom::HResult;
+    fn Reserve(&mut self, Endpoints: i32, CtrlPoints: i32) -> ();
+    fn Batch(&mut self, cmds: *const PathBuilderCmd, num_cmds: i32) -> ();
+    fn Close(&mut self) -> ();
+    fn MoveTo(&mut self, x: f32, y: f32) -> ();
+    fn LineTo(&mut self, x: f32, y: f32) -> ();
+    fn QuadraticBezierTo(&mut self, ctrl_x: f32, ctrl_y: f32, to_x: f32, to_y: f32) -> ();
+    fn CubicBezierTo(&mut self, ctrl0_x: f32, ctrl0_y: f32, ctrl1_x: f32, ctrl1_y: f32, to_x: f32, to_y: f32) -> ();
+    fn Arc(&mut self, center_x: f32, center_y: f32, radii_x: f32, radii_y: f32, sweep_angle: f32, x_rotation: f32) -> ();
+}
+
+#[cocom::interface("a998ec87-868d-4320-a30a-638c291f5562")]
+pub trait IStub : IUnknown {
+    fn Some(&mut self, a: NodeType, b: *mut RootData, c: *mut NString) -> ();
+}
+
+#[cocom::interface("acf5d52e-a656-4c00-a528-09aa4d86b2b2")]
+pub trait ITessellator : IUnknown {
+    fn Fill(&mut self, path: *mut IPath, options: *mut TessFillOptions) -> ::cocom::HResult;
+    fn Stroke(&mut self, path: *mut IPath, options: *mut TessStrokeOptions) -> ::cocom::HResult;
+}
+
+#[cocom::interface("bd0c7402-1de8-4547-860d-c78fd70ff203")]
+pub trait ITextData : IUnknown {
+}
+
+#[cocom::interface("f558ba07-1f1d-4c32-8229-134271b17083")]
+pub trait ITextLayout : IUnknown {
+}
+
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum StrKind {
@@ -842,7 +962,7 @@ pub struct CWStr {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIMap {
     pub m_buckets: *mut i32,
-    pub m_entries: *mut (),
+    pub m_entries: *mut core::ffi::c_void,
     pub m_fast_mode_multiplier: u64,
     pub m_cap: i32,
     pub m_count: i32,
@@ -854,7 +974,7 @@ pub struct FFIMap {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FFIOrderedSet {
     pub m_buckets: *mut i32,
-    pub m_nodes: *mut (),
+    pub m_nodes: *mut core::ffi::c_void,
     pub m_fast_mode_multiplier: u64,
     pub m_cap: i32,
     pub m_first: i32,
@@ -1013,7 +1133,7 @@ pub struct NNodeIdCtrl {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NString {
     pub m_str: *const u16,
-    pub m_handle: *mut (),
+    pub m_handle: *mut core::ffi::c_void,
     pub m_len: i32,
 }
 
@@ -1223,7 +1343,6 @@ pub mod details {
     use cocom::details::*;
     use super::*;
 
-
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IAtlasAllocator {
@@ -1265,8 +1384,8 @@ pub mod details {
         pub f_get_Info: unsafe extern "C" fn(this: *const IFontFace) -> *const NFontInfo,
         pub f_Equals: unsafe extern "C" fn(this: *const IFontFace, other: *mut IFontFace) -> bool,
         pub f_HashCode: unsafe extern "C" fn(this: *const IFontFace) -> i32,
-        pub f_GetFamilyNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut (), add: unsafe extern "C" fn(*mut (), *mut u16, i32, *mut u16, i32) -> ()) -> ::cocom::HResult,
-        pub f_GetFaceNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut (), add: unsafe extern "C" fn(*mut (), *mut u16, i32, *mut u16, i32) -> ()) -> ::cocom::HResult,
+        pub f_GetFamilyNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> ::cocom::HResult,
+        pub f_GetFaceNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> ::cocom::HResult,
     }
 
     #[repr(C)]
@@ -1303,7 +1422,7 @@ pub mod details {
     pub struct VitualTable_IFontManager {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_SetAssocUpdate: unsafe extern "C" fn(this: *mut IFontManager, Data: *mut (), OnDrop: unsafe extern "C" fn(*mut ()) -> (), OnAdd: unsafe extern "C" fn(*mut (), *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut (), *mut IFontFace, u64) -> ()) -> u64,
+        pub f_SetAssocUpdate: unsafe extern "C" fn(this: *mut IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64,
         pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *mut IFontManager, AssocUpdateId: u64) -> (),
         pub f_SetExpireFrame: unsafe extern "C" fn(this: *mut IFontManager, FrameCount: u64) -> (),
         pub f_SetExpireTime: unsafe extern "C" fn(this: *mut IFontManager, TimeTicks: u64) -> (),
@@ -1326,7 +1445,7 @@ pub mod details {
     pub struct VitualTable_ILib {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_SetLogger: unsafe extern "C" fn(this: *mut ILib, obj: *mut (), logger: unsafe extern "C" fn(*mut (), LogLevel, StrKind, i32, *mut ()) -> (), is_enabled: unsafe extern "C" fn(*mut (), LogLevel) -> u8, drop: unsafe extern "C" fn(*mut ()) -> ()) -> (),
+        pub f_SetLogger: unsafe extern "C" fn(this: *mut ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> (),
         pub f_ClearLogger: unsafe extern "C" fn(this: *mut ILib) -> (),
         pub f_GetCurrentErrorMessage: unsafe extern "C" fn(this: *mut ILib) -> Str8,
         pub f_CreateFontManager: unsafe extern "C" fn(this: *mut ILib, fm: *mut *mut IFontManager) -> ::cocom::HResult,
@@ -1391,124 +1510,4 @@ pub mod details {
         b: <IUnknown as Interface>::VitualTable,
 
     }
-}
-
-#[cocom::interface("32b30623-411e-4fd5-a009-ae7e9ed88e78")]
-pub trait IAtlasAllocator : IUnknown {
-    fn Clear(&mut self) -> ();
-    fn get_IsEmpty(&mut self) -> bool;
-    fn GetSize(&mut self, out_width: *mut i32, out_height: *mut i32) -> ();
-    fn Allocate(&mut self, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2D) -> bool;
-    fn Deallocate(&mut self, id: u32) -> ();
-    fn GetRect(&mut self, id: u32, out_rect: *mut AABB2D) -> ();
-}
-
-#[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
-pub trait IFont : IUnknown {
-    fn get_Info(&self) -> *const NFontInfo;
-    fn CreateFace(&self, /* out */ face: *mut *mut IFontFace, manager: *mut IFontManager) -> ::cocom::HResult;
-}
-
-#[cocom::interface("e56d9271-e6fd-4def-b03a-570380e0d560")]
-pub trait IFontCollection : IUnknown {
-    fn GetFamilies(&self, /* out */ count: *mut u32) -> *const *mut IFontFamily;
-    fn ClearNativeFamiliesCache(&mut self) -> ();
-    fn FindDefaultFamily(&mut self) -> u32;
-}
-
-#[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
-pub trait IFontFace : IUnknown {
-    fn get_Id(&self) -> u64;
-    fn get_Info(&self) -> *const NFontInfo;
-    fn Equals(&self, other: *mut IFontFace) -> bool;
-    fn HashCode(&self) -> i32;
-    fn GetFamilyNames(&self, ctx: *mut (), add: unsafe extern "C" fn(*mut (), *mut u16, i32, *mut u16, i32) -> ()) -> ::cocom::HResult;
-    fn GetFaceNames(&self, ctx: *mut (), add: unsafe extern "C" fn(*mut (), *mut u16, i32, *mut u16, i32) -> ()) -> ::cocom::HResult;
-}
-
-#[cocom::interface("b0dbb428-eca1-4784-b27f-629bddf93ea4")]
-pub trait IFontFallback : IUnknown {
-}
-
-#[cocom::interface("9b4e9893-0ea4-456b-bf54-9563db70eff0")]
-pub trait IFontFallbackBuilder : IUnknown {
-    fn Build(&mut self, ff: *mut *mut IFontFallback) -> ::cocom::HResult;
-    fn Add(&mut self, name: *const u16, length: i32, exists: *mut bool) -> ::cocom::HResult;
-    fn AddLocaled(&mut self, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> ::cocom::HResult;
-}
-
-#[cocom::interface("f8009d34-9417-4b87-b23b-b7885d27aeab")]
-pub trait IFontFamily : IUnknown {
-    fn GetLocalNames(&self, /* out */ length: *mut u32) -> *const Str16;
-    fn GetNames(&self, /* out */ length: *mut u32) -> *const FontFamilyNameInfo;
-    fn ClearNativeNamesCache(&mut self) -> ();
-    fn GetFonts(&mut self, /* out */ length: *mut u32, /* out */ pair: *mut *const NFontPair) -> ::cocom::HResult;
-    fn ClearNativeFontsCache(&mut self) -> ();
-}
-
-#[cocom::interface("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
-pub trait IFontManager : IUnknown {
-    fn SetAssocUpdate(&mut self, Data: *mut (), OnDrop: unsafe extern "C" fn(*mut ()) -> (), OnAdd: unsafe extern "C" fn(*mut (), *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut (), *mut IFontFace, u64) -> ()) -> u64;
-    fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
-    fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
-    fn SetExpireTime(&mut self, TimeTicks: u64) -> ();
-    fn GetCurrentFrame(&self) -> u64;
-    fn Update(&mut self, CurrentTime: u64) -> ();
-    fn FontFaceToId(&mut self, Face: *mut IFontFace) -> u64;
-    fn IdToFontFace(&mut self, Id: u64) -> *mut IFontFace;
-}
-
-#[cocom::interface("f1e64bf0-ffb9-42ce-be78-31871d247883")]
-pub trait ILayout : IUnknown {
-    fn Calc(&mut self, ctx: *mut NLayoutContext) -> ::cocom::HResult;
-}
-
-#[cocom::interface("778be1fe-18f2-4aa5-8d1f-52d83b132cff")]
-pub trait ILib : IUnknown {
-    fn SetLogger(&mut self, obj: *mut (), logger: unsafe extern "C" fn(*mut (), LogLevel, StrKind, i32, *mut ()) -> (), is_enabled: unsafe extern "C" fn(*mut (), LogLevel) -> u8, drop: unsafe extern "C" fn(*mut ()) -> ()) -> ();
-    fn ClearLogger(&mut self) -> ();
-    fn GetCurrentErrorMessage(&mut self) -> Str8;
-    fn CreateFontManager(&mut self, fm: *mut *mut IFontManager) -> ::cocom::HResult;
-    fn GetSystemFontCollection(&mut self, fc: *mut *mut IFontCollection) -> ::cocom::HResult;
-    fn GetSystemFontFallback(&mut self, ff: *mut *mut IFontFallback) -> ::cocom::HResult;
-    fn CreateFontFallbackBuilder(&mut self, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> ::cocom::HResult;
-    fn CreateLayout(&mut self, layout: *mut *mut ILayout) -> ::cocom::HResult;
-    fn SplitTexts(&mut self, ranges: *mut NativeList<TextRange>, chars: *const u16, len: i32) -> ::cocom::HResult;
-}
-
-#[cocom::interface("dac7a459-b942-4a96-b7d6-ee5c74eca806")]
-pub trait IPath : IUnknown {
-    fn CalcAABB(&mut self, out_aabb: *mut AABB2DF) -> ();
-}
-
-#[cocom::interface("ee1c5b1d-b22d-446a-9eef-128cec82e6c0")]
-pub trait IPathBuilder : IUnknown {
-    fn Build(&mut self, path: *mut *mut IPath) -> ::cocom::HResult;
-    fn Reserve(&mut self, Endpoints: i32, CtrlPoints: i32) -> ();
-    fn Batch(&mut self, cmds: *const PathBuilderCmd, num_cmds: i32) -> ();
-    fn Close(&mut self) -> ();
-    fn MoveTo(&mut self, x: f32, y: f32) -> ();
-    fn LineTo(&mut self, x: f32, y: f32) -> ();
-    fn QuadraticBezierTo(&mut self, ctrl_x: f32, ctrl_y: f32, to_x: f32, to_y: f32) -> ();
-    fn CubicBezierTo(&mut self, ctrl0_x: f32, ctrl0_y: f32, ctrl1_x: f32, ctrl1_y: f32, to_x: f32, to_y: f32) -> ();
-    fn Arc(&mut self, center_x: f32, center_y: f32, radii_x: f32, radii_y: f32, sweep_angle: f32, x_rotation: f32) -> ();
-}
-
-#[cocom::interface("a998ec87-868d-4320-a30a-638c291f5562")]
-pub trait IStub : IUnknown {
-    fn Some(&mut self, a: NodeType, b: *mut RootData, c: *mut NString) -> ();
-}
-
-#[cocom::interface("acf5d52e-a656-4c00-a528-09aa4d86b2b2")]
-pub trait ITessellator : IUnknown {
-    fn Fill(&mut self, path: *mut IPath, options: *mut TessFillOptions) -> ::cocom::HResult;
-    fn Stroke(&mut self, path: *mut IPath, options: *mut TessStrokeOptions) -> ::cocom::HResult;
-}
-
-#[cocom::interface("bd0c7402-1de8-4547-860d-c78fd70ff203")]
-pub trait ITextData : IUnknown {
-}
-
-#[cocom::interface("f558ba07-1f1d-4c32-8229-134271b17083")]
-pub trait ITextLayout : IUnknown {
 }
