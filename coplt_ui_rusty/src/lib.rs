@@ -59,6 +59,7 @@ mod coplt_alloc {
     }
 }
 
+use cocom::object;
 use coplt_alloc::*;
 
 mod atlas;
@@ -151,3 +152,6 @@ mod com_impl {
         }
     }
 }
+
+#[cocom::object]
+struct Foo {}

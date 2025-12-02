@@ -4,6 +4,10 @@
   ],
   "outputs": [
     {
+      "type": "json",
+      "path": "../com/Coplt.Ui.Native.json"
+    },
+    {
       "type": "cpp",
       "co_com_path": "CoCom.h",
       "proj_name": "COPLT_UI",

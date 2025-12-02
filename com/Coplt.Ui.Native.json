@@ -1,0 +1,5193 @@
+{
+  "types": [
+    {
+      "kind": "fn",
+      "index": 144,
+      "params": [
+        164,
+        59
+      ]
+    },
+    {
+      "kind": "fn",
+      "index": 163,
+      "params": [
+        164
+      ]
+    },
+    {
+      "kind": "fn",
+      "index": 163,
+      "params": [
+        164,
+        59,
+        11,
+        151,
+        164
+      ]
+    },
+    {
+      "kind": "fn",
+      "index": 163,
+      "params": [
+        164,
+        71,
+        161
+      ]
+    },
+    {
+      "kind": "fn",
+      "index": 163,
+      "params": [
+        164,
+        146,
+        151,
+        146,
+        151
+      ]
+    },
+    {
+      "kind": "generic",
+      "index": 0
+    },
+    {
+      "kind": "ptr",
+      "index": 5
+    },
+    {
+      "kind": "h_result"
+    },
+    {
+      "kind": "void"
+    },
+    {
+      "kind": "struct",
+      "index": 0
+    },
+    {
+      "kind": "struct",
+      "index": 1
+    },
+    {
+      "kind": "enum",
+      "index": 0
+    },
+    {
+      "kind": "struct",
+      "index": 2,
+      "params": [
+        5
+      ]
+    },
+    {
+      "kind": "ptr",
+      "index": 12
+    },
+    {
+      "kind": "struct",
+      "index": 3,
+      "params": [
+        135
+      ]
+    },
+    {
+      "kind": "struct",
+      "index": 4,
+      "params": [
+        16
+      ]
+    },
+    {
+      "kind": "struct",
+      "index": 4,
+      "params": [
+        44
+      ]
+    },
+    {
+      "kind": "struct",
+      "index": 4,
+      "params": [
+        48
+      ]
+    },
+    {
+      "kind": "struct",
+      "index": 4,
+      "params": [
+        49
+      ]
+    },
+    {
+      "kind": "struct",
+      "index": 4,
+      "params": [
+        57
+      ]
+    },
+    {
+      "kind": "struct",
+      "index": 4,
+      "params": [
+        130
+      ]
+    },
+    {
+      "kind": "ptr",
+      "index": 20
+    },
+    {
+      "kind": "struct",
+      "index": 5
+    },
+    {
+      "kind": "ptr",
+      "index": 22
+    },
+    {
+      "kind": "struct",
+      "index": 6
+    },
+    {
+      "kind": "ptr",
+      "index": 24
+    },
+    {
+      "kind": "enum",
+      "index": 1
+    },
+    {
+      "kind": "enum",
+      "index": 2
+    },
+    {
+      "kind": "enum",
+      "index": 3
+    },
+    {
+      "kind": "interface",
+      "index": 10
+    },
+    {
+      "kind": "ptr",
+      "index": 29
+    },
+    {
+      "kind": "ptr",
+      "index": 30
+    },
+    {
+      "kind": "struct",
+      "index": 7
+    },
+    {
+      "kind": "struct",
+      "index": 8
+    },
+    {
+      "kind": "struct",
+      "index": 9
+    },
+    {
+      "kind": "struct",
+      "index": 10
+    },
+    {
+      "kind": "enum",
+      "index": 4
+    },
+    {
+      "kind": "struct",
+      "index": 11
+    },
+    {
+      "kind": "enum",
+      "index": 5
+    },
+    {
+      "kind": "struct",
+      "index": 12
+    },
+    {
+      "kind": "ptr",
+      "index": 39
+    },
+    {
+      "kind": "struct",
+      "index": 13
+    },
+    {
+      "kind": "ptr",
+      "index": 41
+    },
+    {
+      "kind": "enum",
+      "index": 6
+    },
+    {
+      "kind": "struct",
+      "index": 14
+    },
+    {
+      "kind": "enum",
+      "index": 7
+    },
+    {
+      "kind": "struct",
+      "index": 15
+    },
+    {
+      "kind": "enum",
+      "index": 8
+    },
+    {
+      "kind": "struct",
+      "index": 16
+    },
+    {
+      "kind": "struct",
+      "index": 17
+    },
+    {
+      "kind": "enum",
+      "index": 9
+    },
+    {
+      "kind": "struct",
+      "index": 18
+    },
+    {
+      "kind": "struct",
+      "index": 19
+    },
+    {
+      "kind": "enum",
+      "index": 10
+    },
+    {
+      "kind": "enum",
+      "index": 11
+    },
+    {
+      "kind": "enum",
+      "index": 12
+    },
+    {
+      "kind": "struct",
+      "index": 20
+    },
+    {
+      "kind": "struct",
+      "index": 21
+    },
+    {
+      "kind": "enum",
+      "index": 13
+    },
+    {
+      "kind": "enum",
+      "index": 14
+    },
+    {
+      "kind": "struct",
+      "index": 22
+    },
+    {
+      "kind": "struct",
+      "index": 23
+    },
+    {
+      "kind": "struct",
+      "index": 24
+    },
+    {
+      "kind": "struct",
+      "index": 25
+    },
+    {
+      "kind": "struct",
+      "index": 26
+    },
+    {
+      "kind": "interface",
+      "index": 1
+    },
+    {
+      "kind": "ptr",
+      "index": 65
+    },
+    {
+      "kind": "interface",
+      "index": 2
+    },
+    {
+      "kind": "ptr",
+      "index": 67
+    },
+    {
+      "kind": "ptr",
+      "index": 68
+    },
+    {
+      "kind": "interface",
+      "index": 3
+    },
+    {
+      "kind": "ptr",
+      "index": 70
+    },
+    {
+      "kind": "ptr",
+      "index": 71
+    },
+    {
+      "kind": "interface",
+      "index": 4
+    },
+    {
+      "kind": "ptr",
+      "index": 73
+    },
+    {
+      "kind": "ptr",
+      "index": 74
+    },
+    {
+      "kind": "interface",
+      "index": 5
+    },
+    {
+      "kind": "ptr",
+      "index": 76
+    },
+    {
+      "kind": "ptr",
+      "index": 77
+    },
+    {
+      "kind": "interface",
+      "index": 6
+    },
+    {
+      "kind": "interface",
+      "index": 7
+    },
+    {
+      "kind": "ptr",
+      "index": 80
+    },
+    {
+      "kind": "ptr",
+      "index": 81
+    },
+    {
+      "kind": "interface",
+      "index": 8
+    },
+    {
+      "kind": "ptr",
+      "index": 83
+    },
+    {
+      "kind": "ptr",
+      "index": 84
+    },
+    {
+      "kind": "interface",
+      "index": 15
+    },
+    {
+      "kind": "struct",
+      "index": 27
+    },
+    {
+      "kind": "struct",
+      "index": 28
+    },
+    {
+      "kind": "struct",
+      "index": 29
+    },
+    {
+      "kind": "enum",
+      "index": 15
+    },
+    {
+      "kind": "struct",
+      "index": 30
+    },
+    {
+      "kind": "struct",
+      "index": 31
+    },
+    {
+      "kind": "struct",
+      "index": 32
+    },
+    {
+      "kind": "struct",
+      "index": 33
+    },
+    {
+      "kind": "ptr",
+      "index": 94
+    },
+    {
+      "kind": "struct",
+      "index": 34
+    },
+    {
+      "kind": "struct",
+      "index": 35
+    },
+    {
+      "kind": "ptr",
+      "index": 97
+    },
+    {
+      "kind": "struct",
+      "index": 36
+    },
+    {
+      "kind": "struct",
+      "index": 37
+    },
+    {
+      "kind": "ptr",
+      "index": 100
+    },
+    {
+      "kind": "enum",
+      "index": 16
+    },
+    {
+      "kind": "enum",
+      "index": 17
+    },
+    {
+      "kind": "enum",
+      "index": 18
+    },
+    {
+      "kind": "enum",
+      "index": 19
+    },
+    {
+      "kind": "enum",
+      "index": 20
+    },
+    {
+      "kind": "enum",
+      "index": 21
+    },
+    {
+      "kind": "struct",
+      "index": 38
+    },
+    {
+      "kind": "enum",
+      "index": 22
+    },
+    {
+      "kind": "enum",
+      "index": 23
+    },
+    {
+      "kind": "struct",
+      "index": 39
+    },
+    {
+      "kind": "enum",
+      "index": 24
+    },
+    {
+      "kind": "enum",
+      "index": 25
+    },
+    {
+      "kind": "enum",
+      "index": 26
+    },
+    {
+      "kind": "enum",
+      "index": 27
+    },
+    {
+      "kind": "enum",
+      "index": 28
+    },
+    {
+      "kind": "enum",
+      "index": 29
+    },
+    {
+      "kind": "enum",
+      "index": 30
+    },
+    {
+      "kind": "enum",
+      "index": 31
+    },
+    {
+      "kind": "enum",
+      "index": 32
+    },
+    {
+      "kind": "enum",
+      "index": 33
+    },
+    {
+      "kind": "enum",
+      "index": 34
+    },
+    {
+      "kind": "enum",
+      "index": 35
+    },
+    {
+      "kind": "enum",
+      "index": 36
+    },
+    {
+      "kind": "enum",
+      "index": 37
+    },
+    {
+      "kind": "enum",
+      "index": 38
+    },
+    {
+      "kind": "enum",
+      "index": 39
+    },
+    {
+      "kind": "struct",
+      "index": 40
+    },
+    {
+      "kind": "enum",
+      "index": 40
+    },
+    {
+      "kind": "struct",
+      "index": 41
+    },
+    {
+      "kind": "struct",
+      "index": 42
+    },
+    {
+      "kind": "ptr",
+      "index": 131
+    },
+    {
+      "kind": "struct",
+      "index": 43
+    },
+    {
+      "kind": "ptr",
+      "index": 133
+    },
+    {
+      "kind": "struct",
+      "index": 44
+    },
+    {
+      "kind": "struct",
+      "index": 45
+    },
+    {
+      "kind": "ptr",
+      "index": 136
+    },
+    {
+      "kind": "struct",
+      "index": 46
+    },
+    {
+      "kind": "ptr",
+      "index": 138
+    },
+    {
+      "kind": "struct",
+      "index": 47
+    },
+    {
+      "kind": "enum",
+      "index": 41
+    },
+    {
+      "kind": "bool"
+    },
+    {
+      "kind": "ptr",
+      "index": 142
+    },
+    {
+      "kind": "u_int8"
+    },
+    {
+      "kind": "char16"
+    },
+    {
+      "kind": "ptr",
+      "index": 145
+    },
+    {
+      "kind": "double"
+    },
+    {
+      "kind": "guid"
+    },
+    {
+      "kind": "int128"
+    },
+    {
+      "kind": "int16"
+    },
+    {
+      "kind": "int32"
+    },
+    {
+      "kind": "ptr",
+      "index": 151
+    },
+    {
+      "kind": "int64"
+    },
+    {
+      "kind": "int_ptr"
+    },
+    {
+      "kind": "int8"
+    },
+    {
+      "kind": "float"
+    },
+    {
+      "kind": "u_int128"
+    },
+    {
+      "kind": "u_int16"
+    },
+    {
+      "kind": "u_int32"
+    },
+    {
+      "kind": "ptr",
+      "index": 159
+    },
+    {
+      "kind": "u_int64"
+    },
+    {
+      "kind": "u_int_ptr"
+    },
+    {
+      "kind": "void"
+    },
+    {
+      "kind": "ptr",
+      "index": 163
+    },
+    {
+      "kind": "ptr",
+      "index": 9,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 32,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 61
+    },
+    {
+      "kind": "ptr",
+      "index": 63,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 64,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 73
+    },
+    {
+      "kind": "ptr",
+      "index": 79
+    },
+    {
+      "kind": "ptr",
+      "index": 86
+    },
+    {
+      "kind": "ptr",
+      "index": 94,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 96,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 99
+    },
+    {
+      "kind": "ptr",
+      "index": 144,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 145,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 171,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
+      "index": 174
+    }
+  ],
+  "enums": [
+    {
+      "name": "StrKind",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Str8",
+          "value": "0"
+        },
+        {
+          "name": "Str16",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "FillRule",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "EvenOdd",
+          "value": "0"
+        },
+        {
+          "name": "NonZero",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "LineCap",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Butt",
+          "value": "0"
+        },
+        {
+          "name": "Square",
+          "value": "1"
+        },
+        {
+          "name": "Round",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "LineJoin",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Miter",
+          "value": "0"
+        },
+        {
+          "name": "MiterClip",
+          "value": "1"
+        },
+        {
+          "name": "Round",
+          "value": "2"
+        },
+        {
+          "name": "Bevel",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "PathBuilderCmdType",
+      "underlying": 159,
+      "items": [
+        {
+          "name": "Close",
+          "value": "0"
+        },
+        {
+          "name": "MoveTo",
+          "value": "1"
+        },
+        {
+          "name": "LineTo",
+          "value": "2"
+        },
+        {
+          "name": "QuadraticBezierTo",
+          "value": "3"
+        },
+        {
+          "name": "CubicBezierTo",
+          "value": "4"
+        },
+        {
+          "name": "Arc",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "name": "Orientation",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Horizontal",
+          "value": "0"
+        },
+        {
+          "name": "Vertical",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "AlignType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "None",
+          "value": "0"
+        },
+        {
+          "name": "Start",
+          "value": "1"
+        },
+        {
+          "name": "End",
+          "value": "2"
+        },
+        {
+          "name": "FlexStart",
+          "value": "3"
+        },
+        {
+          "name": "FlexEnd",
+          "value": "4"
+        },
+        {
+          "name": "Center",
+          "value": "5"
+        },
+        {
+          "name": "Baseline",
+          "value": "6"
+        },
+        {
+          "name": "Stretch",
+          "value": "7"
+        },
+        {
+          "name": "SpaceBetween",
+          "value": "8"
+        },
+        {
+          "name": "SpaceEvenly",
+          "value": "9"
+        },
+        {
+          "name": "SpaceAround",
+          "value": "10"
+        }
+      ]
+    },
+    {
+      "name": "GridNameType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Name",
+          "value": "0"
+        },
+        {
+          "name": "Start",
+          "value": "1"
+        },
+        {
+          "name": "End",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "GridPlacementType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Auto",
+          "value": "0"
+        },
+        {
+          "name": "Line",
+          "value": "1"
+        },
+        {
+          "name": "NamedLine",
+          "value": "2"
+        },
+        {
+          "name": "Span",
+          "value": "3"
+        },
+        {
+          "name": "NamedSpan",
+          "value": "4"
+        }
+      ]
+    },
+    {
+      "name": "GridTemplateComponentType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Single",
+          "value": "0"
+        },
+        {
+          "name": "Repeat",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "LengthType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Fixed",
+          "value": "0"
+        },
+        {
+          "name": "Percent",
+          "value": "1"
+        },
+        {
+          "name": "Auto",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "RepetitionType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Count",
+          "value": "0"
+        },
+        {
+          "name": "AutoFill",
+          "value": "1"
+        },
+        {
+          "name": "AutoFit",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "SizingType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Auto",
+          "value": "0"
+        },
+        {
+          "name": "Fixed",
+          "value": "1"
+        },
+        {
+          "name": "Percent",
+          "value": "2"
+        },
+        {
+          "name": "Fraction",
+          "value": "3"
+        },
+        {
+          "name": "MinContent",
+          "value": "4"
+        },
+        {
+          "name": "MaxContent",
+          "value": "5"
+        },
+        {
+          "name": "FitContent",
+          "value": "6"
+        }
+      ]
+    },
+    {
+      "name": "AvailableSpaceType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Definite",
+          "value": "0"
+        },
+        {
+          "name": "MinContent",
+          "value": "1"
+        },
+        {
+          "name": "MaxContent",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "LogLevel",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Trace",
+          "value": "0"
+        },
+        {
+          "name": "Debug",
+          "value": "1"
+        },
+        {
+          "name": "Info",
+          "value": "2"
+        },
+        {
+          "name": "Warn",
+          "value": "3"
+        },
+        {
+          "name": "Error",
+          "value": "4"
+        },
+        {
+          "name": "Fatal",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "name": "LayoutCacheFlags",
+      "flags": "flags",
+      "underlying": 158,
+      "items": [
+        {
+          "name": "Empty",
+          "value": "0"
+        },
+        {
+          "name": "Final",
+          "value": "1"
+        },
+        {
+          "name": "Measure0",
+          "value": "2"
+        },
+        {
+          "name": "Measure1",
+          "value": "4"
+        },
+        {
+          "name": "Measure2",
+          "value": "8"
+        },
+        {
+          "name": "Measure3",
+          "value": "16"
+        },
+        {
+          "name": "Measure4",
+          "value": "32"
+        },
+        {
+          "name": "Measure5",
+          "value": "64"
+        },
+        {
+          "name": "Measure6",
+          "value": "128"
+        },
+        {
+          "name": "Measure7",
+          "value": "256"
+        },
+        {
+          "name": "Measure8",
+          "value": "512"
+        }
+      ]
+    },
+    {
+      "name": "BoxSizing",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "BorderBox",
+          "value": "0"
+        },
+        {
+          "name": "ContentBox",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "Container",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Flex",
+          "value": "0"
+        },
+        {
+          "name": "Grid",
+          "value": "1"
+        },
+        {
+          "name": "Text",
+          "value": "2"
+        },
+        {
+          "name": "Block",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "CursorType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Default",
+          "value": "0"
+        },
+        {
+          "name": "Pointer",
+          "value": "1"
+        },
+        {
+          "name": "ContextMenu",
+          "value": "2"
+        },
+        {
+          "name": "Help",
+          "value": "3"
+        },
+        {
+          "name": "Progress",
+          "value": "4"
+        },
+        {
+          "name": "Wait",
+          "value": "5"
+        },
+        {
+          "name": "Cell",
+          "value": "6"
+        },
+        {
+          "name": "Crosshair",
+          "value": "7"
+        },
+        {
+          "name": "Text",
+          "value": "8"
+        },
+        {
+          "name": "VerticalText",
+          "value": "9"
+        },
+        {
+          "name": "Alias",
+          "value": "10"
+        },
+        {
+          "name": "Copy",
+          "value": "11"
+        },
+        {
+          "name": "Move",
+          "value": "12"
+        },
+        {
+          "name": "NoDrop",
+          "value": "13"
+        },
+        {
+          "name": "NotAllowed",
+          "value": "14"
+        },
+        {
+          "name": "Grab",
+          "value": "15"
+        },
+        {
+          "name": "Grabbing",
+          "value": "16"
+        },
+        {
+          "name": "AllScroll",
+          "value": "17"
+        },
+        {
+          "name": "ColResize",
+          "value": "18"
+        },
+        {
+          "name": "RowResize",
+          "value": "19"
+        },
+        {
+          "name": "NResize",
+          "value": "20"
+        },
+        {
+          "name": "EResize",
+          "value": "21"
+        },
+        {
+          "name": "SResize",
+          "value": "22"
+        },
+        {
+          "name": "WResize",
+          "value": "23"
+        },
+        {
+          "name": "NeResize",
+          "value": "24"
+        },
+        {
+          "name": "NwResize",
+          "value": "25"
+        },
+        {
+          "name": "SeResize",
+          "value": "26"
+        },
+        {
+          "name": "SwResize",
+          "value": "27"
+        },
+        {
+          "name": "EwResize",
+          "value": "28"
+        },
+        {
+          "name": "NsResize",
+          "value": "29"
+        },
+        {
+          "name": "NeSwResize",
+          "value": "30"
+        },
+        {
+          "name": "NwSeResize",
+          "value": "31"
+        },
+        {
+          "name": "ZoomIn",
+          "value": "32"
+        },
+        {
+          "name": "ZoomOut",
+          "value": "33"
+        }
+      ]
+    },
+    {
+      "name": "FlexDirection",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Column",
+          "value": "0"
+        },
+        {
+          "name": "Row",
+          "value": "1"
+        },
+        {
+          "name": "ColumnReverse",
+          "value": "2"
+        },
+        {
+          "name": "RowReverse",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "FlexWrap",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "NoWrap",
+          "value": "0"
+        },
+        {
+          "name": "Wrap",
+          "value": "1"
+        },
+        {
+          "name": "WrapReverse",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "FontWeight",
+      "underlying": 151,
+      "items": [
+        {
+          "name": "None",
+          "value": "0"
+        },
+        {
+          "name": "Thin",
+          "value": "100"
+        },
+        {
+          "name": "ExtraLight",
+          "value": "200"
+        },
+        {
+          "name": "Light",
+          "value": "300"
+        },
+        {
+          "name": "SemiLight",
+          "value": "350"
+        },
+        {
+          "name": "Normal",
+          "value": "400"
+        },
+        {
+          "name": "Medium",
+          "value": "500"
+        },
+        {
+          "name": "SemiBold",
+          "value": "600"
+        },
+        {
+          "name": "Bold",
+          "value": "700"
+        },
+        {
+          "name": "ExtraBold",
+          "value": "800"
+        },
+        {
+          "name": "Black",
+          "value": "900"
+        },
+        {
+          "name": "ExtraBlack",
+          "value": "950"
+        }
+      ]
+    },
+    {
+      "name": "GridAutoFlow",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Row",
+          "value": "0"
+        },
+        {
+          "name": "Column",
+          "value": "1"
+        },
+        {
+          "name": "RowDense",
+          "value": "2"
+        },
+        {
+          "name": "ColumnDense",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "LineAlign",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Baseline",
+          "value": "0"
+        },
+        {
+          "name": "Start",
+          "value": "1"
+        },
+        {
+          "name": "End",
+          "value": "2"
+        },
+        {
+          "name": "Center",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "LocaleMode",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Normal",
+          "value": "0"
+        },
+        {
+          "name": "ByScript",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "Overflow",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Visible",
+          "value": "0"
+        },
+        {
+          "name": "Clip",
+          "value": "1"
+        },
+        {
+          "name": "Hidden",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "PointerEvents",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Auto",
+          "value": "0"
+        },
+        {
+          "name": "None",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "Position",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Relative",
+          "value": "0"
+        },
+        {
+          "name": "Absolute",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "TextAlign",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Start",
+          "value": "0"
+        },
+        {
+          "name": "End",
+          "value": "1"
+        },
+        {
+          "name": "Center",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "TextDirection",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Forward",
+          "value": "0"
+        },
+        {
+          "name": "Reverse",
+          "value": "1"
+        },
+        {
+          "name": "LeftToRight",
+          "value": "2"
+        },
+        {
+          "name": "RightToLeft",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "name": "TextMode",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Block",
+          "value": "0"
+        },
+        {
+          "name": "Inline",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "TextOrientation",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Mixed",
+          "value": "0"
+        },
+        {
+          "name": "Upright",
+          "value": "1"
+        },
+        {
+          "name": "Sideways",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "TextOverflow",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Clip",
+          "value": "0"
+        },
+        {
+          "name": "Ellipsis",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "TextWrap",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Wrap",
+          "value": "0"
+        },
+        {
+          "name": "NoWrap",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "Visible",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Visible",
+          "value": "0"
+        },
+        {
+          "name": "Hidden",
+          "value": "1"
+        },
+        {
+          "name": "Remove",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "WordBreak",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Auto",
+          "value": "0"
+        },
+        {
+          "name": "BreakAll",
+          "value": "1"
+        },
+        {
+          "name": "KeepAll",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "WrapFlags",
+      "flags": "flags",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "None",
+          "value": "0"
+        },
+        {
+          "name": "AllowNewLine",
+          "value": "1"
+        },
+        {
+          "name": "WrapInSpace",
+          "value": "2"
+        },
+        {
+          "name": "TrimStart",
+          "value": "4"
+        },
+        {
+          "name": "TrimEnd",
+          "value": "8"
+        },
+        {
+          "name": "Trim",
+          "value": "12"
+        }
+      ]
+    },
+    {
+      "name": "WritingDirection",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Horizontal",
+          "value": "0"
+        },
+        {
+          "name": "Vertical",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "CharCategory",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "Unassigned",
+          "value": "0"
+        },
+        {
+          "name": "GeneralOtherTypes",
+          "value": "0"
+        },
+        {
+          "name": "UppercaseLetter",
+          "value": "1"
+        },
+        {
+          "name": "LowercaseLetter",
+          "value": "2"
+        },
+        {
+          "name": "TitlecaseLetter",
+          "value": "3"
+        },
+        {
+          "name": "ModifierLetter",
+          "value": "4"
+        },
+        {
+          "name": "OtherLetter",
+          "value": "5"
+        },
+        {
+          "name": "NonSpacingMark",
+          "value": "6"
+        },
+        {
+          "name": "EnclosingMark",
+          "value": "7"
+        },
+        {
+          "name": "CombiningSpacingMark",
+          "value": "8"
+        },
+        {
+          "name": "DecimalDigitNumber",
+          "value": "9"
+        },
+        {
+          "name": "LetterNumber",
+          "value": "10"
+        },
+        {
+          "name": "OtherNumber",
+          "value": "11"
+        },
+        {
+          "name": "SpaceSeparator",
+          "value": "12"
+        },
+        {
+          "name": "LineSeparator",
+          "value": "13"
+        },
+        {
+          "name": "ParagraphSeparator",
+          "value": "14"
+        },
+        {
+          "name": "ControlChar",
+          "value": "15"
+        },
+        {
+          "name": "FormatChar",
+          "value": "16"
+        },
+        {
+          "name": "PrivateUseChar",
+          "value": "17"
+        },
+        {
+          "name": "Surrogate",
+          "value": "18"
+        },
+        {
+          "name": "DashPunctuation",
+          "value": "19"
+        },
+        {
+          "name": "StartPunctuation",
+          "value": "20"
+        },
+        {
+          "name": "EndPunctuation",
+          "value": "21"
+        },
+        {
+          "name": "ConnectorPunctuation",
+          "value": "22"
+        },
+        {
+          "name": "OtherPunctuation",
+          "value": "23"
+        },
+        {
+          "name": "MathSymbol",
+          "value": "24"
+        },
+        {
+          "name": "CurrencySymbol",
+          "value": "25"
+        },
+        {
+          "name": "ModifierSymbol",
+          "value": "26"
+        },
+        {
+          "name": "OtherSymbol",
+          "value": "27"
+        },
+        {
+          "name": "InitialPunctuation",
+          "value": "28"
+        },
+        {
+          "name": "FinalPunctuation",
+          "value": "29"
+        }
+      ]
+    },
+    {
+      "name": "FontFlags",
+      "flags": "flags",
+      "underlying": 151,
+      "items": [
+        {
+          "name": "None",
+          "value": "0"
+        },
+        {
+          "name": "Color",
+          "value": "1"
+        },
+        {
+          "name": "Monospaced",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "name": "ScriptCode",
+      "underlying": 151,
+      "items": [
+        {
+          "name": "InvalidCode",
+          "value": "-1"
+        },
+        {
+          "name": "Common",
+          "value": "0"
+        },
+        {
+          "name": "Inherited",
+          "value": "1"
+        },
+        {
+          "name": "Arabic",
+          "value": "2"
+        },
+        {
+          "name": "Armenian",
+          "value": "3"
+        },
+        {
+          "name": "Bengali",
+          "value": "4"
+        },
+        {
+          "name": "Bopomofo",
+          "value": "5"
+        },
+        {
+          "name": "Cherokee",
+          "value": "6"
+        },
+        {
+          "name": "Coptic",
+          "value": "7"
+        },
+        {
+          "name": "Cyrillic",
+          "value": "8"
+        },
+        {
+          "name": "Deseret",
+          "value": "9"
+        },
+        {
+          "name": "Devanagari",
+          "value": "10"
+        },
+        {
+          "name": "Ethiopic",
+          "value": "11"
+        },
+        {
+          "name": "Georgian",
+          "value": "12"
+        },
+        {
+          "name": "Gothic",
+          "value": "13"
+        },
+        {
+          "name": "Greek",
+          "value": "14"
+        },
+        {
+          "name": "Gujarati",
+          "value": "15"
+        },
+        {
+          "name": "Gurmukhi",
+          "value": "16"
+        },
+        {
+          "name": "Han",
+          "value": "17"
+        },
+        {
+          "name": "Hangul",
+          "value": "18"
+        },
+        {
+          "name": "Hebrew",
+          "value": "19"
+        },
+        {
+          "name": "Hiragana",
+          "value": "20"
+        },
+        {
+          "name": "Kannada",
+          "value": "21"
+        },
+        {
+          "name": "Katakana",
+          "value": "22"
+        },
+        {
+          "name": "Khmer",
+          "value": "23"
+        },
+        {
+          "name": "Lao",
+          "value": "24"
+        },
+        {
+          "name": "Latin",
+          "value": "25"
+        },
+        {
+          "name": "Malayalam",
+          "value": "26"
+        },
+        {
+          "name": "Mongolian",
+          "value": "27"
+        },
+        {
+          "name": "Myanmar",
+          "value": "28"
+        },
+        {
+          "name": "Ogham",
+          "value": "29"
+        },
+        {
+          "name": "OldItalic",
+          "value": "30"
+        },
+        {
+          "name": "Oriya",
+          "value": "31"
+        },
+        {
+          "name": "Runic",
+          "value": "32"
+        },
+        {
+          "name": "Sinhala",
+          "value": "33"
+        },
+        {
+          "name": "Syriac",
+          "value": "34"
+        },
+        {
+          "name": "Tamil",
+          "value": "35"
+        },
+        {
+          "name": "Telugu",
+          "value": "36"
+        },
+        {
+          "name": "Thaana",
+          "value": "37"
+        },
+        {
+          "name": "Thai",
+          "value": "38"
+        },
+        {
+          "name": "Tibetan",
+          "value": "39"
+        },
+        {
+          "name": "CanadianAboriginal",
+          "value": "40"
+        },
+        {
+          "name": "Ucas",
+          "value": "40"
+        },
+        {
+          "name": "Yi",
+          "value": "41"
+        },
+        {
+          "name": "Tagalog",
+          "value": "42"
+        },
+        {
+          "name": "Hanunoo",
+          "value": "43"
+        },
+        {
+          "name": "Buhid",
+          "value": "44"
+        },
+        {
+          "name": "Tagbanwa",
+          "value": "45"
+        },
+        {
+          "name": "Braille",
+          "value": "46"
+        },
+        {
+          "name": "Cypriot",
+          "value": "47"
+        },
+        {
+          "name": "Limbu",
+          "value": "48"
+        },
+        {
+          "name": "LinearB",
+          "value": "49"
+        },
+        {
+          "name": "Osmanya",
+          "value": "50"
+        },
+        {
+          "name": "Shavian",
+          "value": "51"
+        },
+        {
+          "name": "TaiLe",
+          "value": "52"
+        },
+        {
+          "name": "Ugaritic",
+          "value": "53"
+        },
+        {
+          "name": "KatakanaOrHiragana",
+          "value": "54"
+        },
+        {
+          "name": "Buginese",
+          "value": "55"
+        },
+        {
+          "name": "Glagolitic",
+          "value": "56"
+        },
+        {
+          "name": "Kharoshthi",
+          "value": "57"
+        },
+        {
+          "name": "SylotiNagri",
+          "value": "58"
+        },
+        {
+          "name": "NewTaiLue",
+          "value": "59"
+        },
+        {
+          "name": "Tifinagh",
+          "value": "60"
+        },
+        {
+          "name": "OldPersian",
+          "value": "61"
+        },
+        {
+          "name": "Balinese",
+          "value": "62"
+        },
+        {
+          "name": "Batak",
+          "value": "63"
+        },
+        {
+          "name": "Blissymbols",
+          "value": "64"
+        },
+        {
+          "name": "Brahmi",
+          "value": "65"
+        },
+        {
+          "name": "Cham",
+          "value": "66"
+        },
+        {
+          "name": "Cirth",
+          "value": "67"
+        },
+        {
+          "name": "OldChurchSlavonicCyrillic",
+          "value": "68"
+        },
+        {
+          "name": "DemoticEgyptian",
+          "value": "69"
+        },
+        {
+          "name": "HieraticEgyptian",
+          "value": "70"
+        },
+        {
+          "name": "EgyptianHieroglyphs",
+          "value": "71"
+        },
+        {
+          "name": "Khutsuri",
+          "value": "72"
+        },
+        {
+          "name": "SimplifiedHan",
+          "value": "73"
+        },
+        {
+          "name": "TraditionalHan",
+          "value": "74"
+        },
+        {
+          "name": "PahawhHmong",
+          "value": "75"
+        },
+        {
+          "name": "OldHungarian",
+          "value": "76"
+        },
+        {
+          "name": "HarappanIndus",
+          "value": "77"
+        },
+        {
+          "name": "Javanese",
+          "value": "78"
+        },
+        {
+          "name": "KayahLi",
+          "value": "79"
+        },
+        {
+          "name": "LatinFraktur",
+          "value": "80"
+        },
+        {
+          "name": "LatinGaelic",
+          "value": "81"
+        },
+        {
+          "name": "Lepcha",
+          "value": "82"
+        },
+        {
+          "name": "LinearA",
+          "value": "83"
+        },
+        {
+          "name": "Mandaic",
+          "value": "84"
+        },
+        {
+          "name": "Mandaean",
+          "value": "84"
+        },
+        {
+          "name": "MayanHieroglyphs",
+          "value": "85"
+        },
+        {
+          "name": "MeroiticHieroglyphs",
+          "value": "86"
+        },
+        {
+          "name": "Meroitic",
+          "value": "86"
+        },
+        {
+          "name": "Nko",
+          "value": "87"
+        },
+        {
+          "name": "Orkhon",
+          "value": "88"
+        },
+        {
+          "name": "OldPermic",
+          "value": "89"
+        },
+        {
+          "name": "PhagsPa",
+          "value": "90"
+        },
+        {
+          "name": "Phoenician",
+          "value": "91"
+        },
+        {
+          "name": "Miao",
+          "value": "92"
+        },
+        {
+          "name": "PhoneticPollard",
+          "value": "92"
+        },
+        {
+          "name": "Rongorongo",
+          "value": "93"
+        },
+        {
+          "name": "Sarati",
+          "value": "94"
+        },
+        {
+          "name": "EstrangeloSyriac",
+          "value": "95"
+        },
+        {
+          "name": "WesternSyriac",
+          "value": "96"
+        },
+        {
+          "name": "EasternSyriac",
+          "value": "97"
+        },
+        {
+          "name": "Tengwar",
+          "value": "98"
+        },
+        {
+          "name": "Vai",
+          "value": "99"
+        },
+        {
+          "name": "VisibleSpeech",
+          "value": "100"
+        },
+        {
+          "name": "Cuneiform",
+          "value": "101"
+        },
+        {
+          "name": "UnwrittenLanguages",
+          "value": "102"
+        },
+        {
+          "name": "Unknown",
+          "value": "103"
+        },
+        {
+          "name": "Carian",
+          "value": "104"
+        },
+        {
+          "name": "Japanese",
+          "value": "105"
+        },
+        {
+          "name": "Lanna",
+          "value": "106"
+        },
+        {
+          "name": "Lycian",
+          "value": "107"
+        },
+        {
+          "name": "Lydian",
+          "value": "108"
+        },
+        {
+          "name": "OlChiki",
+          "value": "109"
+        },
+        {
+          "name": "Rejang",
+          "value": "110"
+        },
+        {
+          "name": "Saurashtra",
+          "value": "111"
+        },
+        {
+          "name": "SignWriting",
+          "value": "112"
+        },
+        {
+          "name": "Sundanese",
+          "value": "113"
+        },
+        {
+          "name": "Moon",
+          "value": "114"
+        },
+        {
+          "name": "MeiteiMayek",
+          "value": "115"
+        },
+        {
+          "name": "ImperialAramaic",
+          "value": "116"
+        },
+        {
+          "name": "Avestan",
+          "value": "117"
+        },
+        {
+          "name": "Chakma",
+          "value": "118"
+        },
+        {
+          "name": "Korean",
+          "value": "119"
+        },
+        {
+          "name": "Kaithi",
+          "value": "120"
+        },
+        {
+          "name": "Manichaean",
+          "value": "121"
+        },
+        {
+          "name": "InscriptionalPahlavi",
+          "value": "122"
+        },
+        {
+          "name": "PsalterPahlavi",
+          "value": "123"
+        },
+        {
+          "name": "BookPahlavi",
+          "value": "124"
+        },
+        {
+          "name": "InscriptionalParthian",
+          "value": "125"
+        },
+        {
+          "name": "Samaritan",
+          "value": "126"
+        },
+        {
+          "name": "TaiViet",
+          "value": "127"
+        },
+        {
+          "name": "MathematicalNotation",
+          "value": "128"
+        },
+        {
+          "name": "Symbols",
+          "value": "129"
+        },
+        {
+          "name": "Bamum",
+          "value": "130"
+        },
+        {
+          "name": "Lisu",
+          "value": "131"
+        },
+        {
+          "name": "NakhiGeba",
+          "value": "132"
+        },
+        {
+          "name": "OldSouthArabian",
+          "value": "133"
+        },
+        {
+          "name": "BassaVah",
+          "value": "134"
+        },
+        {
+          "name": "Duployan",
+          "value": "135"
+        },
+        {
+          "name": "Elbasan",
+          "value": "136"
+        },
+        {
+          "name": "Grantha",
+          "value": "137"
+        },
+        {
+          "name": "Kpelle",
+          "value": "138"
+        },
+        {
+          "name": "Loma",
+          "value": "139"
+        },
+        {
+          "name": "Mende",
+          "value": "140"
+        },
+        {
+          "name": "MeroiticCursive",
+          "value": "141"
+        },
+        {
+          "name": "OldNorthArabian",
+          "value": "142"
+        },
+        {
+          "name": "Nabataean",
+          "value": "143"
+        },
+        {
+          "name": "Palmyrene",
+          "value": "144"
+        },
+        {
+          "name": "Khudawadi",
+          "value": "145"
+        },
+        {
+          "name": "Sindhi",
+          "value": "145"
+        },
+        {
+          "name": "WarangCiti",
+          "value": "146"
+        },
+        {
+          "name": "Afaka",
+          "value": "147"
+        },
+        {
+          "name": "Jurchen",
+          "value": "148"
+        },
+        {
+          "name": "Mro",
+          "value": "149"
+        },
+        {
+          "name": "Nushu",
+          "value": "150"
+        },
+        {
+          "name": "Sharada",
+          "value": "151"
+        },
+        {
+          "name": "SoraSompeng",
+          "value": "152"
+        },
+        {
+          "name": "Takri",
+          "value": "153"
+        },
+        {
+          "name": "Tangut",
+          "value": "154"
+        },
+        {
+          "name": "Woleai",
+          "value": "155"
+        },
+        {
+          "name": "AnatolianHieroglyphs",
+          "value": "156"
+        },
+        {
+          "name": "Khojki",
+          "value": "157"
+        },
+        {
+          "name": "Tirhuta",
+          "value": "158"
+        },
+        {
+          "name": "CaucasianAlbanian",
+          "value": "159"
+        },
+        {
+          "name": "Mahajani",
+          "value": "160"
+        },
+        {
+          "name": "Ahom",
+          "value": "161"
+        },
+        {
+          "name": "Hatran",
+          "value": "162"
+        },
+        {
+          "name": "Modi",
+          "value": "163"
+        },
+        {
+          "name": "Multani",
+          "value": "164"
+        },
+        {
+          "name": "PauCinHau",
+          "value": "165"
+        },
+        {
+          "name": "Siddham",
+          "value": "166"
+        },
+        {
+          "name": "Adlam",
+          "value": "167"
+        },
+        {
+          "name": "Bhaiksuki",
+          "value": "168"
+        },
+        {
+          "name": "Marchen",
+          "value": "169"
+        },
+        {
+          "name": "Newa",
+          "value": "170"
+        },
+        {
+          "name": "Osage",
+          "value": "171"
+        },
+        {
+          "name": "HanWithBopomofo",
+          "value": "172"
+        },
+        {
+          "name": "Jamo",
+          "value": "173"
+        },
+        {
+          "name": "SymbolsEmoji",
+          "value": "174"
+        },
+        {
+          "name": "MasaramGondi",
+          "value": "175"
+        },
+        {
+          "name": "Soyombo",
+          "value": "176"
+        },
+        {
+          "name": "ZanabazarSquare",
+          "value": "177"
+        },
+        {
+          "name": "Dogra",
+          "value": "178"
+        },
+        {
+          "name": "GunjalaGondi",
+          "value": "179"
+        },
+        {
+          "name": "Makasar",
+          "value": "180"
+        },
+        {
+          "name": "Medefaidrin",
+          "value": "181"
+        },
+        {
+          "name": "HanifiRohingya",
+          "value": "182"
+        },
+        {
+          "name": "Sogdian",
+          "value": "183"
+        },
+        {
+          "name": "OldSogdian",
+          "value": "184"
+        },
+        {
+          "name": "Elymaic",
+          "value": "185"
+        },
+        {
+          "name": "NyiakengPuachueHmong",
+          "value": "186"
+        },
+        {
+          "name": "Nandinagari",
+          "value": "187"
+        },
+        {
+          "name": "Wancho",
+          "value": "188"
+        },
+        {
+          "name": "Chorasmian",
+          "value": "189"
+        },
+        {
+          "name": "DivesAkuru",
+          "value": "190"
+        },
+        {
+          "name": "KhitanSmallScript",
+          "value": "191"
+        },
+        {
+          "name": "Yezidi",
+          "value": "192"
+        },
+        {
+          "name": "CyproMinoan",
+          "value": "193"
+        },
+        {
+          "name": "OldUyghur",
+          "value": "194"
+        },
+        {
+          "name": "Tangsa",
+          "value": "195"
+        },
+        {
+          "name": "Toto",
+          "value": "196"
+        },
+        {
+          "name": "Vithkuqi",
+          "value": "197"
+        },
+        {
+          "name": "Kawi",
+          "value": "198"
+        },
+        {
+          "name": "NagMundari",
+          "value": "199"
+        },
+        {
+          "name": "ArabicNastaliq",
+          "value": "200"
+        },
+        {
+          "name": "Garay",
+          "value": "201"
+        },
+        {
+          "name": "GurungKhema",
+          "value": "202"
+        },
+        {
+          "name": "KiratRai",
+          "value": "203"
+        },
+        {
+          "name": "OlOnal",
+          "value": "204"
+        },
+        {
+          "name": "Sunuwar",
+          "value": "205"
+        },
+        {
+          "name": "Todhri",
+          "value": "206"
+        },
+        {
+          "name": "TuluTigalari",
+          "value": "207"
+        },
+        {
+          "name": "BeriaErfe",
+          "value": "208"
+        },
+        {
+          "name": "Sidetic",
+          "value": "209"
+        },
+        {
+          "name": "TaiYo",
+          "value": "210"
+        },
+        {
+          "name": "TolongSiki",
+          "value": "211"
+        },
+        {
+          "name": "TraditionalHanWithLatin",
+          "value": "212"
+        }
+      ]
+    },
+    {
+      "name": "NodeType",
+      "underlying": 144,
+      "items": [
+        {
+          "name": "View",
+          "value": "0"
+        },
+        {
+          "name": "Text",
+          "value": "1"
+        }
+      ]
+    }
+  ],
+  "structs": [
+    {
+      "name": "Str16",
+      "fields": [
+        {
+          "type": 177,
+          "name": "Data"
+        },
+        {
+          "type": 159,
+          "name": "Size"
+        }
+      ]
+    },
+    {
+      "name": "Str8",
+      "fields": [
+        {
+          "type": 176,
+          "name": "Data"
+        },
+        {
+          "type": 159,
+          "name": "Size"
+        }
+      ]
+    },
+    {
+      "name": "NativeArcInner",
+      "type_params": [
+        "T"
+      ],
+      "fields": [
+        {
+          "type": 161,
+          "name": "m_count"
+        },
+        {
+          "type": 5,
+          "name": "m_data"
+        }
+      ]
+    },
+    {
+      "name": "NativeArc",
+      "type_params": [
+        "T"
+      ],
+      "fields": [
+        {
+          "type": 13,
+          "name": "m_ptr"
+        }
+      ]
+    },
+    {
+      "name": "NativeList",
+      "type_params": [
+        "T"
+      ],
+      "fields": [
+        {
+          "type": 6,
+          "name": "m_items"
+        },
+        {
+          "type": 151,
+          "name": "m_cap"
+        },
+        {
+          "type": 151,
+          "name": "m_size"
+        }
+      ]
+    },
+    {
+      "name": "AABB2D",
+      "fields": [
+        {
+          "type": 159,
+          "name": "MinX"
+        },
+        {
+          "type": 159,
+          "name": "MinY"
+        },
+        {
+          "type": 159,
+          "name": "MaxX"
+        },
+        {
+          "type": 159,
+          "name": "MaxY"
+        }
+      ]
+    },
+    {
+      "name": "AABB2DF",
+      "fields": [
+        {
+          "type": 156,
+          "name": "MinX"
+        },
+        {
+          "type": 156,
+          "name": "MinY"
+        },
+        {
+          "type": 156,
+          "name": "MaxX"
+        },
+        {
+          "type": 156,
+          "name": "MaxY"
+        }
+      ]
+    },
+    {
+      "name": "PathBuilderCmd",
+      "flags": "union",
+      "fields": [
+        {
+          "type": 36,
+          "name": "Type"
+        },
+        {
+          "type": 37,
+          "name": "XTo"
+        },
+        {
+          "type": 35,
+          "name": "QuadraticBezierTo"
+        },
+        {
+          "type": 34,
+          "name": "CubicBezierTo"
+        },
+        {
+          "type": 33,
+          "name": "Arc"
+        }
+      ]
+    },
+    {
+      "name": "PathBuilderCmdArc",
+      "fields": [
+        {
+          "type": 36,
+          "name": "Type"
+        },
+        {
+          "type": 156,
+          "name": "CenterX"
+        },
+        {
+          "type": 156,
+          "name": "CenterY"
+        },
+        {
+          "type": 156,
+          "name": "RadiiX"
+        },
+        {
+          "type": 156,
+          "name": "RadiiY"
+        },
+        {
+          "type": 156,
+          "name": "SweepAngle"
+        },
+        {
+          "type": 156,
+          "name": "XRotation"
+        }
+      ]
+    },
+    {
+      "name": "PathBuilderCmdCubicBezierTo",
+      "fields": [
+        {
+          "type": 36,
+          "name": "Type"
+        },
+        {
+          "type": 156,
+          "name": "Ctrl0X"
+        },
+        {
+          "type": 156,
+          "name": "Ctrl0Y"
+        },
+        {
+          "type": 156,
+          "name": "Ctrl1X"
+        },
+        {
+          "type": 156,
+          "name": "Ctrl1Y"
+        },
+        {
+          "type": 156,
+          "name": "ToX"
+        },
+        {
+          "type": 156,
+          "name": "ToY"
+        }
+      ]
+    },
+    {
+      "name": "PathBuilderCmdQuadraticBezierTo",
+      "fields": [
+        {
+          "type": 36,
+          "name": "Type"
+        },
+        {
+          "type": 156,
+          "name": "CtrlX"
+        },
+        {
+          "type": 156,
+          "name": "CtrlY"
+        },
+        {
+          "type": 156,
+          "name": "ToX"
+        },
+        {
+          "type": 156,
+          "name": "ToY"
+        }
+      ]
+    },
+    {
+      "name": "PathBuilderCmdXToPoint",
+      "fields": [
+        {
+          "type": 36,
+          "name": "Type"
+        },
+        {
+          "type": 156,
+          "name": "X"
+        },
+        {
+          "type": 156,
+          "name": "Y"
+        }
+      ]
+    },
+    {
+      "name": "TessFillOptions",
+      "fields": [
+        {
+          "type": 156,
+          "name": "ToLerance"
+        },
+        {
+          "type": 26,
+          "name": "FillRule"
+        },
+        {
+          "type": 38,
+          "name": "SweepOrientation"
+        },
+        {
+          "type": 142,
+          "name": "HandleIntersections"
+        }
+      ]
+    },
+    {
+      "name": "TessStrokeOptions",
+      "fields": [
+        {
+          "type": 156,
+          "name": "ToLerance"
+        },
+        {
+          "type": 156,
+          "name": "LineWidth"
+        },
+        {
+          "type": 156,
+          "name": "MiterLimit"
+        },
+        {
+          "type": 27,
+          "name": "StartCap"
+        },
+        {
+          "type": 27,
+          "name": "EndCap"
+        },
+        {
+          "type": 28,
+          "name": "LineJoin"
+        }
+      ]
+    },
+    {
+      "name": "GridName",
+      "fields": [
+        {
+          "type": 151,
+          "name": "Id"
+        },
+        {
+          "type": 45,
+          "name": "Type"
+        }
+      ]
+    },
+    {
+      "name": "GridPlacement",
+      "fields": [
+        {
+          "type": 151,
+          "name": "Name"
+        },
+        {
+          "type": 150,
+          "name": "Value1"
+        },
+        {
+          "type": 45,
+          "name": "NameType"
+        },
+        {
+          "type": 47,
+          "name": "Type"
+        }
+      ]
+    },
+    {
+      "name": "GridTemplateArea",
+      "fields": [
+        {
+          "type": 44,
+          "name": "Id"
+        },
+        {
+          "type": 158,
+          "name": "RowStart"
+        },
+        {
+          "type": 158,
+          "name": "RowEnd"
+        },
+        {
+          "type": 158,
+          "name": "ColumnStart"
+        },
+        {
+          "type": 158,
+          "name": "ColumnEnd"
+        }
+      ]
+    },
+    {
+      "name": "GridTemplateComponent",
+      "fields": [
+        {
+          "type": 51,
+          "name": "Union"
+        },
+        {
+          "type": 50,
+          "name": "Type"
+        }
+      ]
+    },
+    {
+      "name": "GridTemplateComponentUnion",
+      "flags": "union",
+      "fields": [
+        {
+          "type": 57,
+          "name": "Single"
+        },
+        {
+          "type": 52,
+          "name": "Repeat"
+        }
+      ]
+    },
+    {
+      "name": "GridTemplateRepetition",
+      "fields": [
+        {
+          "type": 19,
+          "name": "Tracks"
+        },
+        {
+          "type": 15,
+          "name": "LineIds"
+        },
+        {
+          "type": 158,
+          "name": "RepetitionValue"
+        },
+        {
+          "type": 54,
+          "name": "Repetition"
+        }
+      ]
+    },
+    {
+      "name": "SizingValue",
+      "fields": [
+        {
+          "type": 156,
+          "name": "Value"
+        },
+        {
+          "type": 53,
+          "name": "Type"
+        }
+      ]
+    },
+    {
+      "name": "TrackSizingFunction",
+      "fields": [
+        {
+          "type": 56,
+          "name": "MinValue"
+        },
+        {
+          "type": 56,
+          "name": "MaxValue"
+        },
+        {
+          "type": 55,
+          "name": "Min"
+        },
+        {
+          "type": 55,
+          "name": "Max"
+        }
+      ]
+    },
+    {
+      "name": "CWStr",
+      "fields": [
+        {
+          "type": 177,
+          "name": "Locale"
+        }
+      ]
+    },
+    {
+      "name": "FFIMap",
+      "fields": [
+        {
+          "type": 152,
+          "name": "m_buckets"
+        },
+        {
+          "type": 164,
+          "name": "m_entries"
+        },
+        {
+          "type": 161,
+          "name": "m_fast_mode_multiplier"
+        },
+        {
+          "type": 151,
+          "name": "m_cap"
+        },
+        {
+          "type": 151,
+          "name": "m_count"
+        },
+        {
+          "type": 151,
+          "name": "m_free_list"
+        },
+        {
+          "type": 151,
+          "name": "m_free_count"
+        }
+      ]
+    },
+    {
+      "name": "FFIOrderedSet",
+      "fields": [
+        {
+          "type": 152,
+          "name": "m_buckets"
+        },
+        {
+          "type": 164,
+          "name": "m_nodes"
+        },
+        {
+          "type": 161,
+          "name": "m_fast_mode_multiplier"
+        },
+        {
+          "type": 151,
+          "name": "m_cap"
+        },
+        {
+          "type": 151,
+          "name": "m_first"
+        },
+        {
+          "type": 151,
+          "name": "m_last"
+        },
+        {
+          "type": 151,
+          "name": "m_count"
+        },
+        {
+          "type": 151,
+          "name": "m_free_list"
+        },
+        {
+          "type": 151,
+          "name": "m_free_count"
+        }
+      ]
+    },
+    {
+      "name": "FontFallbackBuilderCreateInfo",
+      "fields": [
+        {
+          "type": 142,
+          "name": "DisableSystemFallback"
+        }
+      ]
+    },
+    {
+      "name": "FontFamilyNameInfo",
+      "fields": [
+        {
+          "type": 9,
+          "name": "Name"
+        },
+        {
+          "type": 159,
+          "name": "Local"
+        }
+      ]
+    },
+    {
+      "name": "LayoutCache",
+      "fields": [
+        {
+          "type": 88,
+          "name": "FinalLayoutEntry"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries0"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries1"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries2"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries3"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries4"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries5"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries6"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries7"
+        },
+        {
+          "type": 89,
+          "name": "MeasureEntries8"
+        },
+        {
+          "type": 90,
+          "name": "Flags"
+        }
+      ]
+    },
+    {
+      "name": "LayoutCacheEntryLayoutOutput",
+      "fields": [
+        {
+          "type": 156,
+          "name": "KnownDimensionsWidthValue"
+        },
+        {
+          "type": 156,
+          "name": "KnownDimensionsHeightValue"
+        },
+        {
+          "type": 156,
+          "name": "AvailableSpaceWidthValue"
+        },
+        {
+          "type": 156,
+          "name": "AvailableSpaceHeightValue"
+        },
+        {
+          "type": 142,
+          "name": "HasKnownDimensionsWidth"
+        },
+        {
+          "type": 142,
+          "name": "HasKnownDimensionsHeight"
+        },
+        {
+          "type": 58,
+          "name": "AvailableSpaceWidth"
+        },
+        {
+          "type": 58,
+          "name": "AvailableSpaceHeight"
+        },
+        {
+          "type": 93,
+          "name": "Content"
+        }
+      ]
+    },
+    {
+      "name": "LayoutCacheEntrySize",
+      "fields": [
+        {
+          "type": 156,
+          "name": "KnownDimensionsWidthValue"
+        },
+        {
+          "type": 156,
+          "name": "KnownDimensionsHeightValue"
+        },
+        {
+          "type": 156,
+          "name": "AvailableSpaceWidthValue"
+        },
+        {
+          "type": 156,
+          "name": "AvailableSpaceHeightValue"
+        },
+        {
+          "type": 142,
+          "name": "HasKnownDimensionsWidth"
+        },
+        {
+          "type": 142,
+          "name": "HasKnownDimensionsHeight"
+        },
+        {
+          "type": 58,
+          "name": "AvailableSpaceWidth"
+        },
+        {
+          "type": 58,
+          "name": "AvailableSpaceHeight"
+        },
+        {
+          "type": 156,
+          "name": "ContentWidth"
+        },
+        {
+          "type": 156,
+          "name": "ContentHeight"
+        }
+      ]
+    },
+    {
+      "name": "LayoutCollapsibleMarginSet",
+      "fields": [
+        {
+          "type": 156,
+          "name": "Positive"
+        },
+        {
+          "type": 156,
+          "name": "Negative"
+        }
+      ]
+    },
+    {
+      "name": "LayoutData",
+      "fields": [
+        {
+          "type": 159,
+          "name": "Order"
+        },
+        {
+          "type": 156,
+          "name": "LocationX"
+        },
+        {
+          "type": 156,
+          "name": "LocationY"
+        },
+        {
+          "type": 156,
+          "name": "Width"
+        },
+        {
+          "type": 156,
+          "name": "Height"
+        },
+        {
+          "type": 156,
+          "name": "ContentWidth"
+        },
+        {
+          "type": 156,
+          "name": "ContentHeight"
+        },
+        {
+          "type": 156,
+          "name": "ScrollXSize"
+        },
+        {
+          "type": 156,
+          "name": "ScrollYSize"
+        },
+        {
+          "type": 156,
+          "name": "BorderTopSize"
+        },
+        {
+          "type": 156,
+          "name": "BorderRightSize"
+        },
+        {
+          "type": 156,
+          "name": "BorderBottomSize"
+        },
+        {
+          "type": 156,
+          "name": "BorderLeftSize"
+        },
+        {
+          "type": 156,
+          "name": "PaddingTopSize"
+        },
+        {
+          "type": 156,
+          "name": "PaddingRightSize"
+        },
+        {
+          "type": 156,
+          "name": "PaddingBottomSize"
+        },
+        {
+          "type": 156,
+          "name": "PaddingLeftSize"
+        },
+        {
+          "type": 156,
+          "name": "MarginTopSize"
+        },
+        {
+          "type": 156,
+          "name": "MarginRightSize"
+        },
+        {
+          "type": 156,
+          "name": "MarginBottomSize"
+        },
+        {
+          "type": 156,
+          "name": "MarginLeftSize"
+        }
+      ]
+    },
+    {
+      "name": "LayoutOutput",
+      "fields": [
+        {
+          "type": 156,
+          "name": "Width"
+        },
+        {
+          "type": 156,
+          "name": "Height"
+        },
+        {
+          "type": 156,
+          "name": "ContentWidth"
+        },
+        {
+          "type": 156,
+          "name": "ContentHeight"
+        },
+        {
+          "type": 156,
+          "name": "FirstBaselinesX"
+        },
+        {
+          "type": 156,
+          "name": "FirstBaselinesY"
+        },
+        {
+          "type": 91,
+          "name": "TopMargin"
+        },
+        {
+          "type": 91,
+          "name": "BottomMargin"
+        },
+        {
+          "type": 142,
+          "name": "HasFirstBaselinesX"
+        },
+        {
+          "type": 142,
+          "name": "HasFirstBaselinesY"
+        },
+        {
+          "type": 142,
+          "name": "MarginsCanCollapseThrough"
+        }
+      ]
+    },
+    {
+      "name": "NFontInfo",
+      "fields": [
+        {
+          "type": 128,
+          "name": "Metrics"
+        },
+        {
+          "type": 108,
+          "name": "Width"
+        },
+        {
+          "type": 107,
+          "name": "Weight"
+        },
+        {
+          "type": 127,
+          "name": "Flags"
+        }
+      ]
+    },
+    {
+      "name": "NFontPair",
+      "fields": [
+        {
+          "type": 66,
+          "name": "Font"
+        },
+        {
+          "type": 95,
+          "name": "Info"
+        }
+      ]
+    },
+    {
+      "name": "NLayoutContext",
+      "fields": [
+        {
+          "type": 81,
+          "name": "font_manager"
+        },
+        {
+          "type": 167,
+          "name": "roots"
+        },
+        {
+          "type": 152,
+          "name": "node_buckets"
+        },
+        {
+          "type": 175,
+          "name": "node_ctrl"
+        },
+        {
+          "type": 134,
+          "name": "node_common_data"
+        },
+        {
+          "type": 132,
+          "name": "node_childs_data"
+        },
+        {
+          "type": 139,
+          "name": "node_style_data"
+        },
+        {
+          "type": 151,
+          "name": "node_count"
+        },
+        {
+          "type": 142,
+          "name": "rounding"
+        }
+      ]
+    },
+    {
+      "name": "NNodeIdCtrl",
+      "fields": [
+        {
+          "type": 151,
+          "name": "HashCode"
+        },
+        {
+          "type": 151,
+          "name": "Next"
+        },
+        {
+          "type": 140,
+          "name": "Key"
+        }
+      ]
+    },
+    {
+      "name": "NString",
+      "fields": [
+        {
+          "type": 177,
+          "name": "m_str"
+        },
+        {
+          "type": 164,
+          "name": "m_handle"
+        },
+        {
+          "type": 151,
+          "name": "m_len"
+        }
+      ]
+    },
+    {
+      "name": "FontWidth",
+      "fields": [
+        {
+          "type": 156,
+          "name": "Width"
+        }
+      ]
+    },
+    {
+      "name": "LocaleId",
+      "fields": [
+        {
+          "type": 146,
+          "name": "Name"
+        }
+      ]
+    },
+    {
+      "name": "FontMetrics",
+      "fields": [
+        {
+          "type": 156,
+          "name": "Ascent"
+        },
+        {
+          "type": 156,
+          "name": "Descent"
+        },
+        {
+          "type": 156,
+          "name": "Leading"
+        },
+        {
+          "type": 156,
+          "name": "LineHeight"
+        },
+        {
+          "type": 158,
+          "name": "UnitsPerEm"
+        }
+      ]
+    },
+    {
+      "name": "TextRange",
+      "fields": [
+        {
+          "type": 60,
+          "name": "Locale"
+        },
+        {
+          "type": 151,
+          "name": "Start"
+        },
+        {
+          "type": 151,
+          "name": "Length"
+        },
+        {
+          "type": 129,
+          "name": "Script"
+        },
+        {
+          "type": 126,
+          "name": "Category"
+        },
+        {
+          "type": 142,
+          "name": "ScriptIsRtl"
+        }
+      ]
+    },
+    {
+      "name": "ChildsData",
+      "fields": [
+        {
+          "type": 62,
+          "name": "m_childs"
+        },
+        {
+          "type": 61,
+          "name": "m_texts"
+        },
+        {
+          "type": 159,
+          "name": "m_text_id_inc"
+        },
+        {
+          "type": 161,
+          "name": "m_version"
+        },
+        {
+          "type": 161,
+          "name": "m_last_version"
+        }
+      ]
+    },
+    {
+      "name": "CommonData",
+      "fields": [
+        {
+          "type": 172,
+          "name": "TextLayoutObject"
+        },
+        {
+          "type": 172,
+          "name": "TextLayoutBelongTo"
+        },
+        {
+          "type": 92,
+          "name": "FinalLayout"
+        },
+        {
+          "type": 92,
+          "name": "UnRoundedLayout"
+        },
+        {
+          "type": 87,
+          "name": "LayoutCache"
+        },
+        {
+          "type": 159,
+          "name": "LastLayoutVersion"
+        },
+        {
+          "type": 159,
+          "name": "LastTextLayoutVersion"
+        },
+        {
+          "type": 159,
+          "name": "LayoutVersion"
+        },
+        {
+          "type": 159,
+          "name": "TextLayoutVersion"
+        }
+      ]
+    },
+    {
+      "name": "GridContainerStyle",
+      "fields": [
+        {
+          "type": 18,
+          "name": "GridTemplateRows"
+        },
+        {
+          "type": 18,
+          "name": "GridTemplateColumns"
+        },
+        {
+          "type": 19,
+          "name": "GridAutoRows"
+        },
+        {
+          "type": 19,
+          "name": "GridAutoColumns"
+        },
+        {
+          "type": 17,
+          "name": "GridTemplateAreas"
+        },
+        {
+          "type": 15,
+          "name": "GridTemplateColumnNames"
+        },
+        {
+          "type": 15,
+          "name": "GridTemplateRowNames"
+        }
+      ]
+    },
+    {
+      "name": "RootData",
+      "fields": [
+        {
+          "type": 140,
+          "name": "Node"
+        },
+        {
+          "type": 156,
+          "name": "AvailableSpaceXValue"
+        },
+        {
+          "type": 156,
+          "name": "AvailableSpaceYValue"
+        },
+        {
+          "type": 58,
+          "name": "AvailableSpaceX"
+        },
+        {
+          "type": 58,
+          "name": "AvailableSpaceY"
+        },
+        {
+          "type": 142,
+          "name": "UseRounding"
+        }
+      ]
+    },
+    {
+      "name": "StyleData",
+      "fields": [
+        {
+          "type": 14,
+          "name": "Grid"
+        },
+        {
+          "type": 170,
+          "name": "FontFallback"
+        },
+        {
+          "type": 111,
+          "name": "Locale"
+        },
+        {
+          "type": 151,
+          "name": "ZIndex"
+        },
+        {
+          "type": 156,
+          "name": "TextColorR"
+        },
+        {
+          "type": 156,
+          "name": "TextColorG"
+        },
+        {
+          "type": 156,
+          "name": "TextColorB"
+        },
+        {
+          "type": 156,
+          "name": "TextColorA"
+        },
+        {
+          "type": 156,
+          "name": "Opacity"
+        },
+        {
+          "type": 156,
+          "name": "BackgroundColorR"
+        },
+        {
+          "type": 156,
+          "name": "BackgroundColorG"
+        },
+        {
+          "type": 156,
+          "name": "BackgroundColorB"
+        },
+        {
+          "type": 156,
+          "name": "BackgroundColorA"
+        },
+        {
+          "type": 156,
+          "name": "ScrollBarSize"
+        },
+        {
+          "type": 156,
+          "name": "WidthValue"
+        },
+        {
+          "type": 156,
+          "name": "HeightValue"
+        },
+        {
+          "type": 156,
+          "name": "MinWidthValue"
+        },
+        {
+          "type": 156,
+          "name": "MinHeightValue"
+        },
+        {
+          "type": 156,
+          "name": "MaxWidthValue"
+        },
+        {
+          "type": 156,
+          "name": "MaxHeightValue"
+        },
+        {
+          "type": 156,
+          "name": "AspectRatioValue"
+        },
+        {
+          "type": 156,
+          "name": "InsertTopValue"
+        },
+        {
+          "type": 156,
+          "name": "InsertRightValue"
+        },
+        {
+          "type": 156,
+          "name": "InsertBottomValue"
+        },
+        {
+          "type": 156,
+          "name": "InsertLeftValue"
+        },
+        {
+          "type": 156,
+          "name": "MarginTopValue"
+        },
+        {
+          "type": 156,
+          "name": "MarginRightValue"
+        },
+        {
+          "type": 156,
+          "name": "MarginBottomValue"
+        },
+        {
+          "type": 156,
+          "name": "MarginLeftValue"
+        },
+        {
+          "type": 156,
+          "name": "PaddingTopValue"
+        },
+        {
+          "type": 156,
+          "name": "PaddingRightValue"
+        },
+        {
+          "type": 156,
+          "name": "PaddingBottomValue"
+        },
+        {
+          "type": 156,
+          "name": "PaddingLeftValue"
+        },
+        {
+          "type": 156,
+          "name": "BorderTopValue"
+        },
+        {
+          "type": 156,
+          "name": "BorderRightValue"
+        },
+        {
+          "type": 156,
+          "name": "BorderBottomValue"
+        },
+        {
+          "type": 156,
+          "name": "BorderLeftValue"
+        },
+        {
+          "type": 156,
+          "name": "GapXValue"
+        },
+        {
+          "type": 156,
+          "name": "GapYValue"
+        },
+        {
+          "type": 156,
+          "name": "FlexGrow"
+        },
+        {
+          "type": 156,
+          "name": "FlexShrink"
+        },
+        {
+          "type": 156,
+          "name": "FlexBasisValue"
+        },
+        {
+          "type": 156,
+          "name": "TabSizeValue"
+        },
+        {
+          "type": 156,
+          "name": "FontSize"
+        },
+        {
+          "type": 108,
+          "name": "FontWidth"
+        },
+        {
+          "type": 156,
+          "name": "FontOblique"
+        },
+        {
+          "type": 107,
+          "name": "FontWeight"
+        },
+        {
+          "type": 156,
+          "name": "LineHeightValue"
+        },
+        {
+          "type": 46,
+          "name": "GridRowStart"
+        },
+        {
+          "type": 46,
+          "name": "GridRowEnd"
+        },
+        {
+          "type": 46,
+          "name": "GridColumnStart"
+        },
+        {
+          "type": 46,
+          "name": "GridColumnEnd"
+        },
+        {
+          "type": 122,
+          "name": "Visible"
+        },
+        {
+          "type": 115,
+          "name": "Position"
+        },
+        {
+          "type": 103,
+          "name": "Container"
+        },
+        {
+          "type": 118,
+          "name": "TextMode"
+        },
+        {
+          "type": 102,
+          "name": "BoxSizing"
+        },
+        {
+          "type": 104,
+          "name": "Cursor"
+        },
+        {
+          "type": 114,
+          "name": "PointerEvents"
+        },
+        {
+          "type": 113,
+          "name": "OverflowX"
+        },
+        {
+          "type": 113,
+          "name": "OverflowY"
+        },
+        {
+          "type": 53,
+          "name": "Width"
+        },
+        {
+          "type": 53,
+          "name": "Height"
+        },
+        {
+          "type": 53,
+          "name": "MinWidth"
+        },
+        {
+          "type": 53,
+          "name": "MinHeight"
+        },
+        {
+          "type": 53,
+          "name": "MaxWidth"
+        },
+        {
+          "type": 53,
+          "name": "MaxHeight"
+        },
+        {
+          "type": 53,
+          "name": "InsertTop"
+        },
+        {
+          "type": 53,
+          "name": "InsertRight"
+        },
+        {
+          "type": 53,
+          "name": "InsertBottom"
+        },
+        {
+          "type": 53,
+          "name": "InsertLeft"
+        },
+        {
+          "type": 53,
+          "name": "MarginTop"
+        },
+        {
+          "type": 53,
+          "name": "MarginRight"
+        },
+        {
+          "type": 53,
+          "name": "MarginBottom"
+        },
+        {
+          "type": 53,
+          "name": "MarginLeft"
+        },
+        {
+          "type": 53,
+          "name": "PaddingTop"
+        },
+        {
+          "type": 53,
+          "name": "PaddingRight"
+        },
+        {
+          "type": 53,
+          "name": "PaddingBottom"
+        },
+        {
+          "type": 53,
+          "name": "PaddingLeft"
+        },
+        {
+          "type": 53,
+          "name": "BorderTop"
+        },
+        {
+          "type": 53,
+          "name": "BorderRight"
+        },
+        {
+          "type": 53,
+          "name": "BorderBottom"
+        },
+        {
+          "type": 53,
+          "name": "BorderLeft"
+        },
+        {
+          "type": 142,
+          "name": "HasAspectRatio"
+        },
+        {
+          "type": 105,
+          "name": "FlexDirection"
+        },
+        {
+          "type": 106,
+          "name": "FlexWrap"
+        },
+        {
+          "type": 109,
+          "name": "GridAutoFlow"
+        },
+        {
+          "type": 53,
+          "name": "GapX"
+        },
+        {
+          "type": 53,
+          "name": "GapY"
+        },
+        {
+          "type": 43,
+          "name": "AlignContent"
+        },
+        {
+          "type": 43,
+          "name": "JustifyContent"
+        },
+        {
+          "type": 43,
+          "name": "AlignItems"
+        },
+        {
+          "type": 43,
+          "name": "JustifyItems"
+        },
+        {
+          "type": 43,
+          "name": "AlignSelf"
+        },
+        {
+          "type": 43,
+          "name": "JustifySelf"
+        },
+        {
+          "type": 53,
+          "name": "FlexBasis"
+        },
+        {
+          "type": 142,
+          "name": "FontItalic"
+        },
+        {
+          "type": 142,
+          "name": "FontOpticalSizing"
+        },
+        {
+          "type": 116,
+          "name": "TextAlign"
+        },
+        {
+          "type": 110,
+          "name": "LineAlign"
+        },
+        {
+          "type": 53,
+          "name": "TabSize"
+        },
+        {
+          "type": 112,
+          "name": "LocaleMode"
+        },
+        {
+          "type": 117,
+          "name": "TextDirection"
+        },
+        {
+          "type": 125,
+          "name": "WritingDirection"
+        },
+        {
+          "type": 124,
+          "name": "WrapFlags"
+        },
+        {
+          "type": 121,
+          "name": "TextWrap"
+        },
+        {
+          "type": 123,
+          "name": "WordBreak"
+        },
+        {
+          "type": 119,
+          "name": "TextOrientation"
+        },
+        {
+          "type": 120,
+          "name": "TextOverflow"
+        },
+        {
+          "type": 53,
+          "name": "LineHeight"
+        }
+      ]
+    },
+    {
+      "name": "NodeId",
+      "fields": [
+        {
+          "type": 159,
+          "name": "Index"
+        },
+        {
+          "type": 159,
+          "name": "IdAndType"
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "IAtlasAllocator",
+      "guid": "32b30623-411e-4fd5-a009-ae7e9ed88e78",
+      "methods": [
+        {
+          "name": "Clear",
+          "index": 0,
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "get_IsEmpty",
+          "index": 1,
+          "flags": "getter",
+          "return_type": 142,
+          "parameters": []
+        },
+        {
+          "name": "GetSize",
+          "index": 2,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "out_width",
+              "type": 152
+            },
+            {
+              "name": "out_height",
+              "type": 152
+            }
+          ]
+        },
+        {
+          "name": "Allocate",
+          "index": 3,
+          "return_type": 142,
+          "parameters": [
+            {
+              "name": "width",
+              "type": 151
+            },
+            {
+              "name": "height",
+              "type": 151
+            },
+            {
+              "name": "out_id",
+              "type": 160
+            },
+            {
+              "name": "out_rect",
+              "type": 23
+            }
+          ]
+        },
+        {
+          "name": "Deallocate",
+          "index": 4,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "id",
+              "type": 159
+            }
+          ]
+        },
+        {
+          "name": "GetRect",
+          "index": 5,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "id",
+              "type": 159
+            },
+            {
+              "name": "out_rect",
+              "type": 23
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IFont",
+      "guid": "09c443bc-9736-4aac-8117-6890555005ff",
+      "methods": [
+        {
+          "name": "get_Info",
+          "index": 0,
+          "flags": "const, getter",
+          "return_type": 173,
+          "parameters": []
+        },
+        {
+          "name": "CreateFace",
+          "index": 1,
+          "flags": "const",
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "face",
+              "flags": "out",
+              "type": 72
+            },
+            {
+              "name": "manager",
+              "type": 81
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IFontCollection",
+      "guid": "e56d9271-e6fd-4def-b03a-570380e0d560",
+      "methods": [
+        {
+          "name": "GetFamilies",
+          "index": 0,
+          "flags": "const",
+          "return_type": 178,
+          "parameters": [
+            {
+              "name": "count",
+              "flags": "out",
+              "type": 160
+            }
+          ]
+        },
+        {
+          "name": "ClearNativeFamiliesCache",
+          "index": 1,
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "FindDefaultFamily",
+          "index": 2,
+          "return_type": 159,
+          "parameters": []
+        }
+      ]
+    },
+    {
+      "name": "IFontFace",
+      "guid": "09c443bc-9736-4aac-8117-6890555005ff",
+      "methods": [
+        {
+          "name": "get_Id",
+          "index": 0,
+          "flags": "const, getter",
+          "return_type": 161,
+          "parameters": []
+        },
+        {
+          "name": "get_Info",
+          "index": 1,
+          "flags": "const, getter",
+          "return_type": 173,
+          "parameters": []
+        },
+        {
+          "name": "Equals",
+          "index": 2,
+          "flags": "const",
+          "return_type": 142,
+          "parameters": [
+            {
+              "name": "other",
+              "type": 71
+            }
+          ]
+        },
+        {
+          "name": "HashCode",
+          "index": 3,
+          "flags": "const",
+          "return_type": 151,
+          "parameters": []
+        },
+        {
+          "name": "GetFamilyNames",
+          "index": 4,
+          "flags": "const",
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ctx",
+              "type": 164
+            },
+            {
+              "name": "add",
+              "type": 4
+            }
+          ]
+        },
+        {
+          "name": "GetFaceNames",
+          "index": 5,
+          "flags": "const",
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ctx",
+              "type": 164
+            },
+            {
+              "name": "add",
+              "type": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IFontFallback",
+      "guid": "b0dbb428-eca1-4784-b27f-629bddf93ea4",
+      "methods": []
+    },
+    {
+      "name": "IFontFallbackBuilder",
+      "guid": "9b4e9893-0ea4-456b-bf54-9563db70eff0",
+      "methods": [
+        {
+          "name": "Build",
+          "index": 0,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ff",
+              "type": 75
+            }
+          ]
+        },
+        {
+          "name": "Add",
+          "index": 1,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "name",
+              "type": 177
+            },
+            {
+              "name": "length",
+              "type": 151
+            },
+            {
+              "name": "exists",
+              "type": 143
+            }
+          ]
+        },
+        {
+          "name": "AddLocaled",
+          "index": 2,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "locale",
+              "type": 177
+            },
+            {
+              "name": "name",
+              "type": 177
+            },
+            {
+              "name": "name_length",
+              "type": 151
+            },
+            {
+              "name": "exists",
+              "type": 143
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IFontFamily",
+      "guid": "f8009d34-9417-4b87-b23b-b7885d27aeab",
+      "methods": [
+        {
+          "name": "GetLocalNames",
+          "index": 0,
+          "flags": "const",
+          "return_type": 165,
+          "parameters": [
+            {
+              "name": "length",
+              "flags": "out",
+              "type": 160
+            }
+          ]
+        },
+        {
+          "name": "GetNames",
+          "index": 1,
+          "flags": "const",
+          "return_type": 169,
+          "parameters": [
+            {
+              "name": "length",
+              "flags": "out",
+              "type": 160
+            }
+          ]
+        },
+        {
+          "name": "ClearNativeNamesCache",
+          "index": 2,
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "GetFonts",
+          "index": 3,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "length",
+              "flags": "out",
+              "type": 160
+            },
+            {
+              "name": "pair",
+              "flags": "out",
+              "type": 179
+            }
+          ]
+        },
+        {
+          "name": "ClearNativeFontsCache",
+          "index": 4,
+          "return_type": 163,
+          "parameters": []
+        }
+      ]
+    },
+    {
+      "name": "IFontManager",
+      "guid": "15a9651e-4fa2-48f3-9291-df0f9681a7d1",
+      "methods": [
+        {
+          "name": "SetAssocUpdate",
+          "index": 0,
+          "return_type": 161,
+          "parameters": [
+            {
+              "name": "Data",
+              "type": 164
+            },
+            {
+              "name": "OnDrop",
+              "type": 1
+            },
+            {
+              "name": "OnAdd",
+              "type": 3
+            },
+            {
+              "name": "OnExpired",
+              "type": 3
+            }
+          ]
+        },
+        {
+          "name": "RemoveAssocUpdate",
+          "index": 1,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "AssocUpdateId",
+              "type": 161
+            }
+          ]
+        },
+        {
+          "name": "SetExpireFrame",
+          "index": 2,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "FrameCount",
+              "type": 161
+            }
+          ]
+        },
+        {
+          "name": "SetExpireTime",
+          "index": 3,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "TimeTicks",
+              "type": 161
+            }
+          ]
+        },
+        {
+          "name": "GetCurrentFrame",
+          "index": 4,
+          "flags": "const",
+          "return_type": 161,
+          "parameters": []
+        },
+        {
+          "name": "Update",
+          "index": 5,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "CurrentTime",
+              "type": 161
+            }
+          ]
+        },
+        {
+          "name": "FontFaceToId",
+          "index": 6,
+          "return_type": 161,
+          "parameters": [
+            {
+              "name": "Face",
+              "type": 71
+            }
+          ]
+        },
+        {
+          "name": "IdToFontFace",
+          "index": 7,
+          "return_type": 71,
+          "parameters": [
+            {
+              "name": "Id",
+              "type": 161
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ILayout",
+      "guid": "f1e64bf0-ffb9-42ce-be78-31871d247883",
+      "methods": [
+        {
+          "name": "Calc",
+          "index": 0,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ctx",
+              "type": 98
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ILib",
+      "guid": "778be1fe-18f2-4aa5-8d1f-52d83b132cff",
+      "methods": [
+        {
+          "name": "SetLogger",
+          "index": 0,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "obj",
+              "type": 164
+            },
+            {
+              "name": "logger",
+              "type": 2
+            },
+            {
+              "name": "is_enabled",
+              "type": 0
+            },
+            {
+              "name": "drop",
+              "type": 1
+            }
+          ]
+        },
+        {
+          "name": "ClearLogger",
+          "index": 1,
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "GetCurrentErrorMessage",
+          "index": 2,
+          "return_type": 10,
+          "parameters": []
+        },
+        {
+          "name": "CreateFontManager",
+          "index": 3,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "fm",
+              "type": 82
+            }
+          ]
+        },
+        {
+          "name": "GetSystemFontCollection",
+          "index": 4,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "fc",
+              "type": 69
+            }
+          ]
+        },
+        {
+          "name": "GetSystemFontFallback",
+          "index": 5,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ff",
+              "type": 75
+            }
+          ]
+        },
+        {
+          "name": "CreateFontFallbackBuilder",
+          "index": 6,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ffb",
+              "type": 78
+            },
+            {
+              "name": "info",
+              "type": 168
+            }
+          ]
+        },
+        {
+          "name": "CreateLayout",
+          "index": 7,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "layout",
+              "type": 85
+            }
+          ]
+        },
+        {
+          "name": "SplitTexts",
+          "index": 8,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "ranges",
+              "type": 21
+            },
+            {
+              "name": "chars",
+              "type": 177
+            },
+            {
+              "name": "len",
+              "type": 151
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IPath",
+      "guid": "dac7a459-b942-4a96-b7d6-ee5c74eca806",
+      "methods": [
+        {
+          "name": "CalcAABB",
+          "index": 0,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "out_aabb",
+              "type": 25
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IPathBuilder",
+      "guid": "ee1c5b1d-b22d-446a-9eef-128cec82e6c0",
+      "methods": [
+        {
+          "name": "Build",
+          "index": 0,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "path",
+              "type": 31
+            }
+          ]
+        },
+        {
+          "name": "Reserve",
+          "index": 1,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "Endpoints",
+              "type": 151
+            },
+            {
+              "name": "CtrlPoints",
+              "type": 151
+            }
+          ]
+        },
+        {
+          "name": "Batch",
+          "index": 2,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "cmds",
+              "type": 166
+            },
+            {
+              "name": "num_cmds",
+              "type": 151
+            }
+          ]
+        },
+        {
+          "name": "Close",
+          "index": 3,
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "MoveTo",
+          "index": 4,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "x",
+              "type": 156
+            },
+            {
+              "name": "y",
+              "type": 156
+            }
+          ]
+        },
+        {
+          "name": "LineTo",
+          "index": 5,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "x",
+              "type": 156
+            },
+            {
+              "name": "y",
+              "type": 156
+            }
+          ]
+        },
+        {
+          "name": "QuadraticBezierTo",
+          "index": 6,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "ctrl_x",
+              "type": 156
+            },
+            {
+              "name": "ctrl_y",
+              "type": 156
+            },
+            {
+              "name": "to_x",
+              "type": 156
+            },
+            {
+              "name": "to_y",
+              "type": 156
+            }
+          ]
+        },
+        {
+          "name": "CubicBezierTo",
+          "index": 7,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "ctrl0_x",
+              "type": 156
+            },
+            {
+              "name": "ctrl0_y",
+              "type": 156
+            },
+            {
+              "name": "ctrl1_x",
+              "type": 156
+            },
+            {
+              "name": "ctrl1_y",
+              "type": 156
+            },
+            {
+              "name": "to_x",
+              "type": 156
+            },
+            {
+              "name": "to_y",
+              "type": 156
+            }
+          ]
+        },
+        {
+          "name": "Arc",
+          "index": 8,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "center_x",
+              "type": 156
+            },
+            {
+              "name": "center_y",
+              "type": 156
+            },
+            {
+              "name": "radii_x",
+              "type": 156
+            },
+            {
+              "name": "radii_y",
+              "type": 156
+            },
+            {
+              "name": "sweep_angle",
+              "type": 156
+            },
+            {
+              "name": "x_rotation",
+              "type": 156
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "IStub",
+      "guid": "a998ec87-868d-4320-a30a-638c291f5562",
+      "methods": [
+        {
+          "name": "Some",
+          "index": 0,
+          "return_type": 163,
+          "parameters": [
+            {
+              "name": "a",
+              "type": 141
+            },
+            {
+              "name": "b",
+              "type": 137
+            },
+            {
+              "name": "c",
+              "type": 101
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ITessellator",
+      "guid": "acf5d52e-a656-4c00-a528-09aa4d86b2b2",
+      "methods": [
+        {
+          "name": "Fill",
+          "index": 0,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "path",
+              "type": 30
+            },
+            {
+              "name": "options",
+              "type": 40
+            }
+          ]
+        },
+        {
+          "name": "Stroke",
+          "index": 1,
+          "return_type": 7,
+          "parameters": [
+            {
+              "name": "path",
+              "type": 30
+            },
+            {
+              "name": "options",
+              "type": 42
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ITextData",
+      "guid": "bd0c7402-1de8-4547-860d-c78fd70ff203",
+      "methods": []
+    },
+    {
+      "name": "ITextLayout",
+      "guid": "f558ba07-1f1d-4c32-8229-134271b17083",
+      "methods": []
+    }
+  ]
+}
