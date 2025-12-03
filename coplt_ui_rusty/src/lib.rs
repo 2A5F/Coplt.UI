@@ -59,6 +59,7 @@ mod coplt_alloc {
     }
 }
 
+use cocom::ComPtr;
 use cocom::object;
 use coplt_alloc::*;
 
@@ -156,5 +157,13 @@ mod com_impl {
 use com::details;
 use com::impls;
 
-#[cocom::object(cocom::IUnknown)]
+use crate::com::ITextLayout;
+
+#[cocom::object(com::ITextLayout)]
 struct Foo {}
+
+impl impls::ITextLayout for Foo {}
+
+fn foo(a: ComPtr<com::IAtlasAllocator>) {
+    a.Clear();
+}
