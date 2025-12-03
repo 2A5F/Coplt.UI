@@ -1348,12 +1348,12 @@ pub mod details {
     pub struct VitualTable_IAtlasAllocator {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_Clear: unsafe extern "C" fn(this: *mut IAtlasAllocator) -> (),
-        pub f_get_IsEmpty: unsafe extern "C" fn(this: *mut IAtlasAllocator) -> bool,
-        pub f_GetSize: unsafe extern "C" fn(this: *mut IAtlasAllocator, out_width: *mut i32, out_height: *mut i32) -> (),
-        pub f_Allocate: unsafe extern "C" fn(this: *mut IAtlasAllocator, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2D) -> bool,
-        pub f_Deallocate: unsafe extern "C" fn(this: *mut IAtlasAllocator, id: u32) -> (),
-        pub f_GetRect: unsafe extern "C" fn(this: *mut IAtlasAllocator, id: u32, out_rect: *mut AABB2D) -> (),
+        pub f_Clear: unsafe extern "C" fn(this: *const IAtlasAllocator) -> (),
+        pub f_get_IsEmpty: unsafe extern "C" fn(this: *const IAtlasAllocator) -> bool,
+        pub f_GetSize: unsafe extern "C" fn(this: *const IAtlasAllocator, out_width: *mut i32, out_height: *mut i32) -> (),
+        pub f_Allocate: unsafe extern "C" fn(this: *const IAtlasAllocator, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2D) -> bool,
+        pub f_Deallocate: unsafe extern "C" fn(this: *const IAtlasAllocator, id: u32) -> (),
+        pub f_GetRect: unsafe extern "C" fn(this: *const IAtlasAllocator, id: u32, out_rect: *mut AABB2D) -> (),
     }
 
     #[repr(C)]
@@ -1371,8 +1371,8 @@ pub mod details {
         b: <IUnknown as Interface>::VitualTable,
 
         pub f_GetFamilies: unsafe extern "C" fn(this: *const IFontCollection, /* out */ count: *mut u32) -> *const *mut IFontFamily,
-        pub f_ClearNativeFamiliesCache: unsafe extern "C" fn(this: *mut IFontCollection) -> (),
-        pub f_FindDefaultFamily: unsafe extern "C" fn(this: *mut IFontCollection) -> u32,
+        pub f_ClearNativeFamiliesCache: unsafe extern "C" fn(this: *const IFontCollection) -> (),
+        pub f_FindDefaultFamily: unsafe extern "C" fn(this: *const IFontCollection) -> u32,
     }
 
     #[repr(C)]
@@ -1400,9 +1400,9 @@ pub mod details {
     pub struct VitualTable_IFontFallbackBuilder {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_Build: unsafe extern "C" fn(this: *mut IFontFallbackBuilder, ff: *mut *mut IFontFallback) -> HResult,
-        pub f_Add: unsafe extern "C" fn(this: *mut IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult,
-        pub f_AddLocaled: unsafe extern "C" fn(this: *mut IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
+        pub f_Build: unsafe extern "C" fn(this: *const IFontFallbackBuilder, ff: *mut *mut IFontFallback) -> HResult,
+        pub f_Add: unsafe extern "C" fn(this: *const IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult,
+        pub f_AddLocaled: unsafe extern "C" fn(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
     }
 
     #[repr(C)]
@@ -1412,9 +1412,9 @@ pub mod details {
 
         pub f_GetLocalNames: unsafe extern "C" fn(this: *const IFontFamily, /* out */ length: *mut u32) -> *const Str16,
         pub f_GetNames: unsafe extern "C" fn(this: *const IFontFamily, /* out */ length: *mut u32) -> *const FontFamilyNameInfo,
-        pub f_ClearNativeNamesCache: unsafe extern "C" fn(this: *mut IFontFamily) -> (),
-        pub f_GetFonts: unsafe extern "C" fn(this: *mut IFontFamily, /* out */ length: *mut u32, /* out */ pair: *mut *const NFontPair) -> HResult,
-        pub f_ClearNativeFontsCache: unsafe extern "C" fn(this: *mut IFontFamily) -> (),
+        pub f_ClearNativeNamesCache: unsafe extern "C" fn(this: *const IFontFamily) -> (),
+        pub f_GetFonts: unsafe extern "C" fn(this: *const IFontFamily, /* out */ length: *mut u32, /* out */ pair: *mut *const NFontPair) -> HResult,
+        pub f_ClearNativeFontsCache: unsafe extern "C" fn(this: *const IFontFamily) -> (),
     }
 
     #[repr(C)]
@@ -1422,14 +1422,14 @@ pub mod details {
     pub struct VitualTable_IFontManager {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_SetAssocUpdate: unsafe extern "C" fn(this: *mut IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64,
-        pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *mut IFontManager, AssocUpdateId: u64) -> (),
-        pub f_SetExpireFrame: unsafe extern "C" fn(this: *mut IFontManager, FrameCount: u64) -> (),
-        pub f_SetExpireTime: unsafe extern "C" fn(this: *mut IFontManager, TimeTicks: u64) -> (),
+        pub f_SetAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64,
+        pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, AssocUpdateId: u64) -> (),
+        pub f_SetExpireFrame: unsafe extern "C" fn(this: *const IFontManager, FrameCount: u64) -> (),
+        pub f_SetExpireTime: unsafe extern "C" fn(this: *const IFontManager, TimeTicks: u64) -> (),
         pub f_GetCurrentFrame: unsafe extern "C" fn(this: *const IFontManager) -> u64,
-        pub f_Update: unsafe extern "C" fn(this: *mut IFontManager, CurrentTime: u64) -> (),
-        pub f_FontFaceToId: unsafe extern "C" fn(this: *mut IFontManager, Face: *mut IFontFace) -> u64,
-        pub f_IdToFontFace: unsafe extern "C" fn(this: *mut IFontManager, Id: u64) -> *mut IFontFace,
+        pub f_Update: unsafe extern "C" fn(this: *const IFontManager, CurrentTime: u64) -> (),
+        pub f_FontFaceToId: unsafe extern "C" fn(this: *const IFontManager, Face: *mut IFontFace) -> u64,
+        pub f_IdToFontFace: unsafe extern "C" fn(this: *const IFontManager, Id: u64) -> *mut IFontFace,
     }
 
     #[repr(C)]
@@ -1437,7 +1437,7 @@ pub mod details {
     pub struct VitualTable_ILayout {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_Calc: unsafe extern "C" fn(this: *mut ILayout, ctx: *mut NLayoutContext) -> HResult,
+        pub f_Calc: unsafe extern "C" fn(this: *const ILayout, ctx: *mut NLayoutContext) -> HResult,
     }
 
     #[repr(C)]
@@ -1445,15 +1445,15 @@ pub mod details {
     pub struct VitualTable_ILib {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_SetLogger: unsafe extern "C" fn(this: *mut ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> (),
-        pub f_ClearLogger: unsafe extern "C" fn(this: *mut ILib) -> (),
-        pub f_GetCurrentErrorMessage: unsafe extern "C" fn(this: *mut ILib) -> Str8,
-        pub f_CreateFontManager: unsafe extern "C" fn(this: *mut ILib, fm: *mut *mut IFontManager) -> HResult,
-        pub f_GetSystemFontCollection: unsafe extern "C" fn(this: *mut ILib, fc: *mut *mut IFontCollection) -> HResult,
-        pub f_GetSystemFontFallback: unsafe extern "C" fn(this: *mut ILib, ff: *mut *mut IFontFallback) -> HResult,
-        pub f_CreateFontFallbackBuilder: unsafe extern "C" fn(this: *mut ILib, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> HResult,
-        pub f_CreateLayout: unsafe extern "C" fn(this: *mut ILib, layout: *mut *mut ILayout) -> HResult,
-        pub f_SplitTexts: unsafe extern "C" fn(this: *mut ILib, ranges: *mut NativeList<TextRange>, chars: *const u16, len: i32) -> HResult,
+        pub f_SetLogger: unsafe extern "C" fn(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> (),
+        pub f_ClearLogger: unsafe extern "C" fn(this: *const ILib) -> (),
+        pub f_GetCurrentErrorMessage: unsafe extern "C" fn(this: *const ILib) -> Str8,
+        pub f_CreateFontManager: unsafe extern "C" fn(this: *const ILib, fm: *mut *mut IFontManager) -> HResult,
+        pub f_GetSystemFontCollection: unsafe extern "C" fn(this: *const ILib, fc: *mut *mut IFontCollection) -> HResult,
+        pub f_GetSystemFontFallback: unsafe extern "C" fn(this: *const ILib, ff: *mut *mut IFontFallback) -> HResult,
+        pub f_CreateFontFallbackBuilder: unsafe extern "C" fn(this: *const ILib, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> HResult,
+        pub f_CreateLayout: unsafe extern "C" fn(this: *const ILib, layout: *mut *mut ILayout) -> HResult,
+        pub f_SplitTexts: unsafe extern "C" fn(this: *const ILib, ranges: *mut NativeList<TextRange>, chars: *const u16, len: i32) -> HResult,
     }
 
     #[repr(C)]
@@ -1461,7 +1461,7 @@ pub mod details {
     pub struct VitualTable_IPath {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_CalcAABB: unsafe extern "C" fn(this: *mut IPath, out_aabb: *mut AABB2DF) -> (),
+        pub f_CalcAABB: unsafe extern "C" fn(this: *const IPath, out_aabb: *mut AABB2DF) -> (),
     }
 
     #[repr(C)]
@@ -1469,15 +1469,15 @@ pub mod details {
     pub struct VitualTable_IPathBuilder {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_Build: unsafe extern "C" fn(this: *mut IPathBuilder, path: *mut *mut IPath) -> HResult,
-        pub f_Reserve: unsafe extern "C" fn(this: *mut IPathBuilder, Endpoints: i32, CtrlPoints: i32) -> (),
-        pub f_Batch: unsafe extern "C" fn(this: *mut IPathBuilder, cmds: *const PathBuilderCmd, num_cmds: i32) -> (),
-        pub f_Close: unsafe extern "C" fn(this: *mut IPathBuilder) -> (),
-        pub f_MoveTo: unsafe extern "C" fn(this: *mut IPathBuilder, x: f32, y: f32) -> (),
-        pub f_LineTo: unsafe extern "C" fn(this: *mut IPathBuilder, x: f32, y: f32) -> (),
-        pub f_QuadraticBezierTo: unsafe extern "C" fn(this: *mut IPathBuilder, ctrl_x: f32, ctrl_y: f32, to_x: f32, to_y: f32) -> (),
-        pub f_CubicBezierTo: unsafe extern "C" fn(this: *mut IPathBuilder, ctrl0_x: f32, ctrl0_y: f32, ctrl1_x: f32, ctrl1_y: f32, to_x: f32, to_y: f32) -> (),
-        pub f_Arc: unsafe extern "C" fn(this: *mut IPathBuilder, center_x: f32, center_y: f32, radii_x: f32, radii_y: f32, sweep_angle: f32, x_rotation: f32) -> (),
+        pub f_Build: unsafe extern "C" fn(this: *const IPathBuilder, path: *mut *mut IPath) -> HResult,
+        pub f_Reserve: unsafe extern "C" fn(this: *const IPathBuilder, Endpoints: i32, CtrlPoints: i32) -> (),
+        pub f_Batch: unsafe extern "C" fn(this: *const IPathBuilder, cmds: *const PathBuilderCmd, num_cmds: i32) -> (),
+        pub f_Close: unsafe extern "C" fn(this: *const IPathBuilder) -> (),
+        pub f_MoveTo: unsafe extern "C" fn(this: *const IPathBuilder, x: f32, y: f32) -> (),
+        pub f_LineTo: unsafe extern "C" fn(this: *const IPathBuilder, x: f32, y: f32) -> (),
+        pub f_QuadraticBezierTo: unsafe extern "C" fn(this: *const IPathBuilder, ctrl_x: f32, ctrl_y: f32, to_x: f32, to_y: f32) -> (),
+        pub f_CubicBezierTo: unsafe extern "C" fn(this: *const IPathBuilder, ctrl0_x: f32, ctrl0_y: f32, ctrl1_x: f32, ctrl1_y: f32, to_x: f32, to_y: f32) -> (),
+        pub f_Arc: unsafe extern "C" fn(this: *const IPathBuilder, center_x: f32, center_y: f32, radii_x: f32, radii_y: f32, sweep_angle: f32, x_rotation: f32) -> (),
     }
 
     #[repr(C)]
@@ -1485,7 +1485,7 @@ pub mod details {
     pub struct VitualTable_IStub {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_Some: unsafe extern "C" fn(this: *mut IStub, a: NodeType, b: *mut RootData, c: *mut NString) -> (),
+        pub f_Some: unsafe extern "C" fn(this: *const IStub, a: NodeType, b: *mut RootData, c: *mut NString) -> (),
     }
 
     #[repr(C)]
@@ -1493,8 +1493,8 @@ pub mod details {
     pub struct VitualTable_ITessellator {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_Fill: unsafe extern "C" fn(this: *mut ITessellator, path: *mut IPath, options: *mut TessFillOptions) -> HResult,
-        pub f_Stroke: unsafe extern "C" fn(this: *mut ITessellator, path: *mut IPath, options: *mut TessStrokeOptions) -> HResult,
+        pub f_Fill: unsafe extern "C" fn(this: *const ITessellator, path: *mut IPath, options: *mut TessFillOptions) -> HResult,
+        pub f_Stroke: unsafe extern "C" fn(this: *const ITessellator, path: *mut IPath, options: *mut TessStrokeOptions) -> HResult,
     }
 
     #[repr(C)]

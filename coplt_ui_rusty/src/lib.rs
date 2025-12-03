@@ -153,5 +153,8 @@ mod com_impl {
     }
 }
 
+use com::details;
+use com::impls;
+
 #[cocom::object(cocom::IUnknown)]
 struct Foo {}
