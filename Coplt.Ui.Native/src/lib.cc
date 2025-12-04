@@ -56,6 +56,21 @@ Str8 LibUi::Impl_GetCurrentErrorMessage()
     return Str8(reinterpret_cast<u8*>(const_cast<char*>(msg.data())), msg.size());
 }
 
+extern "C" void coplt_ui_new_atlas_allocator(
+    AtlasAllocatorType t, i32 width, i32 height, IAtlasAllocator** output
+);
+
+HResult LibUi::Impl_CreateAtlasAllocator(AtlasAllocatorType Type, i32 Width, i32 Height, IAtlasAllocator** aa)
+{
+    return feb(
+        [&]
+        {
+            coplt_ui_new_atlas_allocator(Type, Width, Height, aa);
+            return HResultE::Ok;
+        }
+    );
+}
+
 HResult LibUi::Impl_CreateFontManager(IFontManager** fm)
 {
     return feb(

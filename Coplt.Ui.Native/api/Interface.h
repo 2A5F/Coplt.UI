@@ -15,9 +15,8 @@ namespace Coplt {
         COPLT_COM_METHOD(Clear, void, ());
         COPLT_COM_METHOD(get_IsEmpty, bool, ());
         COPLT_COM_METHOD(GetSize, void, (::Coplt::i32* out_width, ::Coplt::i32* out_height), out_width, out_height);
-        COPLT_COM_METHOD(Allocate, bool, (::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2D* out_rect), width, height, out_id, out_rect);
+        COPLT_COM_METHOD(Allocate, bool, (::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2DI* out_rect), width, height, out_id, out_rect);
         COPLT_COM_METHOD(Deallocate, void, (::Coplt::u32 id), id);
-        COPLT_COM_METHOD(GetRect, void, (::Coplt::u32 id, ::Coplt::AABB2D* out_rect), id, out_rect);
     };
 
     COPLT_COM_INTERFACE(IFont, "09c443bc-9736-4aac-8117-6890555005ff", ::Coplt::IUnknown)
@@ -102,6 +101,7 @@ namespace Coplt {
         COPLT_COM_METHOD(SetLogger, void, (void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* logger, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* is_enabled, ::Coplt::Func<void, void*>* drop), obj, logger, is_enabled, drop);
         COPLT_COM_METHOD(ClearLogger, void, ());
         COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());
+        COPLT_COM_METHOD(CreateAtlasAllocator, ::Coplt::HResult, (::Coplt::AtlasAllocatorType Type, ::Coplt::i32 Width, ::Coplt::i32 Height, IAtlasAllocator** aa), Type, Width, Height, aa);
         COPLT_COM_METHOD(CreateFontManager, ::Coplt::HResult, (IFontManager** fm), fm);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
         COPLT_COM_METHOD(GetSystemFontFallback, ::Coplt::HResult, (IFontFallback** ff), ff);

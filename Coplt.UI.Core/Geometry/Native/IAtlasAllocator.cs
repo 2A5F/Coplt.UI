@@ -9,7 +9,6 @@ public unsafe partial struct IAtlasAllocator
     public partial void Clear();
     public partial bool IsEmpty { get; }
     public partial void GetSize(int* out_width, int* out_height);
-    public partial bool Allocate(int width, int height, uint* out_id, AABB2D* out_rect);
+    public partial bool Allocate(int width, int height, uint* out_id, AABB2DI* out_rect);
     public partial void Deallocate(uint id);
-    public partial void GetRect(uint id, AABB2D* out_rect);
 }

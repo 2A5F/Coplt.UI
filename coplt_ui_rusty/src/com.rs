@@ -2,16 +2,15 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 
-use cocom::{Guid, HResult, Interface, IUnknown, IWeak};
+use cocom::{Guid, HResult, HResultE, Interface, IUnknown, IWeak};
 
 #[cocom::interface("32b30623-411e-4fd5-a009-ae7e9ed88e78")]
 pub trait IAtlasAllocator : IUnknown {
     fn Clear(&mut self) -> ();
     fn get_IsEmpty(&mut self) -> bool;
     fn GetSize(&mut self, out_width: *mut i32, out_height: *mut i32) -> ();
-    fn Allocate(&mut self, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2D) -> bool;
+    fn Allocate(&mut self, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2DI) -> bool;
     fn Deallocate(&mut self, id: u32) -> ();
-    fn GetRect(&mut self, id: u32, out_rect: *mut AABB2D) -> ();
 }
 
 #[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
@@ -79,6 +78,7 @@ pub trait ILib : IUnknown {
     fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> ();
     fn ClearLogger(&mut self) -> ();
     fn GetCurrentErrorMessage(&mut self) -> Str8;
+    fn CreateAtlasAllocator(&mut self, Type: AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut IAtlasAllocator) -> HResult;
     fn CreateFontManager(&mut self, fm: *mut *mut IFontManager) -> HResult;
     fn GetSystemFontCollection(&mut self, fc: *mut *mut IFontCollection) -> HResult;
     fn GetSystemFontFallback(&mut self, ff: *mut *mut IFontFallback) -> HResult;
@@ -129,6 +129,13 @@ pub trait ITextLayout : IUnknown {
 pub enum StrKind {
     Str8 = 0,
     Str16 = 1,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum AtlasAllocatorType {
+    Common = 0,
+    Bucketed = 1,
 }
 
 #[repr(u8)]
@@ -799,20 +806,20 @@ pub struct NativeList<T0 /* T */> {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct AABB2D {
-    pub MinX: u32,
-    pub MinY: u32,
-    pub MaxX: u32,
-    pub MaxY: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct AABB2DF {
     pub MinX: f32,
     pub MinY: f32,
     pub MaxX: f32,
     pub MaxY: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct AABB2DI {
+    pub MinX: i32,
+    pub MinY: i32,
+    pub MaxX: i32,
+    pub MaxY: i32,
 }
 
 #[repr(C)]
@@ -1343,6 +1350,8 @@ pub mod details {
     pub use cocom::details::*;
     use super::*;
 
+    struct VT<T, V, O>(core::marker::PhantomData<(T, V, O)>);
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IAtlasAllocator {
@@ -1351,9 +1360,66 @@ pub mod details {
         pub f_Clear: unsafe extern "C" fn(this: *const IAtlasAllocator) -> (),
         pub f_get_IsEmpty: unsafe extern "C" fn(this: *const IAtlasAllocator) -> bool,
         pub f_GetSize: unsafe extern "C" fn(this: *const IAtlasAllocator, out_width: *mut i32, out_height: *mut i32) -> (),
-        pub f_Allocate: unsafe extern "C" fn(this: *const IAtlasAllocator, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2D) -> bool,
+        pub f_Allocate: unsafe extern "C" fn(this: *const IAtlasAllocator, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2DI) -> bool,
         pub f_Deallocate: unsafe extern "C" fn(this: *const IAtlasAllocator, id: u32) -> (),
-        pub f_GetRect: unsafe extern "C" fn(this: *const IAtlasAllocator, id: u32, out_rect: *mut AABB2D) -> (),
+    }
+
+    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IAtlasAllocator, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IAtlasAllocator = VitualTable_IAtlasAllocator {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_Clear: Self::f_Clear,
+            f_get_IsEmpty: Self::f_get_IsEmpty,
+            f_GetSize: Self::f_GetSize,
+            f_Allocate: Self::f_Allocate,
+            f_Deallocate: Self::f_Deallocate,
+        };
+
+        unsafe extern "C" fn f_Clear(this: *const IAtlasAllocator) -> () {
+            unsafe { (*O::GetObject(this as _)).Clear() }
+        }
+        unsafe extern "C" fn f_get_IsEmpty(this: *const IAtlasAllocator) -> bool {
+            unsafe { (*O::GetObject(this as _)).get_IsEmpty() }
+        }
+        unsafe extern "C" fn f_GetSize(this: *const IAtlasAllocator, out_width: *mut i32, out_height: *mut i32) -> () {
+            unsafe { (*O::GetObject(this as _)).GetSize(out_width, out_height) }
+        }
+        unsafe extern "C" fn f_Allocate(this: *const IAtlasAllocator, width: i32, height: i32, out_id: *mut u32, out_rect: *mut AABB2DI) -> bool {
+            unsafe { (*O::GetObject(this as _)).Allocate(width, height, out_id, out_rect) }
+        }
+        unsafe extern "C" fn f_Deallocate(this: *const IAtlasAllocator, id: u32) -> () {
+            unsafe { (*O::GetObject(this as _)).Deallocate(id) }
+        }
+    }
+
+    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IAtlasAllocator
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IAtlasAllocator as Interface>::VitualTable = VT::<T, IAtlasAllocator, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IAtlasAllocator {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IAtlasAllocator::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1365,6 +1431,52 @@ pub mod details {
         pub f_CreateFace: unsafe extern "C" fn(this: *const IFont, /* out */ face: *mut *mut IFontFace, manager: *mut IFontManager) -> HResult,
     }
 
+    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFont, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFont = VitualTable_IFont {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_get_Info: Self::f_get_Info,
+            f_CreateFace: Self::f_CreateFace,
+        };
+
+        unsafe extern "C" fn f_get_Info(this: *const IFont) -> *const NFontInfo {
+            unsafe { (*O::GetObject(this as _)).get_Info() }
+        }
+        unsafe extern "C" fn f_CreateFace(this: *const IFont, /* out */ face: *mut *mut IFontFace, manager: *mut IFontManager) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateFace(face, manager) }
+        }
+    }
+
+    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFont
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFont as Interface>::VitualTable = VT::<T, IFont, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFont {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFont::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IFontCollection {
@@ -1373,6 +1485,56 @@ pub mod details {
         pub f_GetFamilies: unsafe extern "C" fn(this: *const IFontCollection, /* out */ count: *mut u32) -> *const *mut IFontFamily,
         pub f_ClearNativeFamiliesCache: unsafe extern "C" fn(this: *const IFontCollection) -> (),
         pub f_FindDefaultFamily: unsafe extern "C" fn(this: *const IFontCollection) -> u32,
+    }
+
+    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontCollection, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFontCollection = VitualTable_IFontCollection {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_GetFamilies: Self::f_GetFamilies,
+            f_ClearNativeFamiliesCache: Self::f_ClearNativeFamiliesCache,
+            f_FindDefaultFamily: Self::f_FindDefaultFamily,
+        };
+
+        unsafe extern "C" fn f_GetFamilies(this: *const IFontCollection, /* out */ count: *mut u32) -> *const *mut IFontFamily {
+            unsafe { (*O::GetObject(this as _)).GetFamilies(count) }
+        }
+        unsafe extern "C" fn f_ClearNativeFamiliesCache(this: *const IFontCollection) -> () {
+            unsafe { (*O::GetObject(this as _)).ClearNativeFamiliesCache() }
+        }
+        unsafe extern "C" fn f_FindDefaultFamily(this: *const IFontCollection) -> u32 {
+            unsafe { (*O::GetObject(this as _)).FindDefaultFamily() }
+        }
+    }
+
+    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontCollection
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFontCollection as Interface>::VitualTable = VT::<T, IFontCollection, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontCollection {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFontCollection::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1388,11 +1550,111 @@ pub mod details {
         pub f_GetFaceNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult,
     }
 
+    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFace, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFontFace = VitualTable_IFontFace {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_get_Id: Self::f_get_Id,
+            f_get_Info: Self::f_get_Info,
+            f_Equals: Self::f_Equals,
+            f_HashCode: Self::f_HashCode,
+            f_GetFamilyNames: Self::f_GetFamilyNames,
+            f_GetFaceNames: Self::f_GetFaceNames,
+        };
+
+        unsafe extern "C" fn f_get_Id(this: *const IFontFace) -> u64 {
+            unsafe { (*O::GetObject(this as _)).get_Id() }
+        }
+        unsafe extern "C" fn f_get_Info(this: *const IFontFace) -> *const NFontInfo {
+            unsafe { (*O::GetObject(this as _)).get_Info() }
+        }
+        unsafe extern "C" fn f_Equals(this: *const IFontFace, other: *mut IFontFace) -> bool {
+            unsafe { (*O::GetObject(this as _)).Equals(other) }
+        }
+        unsafe extern "C" fn f_HashCode(this: *const IFontFace) -> i32 {
+            unsafe { (*O::GetObject(this as _)).HashCode() }
+        }
+        unsafe extern "C" fn f_GetFamilyNames(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult {
+            unsafe { (*O::GetObject(this as _)).GetFamilyNames(ctx, add) }
+        }
+        unsafe extern "C" fn f_GetFaceNames(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult {
+            unsafe { (*O::GetObject(this as _)).GetFaceNames(ctx, add) }
+        }
+    }
+
+    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFace
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFontFace as Interface>::VitualTable = VT::<T, IFontFace, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFace {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFontFace::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IFontFallback {
         b: <IUnknown as Interface>::VitualTable,
 
+    }
+
+    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallback, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFontFallback = VitualTable_IFontFallback {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+        };
+
+    }
+
+    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFallback
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFontFallback as Interface>::VitualTable = VT::<T, IFontFallback, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFallback {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFontFallback::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1405,6 +1667,56 @@ pub mod details {
         pub f_AddLocaled: unsafe extern "C" fn(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
     }
 
+    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallbackBuilder, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFontFallbackBuilder = VitualTable_IFontFallbackBuilder {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_Build: Self::f_Build,
+            f_Add: Self::f_Add,
+            f_AddLocaled: Self::f_AddLocaled,
+        };
+
+        unsafe extern "C" fn f_Build(this: *const IFontFallbackBuilder, ff: *mut *mut IFontFallback) -> HResult {
+            unsafe { (*O::GetObject(this as _)).Build(ff) }
+        }
+        unsafe extern "C" fn f_Add(this: *const IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult {
+            unsafe { (*O::GetObject(this as _)).Add(name, length, exists) }
+        }
+        unsafe extern "C" fn f_AddLocaled(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult {
+            unsafe { (*O::GetObject(this as _)).AddLocaled(locale, name, name_length, exists) }
+        }
+    }
+
+    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFallbackBuilder
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFontFallbackBuilder as Interface>::VitualTable = VT::<T, IFontFallbackBuilder, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFallbackBuilder {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFontFallbackBuilder::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IFontFamily {
@@ -1415,6 +1727,64 @@ pub mod details {
         pub f_ClearNativeNamesCache: unsafe extern "C" fn(this: *const IFontFamily) -> (),
         pub f_GetFonts: unsafe extern "C" fn(this: *const IFontFamily, /* out */ length: *mut u32, /* out */ pair: *mut *const NFontPair) -> HResult,
         pub f_ClearNativeFontsCache: unsafe extern "C" fn(this: *const IFontFamily) -> (),
+    }
+
+    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFamily, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFontFamily = VitualTable_IFontFamily {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_GetLocalNames: Self::f_GetLocalNames,
+            f_GetNames: Self::f_GetNames,
+            f_ClearNativeNamesCache: Self::f_ClearNativeNamesCache,
+            f_GetFonts: Self::f_GetFonts,
+            f_ClearNativeFontsCache: Self::f_ClearNativeFontsCache,
+        };
+
+        unsafe extern "C" fn f_GetLocalNames(this: *const IFontFamily, /* out */ length: *mut u32) -> *const Str16 {
+            unsafe { (*O::GetObject(this as _)).GetLocalNames(length) }
+        }
+        unsafe extern "C" fn f_GetNames(this: *const IFontFamily, /* out */ length: *mut u32) -> *const FontFamilyNameInfo {
+            unsafe { (*O::GetObject(this as _)).GetNames(length) }
+        }
+        unsafe extern "C" fn f_ClearNativeNamesCache(this: *const IFontFamily) -> () {
+            unsafe { (*O::GetObject(this as _)).ClearNativeNamesCache() }
+        }
+        unsafe extern "C" fn f_GetFonts(this: *const IFontFamily, /* out */ length: *mut u32, /* out */ pair: *mut *const NFontPair) -> HResult {
+            unsafe { (*O::GetObject(this as _)).GetFonts(length, pair) }
+        }
+        unsafe extern "C" fn f_ClearNativeFontsCache(this: *const IFontFamily) -> () {
+            unsafe { (*O::GetObject(this as _)).ClearNativeFontsCache() }
+        }
+    }
+
+    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFamily
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFontFamily as Interface>::VitualTable = VT::<T, IFontFamily, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFamily {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFontFamily::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1432,12 +1802,124 @@ pub mod details {
         pub f_IdToFontFace: unsafe extern "C" fn(this: *const IFontManager, Id: u64) -> *mut IFontFace,
     }
 
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontManager, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFontManager = VitualTable_IFontManager {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_SetAssocUpdate: Self::f_SetAssocUpdate,
+            f_RemoveAssocUpdate: Self::f_RemoveAssocUpdate,
+            f_SetExpireFrame: Self::f_SetExpireFrame,
+            f_SetExpireTime: Self::f_SetExpireTime,
+            f_GetCurrentFrame: Self::f_GetCurrentFrame,
+            f_Update: Self::f_Update,
+            f_FontFaceToId: Self::f_FontFaceToId,
+            f_IdToFontFace: Self::f_IdToFontFace,
+        };
+
+        unsafe extern "C" fn f_SetAssocUpdate(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64 {
+            unsafe { (*O::GetObject(this as _)).SetAssocUpdate(Data, OnDrop, OnAdd, OnExpired) }
+        }
+        unsafe extern "C" fn f_RemoveAssocUpdate(this: *const IFontManager, AssocUpdateId: u64) -> () {
+            unsafe { (*O::GetObject(this as _)).RemoveAssocUpdate(AssocUpdateId) }
+        }
+        unsafe extern "C" fn f_SetExpireFrame(this: *const IFontManager, FrameCount: u64) -> () {
+            unsafe { (*O::GetObject(this as _)).SetExpireFrame(FrameCount) }
+        }
+        unsafe extern "C" fn f_SetExpireTime(this: *const IFontManager, TimeTicks: u64) -> () {
+            unsafe { (*O::GetObject(this as _)).SetExpireTime(TimeTicks) }
+        }
+        unsafe extern "C" fn f_GetCurrentFrame(this: *const IFontManager) -> u64 {
+            unsafe { (*O::GetObject(this as _)).GetCurrentFrame() }
+        }
+        unsafe extern "C" fn f_Update(this: *const IFontManager, CurrentTime: u64) -> () {
+            unsafe { (*O::GetObject(this as _)).Update(CurrentTime) }
+        }
+        unsafe extern "C" fn f_FontFaceToId(this: *const IFontManager, Face: *mut IFontFace) -> u64 {
+            unsafe { (*O::GetObject(this as _)).FontFaceToId(Face) }
+        }
+        unsafe extern "C" fn f_IdToFontFace(this: *const IFontManager, Id: u64) -> *mut IFontFace {
+            unsafe { (*O::GetObject(this as _)).IdToFontFace(Id) }
+        }
+    }
+
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontManager
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFontManager as Interface>::VitualTable = VT::<T, IFontManager, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontManager {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFontManager::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_ILayout {
         b: <IUnknown as Interface>::VitualTable,
 
         pub f_Calc: unsafe extern "C" fn(this: *const ILayout, ctx: *mut NLayoutContext) -> HResult,
+    }
+
+    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ILayout, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_ILayout = VitualTable_ILayout {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_Calc: Self::f_Calc,
+        };
+
+        unsafe extern "C" fn f_Calc(this: *const ILayout, ctx: *mut NLayoutContext) -> HResult {
+            unsafe { (*O::GetObject(this as _)).Calc(ctx) }
+        }
+    }
+
+    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ILayout
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <ILayout as Interface>::VitualTable = VT::<T, ILayout, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ILayout {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == ILayout::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1448,6 +1930,7 @@ pub mod details {
         pub f_SetLogger: unsafe extern "C" fn(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> (),
         pub f_ClearLogger: unsafe extern "C" fn(this: *const ILib) -> (),
         pub f_GetCurrentErrorMessage: unsafe extern "C" fn(this: *const ILib) -> Str8,
+        pub f_CreateAtlasAllocator: unsafe extern "C" fn(this: *const ILib, Type: AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut IAtlasAllocator) -> HResult,
         pub f_CreateFontManager: unsafe extern "C" fn(this: *const ILib, fm: *mut *mut IFontManager) -> HResult,
         pub f_GetSystemFontCollection: unsafe extern "C" fn(this: *const ILib, fc: *mut *mut IFontCollection) -> HResult,
         pub f_GetSystemFontFallback: unsafe extern "C" fn(this: *const ILib, ff: *mut *mut IFontFallback) -> HResult,
@@ -1456,12 +1939,132 @@ pub mod details {
         pub f_SplitTexts: unsafe extern "C" fn(this: *const ILib, ranges: *mut NativeList<TextRange>, chars: *const u16, len: i32) -> HResult,
     }
 
+    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ILib, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_ILib = VitualTable_ILib {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_SetLogger: Self::f_SetLogger,
+            f_ClearLogger: Self::f_ClearLogger,
+            f_GetCurrentErrorMessage: Self::f_GetCurrentErrorMessage,
+            f_CreateAtlasAllocator: Self::f_CreateAtlasAllocator,
+            f_CreateFontManager: Self::f_CreateFontManager,
+            f_GetSystemFontCollection: Self::f_GetSystemFontCollection,
+            f_GetSystemFontFallback: Self::f_GetSystemFontFallback,
+            f_CreateFontFallbackBuilder: Self::f_CreateFontFallbackBuilder,
+            f_CreateLayout: Self::f_CreateLayout,
+            f_SplitTexts: Self::f_SplitTexts,
+        };
+
+        unsafe extern "C" fn f_SetLogger(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> () {
+            unsafe { (*O::GetObject(this as _)).SetLogger(obj, logger, is_enabled, drop) }
+        }
+        unsafe extern "C" fn f_ClearLogger(this: *const ILib) -> () {
+            unsafe { (*O::GetObject(this as _)).ClearLogger() }
+        }
+        unsafe extern "C" fn f_GetCurrentErrorMessage(this: *const ILib) -> Str8 {
+            unsafe { (*O::GetObject(this as _)).GetCurrentErrorMessage() }
+        }
+        unsafe extern "C" fn f_CreateAtlasAllocator(this: *const ILib, Type: AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut IAtlasAllocator) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateAtlasAllocator(Type, Width, Height, aa) }
+        }
+        unsafe extern "C" fn f_CreateFontManager(this: *const ILib, fm: *mut *mut IFontManager) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateFontManager(fm) }
+        }
+        unsafe extern "C" fn f_GetSystemFontCollection(this: *const ILib, fc: *mut *mut IFontCollection) -> HResult {
+            unsafe { (*O::GetObject(this as _)).GetSystemFontCollection(fc) }
+        }
+        unsafe extern "C" fn f_GetSystemFontFallback(this: *const ILib, ff: *mut *mut IFontFallback) -> HResult {
+            unsafe { (*O::GetObject(this as _)).GetSystemFontFallback(ff) }
+        }
+        unsafe extern "C" fn f_CreateFontFallbackBuilder(this: *const ILib, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateFontFallbackBuilder(ffb, info) }
+        }
+        unsafe extern "C" fn f_CreateLayout(this: *const ILib, layout: *mut *mut ILayout) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateLayout(layout) }
+        }
+        unsafe extern "C" fn f_SplitTexts(this: *const ILib, ranges: *mut NativeList<TextRange>, chars: *const u16, len: i32) -> HResult {
+            unsafe { (*O::GetObject(this as _)).SplitTexts(ranges, chars, len) }
+        }
+    }
+
+    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ILib
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <ILib as Interface>::VitualTable = VT::<T, ILib, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ILib {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == ILib::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IPath {
         b: <IUnknown as Interface>::VitualTable,
 
         pub f_CalcAABB: unsafe extern "C" fn(this: *const IPath, out_aabb: *mut AABB2DF) -> (),
+    }
+
+    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IPath, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IPath = VitualTable_IPath {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_CalcAABB: Self::f_CalcAABB,
+        };
+
+        unsafe extern "C" fn f_CalcAABB(this: *const IPath, out_aabb: *mut AABB2DF) -> () {
+            unsafe { (*O::GetObject(this as _)).CalcAABB(out_aabb) }
+        }
+    }
+
+    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IPath
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IPath as Interface>::VitualTable = VT::<T, IPath, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IPath {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IPath::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1480,12 +2083,128 @@ pub mod details {
         pub f_Arc: unsafe extern "C" fn(this: *const IPathBuilder, center_x: f32, center_y: f32, radii_x: f32, radii_y: f32, sweep_angle: f32, x_rotation: f32) -> (),
     }
 
+    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IPathBuilder, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IPathBuilder = VitualTable_IPathBuilder {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_Build: Self::f_Build,
+            f_Reserve: Self::f_Reserve,
+            f_Batch: Self::f_Batch,
+            f_Close: Self::f_Close,
+            f_MoveTo: Self::f_MoveTo,
+            f_LineTo: Self::f_LineTo,
+            f_QuadraticBezierTo: Self::f_QuadraticBezierTo,
+            f_CubicBezierTo: Self::f_CubicBezierTo,
+            f_Arc: Self::f_Arc,
+        };
+
+        unsafe extern "C" fn f_Build(this: *const IPathBuilder, path: *mut *mut IPath) -> HResult {
+            unsafe { (*O::GetObject(this as _)).Build(path) }
+        }
+        unsafe extern "C" fn f_Reserve(this: *const IPathBuilder, Endpoints: i32, CtrlPoints: i32) -> () {
+            unsafe { (*O::GetObject(this as _)).Reserve(Endpoints, CtrlPoints) }
+        }
+        unsafe extern "C" fn f_Batch(this: *const IPathBuilder, cmds: *const PathBuilderCmd, num_cmds: i32) -> () {
+            unsafe { (*O::GetObject(this as _)).Batch(cmds, num_cmds) }
+        }
+        unsafe extern "C" fn f_Close(this: *const IPathBuilder) -> () {
+            unsafe { (*O::GetObject(this as _)).Close() }
+        }
+        unsafe extern "C" fn f_MoveTo(this: *const IPathBuilder, x: f32, y: f32) -> () {
+            unsafe { (*O::GetObject(this as _)).MoveTo(x, y) }
+        }
+        unsafe extern "C" fn f_LineTo(this: *const IPathBuilder, x: f32, y: f32) -> () {
+            unsafe { (*O::GetObject(this as _)).LineTo(x, y) }
+        }
+        unsafe extern "C" fn f_QuadraticBezierTo(this: *const IPathBuilder, ctrl_x: f32, ctrl_y: f32, to_x: f32, to_y: f32) -> () {
+            unsafe { (*O::GetObject(this as _)).QuadraticBezierTo(ctrl_x, ctrl_y, to_x, to_y) }
+        }
+        unsafe extern "C" fn f_CubicBezierTo(this: *const IPathBuilder, ctrl0_x: f32, ctrl0_y: f32, ctrl1_x: f32, ctrl1_y: f32, to_x: f32, to_y: f32) -> () {
+            unsafe { (*O::GetObject(this as _)).CubicBezierTo(ctrl0_x, ctrl0_y, ctrl1_x, ctrl1_y, to_x, to_y) }
+        }
+        unsafe extern "C" fn f_Arc(this: *const IPathBuilder, center_x: f32, center_y: f32, radii_x: f32, radii_y: f32, sweep_angle: f32, x_rotation: f32) -> () {
+            unsafe { (*O::GetObject(this as _)).Arc(center_x, center_y, radii_x, radii_y, sweep_angle, x_rotation) }
+        }
+    }
+
+    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IPathBuilder
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IPathBuilder as Interface>::VitualTable = VT::<T, IPathBuilder, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IPathBuilder {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IPathBuilder::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IStub {
         b: <IUnknown as Interface>::VitualTable,
 
         pub f_Some: unsafe extern "C" fn(this: *const IStub, a: NodeType, b: *mut RootData, c: *mut NString) -> (),
+    }
+
+    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IStub, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IStub = VitualTable_IStub {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_Some: Self::f_Some,
+        };
+
+        unsafe extern "C" fn f_Some(this: *const IStub, a: NodeType, b: *mut RootData, c: *mut NString) -> () {
+            unsafe { (*O::GetObject(this as _)).Some(a, b, c) }
+        }
+    }
+
+    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IStub
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IStub as Interface>::VitualTable = VT::<T, IStub, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IStub {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IStub::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 
     #[repr(C)]
@@ -1497,6 +2216,52 @@ pub mod details {
         pub f_Stroke: unsafe extern "C" fn(this: *const ITessellator, path: *mut IPath, options: *mut TessStrokeOptions) -> HResult,
     }
 
+    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITessellator, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_ITessellator = VitualTable_ITessellator {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_Fill: Self::f_Fill,
+            f_Stroke: Self::f_Stroke,
+        };
+
+        unsafe extern "C" fn f_Fill(this: *const ITessellator, path: *mut IPath, options: *mut TessFillOptions) -> HResult {
+            unsafe { (*O::GetObject(this as _)).Fill(path, options) }
+        }
+        unsafe extern "C" fn f_Stroke(this: *const ITessellator, path: *mut IPath, options: *mut TessStrokeOptions) -> HResult {
+            unsafe { (*O::GetObject(this as _)).Stroke(path, options) }
+        }
+    }
+
+    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITessellator
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <ITessellator as Interface>::VitualTable = VT::<T, ITessellator, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITessellator {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == ITessellator::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_ITextData {
@@ -1504,11 +2269,87 @@ pub mod details {
 
     }
 
+    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITextData, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_ITextData = VitualTable_ITextData {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+        };
+
+    }
+
+    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITextData
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <ITextData as Interface>::VitualTable = VT::<T, ITextData, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITextData {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == ITextData::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_ITextLayout {
         b: <IUnknown as Interface>::VitualTable,
 
+    }
+
+    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITextLayout, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_ITextLayout = VitualTable_ITextLayout {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+        };
+
+    }
+
+    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITextLayout
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <ITextLayout as Interface>::VitualTable = VT::<T, ITextLayout, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITextLayout {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == ITextLayout::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
     }
 }
 
@@ -1520,9 +2361,8 @@ pub mod impls {
         fn Clear(&mut self) -> ();
         fn get_IsEmpty(&mut self) -> bool;
         fn GetSize(&mut self, out_width: *mut i32, out_height: *mut i32) -> ();
-        fn Allocate(&mut self, width: i32, height: i32, out_id: *mut u32, out_rect: *mut super::AABB2D) -> bool;
+        fn Allocate(&mut self, width: i32, height: i32, out_id: *mut u32, out_rect: *mut super::AABB2DI) -> bool;
         fn Deallocate(&mut self, id: u32) -> ();
-        fn GetRect(&mut self, id: u32, out_rect: *mut super::AABB2D) -> ();
     }
 
     pub trait IFont : IUnknown {
@@ -1581,6 +2421,7 @@ pub mod impls {
         fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, super::LogLevel, super::StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, super::LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> ();
         fn ClearLogger(&mut self) -> ();
         fn GetCurrentErrorMessage(&mut self) -> super::Str8;
+        fn CreateAtlasAllocator(&mut self, Type: super::AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut super::IAtlasAllocator) -> HResult;
         fn CreateFontManager(&mut self, fm: *mut *mut super::IFontManager) -> HResult;
         fn GetSystemFontCollection(&mut self, fc: *mut *mut super::IFontCollection) -> HResult;
         fn GetSystemFontFallback(&mut self, ff: *mut *mut super::IFontFallback) -> HResult;

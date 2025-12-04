@@ -1,7 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.UI.Collections;
-using Coplt.UI.Core.Utilities;
+using Coplt.UI.Core.Geometry;
+using Coplt.UI.Core.Geometry.Native;
 using Coplt.UI.Miscellaneous;
 using Coplt.UI.Texts;
 
@@ -19,6 +20,8 @@ public unsafe partial struct ILib
     public partial void ClearLogger();
 
     public partial Str8 GetCurrentErrorMessage();
+
+    public partial HResult CreateAtlasAllocator(AtlasAllocatorType Type, int Width, int Height, IAtlasAllocator** aa);
 
     public partial HResult CreateFontManager(IFontManager** fm);
 

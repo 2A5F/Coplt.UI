@@ -19,9 +19,9 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeList;
 
-    struct AABB2D;
-
     struct AABB2DF;
+
+    struct AABB2DI;
 
     union PathBuilderCmd;
 
@@ -141,6 +141,12 @@ namespace Coplt {
     {
         Str8 = 0,
         Str16 = 1,
+    };
+
+    enum class AtlasAllocatorType : ::Coplt::u8
+    {
+        Common = 0,
+        Bucketed = 1,
     };
 
     enum class FillRule : ::Coplt::u8
@@ -994,20 +1000,20 @@ namespace Coplt {
         T0 m_data;
     };
 
-    struct AABB2D
-    {
-        ::Coplt::u32 MinX;
-        ::Coplt::u32 MinY;
-        ::Coplt::u32 MaxX;
-        ::Coplt::u32 MaxY;
-    };
-
     struct AABB2DF
     {
         ::Coplt::f32 MinX;
         ::Coplt::f32 MinY;
         ::Coplt::f32 MaxX;
         ::Coplt::f32 MaxY;
+    };
+
+    struct AABB2DI
+    {
+        ::Coplt::i32 MinX;
+        ::Coplt::i32 MinY;
+        ::Coplt::i32 MaxX;
+        ::Coplt::i32 MaxY;
     };
 
     union PathBuilderCmd

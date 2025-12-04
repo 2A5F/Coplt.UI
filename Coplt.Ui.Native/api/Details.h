@@ -36,18 +36,16 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IAtlasAllocator>
     void (*const COPLT_CDECL f_Clear)(::Coplt::IAtlasAllocator*) noexcept;
     bool (*const COPLT_CDECL f_get_IsEmpty)(::Coplt::IAtlasAllocator*) noexcept;
     void (*const COPLT_CDECL f_GetSize)(::Coplt::IAtlasAllocator*, ::Coplt::i32* out_width, ::Coplt::i32* out_height) noexcept;
-    bool (*const COPLT_CDECL f_Allocate)(::Coplt::IAtlasAllocator*, ::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2D* out_rect) noexcept;
+    bool (*const COPLT_CDECL f_Allocate)(::Coplt::IAtlasAllocator*, ::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2DI* out_rect) noexcept;
     void (*const COPLT_CDECL f_Deallocate)(::Coplt::IAtlasAllocator*, ::Coplt::u32 id) noexcept;
-    void (*const COPLT_CDECL f_GetRect)(::Coplt::IAtlasAllocator*, ::Coplt::u32 id, ::Coplt::AABB2D* out_rect) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IAtlasAllocator
 {
     void COPLT_CDECL Clear(::Coplt::IAtlasAllocator* self) noexcept;
     bool COPLT_CDECL get_IsEmpty(::Coplt::IAtlasAllocator* self) noexcept;
     void COPLT_CDECL GetSize(::Coplt::IAtlasAllocator* self, ::Coplt::i32* p0, ::Coplt::i32* p1) noexcept;
-    bool COPLT_CDECL Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept;
+    bool COPLT_CDECL Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2DI* p3) noexcept;
     void COPLT_CDECL Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept;
-    void COPLT_CDECL GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept;
 }
 
 template <>
@@ -85,7 +83,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IAtlasAllocator>
             .f_GetSize = VirtualImpl_Coplt_IAtlasAllocator::GetSize,
             .f_Allocate = VirtualImpl_Coplt_IAtlasAllocator::Allocate,
             .f_Deallocate = VirtualImpl_Coplt_IAtlasAllocator::Deallocate,
-            .f_GetRect = VirtualImpl_Coplt_IAtlasAllocator::GetRect,
         };
         return vtb;
     };
@@ -96,9 +93,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IAtlasAllocator>
         virtual void Impl_Clear() = 0;
         virtual bool Impl_get_IsEmpty() = 0;
         virtual void Impl_GetSize(::Coplt::i32* out_width, ::Coplt::i32* out_height) = 0;
-        virtual bool Impl_Allocate(::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2D* out_rect) = 0;
+        virtual bool Impl_Allocate(::Coplt::i32 width, ::Coplt::i32 height, ::Coplt::u32* out_id, ::Coplt::AABB2DI* out_rect) = 0;
         virtual void Impl_Deallocate(::Coplt::u32 id) = 0;
-        virtual void Impl_GetRect(::Coplt::u32 id, ::Coplt::AABB2D* out_rect) = 0;
     };
 
     template <std::derived_from<::Coplt::IAtlasAllocator> Base = ::Coplt::IAtlasAllocator>
@@ -131,7 +127,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IAtlasAllocator>
             AsImpl(self)->Impl_GetSize(p0, p1);
         }
 
-        static bool COPLT_CDECL f_Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept
+        static bool COPLT_CDECL f_Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2DI* p3) noexcept
         {
             return AsImpl(self)->Impl_Allocate(p0, p1, p2, p3);
         }
@@ -139,11 +135,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IAtlasAllocator>
         static void COPLT_CDECL f_Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept
         {
             AsImpl(self)->Impl_Deallocate(p0);
-        }
-
-        static void COPLT_CDECL f_GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept
-        {
-            AsImpl(self)->Impl_GetRect(p0, p1);
         }
     };
 
@@ -156,7 +147,6 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IAtlasAllocator>
         .f_GetSize = VirtualImpl<Impl>::f_GetSize,
         .f_Allocate = VirtualImpl<Impl>::f_Allocate,
         .f_Deallocate = VirtualImpl<Impl>::f_Deallocate,
-        .f_GetRect = VirtualImpl<Impl>::f_GetRect,
     };
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IAtlasAllocator
@@ -199,7 +189,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IAtlasAllocator
         #endif
     }
 
-    inline bool COPLT_CDECL Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept
+    inline bool COPLT_CDECL Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2DI* p3) noexcept
     {
         bool r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -221,18 +211,6 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IAtlasAllocator
         ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_Deallocate(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, Deallocate, void)
-        #endif
-    }
-
-    inline void COPLT_CDECL GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept
-    {
-        struct { } r;
-        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IAtlasAllocator, GetRect, void)
-        #endif
-        ::Coplt::Internal::AsImpl<::Coplt::IAtlasAllocator>(self)->Impl_GetRect(p0, p1);
-        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IAtlasAllocator, GetRect, void)
         #endif
     }
 }
@@ -257,17 +235,13 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IAtlasAllocator>
     {
         COPLT_COM_PVTB(IAtlasAllocator, self)->f_GetSize(self, p0, p1);
     }
-    static COPLT_FORCE_INLINE bool Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2D* p3) noexcept
+    static COPLT_FORCE_INLINE bool Allocate(::Coplt::IAtlasAllocator* self, ::Coplt::i32 p0, ::Coplt::i32 p1, ::Coplt::u32* p2, ::Coplt::AABB2DI* p3) noexcept
     {
         return COPLT_COM_PVTB(IAtlasAllocator, self)->f_Allocate(self, p0, p1, p2, p3);
     }
     static COPLT_FORCE_INLINE void Deallocate(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0) noexcept
     {
         COPLT_COM_PVTB(IAtlasAllocator, self)->f_Deallocate(self, p0);
-    }
-    static COPLT_FORCE_INLINE void GetRect(::Coplt::IAtlasAllocator* self, ::Coplt::u32 p0, ::Coplt::AABB2D* p1) noexcept
-    {
-        COPLT_COM_PVTB(IAtlasAllocator, self)->f_GetRect(self, p0, p1);
     }
 };
 
@@ -1698,6 +1672,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::ILib>
     void (*const COPLT_CDECL f_SetLogger)(::Coplt::ILib*, void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* logger, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* is_enabled, ::Coplt::Func<void, void*>* drop) noexcept;
     void (*const COPLT_CDECL f_ClearLogger)(::Coplt::ILib*) noexcept;
     ::Coplt::Str8* (*const COPLT_CDECL f_GetCurrentErrorMessage)(::Coplt::ILib*, ::Coplt::Str8*) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_CreateAtlasAllocator)(::Coplt::ILib*, ::Coplt::AtlasAllocatorType Type, ::Coplt::i32 Width, ::Coplt::i32 Height, IAtlasAllocator** aa) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_CreateFontManager)(::Coplt::ILib*, IFontManager** fm) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontCollection)(::Coplt::ILib*, IFontCollection** fc) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetSystemFontFallback)(::Coplt::ILib*, IFontFallback** ff) noexcept;
@@ -1710,6 +1685,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
     void COPLT_CDECL SetLogger(::Coplt::ILib* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* p1, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* p2, ::Coplt::Func<void, void*>* p3) noexcept;
     void COPLT_CDECL ClearLogger(::Coplt::ILib* self) noexcept;
     ::Coplt::Str8* COPLT_CDECL GetCurrentErrorMessage(::Coplt::ILib* self, ::Coplt::Str8* r) noexcept;
+    ::Coplt::i32 COPLT_CDECL CreateAtlasAllocator(::Coplt::ILib* self, ::Coplt::AtlasAllocatorType p0, ::Coplt::i32 p1, ::Coplt::i32 p2, IAtlasAllocator** p3) noexcept;
     ::Coplt::i32 COPLT_CDECL CreateFontManager(::Coplt::ILib* self, IFontManager** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL GetSystemFontCollection(::Coplt::ILib* self, IFontCollection** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL GetSystemFontFallback(::Coplt::ILib* self, IFontFallback** p0) noexcept;
@@ -1751,6 +1727,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
             .f_SetLogger = VirtualImpl_Coplt_ILib::SetLogger,
             .f_ClearLogger = VirtualImpl_Coplt_ILib::ClearLogger,
             .f_GetCurrentErrorMessage = VirtualImpl_Coplt_ILib::GetCurrentErrorMessage,
+            .f_CreateAtlasAllocator = VirtualImpl_Coplt_ILib::CreateAtlasAllocator,
             .f_CreateFontManager = VirtualImpl_Coplt_ILib::CreateFontManager,
             .f_GetSystemFontCollection = VirtualImpl_Coplt_ILib::GetSystemFontCollection,
             .f_GetSystemFontFallback = VirtualImpl_Coplt_ILib::GetSystemFontFallback,
@@ -1767,6 +1744,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         virtual void Impl_SetLogger(void* obj, ::Coplt::Func<void, void*, ::Coplt::LogLevel, ::Coplt::StrKind, ::Coplt::i32, void*>* logger, ::Coplt::Func<::Coplt::u8, void*, ::Coplt::LogLevel>* is_enabled, ::Coplt::Func<void, void*>* drop) = 0;
         virtual void Impl_ClearLogger() = 0;
         virtual ::Coplt::Str8 Impl_GetCurrentErrorMessage() = 0;
+        virtual ::Coplt::HResult Impl_CreateAtlasAllocator(::Coplt::AtlasAllocatorType Type, ::Coplt::i32 Width, ::Coplt::i32 Height, IAtlasAllocator** aa) = 0;
         virtual ::Coplt::HResult Impl_CreateFontManager(IFontManager** fm) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontCollection(IFontCollection** fc) = 0;
         virtual ::Coplt::HResult Impl_GetSystemFontFallback(IFontFallback** ff) = 0;
@@ -1804,6 +1782,11 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         {
             *r = AsImpl(self)->Impl_GetCurrentErrorMessage();
             return r;
+        }
+
+        static ::Coplt::i32 COPLT_CDECL f_CreateAtlasAllocator(::Coplt::ILib* self, ::Coplt::AtlasAllocatorType p0, ::Coplt::i32 p1, ::Coplt::i32 p2, IAtlasAllocator** p3) noexcept
+        {
+            return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_CreateAtlasAllocator(p0, p1, p2, p3));
         }
 
         static ::Coplt::i32 COPLT_CDECL f_CreateFontManager(::Coplt::ILib* self, IFontManager** p0) noexcept
@@ -1844,6 +1827,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::ILib>
         .f_SetLogger = VirtualImpl<Impl>::f_SetLogger,
         .f_ClearLogger = VirtualImpl<Impl>::f_ClearLogger,
         .f_GetCurrentErrorMessage = VirtualImpl<Impl>::f_GetCurrentErrorMessage,
+        .f_CreateAtlasAllocator = VirtualImpl<Impl>::f_CreateAtlasAllocator,
         .f_CreateFontManager = VirtualImpl<Impl>::f_CreateFontManager,
         .f_GetSystemFontCollection = VirtualImpl<Impl>::f_GetSystemFontCollection,
         .f_GetSystemFontFallback = VirtualImpl<Impl>::f_GetSystemFontFallback,
@@ -1887,6 +1871,19 @@ namespace Coplt::Internal::VirtualImpl_Coplt_ILib
         *r = ::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_GetCurrentErrorMessage();
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
         COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, GetCurrentErrorMessage, ::Coplt::Str8)
+        #endif
+        return r;
+    }
+
+    inline ::Coplt::i32 COPLT_CDECL CreateAtlasAllocator(::Coplt::ILib* self, ::Coplt::AtlasAllocatorType p0, ::Coplt::i32 p1, ::Coplt::i32 p2, IAtlasAllocator** p3) noexcept
+    {
+        ::Coplt::i32 r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::ILib, CreateAtlasAllocator, ::Coplt::i32)
+        #endif
+        r = ::Coplt::Internal::BitCast<::Coplt::i32>(::Coplt::Internal::AsImpl<::Coplt::ILib>(self)->Impl_CreateAtlasAllocator(p0, p1, p2, p3));
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::ILib, CreateAtlasAllocator, ::Coplt::i32)
         #endif
         return r;
     }
@@ -1990,6 +1987,10 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::ILib>
     {
         ::Coplt::Str8 r{};
         return *COPLT_COM_PVTB(ILib, self)->f_GetCurrentErrorMessage(self, &r);
+    }
+    static COPLT_FORCE_INLINE ::Coplt::HResult CreateAtlasAllocator(::Coplt::ILib* self, ::Coplt::AtlasAllocatorType p0, ::Coplt::i32 p1, ::Coplt::i32 p2, IAtlasAllocator** p3) noexcept
+    {
+        return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(ILib, self)->f_CreateAtlasAllocator(self, p0, p1, p2, p3));
     }
     static COPLT_FORCE_INLINE ::Coplt::HResult CreateFontManager(::Coplt::ILib* self, IFontManager** p0) noexcept
     {

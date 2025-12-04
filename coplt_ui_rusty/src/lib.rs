@@ -153,17 +153,3 @@ mod com_impl {
         }
     }
 }
-
-use com::details;
-use com::impls;
-
-use crate::com::ITextLayout;
-
-#[cocom::object(com::ITextLayout)]
-struct Foo {}
-
-impl impls::ITextLayout for Foo {}
-
-fn foo(a: ComPtr<com::IAtlasAllocator>) {
-    a.Clear();
-}

@@ -137,6 +137,9 @@ namespace Coplt
         Str8 Impl_GetCurrentErrorMessage();
 
         COPLT_FORCE_INLINE
+        HResult Impl_CreateAtlasAllocator(AtlasAllocatorType Type, i32 Width, i32 Height, IAtlasAllocator** aa);
+
+        COPLT_FORCE_INLINE
         HResult Impl_CreateFontManager(IFontManager** fm);
 
         COPLT_FORCE_INLINE

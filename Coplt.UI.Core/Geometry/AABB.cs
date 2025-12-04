@@ -1,11 +1,19 @@
 namespace Coplt.UI.Core.Geometry;
 
-public struct AABB2D
+public struct AABB2DU
 {
     public uint MinX;
     public uint MinY;
     public uint MaxX;
     public uint MaxY;
+}
+
+public struct AABB2DI
+{
+    public int MinX;
+    public int MinY;
+    public int MaxX;
+    public int MaxY;
 }
 
 public struct AABB2DF
