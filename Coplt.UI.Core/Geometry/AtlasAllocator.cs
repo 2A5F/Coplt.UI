@@ -19,25 +19,27 @@ public sealed unsafe partial class AtlasAllocator
 
     [Drop]
     internal Rc<IAtlasAllocator> m_inner;
-    internal AtlasAllocatorType m_type;
-    internal int2 m_size;
+    internal readonly AtlasAllocatorType m_type;
+    internal readonly int2 m_size;
 
     #endregion
 
     #region Props
 
     public ref readonly Rc<IAtlasAllocator> Inner => ref m_inner;
-    public AtlasAllocatorType Type => m_type;
-    public int2 Size => m_size;
+    public ref readonly AtlasAllocatorType Type => ref m_type;
+    public ref readonly int2 Size => ref m_size;
 
     #endregion
 
     #region Ctor
 
-    public AtlasAllocator(int2 Size, AtlasAllocatorType Type = AtlasAllocatorType.Common)
+    public AtlasAllocator(int2 Size, AtlasAllocatorType Type = AtlasAllocatorType.Common) : this(Size.x, Size.y, Type) { }
+
+    public AtlasAllocator(int Width, int Height, AtlasAllocatorType Type = AtlasAllocatorType.Common)
     {
         IAtlasAllocator* ptr;
-        NativeLib.Instance.m_lib.CreateAtlasAllocator(Type, Size.x, Size.y, &ptr).TryThrowWithMsg();
+        NativeLib.Instance.m_lib.CreateAtlasAllocator(Type, Width, Height, &ptr).TryThrowWithMsg();
         m_inner = new(ptr);
         m_type = Type;
         m_size = Size;
@@ -56,12 +58,14 @@ public sealed unsafe partial class AtlasAllocator
     public void Clear() => m_inner.Clear();
     public bool IsEmpty => m_inner.IsEmpty;
 
-    public bool Allocate(int2 Size, out AllocId Id, out AABB2DI Rect)
+    public bool Allocate(int2 Size, out AllocId Id, out AABB2DI Rect) =>
+        Allocate(Size.x, Size.y, out Id, out Rect);
+    public bool Allocate(int Width, int Height, out AllocId Id, out AABB2DI Rect)
     {
         uint id = 0;
         fixed (AABB2DI* p_rect = &Rect)
         {
-            var r = m_inner.Allocate(Size.x, Size.y, &id, p_rect);
+            var r = m_inner.Allocate(Width, Height, &id, p_rect);
             Id = new(id);
             return r;
         }

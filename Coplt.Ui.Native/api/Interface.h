@@ -73,7 +73,7 @@ namespace Coplt {
         COPLT_COM_METHOD(ClearNativeFontsCache, void, ());
     };
 
-    COPLT_COM_INTERFACE(IFontManager, "15a9651e-4fa2-48f3-9291-df0f9681a7d1", ::Coplt::IUnknown)
+    COPLT_COM_INTERFACE(IFontManager, "15a9651e-4fa2-48f3-9291-df0f9681a7d1", ::Coplt::IWeak)
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontManager
 

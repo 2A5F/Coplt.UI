@@ -57,7 +57,7 @@ pub trait IFontFamily : IUnknown {
 }
 
 #[cocom::interface("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
-pub trait IFontManager : IUnknown {
+pub trait IFontManager : IWeak + IUnknown {
     fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64;
     fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
     fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
@@ -1790,7 +1790,7 @@ pub mod details {
     #[repr(C)]
     #[derive(Debug)]
     pub struct VitualTable_IFontManager {
-        b: <IUnknown as Interface>::VitualTable,
+        b: <IWeak as Interface>::VitualTable,
 
         pub f_SetAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64,
         pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, AssocUpdateId: u64) -> (),
@@ -1802,12 +1802,12 @@ pub mod details {
         pub f_IdToFontFace: unsafe extern "C" fn(this: *const IFontManager, Id: u64) -> *mut IFontFace,
     }
 
-    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontManager, O>
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> VT<T, IFontManager, O>
     where
         T::Interface: details::QuIn<T, O>,
     {
         pub const VTBL: VitualTable_IFontManager = VitualTable_IFontManager {
-            b: <IUnknown as Vtbl<O>>::VTBL,
+            b: <IWeak as Vtbl<O>>::VTBL,
             f_SetAssocUpdate: Self::f_SetAssocUpdate,
             f_RemoveAssocUpdate: Self::f_RemoveAssocUpdate,
             f_SetExpireFrame: Self::f_SetExpireFrame,
@@ -1844,7 +1844,7 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontManager
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> Vtbl<O> for IFontManager
     where
         T::Interface: details::QuIn<T, O>,
     {
@@ -1867,7 +1867,7 @@ pub mod details {
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IWeak as QuIn<T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2402,7 +2402,7 @@ pub mod impls {
         fn ClearNativeFontsCache(&mut self) -> ();
     }
 
-    pub trait IFontManager : IUnknown {
+    pub trait IFontManager : IWeak {
         fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> core::ffi::c_void) -> u64;
         fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
         fn SetExpireFrame(&mut self, FrameCount: u64) -> ();

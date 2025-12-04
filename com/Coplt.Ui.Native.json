@@ -4386,6 +4386,7 @@
   ],
   "interfaces": [
     {
+      "export": true,
       "name": "IAtlasAllocator",
       "guid": "32b30623-411e-4fd5-a009-ae7e9ed88e78",
       "methods": [
@@ -4454,6 +4455,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IFont",
       "guid": "09c443bc-9736-4aac-8117-6890555005ff",
       "methods": [
@@ -4484,6 +4486,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IFontCollection",
       "guid": "e56d9271-e6fd-4def-b03a-570380e0d560",
       "methods": [
@@ -4515,6 +4518,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IFontFace",
       "guid": "09c443bc-9736-4aac-8117-6890555005ff",
       "methods": [
@@ -4586,11 +4590,13 @@
       ]
     },
     {
+      "export": true,
       "name": "IFontFallback",
       "guid": "b0dbb428-eca1-4784-b27f-629bddf93ea4",
       "methods": []
     },
     {
+      "export": true,
       "name": "IFontFallbackBuilder",
       "guid": "9b4e9893-0ea4-456b-bf54-9563db70eff0",
       "methods": [
@@ -4650,6 +4656,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IFontFamily",
       "guid": "f8009d34-9417-4b87-b23b-b7885d27aeab",
       "methods": [
@@ -4711,8 +4718,10 @@
       ]
     },
     {
+      "export": true,
       "name": "IFontManager",
       "guid": "15a9651e-4fa2-48f3-9291-df0f9681a7d1",
+      "parent": "9d01e165-12b5-4190-bb46-3d78413de9a5",
       "methods": [
         {
           "name": "SetAssocUpdate",
@@ -4813,6 +4822,7 @@
       ]
     },
     {
+      "export": true,
       "name": "ILayout",
       "guid": "f1e64bf0-ffb9-42ce-be78-31871d247883",
       "methods": [
@@ -4830,6 +4840,7 @@
       ]
     },
     {
+      "export": true,
       "name": "ILib",
       "guid": "778be1fe-18f2-4aa5-8d1f-52d83b132cff",
       "methods": [
@@ -4972,6 +4983,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IPath",
       "guid": "dac7a459-b942-4a96-b7d6-ee5c74eca806",
       "methods": [
@@ -4989,6 +5001,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IPathBuilder",
       "guid": "ee1c5b1d-b22d-446a-9eef-128cec82e6c0",
       "methods": [
@@ -5157,6 +5170,7 @@
       ]
     },
     {
+      "export": true,
       "name": "IStub",
       "guid": "a998ec87-868d-4320-a30a-638c291f5562",
       "methods": [
@@ -5182,6 +5196,7 @@
       ]
     },
     {
+      "export": true,
       "name": "ITessellator",
       "guid": "acf5d52e-a656-4c00-a528-09aa4d86b2b2",
       "methods": [
@@ -5218,14 +5233,44 @@
       ]
     },
     {
+      "export": true,
       "name": "ITextData",
       "guid": "bd0c7402-1de8-4547-860d-c78fd70ff203",
       "methods": []
     },
     {
+      "export": true,
       "name": "ITextLayout",
       "guid": "f558ba07-1f1d-4c32-8229-134271b17083",
       "methods": []
+    },
+    {
+      "export": false,
+      "name": "IWeak",
+      "guid": "9d01e165-12b5-4190-bb46-3d78413de9a5",
+      "methods": [
+        {
+          "name": "AddRefWeak",
+          "index": 0,
+          "flags": "const",
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "ReleaseWeak",
+          "index": 1,
+          "flags": "const",
+          "return_type": 163,
+          "parameters": []
+        },
+        {
+          "name": "TryUpgrade",
+          "index": 2,
+          "flags": "const",
+          "return_type": 146,
+          "parameters": []
+        }
+      ]
     }
   ]
 }

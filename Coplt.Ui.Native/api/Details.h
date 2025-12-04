@@ -1261,7 +1261,7 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFamily>
 template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFontManager>
 {
-    VirtualTable<::Coplt::IUnknown> b;
+    VirtualTable<::Coplt::IWeak> b;
     ::Coplt::u64 (*const COPLT_CDECL f_SetAssocUpdate)(::Coplt::IFontManager*, void* Data, ::Coplt::Func<void, void*>* OnDrop, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) noexcept;
     void (*const COPLT_CDECL f_RemoveAssocUpdate)(::Coplt::IFontManager*, ::Coplt::u64 AssocUpdateId) noexcept;
     void (*const COPLT_CDECL f_SetExpireFrame)(::Coplt::IFontManager*, ::Coplt::u64 FrameCount) noexcept;
@@ -1304,7 +1304,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
             self->AddRef();
             return ::Coplt::HResultE::Ok;
         }
-        return ComProxy<::Coplt::IUnknown>::QueryInterface(self, guid, object);
+        return ComProxy<::Coplt::IWeak>::QueryInterface(self, guid, object);
     }
 
     COPLT_FORCE_INLINE
@@ -1312,7 +1312,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
     {
         static VirtualTable vtb
         {
-            .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
+            .b = ComProxy<::Coplt::IWeak>::GetVtb(),
             .f_SetAssocUpdate = VirtualImpl_Coplt_IFontManager::SetAssocUpdate,
             .f_RemoveAssocUpdate = VirtualImpl_Coplt_IFontManager::RemoveAssocUpdate,
             .f_SetExpireFrame = VirtualImpl_Coplt_IFontManager::SetExpireFrame,
@@ -1325,7 +1325,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
         return vtb;
     };
 
-    struct Impl : ComProxy<::Coplt::IUnknown>::Impl
+    struct Impl : ComProxy<::Coplt::IWeak>::Impl
     {
 
         virtual ::Coplt::u64 Impl_SetAssocUpdate(void* Data, ::Coplt::Func<void, void*>* OnDrop, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired) = 0;
@@ -1397,7 +1397,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
     template<class Impl>
     constexpr static VirtualTable s_vtb
     {
-        .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
+        .b = ComProxy<::Coplt::IWeak>::s_vtb<Impl>,
         .f_SetAssocUpdate = VirtualImpl<Impl>::f_SetAssocUpdate,
         .f_RemoveAssocUpdate = VirtualImpl<Impl>::f_RemoveAssocUpdate,
         .f_SetExpireFrame = VirtualImpl<Impl>::f_SetExpireFrame,
@@ -1512,7 +1512,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
     }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_IFontManager\
-    using Super = ::Coplt::IUnknown;\
+    using Super = ::Coplt::IWeak;\
     using Self = ::Coplt::IFontManager;\
 \
     explicit IFontManager(const ::Coplt::Internal::VirtualTable<Self>* vtbl) : Super(&vtbl->b) {}

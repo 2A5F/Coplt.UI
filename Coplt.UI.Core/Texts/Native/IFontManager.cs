@@ -3,7 +3,7 @@ using Coplt.Com;
 
 namespace Coplt.UI.Native;
 
-[Interface, Guid("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
+[Interface(typeof(IWeak)), Guid("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
 public unsafe partial struct IFontManager
 {
     public partial ulong SetAssocUpdate(

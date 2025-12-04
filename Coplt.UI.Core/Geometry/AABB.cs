@@ -1,6 +1,6 @@
 namespace Coplt.UI.Core.Geometry;
 
-public struct AABB2DU
+public record struct AABB2DU
 {
     public uint MinX;
     public uint MinY;
@@ -8,7 +8,7 @@ public struct AABB2DU
     public uint MaxY;
 }
 
-public struct AABB2DI
+public record struct AABB2DI
 {
     public int MinX;
     public int MinY;
@@ -16,7 +16,7 @@ public struct AABB2DI
     public int MaxY;
 }
 
-public struct AABB2DF
+public record struct AABB2DF
 {
     public float MinX;
     public float MinY;
