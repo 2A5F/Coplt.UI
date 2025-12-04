@@ -1,7 +1,9 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
+using Coplt.UI.Miscellaneous;
 using Coplt.UI.Native;
 
 namespace Coplt.UI.Texts;
@@ -13,8 +15,8 @@ public sealed unsafe partial class FontManager
 
     [Drop]
     internal Rc<IFontManager> m_inner;
+    internal readonly FrameSource m_frame_source;
 
-    internal readonly Lock m_lock = new();
     private readonly ManagedAssocUpdate m_managed_assoc;
 
     #endregion
@@ -22,25 +24,20 @@ public sealed unsafe partial class FontManager
     #region Properties
 
     public ref readonly Rc<IFontManager> Inner => ref m_inner;
+    public FrameSource FrameSource => m_frame_source;
 
     #endregion
 
     #region Ctor
 
-    internal FontManager(Rc<IFontManager> inner)
+    public FontManager(FrameSource FrameSource)
     {
-        m_inner = inner;
-        m_managed_assoc = new(m_lock);
-        SetAssocUpdate(m_managed_assoc);
-    }
-
-    public FontManager()
-    {
+        m_frame_source = FrameSource;
         var lib = NativeLib.Instance;
         IFontManager* p_fm;
-        lib.m_lib.CreateFontManager(&p_fm).TryThrowWithMsg();
+        lib.m_lib.CreateFontManager(FrameSource.m_inner.Handle, &p_fm).TryThrowWithMsg();
         m_inner = new(p_fm);
-        m_managed_assoc = new(m_lock);
+        m_managed_assoc = new();
         SetAssocUpdate(m_managed_assoc);
     }
 
@@ -136,26 +133,19 @@ public sealed unsafe partial class FontManager
         }
     }
 
-    private sealed class ManagedAssocUpdate(Lock m_lock) : IAssocUpdate
+    private sealed class ManagedAssocUpdate : IAssocUpdate
     {
-        public readonly Dictionary<Ptr<IFontFace>, FontFace> m_native_to_manager = new();
+        public readonly ConcurrentDictionary<Ptr<IFontFace>, FontFace> m_native_to_manager = new();
 
         public void OnAdd(IFontFace* face, ulong id)
         {
-            lock (m_lock)
-            {
-                face->AddRef();
-                ref var slot = ref CollectionsMarshal.GetValueRefOrAddDefault(m_native_to_manager, face, out var exists);
-                if (!exists) slot = new FontFace(new(face));
-            }
+            face->AddRef();
+            m_native_to_manager.GetOrAdd(face, static face => new(new(face)));
         }
 
         public void OnExpired(IFontFace* face, ulong id)
         {
-            lock (m_lock)
-            {
-                m_native_to_manager.Remove(face);
-            }
+            m_native_to_manager.Remove(face, out _);
         }
     }
 
@@ -172,14 +162,8 @@ public sealed unsafe partial class FontManager
     /// <inheritdoc cref="IFontManager.SetExpireTime" />
     public void SetExpireTime(ulong TimeTicks) => m_inner.SetExpireTime(TimeTicks);
 
-    /// <inheritdoc cref="IFontManager.GetCurrentFrame" />
-    public ulong CurrentFrame => m_inner.GetCurrentFrame();
-
-    /// <inheritdoc cref="IFontManager.Update" />
-    public void Update(ulong CurrentTime) => m_inner.Update(CurrentTime);
-
-    /// <inheritdoc cref="IFontManager.FontFaceToId" />
-    public ulong NativeFontFaceToId(IFontFace* Face) => m_inner.FontFaceToId(Face);
+    /// <inheritdoc cref="IFontManager.Collect" />
+    public void Collect() => m_inner.Collect();
 
     /// <inheritdoc cref="IFontManager.IdToFontFace" />
     public IFontFace* IdToNativeFontFace(ulong Id) => m_inner.IdToFontFace(Id);
@@ -191,30 +175,14 @@ public sealed unsafe partial class FontManager
     public FontFace? NativeFontFaceToFontFace(IFontFace* Face)
     {
         if (Face == null) return null;
-        lock (m_lock)
-        {
-            return m_managed_assoc.m_native_to_manager.GetValueOrDefault(Face);
-        }
+        return m_managed_assoc.m_native_to_manager.GetValueOrDefault(Face);
     }
 
     public FontFace? IdToFontFace(ulong Id)
     {
         var face = IdToNativeFontFace(Id);
         if (face == null) return null;
-        lock (m_lock)
-        {
-            return m_managed_assoc.m_native_to_manager.GetValueOrDefault(face);
-        }
-    }
-
-    /// <inheritdoc cref="IFontManager.FontFaceToId" />
-    public ulong FontFaceToId(FontFace Face)
-    {
-        lock (m_lock)
-        {
-            m_managed_assoc.m_native_to_manager.Add(Face.m_inner.Handle, Face);
-        }
-        return m_inner.FontFaceToId(Face.m_inner);
+        return m_managed_assoc.m_native_to_manager.GetValueOrDefault(face);
     }
 
     #endregion

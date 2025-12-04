@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Layouts;
+using Coplt.UI.Miscellaneous;
 using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
@@ -27,7 +28,7 @@ public sealed partial class Document
     // ReSharper disable once CollectionNeverQueried.Global
     internal readonly IModule[] m_modules;
     internal readonly Action<Document>[] m_modules_update;
-    [Drop]
+    internal readonly FrameSource m_frame_source;
     internal readonly FontManager m_font_manager;
     internal uint m_node_id_inc;
 
@@ -35,10 +36,11 @@ public sealed partial class Document
 
     #region Ctor
 
-    internal Document(Template template, FontManager? font_manager)
+    internal Document(Template template, FrameSource? frame_source, FontManager? font_manager)
     {
         m_template = template;
-        m_font_manager = font_manager ?? new();
+        m_frame_source = frame_source ?? new();
+        m_font_manager = font_manager ?? new(m_frame_source);
         m_arche = m_template.m_arche.Create();
         m_modules = new IModule[m_template.m_modules.Length];
         m_modules_update = new Action<Document>[m_template.m_modules.Length];
@@ -58,6 +60,7 @@ public sealed partial class Document
     {
         private readonly Dictionary<Type, AModuleTemplate> m_modules = new();
         private readonly Dictionary<Type, AStorageTemplate> m_types = new();
+        private FrameSource? m_frame_source;
         private FontManager? m_font_manager;
 
         public Builder()
@@ -70,8 +73,15 @@ public sealed partial class Document
             With<LayoutModule>();
         }
 
+        public Builder WithFrameSource(FrameSource frame_source)
+        {
+            m_frame_source = frame_source;
+            return this;
+        }
+
         public Builder WithFontManager(FontManager font_manager)
         {
+            m_frame_source = font_manager.m_frame_source;
             m_font_manager = font_manager;
             return this;
         }
@@ -93,7 +103,7 @@ public sealed partial class Document
 
         public Template Build() => new(new ArcheTemplate(m_types), m_modules.Values.ToArray());
 
-        public Document Create() => Build().Create(m_font_manager);
+        public Document Create() => Build().Create(m_frame_source, m_font_manager);
     }
 
     #endregion
@@ -136,7 +146,8 @@ public sealed partial class Document
             m_modules = modules;
         }
 
-        public Document Create(FontManager? font_manager) => new(this, font_manager);
+        public Document Create(FrameSource? frame_source, FontManager? font_manager) =>
+            new(this, frame_source, font_manager);
     }
 
     internal sealed class ArcheTemplate
@@ -448,7 +459,6 @@ public sealed partial class Document
 
     public void Update()
     {
-        m_font_manager.Update((ulong)Stopwatch.GetTimestamp());
         foreach (var update in m_modules_update)
         {
             update(this);

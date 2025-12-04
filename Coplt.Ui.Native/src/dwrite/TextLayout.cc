@@ -141,7 +141,7 @@ const Rc<DWriteFontFace>& TextLayout::GetFallbackUndefFont()
 
     if (!m_one_space_analysis_source) m_one_space_analysis_source = Rc(new OneSpaceTextAnalysisSource());
 
-    const auto fm = static_cast<DWriteFontManager*>(m_node.ctx->font_manager);
+    const auto fm = m_node.ctx->font_manager;
     const auto& system_font_fallback = m_layout->m_system_font_fallback;
 
     u32 mapped_length{};
@@ -157,7 +157,7 @@ const Rc<DWriteFontFace>& TextLayout::GetFallbackUndefFont()
     ); FAILED(hr) || !mapped_font)
         throw ComException(hr, "Failed to map characters");
 
-    m_fallback_undef_font = fm->DwriteFontFaceToFontFace(mapped_font.get());
+    m_fallback_undef_font = DWriteFontFace::Get(fm, mapped_font);
     return m_fallback_undef_font;
 }
 
@@ -205,7 +205,7 @@ void ParagraphData::CollectChars()
 
 void ParagraphData::AnalyzeFonts()
 {
-    const auto fm = static_cast<DWriteFontManager*>(m_text_layout->m_node.ctx->font_manager);
+    const auto fm = m_text_layout->m_node.ctx->font_manager;
 
     const auto& system_font_fallback = m_layout->m_system_font_fallback;
 
@@ -306,7 +306,7 @@ void ParagraphData::AnalyzeFonts()
                 FontRange{
                     .Start = text_start,
                     .Length = mapped_length,
-                    .Font = mapped_font ? fm->DwriteFontFaceToFontFace(mapped_font.get()) : nullptr,
+                    .Font = mapped_font ? DWriteFontFace::Get(fm, mapped_font) : nullptr,
                     .ItemStart = 0,
                     .ItemLength = 0,
                     .IsInlineBlock = false,

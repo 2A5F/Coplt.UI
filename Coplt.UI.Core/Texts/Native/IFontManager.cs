@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using Coplt.Com;
+using Coplt.UI.Miscellaneous;
 
 namespace Coplt.UI.Native;
 
@@ -14,6 +15,9 @@ public unsafe partial struct IFontManager
     );
     public partial void RemoveAssocUpdate(ulong AssocUpdateId);
 
+    /// <returns>AddRef will be called</returns>
+    public partial IFrameSource* GetFrameSource();
+
     /// <summary>
     /// Sets the number of frames after which the font expires if no font is used. default is 180 frames, min is 4 frames
     /// <para>A font face will only actually expire if both frame and time requirements are met.</para>
@@ -24,22 +28,16 @@ public unsafe partial struct IFontManager
     /// <para>A font face will only actually expire if both frame and time requirements are met.</para>
     /// </summary>
     public partial void SetExpireTime(ulong TimeTicks);
+
+    public partial void Register(IFontFace* Face);
+    /// <returns>AddRef will be called</returns>
+    public partial IFontFace* GetOrAdd(ulong Id, void* Data, delegate* unmanaged[Cdecl]<void*, ulong, IFontFace*> OnAdd);
+
     /// <summary>
-    /// Get current frame
+    /// Collecting expired fonts that are no longer in use. Can be executed concurrently in the background
     /// </summary>
-    /// <returns></returns>
-    public readonly partial ulong GetCurrentFrame();
-    /// <summary>
-    /// Update frames. This will release all font faces that have exceeded their expiration frames and times.
-    /// </summary>
-    public partial void Update(ulong CurrentTime);
-    /// <summary>
-    /// This will cause the last use of the font face to be updated to the current frame.
-    /// </summary>
-    public partial ulong FontFaceToId(IFontFace* Face);
-    /// <summary>
-    /// This will cause the last use of the font face to be updated to the current frame.
-    /// </summary>
-    /// <returns>null if not exists</returns>
+    public partial void Collect();
+
+    /// <returns>null if not exists; AddRef will be called</returns>
     public partial IFontFace* IdToFontFace(ulong Id);
 }

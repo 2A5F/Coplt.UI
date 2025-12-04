@@ -41,6 +41,10 @@ namespace Coplt {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFace
 
         COPLT_COM_METHOD(get_Id, ::Coplt::u64, () const);
+        COPLT_COM_METHOD(get_RefCount, ::Coplt::u32, () const);
+        COPLT_COM_METHOD(get_FrameTime, ::Coplt::FrameTime const*, () const);
+        COPLT_COM_METHOD(GetFrameSource, IFrameSource*, () const);
+        COPLT_COM_METHOD(GetFontManager, IFontManager*, () const);
         COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
         COPLT_COM_METHOD(Equals, bool, (IFontFace* other) const, other);
         COPLT_COM_METHOD(HashCode, ::Coplt::i32, () const);
@@ -79,12 +83,20 @@ namespace Coplt {
 
         COPLT_COM_METHOD(SetAssocUpdate, ::Coplt::u64, (void* Data, ::Coplt::Func<void, void*>* OnDrop, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired), Data, OnDrop, OnAdd, OnExpired);
         COPLT_COM_METHOD(RemoveAssocUpdate, void, (::Coplt::u64 AssocUpdateId), AssocUpdateId);
+        COPLT_COM_METHOD(GetFrameSource, IFrameSource*, ());
         COPLT_COM_METHOD(SetExpireFrame, void, (::Coplt::u64 FrameCount), FrameCount);
         COPLT_COM_METHOD(SetExpireTime, void, (::Coplt::u64 TimeTicks), TimeTicks);
-        COPLT_COM_METHOD(GetCurrentFrame, ::Coplt::u64, () const);
-        COPLT_COM_METHOD(Update, void, (::Coplt::u64 CurrentTime), CurrentTime);
-        COPLT_COM_METHOD(FontFaceToId, ::Coplt::u64, (IFontFace* Face), Face);
+        COPLT_COM_METHOD(Register, void, (IFontFace* Face), Face);
+        COPLT_COM_METHOD(GetOrAdd, IFontFace*, (::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd), Id, Data, OnAdd);
+        COPLT_COM_METHOD(Collect, void, ());
         COPLT_COM_METHOD(IdToFontFace, IFontFace*, (::Coplt::u64 Id), Id);
+    };
+
+    COPLT_COM_INTERFACE(IFrameSource, "92a81f7e-98b1-4c83-b6ac-161fca9469d6", ::Coplt::IUnknown)
+    {
+        COPLT_COM_INTERFACE_BODY_Coplt_IFrameSource
+
+        COPLT_COM_METHOD(get_Data, ::Coplt::FrameTime*, ());
     };
 
     COPLT_COM_INTERFACE(ILayout, "f1e64bf0-ffb9-42ce-be78-31871d247883", ::Coplt::IUnknown)
@@ -102,7 +114,8 @@ namespace Coplt {
         COPLT_COM_METHOD(ClearLogger, void, ());
         COPLT_COM_METHOD(GetCurrentErrorMessage, ::Coplt::Str8, ());
         COPLT_COM_METHOD(CreateAtlasAllocator, ::Coplt::HResult, (::Coplt::AtlasAllocatorType Type, ::Coplt::i32 Width, ::Coplt::i32 Height, IAtlasAllocator** aa), Type, Width, Height, aa);
-        COPLT_COM_METHOD(CreateFontManager, ::Coplt::HResult, (IFontManager** fm), fm);
+        COPLT_COM_METHOD(CreateFrameSource, ::Coplt::HResult, (IFrameSource** fs), fs);
+        COPLT_COM_METHOD(CreateFontManager, ::Coplt::HResult, (IFrameSource* fs, IFontManager** fm), fs, fm);
         COPLT_COM_METHOD(GetSystemFontCollection, ::Coplt::HResult, (IFontCollection** fc), fc);
         COPLT_COM_METHOD(GetSystemFontFallback, ::Coplt::HResult, (IFontFallback** ff), ff);
         COPLT_COM_METHOD(CreateFontFallbackBuilder, ::Coplt::HResult, (IFontFallbackBuilder** ffb, ::Coplt::FontFallbackBuilderCreateInfo const* info), ffb, info);

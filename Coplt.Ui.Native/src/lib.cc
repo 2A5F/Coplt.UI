@@ -71,13 +71,29 @@ HResult LibUi::Impl_CreateAtlasAllocator(AtlasAllocatorType Type, i32 Width, i32
     );
 }
 
-HResult LibUi::Impl_CreateFontManager(IFontManager** fm)
+HResult LibUi::Impl_CreateFrameSource(IFrameSource** fs)
 {
     return feb(
         [&] -> HResult
         {
-            auto out = m_backend->CreateFontManager();
-            *fm = out.leak();
+            *fs = new FrameSource();
+            return HResultE::Ok;
+        }
+    );
+}
+
+extern "C" void coplt_ui_new_font_manager(
+    /* move */ IFrameSource* frame_source, IFontManager** output
+);
+
+HResult LibUi::Impl_CreateFontManager(IFrameSource* fs, IFontManager** fm)
+{
+    return feb(
+        [&] -> HResult
+        {
+            if (fs == nullptr || fm == nullptr) return HResultE::InvalidArg;
+            fs->AddRef();
+            coplt_ui_new_font_manager(fs, fm);
             return HResultE::Ok;
         }
     );

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.Dropping;
+using Coplt.UI.Miscellaneous;
 using Coplt.UI.Native;
 using Coplt.UI.Styles;
 
@@ -23,16 +24,19 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
     internal readonly ulong m_id;
     [Drop]
     internal Rc<IFontFace> m_inner;
+    internal FrameTime* m_frame_time;
     internal NFontInfo* m_info;
     internal FrozenDictionary<CultureInfo, string>? m_family_names;
     internal FrozenDictionary<CultureInfo, string>? m_face_names;
 
     #endregion
 
-    #region Properties
+    #region Props
 
     public ulong Id => m_id;
+    public uint RefCount => m_inner.RefCount;
     public ref readonly Rc<IFontFace> Inner => ref m_inner;
+    public ref readonly FrameTime FrameTime => ref *m_frame_time;
     public ref readonly FontMetrics Metrics => ref m_info->Metrics;
     public FontWidth Width => m_info->Width;
     public FontWeight Weight => m_info->Weight;
@@ -68,6 +72,7 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
     {
         m_inner = inner;
         m_id = m_inner.Id;
+        m_frame_time = m_inner.FrameTime;
         m_info = m_inner.Info;
     }
 
@@ -78,6 +83,7 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
     [Drop]
     private void ClearInfo()
     {
+        m_frame_time = null;
         m_info = null;
     }
 

@@ -19,9 +19,9 @@
           "name": "LibUi",
           "impl": "ILib"
         },
-        "FontManager.h": {
-          "name": "FontManagerBase",
-          "impl": "IFontManager"
+        "FrameSource.h": {
+          "name": "FrameSource",
+          "impl": "IFrameSource"
         },
         "dwrite/Layout.h": {
           "name": "Layout",

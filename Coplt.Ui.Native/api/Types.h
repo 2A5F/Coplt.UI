@@ -53,6 +53,8 @@ namespace Coplt {
 
     struct TrackSizingFunction;
 
+    struct FrameTime;
+
     struct CWStr;
 
     struct FFIMap;
@@ -120,6 +122,8 @@ namespace Coplt {
     struct IFontFamily;
 
     struct IFontManager;
+
+    struct IFrameSource;
 
     struct ILayout;
 
@@ -1056,6 +1060,12 @@ namespace Coplt {
     {
         ::Coplt::GridTemplateComponentUnion Union;
         ::Coplt::GridTemplateComponentType Type;
+    };
+
+    struct FrameTime
+    {
+        ::Coplt::u64 NthFrame;
+        ::Coplt::u64 TimeTicks;
     };
 
     struct FontFallbackBuilderCreateInfo

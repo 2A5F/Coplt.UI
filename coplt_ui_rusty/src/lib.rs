@@ -66,6 +66,7 @@ use coplt_alloc::*;
 mod atlas;
 mod col;
 mod com;
+mod font_manager;
 mod layout;
 mod unicode_utils;
 mod utils;

@@ -77,14 +77,14 @@ HResult Font::Impl_CreateFace(IFontFace** face, IFontManager* manager) const
     return feb(
         [&]
         {
-            auto out = CreateFace(static_cast<DWriteFontManager*>(manager));
+            auto out = CreateFace(manager);
             *face = out.leak();
             return HResultE::Ok;
         }
     );
 }
 
-Rc<DWriteFontFace> Font::CreateFace(DWriteFontManager* manager) const
+Rc<DWriteFontFace> Font::CreateFace(IFontManager* manager) const
 {
     Rc<IDWriteFontFace3> face3{};
     Rc<IDWriteFontFace5> face5{};
@@ -92,5 +92,5 @@ Rc<DWriteFontFace> Font::CreateFace(DWriteFontManager* manager) const
         throw ComException(hr, "Failed to create font face");
     if (const auto hr = face3->QueryInterface(face5.put()); FAILED(hr))
         throw ComException(hr, "Failed to create font face");
-    return manager->DwriteFontFaceToFontFace(face5.get());
+    return Rc(new DWriteFontFace(face5, manager, true));
 }

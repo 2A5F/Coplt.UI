@@ -3,6 +3,7 @@
 #include "Com.h"
 #include "Defines.h"
 #include "Backend.h"
+#include "FrameSource.h"
 
 namespace Coplt
 {
@@ -140,7 +141,10 @@ namespace Coplt
         HResult Impl_CreateAtlasAllocator(AtlasAllocatorType Type, i32 Width, i32 Height, IAtlasAllocator** aa);
 
         COPLT_FORCE_INLINE
-        HResult Impl_CreateFontManager(IFontManager** fm);
+        HResult Impl_CreateFrameSource(IFrameSource** fs);
+
+        COPLT_FORCE_INLINE
+        HResult Impl_CreateFontManager(IFrameSource* fs, IFontManager** fm);
 
         COPLT_FORCE_INLINE
         HResult Impl_GetSystemFontCollection(IFontCollection** fc);

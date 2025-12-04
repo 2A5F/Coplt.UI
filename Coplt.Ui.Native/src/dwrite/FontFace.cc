@@ -4,21 +4,38 @@
 
 using namespace Coplt;
 
-DWriteFontFace::DWriteFontFace(Rc<IDWriteFontFace5>&& face, const u64 id)
-    : m_id(id), m_face(std::forward<Rc<IDWriteFontFace5>>(face))
+DWriteFontFace::DWriteFontFace(Rc<IDWriteFontFace5>&& face, IFontManager* manager, const bool do_register)
+    : m_frame_source(Rc(manager->GetFrameSource())), m_manager(MakeWeak(manager)), m_face(std::forward<Rc<IDWriteFontFace5>>(face))
 {
-    Init();
+    Init(manager, do_register);
 }
 
-DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face, const u64 id)
-    : m_id(id), m_face(face)
+DWriteFontFace::DWriteFontFace(const Rc<IDWriteFontFace5>& face, IFontManager* manager, const bool do_register)
+    : m_frame_source(Rc(manager->GetFrameSource())), m_manager(MakeWeak(manager)), m_face(face)
 {
-    Init();
+    Init(manager, do_register);
 }
 
-void DWriteFontFace::Init()
+Rc<DWriteFontFace> DWriteFontFace::Get(IFontManager* manager, const Rc<IDWriteFontFace5>& face)
 {
+    const u64 id = static_cast<u64>(reinterpret_cast<usize>(face.get()));
+    const auto r = manager->GetOrAdd(
+        id, (void*)manager, [](void* data, const u64 id) -> IFontFace*
+        {
+            IFontManager* manager = static_cast<IFontManager*>(data);
+            IDWriteFontFace5* p_face = reinterpret_cast<IDWriteFontFace5*>(static_cast<usize>(id));
+            Rc face = Rc<IDWriteFontFace5>::UnsafeClone(p_face);
+            return new DWriteFontFace(face, manager, false);
+        }
+    );
+    return Rc(static_cast<DWriteFontFace*>(r));
+}
+
+void DWriteFontFace::Init(IFontManager* manager, const bool do_register)
+{
+    m_frame_time = *m_frame_source->get_Data();
     InitInfo();
+    if (do_register) manager->Register(this);
 }
 
 void DWriteFontFace::InitInfo()
@@ -81,9 +98,36 @@ void DWriteFontFace::InitInfo()
     }
 }
 
+void DWriteFontFace::OnStrongCountSub(const u32 old_count)
+{
+    if (old_count == 1) return;
+    m_frame_time = *m_frame_source->get_Data();
+}
+
 u64 DWriteFontFace::Impl_get_Id() const
 {
-    return m_id;
+    return static_cast<u64>(reinterpret_cast<usize>(m_face.get()));
+}
+
+u32 DWriteFontFace::Impl_get_RefCount() const
+{
+    return GetStrongCount();
+}
+
+FrameTime const* DWriteFontFace::Impl_get_FrameTime() const
+{
+    return &m_frame_time;
+}
+
+IFrameSource* DWriteFontFace::Impl_GetFrameSource() const
+{
+    m_frame_source->AddRef();
+    return m_frame_source.get();
+}
+
+IFontManager* DWriteFontFace::Impl_GetFontManager() const
+{
+    return m_manager.upgrade().leak();
 }
 
 NFontInfo const* DWriteFontFace::Impl_get_Info() const

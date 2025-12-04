@@ -7,20 +7,39 @@ namespace Coplt
 {
     struct DWriteFontFace final : ComImpl<DWriteFontFace, IFontFace>
     {
-        u64 m_id{};
+        Rc<IFrameSource> m_frame_source{};
+        Weak<IFontManager> m_manager{};
+        FrameTime m_frame_time{};
+
         Rc<IDWriteFontFace5> m_face{};
         NFontInfo m_info{};
 
-        explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face, u64 id);
-        explicit DWriteFontFace(const Rc<IDWriteFontFace5>& face, u64 id);
+        explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face, IFontManager* manager, bool do_register);
+        explicit DWriteFontFace(const Rc<IDWriteFontFace5>& face, IFontManager* manager, bool do_register);
 
-        void Init();
+        static Rc<DWriteFontFace> Get(IFontManager* manager, const Rc<IDWriteFontFace5>& face);
+
+        void Init(IFontManager* manager, bool do_register);
         void InitInfo();
+
+        void OnStrongCountSub(u32 old_count);
 
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
         u64 Impl_get_Id() const;
+
+        COPLT_FORCE_INLINE
+        u32 Impl_get_RefCount() const;
+
+        COPLT_FORCE_INLINE
+        FrameTime const* Impl_get_FrameTime() const;
+
+        COPLT_FORCE_INLINE
+        IFrameSource* Impl_GetFrameSource() const;
+
+        COPLT_FORCE_INLINE
+        IFontManager* Impl_GetFontManager() const;
 
         COPLT_FORCE_INLINE
         NFontInfo const* Impl_get_Info() const;

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Coplt.UI.Miscellaneous;
 using Coplt.UI.Texts;
 
 namespace TestCore;
@@ -24,7 +25,7 @@ public class TestFont
     [Test]
     public void Test2()
     {
-        var fm = new FontManager();
+        var fm = new FontManager(new FrameSource());
         var start = Stopwatch.GetTimestamp();
         var b = FontCollection.SystemCollection;
         var end = Stopwatch.GetTimestamp();

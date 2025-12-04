@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Coplt.Com;
+using Coplt.UI.Miscellaneous;
 
 namespace Coplt.UI.Native;
 
@@ -7,7 +8,15 @@ namespace Coplt.UI.Native;
 public unsafe partial struct IFontFace
 {
     public readonly partial ulong Id { get; }
-    
+    public readonly partial uint RefCount { get; }
+    [ComType<ConstPtr<FrameTime>>]
+    public readonly partial FrameTime* FrameTime { get; }
+
+    /// <returns>AddRef will be called</returns>
+    public readonly partial IFrameSource* GetFrameSource();
+    /// <returns>It may be null, AddRef will be called</returns>
+    public readonly partial IFontManager* GetFontManager();
+
     [ComType<ConstPtr<NFontInfo>>]
     public readonly partial NFontInfo* Info { get; }
 

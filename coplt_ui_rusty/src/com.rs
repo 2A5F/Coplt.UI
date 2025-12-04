@@ -29,11 +29,15 @@ pub trait IFontCollection : IUnknown {
 #[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
 pub trait IFontFace : IUnknown {
     fn get_Id(&self) -> u64;
+    fn get_RefCount(&self) -> u32;
+    fn get_FrameTime(&self) -> *const FrameTime;
+    fn GetFrameSource(&self) -> *mut IFrameSource;
+    fn GetFontManager(&self) -> *mut IFontManager;
     fn get_Info(&self) -> *const NFontInfo;
     fn Equals(&self, other: *mut IFontFace) -> bool;
     fn HashCode(&self) -> i32;
-    fn GetFamilyNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult;
-    fn GetFaceNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult;
+    fn GetFamilyNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
+    fn GetFaceNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
 }
 
 #[cocom::interface("b0dbb428-eca1-4784-b27f-629bddf93ea4")]
@@ -58,14 +62,20 @@ pub trait IFontFamily : IUnknown {
 
 #[cocom::interface("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
 pub trait IFontManager : IWeak + IUnknown {
-    fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64;
+    fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64;
     fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
+    fn GetFrameSource(&mut self) -> *mut IFrameSource;
     fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
     fn SetExpireTime(&mut self, TimeTicks: u64) -> ();
-    fn GetCurrentFrame(&self) -> u64;
-    fn Update(&mut self, CurrentTime: u64) -> ();
-    fn FontFaceToId(&mut self, Face: *mut IFontFace) -> u64;
+    fn Register(&mut self, Face: *mut IFontFace) -> ();
+    fn GetOrAdd(&mut self, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace;
+    fn Collect(&mut self) -> ();
     fn IdToFontFace(&mut self, Id: u64) -> *mut IFontFace;
+}
+
+#[cocom::interface("92a81f7e-98b1-4c83-b6ac-161fca9469d6")]
+pub trait IFrameSource : IUnknown {
+    fn get_Data(&mut self) -> *mut FrameTime;
 }
 
 #[cocom::interface("f1e64bf0-ffb9-42ce-be78-31871d247883")]
@@ -75,11 +85,12 @@ pub trait ILayout : IUnknown {
 
 #[cocom::interface("778be1fe-18f2-4aa5-8d1f-52d83b132cff")]
 pub trait ILib : IUnknown {
-    fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> ();
+    fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> (), is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
     fn ClearLogger(&mut self) -> ();
     fn GetCurrentErrorMessage(&mut self) -> Str8;
     fn CreateAtlasAllocator(&mut self, Type: AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut IAtlasAllocator) -> HResult;
-    fn CreateFontManager(&mut self, fm: *mut *mut IFontManager) -> HResult;
+    fn CreateFrameSource(&mut self, fs: *mut *mut IFrameSource) -> HResult;
+    fn CreateFontManager(&mut self, fs: *mut IFrameSource, fm: *mut *mut IFontManager) -> HResult;
     fn GetSystemFontCollection(&mut self, fc: *mut *mut IFontCollection) -> HResult;
     fn GetSystemFontFallback(&mut self, ff: *mut *mut IFontFallback) -> HResult;
     fn CreateFontFallbackBuilder(&mut self, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> HResult;
@@ -961,6 +972,13 @@ pub struct TrackSizingFunction {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct FrameTime {
+    pub NthFrame: u64,
+    pub TimeTicks: u64,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CWStr {
     pub Locale: *const u16,
 }
@@ -1543,11 +1561,15 @@ pub mod details {
         b: <IUnknown as Interface>::VitualTable,
 
         pub f_get_Id: unsafe extern "C" fn(this: *const IFontFace) -> u64,
+        pub f_get_RefCount: unsafe extern "C" fn(this: *const IFontFace) -> u32,
+        pub f_get_FrameTime: unsafe extern "C" fn(this: *const IFontFace) -> *const FrameTime,
+        pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontFace) -> *mut IFrameSource,
+        pub f_GetFontManager: unsafe extern "C" fn(this: *const IFontFace) -> *mut IFontManager,
         pub f_get_Info: unsafe extern "C" fn(this: *const IFontFace) -> *const NFontInfo,
         pub f_Equals: unsafe extern "C" fn(this: *const IFontFace, other: *mut IFontFace) -> bool,
         pub f_HashCode: unsafe extern "C" fn(this: *const IFontFace) -> i32,
-        pub f_GetFamilyNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult,
-        pub f_GetFaceNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult,
+        pub f_GetFamilyNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult,
+        pub f_GetFaceNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult,
     }
 
     impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFace, O>
@@ -1557,6 +1579,10 @@ pub mod details {
         pub const VTBL: VitualTable_IFontFace = VitualTable_IFontFace {
             b: <IUnknown as Vtbl<O>>::VTBL,
             f_get_Id: Self::f_get_Id,
+            f_get_RefCount: Self::f_get_RefCount,
+            f_get_FrameTime: Self::f_get_FrameTime,
+            f_GetFrameSource: Self::f_GetFrameSource,
+            f_GetFontManager: Self::f_GetFontManager,
             f_get_Info: Self::f_get_Info,
             f_Equals: Self::f_Equals,
             f_HashCode: Self::f_HashCode,
@@ -1567,6 +1593,18 @@ pub mod details {
         unsafe extern "C" fn f_get_Id(this: *const IFontFace) -> u64 {
             unsafe { (*O::GetObject(this as _)).get_Id() }
         }
+        unsafe extern "C" fn f_get_RefCount(this: *const IFontFace) -> u32 {
+            unsafe { (*O::GetObject(this as _)).get_RefCount() }
+        }
+        unsafe extern "C" fn f_get_FrameTime(this: *const IFontFace) -> *const FrameTime {
+            unsafe { (*O::GetObject(this as _)).get_FrameTime() }
+        }
+        unsafe extern "C" fn f_GetFrameSource(this: *const IFontFace) -> *mut IFrameSource {
+            unsafe { (*O::GetObject(this as _)).GetFrameSource() }
+        }
+        unsafe extern "C" fn f_GetFontManager(this: *const IFontFace) -> *mut IFontManager {
+            unsafe { (*O::GetObject(this as _)).GetFontManager() }
+        }
         unsafe extern "C" fn f_get_Info(this: *const IFontFace) -> *const NFontInfo {
             unsafe { (*O::GetObject(this as _)).get_Info() }
         }
@@ -1576,10 +1614,10 @@ pub mod details {
         unsafe extern "C" fn f_HashCode(this: *const IFontFace) -> i32 {
             unsafe { (*O::GetObject(this as _)).HashCode() }
         }
-        unsafe extern "C" fn f_GetFamilyNames(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult {
+        unsafe extern "C" fn f_GetFamilyNames(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult {
             unsafe { (*O::GetObject(this as _)).GetFamilyNames(ctx, add) }
         }
-        unsafe extern "C" fn f_GetFaceNames(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult {
+        unsafe extern "C" fn f_GetFaceNames(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult {
             unsafe { (*O::GetObject(this as _)).GetFaceNames(ctx, add) }
         }
     }
@@ -1792,13 +1830,14 @@ pub mod details {
     pub struct VitualTable_IFontManager {
         b: <IWeak as Interface>::VitualTable,
 
-        pub f_SetAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64,
+        pub f_SetAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64,
         pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, AssocUpdateId: u64) -> (),
+        pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontManager) -> *mut IFrameSource,
         pub f_SetExpireFrame: unsafe extern "C" fn(this: *const IFontManager, FrameCount: u64) -> (),
         pub f_SetExpireTime: unsafe extern "C" fn(this: *const IFontManager, TimeTicks: u64) -> (),
-        pub f_GetCurrentFrame: unsafe extern "C" fn(this: *const IFontManager) -> u64,
-        pub f_Update: unsafe extern "C" fn(this: *const IFontManager, CurrentTime: u64) -> (),
-        pub f_FontFaceToId: unsafe extern "C" fn(this: *const IFontManager, Face: *mut IFontFace) -> u64,
+        pub f_Register: unsafe extern "C" fn(this: *const IFontManager, Face: *mut IFontFace) -> (),
+        pub f_GetOrAdd: unsafe extern "C" fn(this: *const IFontManager, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace,
+        pub f_Collect: unsafe extern "C" fn(this: *const IFontManager) -> (),
         pub f_IdToFontFace: unsafe extern "C" fn(this: *const IFontManager, Id: u64) -> *mut IFontFace,
     }
 
@@ -1810,19 +1849,23 @@ pub mod details {
             b: <IWeak as Vtbl<O>>::VTBL,
             f_SetAssocUpdate: Self::f_SetAssocUpdate,
             f_RemoveAssocUpdate: Self::f_RemoveAssocUpdate,
+            f_GetFrameSource: Self::f_GetFrameSource,
             f_SetExpireFrame: Self::f_SetExpireFrame,
             f_SetExpireTime: Self::f_SetExpireTime,
-            f_GetCurrentFrame: Self::f_GetCurrentFrame,
-            f_Update: Self::f_Update,
-            f_FontFaceToId: Self::f_FontFaceToId,
+            f_Register: Self::f_Register,
+            f_GetOrAdd: Self::f_GetOrAdd,
+            f_Collect: Self::f_Collect,
             f_IdToFontFace: Self::f_IdToFontFace,
         };
 
-        unsafe extern "C" fn f_SetAssocUpdate(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> core::ffi::c_void) -> u64 {
+        unsafe extern "C" fn f_SetAssocUpdate(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64 {
             unsafe { (*O::GetObject(this as _)).SetAssocUpdate(Data, OnDrop, OnAdd, OnExpired) }
         }
         unsafe extern "C" fn f_RemoveAssocUpdate(this: *const IFontManager, AssocUpdateId: u64) -> () {
             unsafe { (*O::GetObject(this as _)).RemoveAssocUpdate(AssocUpdateId) }
+        }
+        unsafe extern "C" fn f_GetFrameSource(this: *const IFontManager) -> *mut IFrameSource {
+            unsafe { (*O::GetObject(this as _)).GetFrameSource() }
         }
         unsafe extern "C" fn f_SetExpireFrame(this: *const IFontManager, FrameCount: u64) -> () {
             unsafe { (*O::GetObject(this as _)).SetExpireFrame(FrameCount) }
@@ -1830,14 +1873,14 @@ pub mod details {
         unsafe extern "C" fn f_SetExpireTime(this: *const IFontManager, TimeTicks: u64) -> () {
             unsafe { (*O::GetObject(this as _)).SetExpireTime(TimeTicks) }
         }
-        unsafe extern "C" fn f_GetCurrentFrame(this: *const IFontManager) -> u64 {
-            unsafe { (*O::GetObject(this as _)).GetCurrentFrame() }
+        unsafe extern "C" fn f_Register(this: *const IFontManager, Face: *mut IFontFace) -> () {
+            unsafe { (*O::GetObject(this as _)).Register(Face) }
         }
-        unsafe extern "C" fn f_Update(this: *const IFontManager, CurrentTime: u64) -> () {
-            unsafe { (*O::GetObject(this as _)).Update(CurrentTime) }
+        unsafe extern "C" fn f_GetOrAdd(this: *const IFontManager, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace {
+            unsafe { (*O::GetObject(this as _)).GetOrAdd(Id, Data, OnAdd) }
         }
-        unsafe extern "C" fn f_FontFaceToId(this: *const IFontManager, Face: *mut IFontFace) -> u64 {
-            unsafe { (*O::GetObject(this as _)).FontFaceToId(Face) }
+        unsafe extern "C" fn f_Collect(this: *const IFontManager) -> () {
+            unsafe { (*O::GetObject(this as _)).Collect() }
         }
         unsafe extern "C" fn f_IdToFontFace(this: *const IFontManager, Id: u64) -> *mut IFontFace {
             unsafe { (*O::GetObject(this as _)).IdToFontFace(Id) }
@@ -1868,6 +1911,56 @@ pub mod details {
                     return HResultE::Ok.into();
                 }
                 <IWeak as QuIn<T, O>>::QueryInterface(this, guid, out)
+            }
+        }
+    }
+
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct VitualTable_IFrameSource {
+        b: <IUnknown as Interface>::VitualTable,
+
+        pub f_get_Data: unsafe extern "C" fn(this: *const IFrameSource) -> *mut FrameTime,
+    }
+
+    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFrameSource, O>
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        pub const VTBL: VitualTable_IFrameSource = VitualTable_IFrameSource {
+            b: <IUnknown as Vtbl<O>>::VTBL,
+            f_get_Data: Self::f_get_Data,
+        };
+
+        unsafe extern "C" fn f_get_Data(this: *const IFrameSource) -> *mut FrameTime {
+            unsafe { (*O::GetObject(this as _)).get_Data() }
+        }
+    }
+
+    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFrameSource
+    where
+        T::Interface: details::QuIn<T, O>,
+    {
+        const VTBL: <IFrameSource as Interface>::VitualTable = VT::<T, IFrameSource, O>::VTBL;
+
+        fn vtbl() -> &'static Self::VitualTable {
+            &<Self as Vtbl<O>>::VTBL
+        }
+    }
+
+    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFrameSource {
+        unsafe fn QueryInterface(
+            this: *mut T,
+            guid: *const Guid,
+            out: *mut *mut core::ffi::c_void,
+        ) -> HResult {
+            unsafe {
+                if *guid == IFrameSource::GUID {
+                    *out = this as _;
+                    O::AddRef(this as _);
+                    return HResultE::Ok.into();
+                }
+                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1927,11 +2020,12 @@ pub mod details {
     pub struct VitualTable_ILib {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_SetLogger: unsafe extern "C" fn(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> (),
+        pub f_SetLogger: unsafe extern "C" fn(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> (), is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> (),
         pub f_ClearLogger: unsafe extern "C" fn(this: *const ILib) -> (),
         pub f_GetCurrentErrorMessage: unsafe extern "C" fn(this: *const ILib) -> Str8,
         pub f_CreateAtlasAllocator: unsafe extern "C" fn(this: *const ILib, Type: AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut IAtlasAllocator) -> HResult,
-        pub f_CreateFontManager: unsafe extern "C" fn(this: *const ILib, fm: *mut *mut IFontManager) -> HResult,
+        pub f_CreateFrameSource: unsafe extern "C" fn(this: *const ILib, fs: *mut *mut IFrameSource) -> HResult,
+        pub f_CreateFontManager: unsafe extern "C" fn(this: *const ILib, fs: *mut IFrameSource, fm: *mut *mut IFontManager) -> HResult,
         pub f_GetSystemFontCollection: unsafe extern "C" fn(this: *const ILib, fc: *mut *mut IFontCollection) -> HResult,
         pub f_GetSystemFontFallback: unsafe extern "C" fn(this: *const ILib, ff: *mut *mut IFontFallback) -> HResult,
         pub f_CreateFontFallbackBuilder: unsafe extern "C" fn(this: *const ILib, ffb: *mut *mut IFontFallbackBuilder, info: *const FontFallbackBuilderCreateInfo) -> HResult,
@@ -1949,6 +2043,7 @@ pub mod details {
             f_ClearLogger: Self::f_ClearLogger,
             f_GetCurrentErrorMessage: Self::f_GetCurrentErrorMessage,
             f_CreateAtlasAllocator: Self::f_CreateAtlasAllocator,
+            f_CreateFrameSource: Self::f_CreateFrameSource,
             f_CreateFontManager: Self::f_CreateFontManager,
             f_GetSystemFontCollection: Self::f_GetSystemFontCollection,
             f_GetSystemFontFallback: Self::f_GetSystemFontFallback,
@@ -1957,7 +2052,7 @@ pub mod details {
             f_SplitTexts: Self::f_SplitTexts,
         };
 
-        unsafe extern "C" fn f_SetLogger(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> () {
+        unsafe extern "C" fn f_SetLogger(this: *const ILib, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel, StrKind, i32, *mut core::ffi::c_void) -> (), is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> () {
             unsafe { (*O::GetObject(this as _)).SetLogger(obj, logger, is_enabled, drop) }
         }
         unsafe extern "C" fn f_ClearLogger(this: *const ILib) -> () {
@@ -1969,8 +2064,11 @@ pub mod details {
         unsafe extern "C" fn f_CreateAtlasAllocator(this: *const ILib, Type: AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut IAtlasAllocator) -> HResult {
             unsafe { (*O::GetObject(this as _)).CreateAtlasAllocator(Type, Width, Height, aa) }
         }
-        unsafe extern "C" fn f_CreateFontManager(this: *const ILib, fm: *mut *mut IFontManager) -> HResult {
-            unsafe { (*O::GetObject(this as _)).CreateFontManager(fm) }
+        unsafe extern "C" fn f_CreateFrameSource(this: *const ILib, fs: *mut *mut IFrameSource) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateFrameSource(fs) }
+        }
+        unsafe extern "C" fn f_CreateFontManager(this: *const ILib, fs: *mut IFrameSource, fm: *mut *mut IFontManager) -> HResult {
+            unsafe { (*O::GetObject(this as _)).CreateFontManager(fs, fm) }
         }
         unsafe extern "C" fn f_GetSystemFontCollection(this: *const ILib, fc: *mut *mut IFontCollection) -> HResult {
             unsafe { (*O::GetObject(this as _)).GetSystemFontCollection(fc) }
@@ -2378,11 +2476,15 @@ pub mod impls {
 
     pub trait IFontFace : IUnknown {
         fn get_Id(& self) -> u64;
+        fn get_RefCount(& self) -> u32;
+        fn get_FrameTime(& self) -> *const super::FrameTime;
+        fn GetFrameSource(& self) -> *mut super::IFrameSource;
+        fn GetFontManager(& self) -> *mut super::IFontManager;
         fn get_Info(& self) -> *const super::NFontInfo;
         fn Equals(& self, other: *mut super::IFontFace) -> bool;
         fn HashCode(& self) -> i32;
-        fn GetFamilyNames(& self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult;
-        fn GetFaceNames(& self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> core::ffi::c_void) -> HResult;
+        fn GetFamilyNames(& self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
+        fn GetFaceNames(& self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
     }
 
     pub trait IFontFallback : IUnknown {
@@ -2403,14 +2505,19 @@ pub mod impls {
     }
 
     pub trait IFontManager : IWeak {
-        fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> core::ffi::c_void, OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> core::ffi::c_void) -> u64;
+        fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> ()) -> u64;
         fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
+        fn GetFrameSource(&mut self) -> *mut super::IFrameSource;
         fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
         fn SetExpireTime(&mut self, TimeTicks: u64) -> ();
-        fn GetCurrentFrame(& self) -> u64;
-        fn Update(&mut self, CurrentTime: u64) -> ();
-        fn FontFaceToId(&mut self, Face: *mut super::IFontFace) -> u64;
+        fn Register(&mut self, Face: *mut super::IFontFace) -> ();
+        fn GetOrAdd(&mut self, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut super::IFontFace) -> *mut super::IFontFace;
+        fn Collect(&mut self) -> ();
         fn IdToFontFace(&mut self, Id: u64) -> *mut super::IFontFace;
+    }
+
+    pub trait IFrameSource : IUnknown {
+        fn get_Data(&mut self) -> *mut super::FrameTime;
     }
 
     pub trait ILayout : IUnknown {
@@ -2418,11 +2525,12 @@ pub mod impls {
     }
 
     pub trait ILib : IUnknown {
-        fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, super::LogLevel, super::StrKind, i32, *mut core::ffi::c_void) -> core::ffi::c_void, is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, super::LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> core::ffi::c_void) -> ();
+        fn SetLogger(&mut self, obj: *mut core::ffi::c_void, logger: unsafe extern "C" fn(*mut core::ffi::c_void, super::LogLevel, super::StrKind, i32, *mut core::ffi::c_void) -> (), is_enabled: unsafe extern "C" fn(*mut core::ffi::c_void, super::LogLevel) -> u8, drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
         fn ClearLogger(&mut self) -> ();
         fn GetCurrentErrorMessage(&mut self) -> super::Str8;
         fn CreateAtlasAllocator(&mut self, Type: super::AtlasAllocatorType, Width: i32, Height: i32, aa: *mut *mut super::IAtlasAllocator) -> HResult;
-        fn CreateFontManager(&mut self, fm: *mut *mut super::IFontManager) -> HResult;
+        fn CreateFrameSource(&mut self, fs: *mut *mut super::IFrameSource) -> HResult;
+        fn CreateFontManager(&mut self, fs: *mut super::IFrameSource, fm: *mut *mut super::IFontManager) -> HResult;
         fn GetSystemFontCollection(&mut self, fc: *mut *mut super::IFontCollection) -> HResult;
         fn GetSystemFontFallback(&mut self, ff: *mut *mut super::IFontFallback) -> HResult;
         fn CreateFontFallbackBuilder(&mut self, ffb: *mut *mut super::IFontFallbackBuilder, info: *const super::FontFallbackBuilderCreateInfo) -> HResult;

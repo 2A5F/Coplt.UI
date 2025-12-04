@@ -23,7 +23,8 @@ public unsafe partial struct ILib
 
     public partial HResult CreateAtlasAllocator(AtlasAllocatorType Type, int Width, int Height, IAtlasAllocator** aa);
 
-    public partial HResult CreateFontManager(IFontManager** fm);
+    public partial HResult CreateFrameSource(IFrameSource** fs);
+    public partial HResult CreateFontManager(IFrameSource* fs, IFontManager** fm);
 
     public partial HResult GetSystemFontCollection(IFontCollection** fc);
     public partial HResult GetSystemFontFallback(IFontFallback** ff);
