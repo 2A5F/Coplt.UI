@@ -162,10 +162,15 @@ impl impls::IFontManager for FontManager {
             ComPtr::new(NonNull::new_unchecked(Face))
         };
         let id = face.get_Id();
-        self.id_to_faces.insert(id, face);
-        for au in self.assoc_updates.values() {
-            au.on_add(Face, id);
-        }
+        match self.id_to_faces.entry(id) {
+            dashmap::Entry::Occupied(_) => {}
+            dashmap::Entry::Vacant(entry) => {
+                let r = entry.insert(face.clone()).clone();
+                for au in self.assoc_updates.values() {
+                    au.on_add(r.ptr().as_ptr(), id);
+                }
+            }
+        };
         drop(lock_guard);
     }
 
@@ -178,9 +183,15 @@ impl impls::IFontManager for FontManager {
         let lock_guard = self.op_lock.read().unwrap();
         let r = match self.id_to_faces.entry(Id) {
             dashmap::Entry::Occupied(entry) => entry.get().clone(),
-            dashmap::Entry::Vacant(entry) => entry
-                .insert(unsafe { ComPtr::new(NonNull::new_unchecked(OnAdd(Data, Id))) })
-                .clone(),
+            dashmap::Entry::Vacant(entry) => {
+                let r = entry
+                    .insert(unsafe { ComPtr::new(NonNull::new_unchecked(OnAdd(Data, Id))) })
+                    .clone();
+                for au in self.assoc_updates.values() {
+                    au.on_add(r.ptr().as_ptr(), Id);
+                }
+                r
+            }
         };
         drop(lock_guard);
         r.leak()

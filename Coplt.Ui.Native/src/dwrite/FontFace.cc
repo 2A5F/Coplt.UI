@@ -20,7 +20,7 @@ Rc<DWriteFontFace> DWriteFontFace::Get(IFontManager* manager, const Rc<IDWriteFo
 {
     const u64 id = static_cast<u64>(reinterpret_cast<usize>(face.get()));
     const auto r = manager->GetOrAdd(
-        id, (void*)manager, [](void* data, const u64 id) -> IFontFace*
+        id, manager, [](void* data, const u64 id) -> IFontFace*
         {
             IFontManager* manager = static_cast<IFontManager*>(data);
             IDWriteFontFace5* p_face = reinterpret_cast<IDWriteFontFace5*>(static_cast<usize>(id));
