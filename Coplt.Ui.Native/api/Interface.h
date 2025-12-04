@@ -86,10 +86,10 @@ namespace Coplt {
         COPLT_COM_METHOD(GetFrameSource, IFrameSource*, ());
         COPLT_COM_METHOD(SetExpireFrame, void, (::Coplt::u64 FrameCount), FrameCount);
         COPLT_COM_METHOD(SetExpireTime, void, (::Coplt::u64 TimeTicks), TimeTicks);
-        COPLT_COM_METHOD(Register, void, (IFontFace* Face), Face);
-        COPLT_COM_METHOD(GetOrAdd, IFontFace*, (::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd), Id, Data, OnAdd);
         COPLT_COM_METHOD(Collect, void, ());
-        COPLT_COM_METHOD(IdToFontFace, IFontFace*, (::Coplt::u64 Id), Id);
+        COPLT_COM_METHOD(Add, void, (IFontFace* Face), Face);
+        COPLT_COM_METHOD(GetOrAdd, IFontFace*, (::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd), Id, Data, OnAdd);
+        COPLT_COM_METHOD(Get, IFontFace*, (::Coplt::u64 Id), Id);
     };
 
     COPLT_COM_INTERFACE(IFrameSource, "92a81f7e-98b1-4c83-b6ac-161fca9469d6", ::Coplt::IUnknown)

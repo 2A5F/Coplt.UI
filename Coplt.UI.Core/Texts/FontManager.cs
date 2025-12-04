@@ -165,22 +165,19 @@ public sealed unsafe partial class FontManager
     /// <inheritdoc cref="IFontManager.Collect" />
     public void Collect() => m_inner.Collect();
 
-    /// <inheritdoc cref="IFontManager.IdToFontFace" />
-    public IFontFace* IdToNativeFontFace(ulong Id) => m_inner.IdToFontFace(Id);
-
     #endregion
 
     #region Managed
 
-    public FontFace? NativeFontFaceToFontFace(IFontFace* Face)
+    public FontFace? Get(IFontFace* Face)
     {
         if (Face == null) return null;
         return m_managed_assoc.m_native_to_manager.GetValueOrDefault(Face);
     }
 
-    public FontFace? IdToFontFace(ulong Id)
+    public FontFace? Get(ulong Id)
     {
-        var face = IdToNativeFontFace(Id);
+        var face = m_inner.Get(Id);
         if (face == null) return null;
         return m_managed_assoc.m_native_to_manager.GetValueOrDefault(face);
     }

@@ -29,15 +29,14 @@ public unsafe partial struct IFontManager
     /// </summary>
     public partial void SetExpireTime(ulong TimeTicks);
 
-    public partial void Register(IFontFace* Face);
-    /// <returns>AddRef will be called</returns>
-    public partial IFontFace* GetOrAdd(ulong Id, void* Data, delegate* unmanaged[Cdecl]<void*, ulong, IFontFace*> OnAdd);
-
     /// <summary>
     /// Collecting expired fonts that are no longer in use. Can be executed concurrently in the background
     /// </summary>
     public partial void Collect();
 
+    public partial void Add(IFontFace* Face);
+    /// <returns>AddRef will be called</returns>
+    public partial IFontFace* GetOrAdd(ulong Id, void* Data, delegate* unmanaged[Cdecl]<void*, ulong, IFontFace*> OnAdd);
     /// <returns>null if not exists; AddRef will be called</returns>
-    public partial IFontFace* IdToFontFace(ulong Id);
+    public partial IFontFace* Get(ulong Id);
 }

@@ -1376,10 +1376,10 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFontManager>
     IFrameSource* (*const COPLT_CDECL f_GetFrameSource)(::Coplt::IFontManager*) noexcept;
     void (*const COPLT_CDECL f_SetExpireFrame)(::Coplt::IFontManager*, ::Coplt::u64 FrameCount) noexcept;
     void (*const COPLT_CDECL f_SetExpireTime)(::Coplt::IFontManager*, ::Coplt::u64 TimeTicks) noexcept;
-    void (*const COPLT_CDECL f_Register)(::Coplt::IFontManager*, IFontFace* Face) noexcept;
-    IFontFace* (*const COPLT_CDECL f_GetOrAdd)(::Coplt::IFontManager*, ::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd) noexcept;
     void (*const COPLT_CDECL f_Collect)(::Coplt::IFontManager*) noexcept;
-    IFontFace* (*const COPLT_CDECL f_IdToFontFace)(::Coplt::IFontManager*, ::Coplt::u64 Id) noexcept;
+    void (*const COPLT_CDECL f_Add)(::Coplt::IFontManager*, IFontFace* Face) noexcept;
+    IFontFace* (*const COPLT_CDECL f_GetOrAdd)(::Coplt::IFontManager*, ::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd) noexcept;
+    IFontFace* (*const COPLT_CDECL f_Get)(::Coplt::IFontManager*, ::Coplt::u64 Id) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
 {
@@ -1388,10 +1388,10 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
     IFrameSource* COPLT_CDECL GetFrameSource(::Coplt::IFontManager* self) noexcept;
     void COPLT_CDECL SetExpireFrame(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
     void COPLT_CDECL SetExpireTime(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
-    void COPLT_CDECL Register(::Coplt::IFontManager* self, IFontFace* p0) noexcept;
-    IFontFace* COPLT_CDECL GetOrAdd(::Coplt::IFontManager* self, ::Coplt::u64 p0, void* p1, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* p2) noexcept;
     void COPLT_CDECL Collect(::Coplt::IFontManager* self) noexcept;
-    IFontFace* COPLT_CDECL IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
+    void COPLT_CDECL Add(::Coplt::IFontManager* self, IFontFace* p0) noexcept;
+    IFontFace* COPLT_CDECL GetOrAdd(::Coplt::IFontManager* self, ::Coplt::u64 p0, void* p1, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* p2) noexcept;
+    IFontFace* COPLT_CDECL Get(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept;
 }
 
 template <>
@@ -1429,10 +1429,10 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
             .f_GetFrameSource = VirtualImpl_Coplt_IFontManager::GetFrameSource,
             .f_SetExpireFrame = VirtualImpl_Coplt_IFontManager::SetExpireFrame,
             .f_SetExpireTime = VirtualImpl_Coplt_IFontManager::SetExpireTime,
-            .f_Register = VirtualImpl_Coplt_IFontManager::Register,
-            .f_GetOrAdd = VirtualImpl_Coplt_IFontManager::GetOrAdd,
             .f_Collect = VirtualImpl_Coplt_IFontManager::Collect,
-            .f_IdToFontFace = VirtualImpl_Coplt_IFontManager::IdToFontFace,
+            .f_Add = VirtualImpl_Coplt_IFontManager::Add,
+            .f_GetOrAdd = VirtualImpl_Coplt_IFontManager::GetOrAdd,
+            .f_Get = VirtualImpl_Coplt_IFontManager::Get,
         };
         return vtb;
     };
@@ -1445,10 +1445,10 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
         virtual IFrameSource* Impl_GetFrameSource() = 0;
         virtual void Impl_SetExpireFrame(::Coplt::u64 FrameCount) = 0;
         virtual void Impl_SetExpireTime(::Coplt::u64 TimeTicks) = 0;
-        virtual void Impl_Register(IFontFace* Face) = 0;
-        virtual IFontFace* Impl_GetOrAdd(::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd) = 0;
         virtual void Impl_Collect() = 0;
-        virtual IFontFace* Impl_IdToFontFace(::Coplt::u64 Id) = 0;
+        virtual void Impl_Add(IFontFace* Face) = 0;
+        virtual IFontFace* Impl_GetOrAdd(::Coplt::u64 Id, void* Data, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* OnAdd) = 0;
+        virtual IFontFace* Impl_Get(::Coplt::u64 Id) = 0;
     };
 
     template <std::derived_from<::Coplt::IFontManager> Base = ::Coplt::IFontManager>
@@ -1491,9 +1491,14 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
             AsImpl(self)->Impl_SetExpireTime(p0);
         }
 
-        static void COPLT_CDECL f_Register(::Coplt::IFontManager* self, IFontFace* p0) noexcept
+        static void COPLT_CDECL f_Collect(::Coplt::IFontManager* self) noexcept
         {
-            AsImpl(self)->Impl_Register(p0);
+            AsImpl(self)->Impl_Collect();
+        }
+
+        static void COPLT_CDECL f_Add(::Coplt::IFontManager* self, IFontFace* p0) noexcept
+        {
+            AsImpl(self)->Impl_Add(p0);
         }
 
         static IFontFace* COPLT_CDECL f_GetOrAdd(::Coplt::IFontManager* self, ::Coplt::u64 p0, void* p1, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* p2) noexcept
@@ -1501,14 +1506,9 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
             return AsImpl(self)->Impl_GetOrAdd(p0, p1, p2);
         }
 
-        static void COPLT_CDECL f_Collect(::Coplt::IFontManager* self) noexcept
+        static IFontFace* COPLT_CDECL f_Get(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
         {
-            AsImpl(self)->Impl_Collect();
-        }
-
-        static IFontFace* COPLT_CDECL f_IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
-        {
-            return AsImpl(self)->Impl_IdToFontFace(p0);
+            return AsImpl(self)->Impl_Get(p0);
         }
     };
 
@@ -1521,10 +1521,10 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontManager>
         .f_GetFrameSource = VirtualImpl<Impl>::f_GetFrameSource,
         .f_SetExpireFrame = VirtualImpl<Impl>::f_SetExpireFrame,
         .f_SetExpireTime = VirtualImpl<Impl>::f_SetExpireTime,
-        .f_Register = VirtualImpl<Impl>::f_Register,
-        .f_GetOrAdd = VirtualImpl<Impl>::f_GetOrAdd,
         .f_Collect = VirtualImpl<Impl>::f_Collect,
-        .f_IdToFontFace = VirtualImpl<Impl>::f_IdToFontFace,
+        .f_Add = VirtualImpl<Impl>::f_Add,
+        .f_GetOrAdd = VirtualImpl<Impl>::f_GetOrAdd,
+        .f_Get = VirtualImpl<Impl>::f_Get,
     };
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
@@ -1592,15 +1592,27 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
         #endif
     }
 
-    inline void COPLT_CDECL Register(::Coplt::IFontManager* self, IFontFace* p0) noexcept
+    inline void COPLT_CDECL Collect(::Coplt::IFontManager* self) noexcept
     {
         struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, Register, void)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, Collect, void)
         #endif
-        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Register(p0);
+        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Collect();
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, Register, void)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, Collect, void)
+        #endif
+    }
+
+    inline void COPLT_CDECL Add(::Coplt::IFontManager* self, IFontFace* p0) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, Add, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Add(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, Add, void)
         #endif
     }
 
@@ -1617,27 +1629,15 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontManager
         return r;
     }
 
-    inline void COPLT_CDECL Collect(::Coplt::IFontManager* self) noexcept
-    {
-        struct { } r;
-        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, Collect, void)
-        #endif
-        ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Collect();
-        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, Collect, void)
-        #endif
-    }
-
-    inline IFontFace* COPLT_CDECL IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
+    inline IFontFace* COPLT_CDECL Get(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
         IFontFace* r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, IdToFontFace, IFontFace*)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontManager, Get, IFontFace*)
         #endif
-        r = ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_IdToFontFace(p0);
+        r = ::Coplt::Internal::AsImpl<::Coplt::IFontManager>(self)->Impl_Get(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, IdToFontFace, IFontFace*)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontManager, Get, IFontFace*)
         #endif
         return r;
     }
@@ -1671,21 +1671,21 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontManager>
     {
         COPLT_COM_PVTB(IFontManager, self)->f_SetExpireTime(self, p0);
     }
-    static COPLT_FORCE_INLINE void Register(::Coplt::IFontManager* self, IFontFace* p0) noexcept
+    static COPLT_FORCE_INLINE void Collect(::Coplt::IFontManager* self) noexcept
     {
-        COPLT_COM_PVTB(IFontManager, self)->f_Register(self, p0);
+        COPLT_COM_PVTB(IFontManager, self)->f_Collect(self);
+    }
+    static COPLT_FORCE_INLINE void Add(::Coplt::IFontManager* self, IFontFace* p0) noexcept
+    {
+        COPLT_COM_PVTB(IFontManager, self)->f_Add(self, p0);
     }
     static COPLT_FORCE_INLINE IFontFace* GetOrAdd(::Coplt::IFontManager* self, ::Coplt::u64 p0, void* p1, ::Coplt::Func<IFontFace*, void*, ::Coplt::u64>* p2) noexcept
     {
         return COPLT_COM_PVTB(IFontManager, self)->f_GetOrAdd(self, p0, p1, p2);
     }
-    static COPLT_FORCE_INLINE void Collect(::Coplt::IFontManager* self) noexcept
+    static COPLT_FORCE_INLINE IFontFace* Get(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
     {
-        COPLT_COM_PVTB(IFontManager, self)->f_Collect(self);
-    }
-    static COPLT_FORCE_INLINE IFontFace* IdToFontFace(::Coplt::IFontManager* self, ::Coplt::u64 p0) noexcept
-    {
-        return COPLT_COM_PVTB(IFontManager, self)->f_IdToFontFace(self, p0);
+        return COPLT_COM_PVTB(IFontManager, self)->f_Get(self, p0);
     }
 };
 

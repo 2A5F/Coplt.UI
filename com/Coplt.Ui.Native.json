@@ -4860,8 +4860,14 @@
           ]
         },
         {
-          "name": "Register",
+          "name": "Collect",
           "index": 5,
+          "return_type": 173,
+          "parameters": []
+        },
+        {
+          "name": "Add",
+          "index": 6,
           "return_type": 173,
           "parameters": [
             {
@@ -4872,7 +4878,7 @@
         },
         {
           "name": "GetOrAdd",
-          "index": 6,
+          "index": 7,
           "return_type": 81,
           "parameters": [
             {
@@ -4890,13 +4896,7 @@
           ]
         },
         {
-          "name": "Collect",
-          "index": 7,
-          "return_type": 173,
-          "parameters": []
-        },
-        {
-          "name": "IdToFontFace",
+          "name": "Get",
           "index": 8,
           "return_type": 81,
           "parameters": [

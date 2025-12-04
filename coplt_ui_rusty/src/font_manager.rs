@@ -155,7 +155,29 @@ impl impls::IFontManager for FontManager {
         drop(lock_guard);
     }
 
-    fn Register(&mut self, Face: *mut IFontFace) -> () {
+    fn Collect(&mut self) -> () {
+        let lock_guard = self.op_lock.read().unwrap();
+        let sft = unsafe { *self.frame_source.get_Data() };
+        self.id_to_faces.retain(|id, face| {
+            if face.get_RefCount() != 1 {
+                return false;
+            }
+            let fft = unsafe { *face.get_FrameTime() };
+            if sft.NthFrame - fft.NthFrame < self.expire_frame {
+                return false;
+            }
+            if sft.TimeTicks - fft.TimeTicks < self.expre_time {
+                return false;
+            }
+            for au in self.assoc_updates.values() {
+                au.on_expired(face.ptr().as_ptr(), *id);
+            }
+            true
+        });
+        drop(lock_guard);
+    }
+
+    fn Add(&mut self, Face: *mut IFontFace) -> () {
         let lock_guard = self.op_lock.read().unwrap();
         let face = unsafe {
             (*Face).AddRef();
@@ -197,29 +219,7 @@ impl impls::IFontManager for FontManager {
         r.leak()
     }
 
-    fn Collect(&mut self) -> () {
-        let lock_guard = self.op_lock.read().unwrap();
-        let sft = unsafe { *self.frame_source.get_Data() };
-        self.id_to_faces.retain(|id, face| {
-            if face.get_RefCount() != 1 {
-                return false;
-            }
-            let fft = unsafe { *face.get_FrameTime() };
-            if sft.NthFrame - fft.NthFrame < self.expire_frame {
-                return false;
-            }
-            if sft.TimeTicks - fft.TimeTicks < self.expre_time {
-                return false;
-            }
-            for au in self.assoc_updates.values() {
-                au.on_expired(face.ptr().as_ptr(), *id);
-            }
-            true
-        });
-        drop(lock_guard);
-    }
-
-    fn IdToFontFace(&mut self, Id: u64) -> *mut IFontFace {
+    fn Get(&mut self, Id: u64) -> *mut IFontFace {
         let lock_guard = self.op_lock.read().unwrap();
         let r = match self.id_to_faces.get(&Id) {
             Some(face) => {

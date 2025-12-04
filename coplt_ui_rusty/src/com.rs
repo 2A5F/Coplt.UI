@@ -67,10 +67,10 @@ pub trait IFontManager : IWeak + IUnknown {
     fn GetFrameSource(&mut self) -> *mut IFrameSource;
     fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
     fn SetExpireTime(&mut self, TimeTicks: u64) -> ();
-    fn Register(&mut self, Face: *mut IFontFace) -> ();
-    fn GetOrAdd(&mut self, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace;
     fn Collect(&mut self) -> ();
-    fn IdToFontFace(&mut self, Id: u64) -> *mut IFontFace;
+    fn Add(&mut self, Face: *mut IFontFace) -> ();
+    fn GetOrAdd(&mut self, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace;
+    fn Get(&mut self, Id: u64) -> *mut IFontFace;
 }
 
 #[cocom::interface("92a81f7e-98b1-4c83-b6ac-161fca9469d6")]
@@ -1835,10 +1835,10 @@ pub mod details {
         pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontManager) -> *mut IFrameSource,
         pub f_SetExpireFrame: unsafe extern "C" fn(this: *const IFontManager, FrameCount: u64) -> (),
         pub f_SetExpireTime: unsafe extern "C" fn(this: *const IFontManager, TimeTicks: u64) -> (),
-        pub f_Register: unsafe extern "C" fn(this: *const IFontManager, Face: *mut IFontFace) -> (),
-        pub f_GetOrAdd: unsafe extern "C" fn(this: *const IFontManager, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace,
         pub f_Collect: unsafe extern "C" fn(this: *const IFontManager) -> (),
-        pub f_IdToFontFace: unsafe extern "C" fn(this: *const IFontManager, Id: u64) -> *mut IFontFace,
+        pub f_Add: unsafe extern "C" fn(this: *const IFontManager, Face: *mut IFontFace) -> (),
+        pub f_GetOrAdd: unsafe extern "C" fn(this: *const IFontManager, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace,
+        pub f_Get: unsafe extern "C" fn(this: *const IFontManager, Id: u64) -> *mut IFontFace,
     }
 
     impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> VT<T, IFontManager, O>
@@ -1852,10 +1852,10 @@ pub mod details {
             f_GetFrameSource: Self::f_GetFrameSource,
             f_SetExpireFrame: Self::f_SetExpireFrame,
             f_SetExpireTime: Self::f_SetExpireTime,
-            f_Register: Self::f_Register,
-            f_GetOrAdd: Self::f_GetOrAdd,
             f_Collect: Self::f_Collect,
-            f_IdToFontFace: Self::f_IdToFontFace,
+            f_Add: Self::f_Add,
+            f_GetOrAdd: Self::f_GetOrAdd,
+            f_Get: Self::f_Get,
         };
 
         unsafe extern "C" fn f_SetAssocUpdate(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64 {
@@ -1873,17 +1873,17 @@ pub mod details {
         unsafe extern "C" fn f_SetExpireTime(this: *const IFontManager, TimeTicks: u64) -> () {
             unsafe { (*O::GetObject(this as _)).SetExpireTime(TimeTicks) }
         }
-        unsafe extern "C" fn f_Register(this: *const IFontManager, Face: *mut IFontFace) -> () {
-            unsafe { (*O::GetObject(this as _)).Register(Face) }
+        unsafe extern "C" fn f_Collect(this: *const IFontManager) -> () {
+            unsafe { (*O::GetObject(this as _)).Collect() }
+        }
+        unsafe extern "C" fn f_Add(this: *const IFontManager, Face: *mut IFontFace) -> () {
+            unsafe { (*O::GetObject(this as _)).Add(Face) }
         }
         unsafe extern "C" fn f_GetOrAdd(this: *const IFontManager, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut IFontFace) -> *mut IFontFace {
             unsafe { (*O::GetObject(this as _)).GetOrAdd(Id, Data, OnAdd) }
         }
-        unsafe extern "C" fn f_Collect(this: *const IFontManager) -> () {
-            unsafe { (*O::GetObject(this as _)).Collect() }
-        }
-        unsafe extern "C" fn f_IdToFontFace(this: *const IFontManager, Id: u64) -> *mut IFontFace {
-            unsafe { (*O::GetObject(this as _)).IdToFontFace(Id) }
+        unsafe extern "C" fn f_Get(this: *const IFontManager, Id: u64) -> *mut IFontFace {
+            unsafe { (*O::GetObject(this as _)).Get(Id) }
         }
     }
 
@@ -2510,10 +2510,10 @@ pub mod impls {
         fn GetFrameSource(&mut self) -> *mut super::IFrameSource;
         fn SetExpireFrame(&mut self, FrameCount: u64) -> ();
         fn SetExpireTime(&mut self, TimeTicks: u64) -> ();
-        fn Register(&mut self, Face: *mut super::IFontFace) -> ();
-        fn GetOrAdd(&mut self, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut super::IFontFace) -> *mut super::IFontFace;
         fn Collect(&mut self) -> ();
-        fn IdToFontFace(&mut self, Id: u64) -> *mut super::IFontFace;
+        fn Add(&mut self, Face: *mut super::IFontFace) -> ();
+        fn GetOrAdd(&mut self, Id: u64, Data: *mut core::ffi::c_void, OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, u64) -> *mut super::IFontFace) -> *mut super::IFontFace;
+        fn Get(&mut self, Id: u64) -> *mut super::IFontFace;
     }
 
     pub trait IFrameSource : IUnknown {

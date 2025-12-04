@@ -35,7 +35,7 @@ void DWriteFontFace::Init(IFontManager* manager, const bool do_register)
 {
     m_frame_time = *m_frame_source->get_Data();
     InitInfo();
-    if (do_register) manager->Register(this);
+    if (do_register) manager->Add(this);
 }
 
 void DWriteFontFace::InitInfo()
