@@ -4,6 +4,7 @@
 
 use std::{
     collections::HashMap,
+    mem::MaybeUninit,
     os::raw::c_void,
     ptr::NonNull,
     sync::{
@@ -157,7 +158,9 @@ impl impls::IFontManager for FontManager {
 
     fn Collect(&mut self) -> () {
         let lock_guard = self.op_lock.read().unwrap();
-        let sft = unsafe { *self.frame_source.get_Data() };
+        let mut sft: MaybeUninit<FrameTime> = MaybeUninit::uninit();
+        unsafe { self.frame_source.Get(sft.as_mut_ptr()) };
+        let sft = unsafe { sft.assume_init() };
         self.id_to_faces.retain(|id, face| {
             if face.get_RefCount() != 1 {
                 return false;

@@ -17,14 +17,12 @@ public sealed unsafe partial class FrameSource
 
     [Drop]
     internal Rc<IFrameSource> m_inner;
-    internal readonly FrameTime* m_data;
 
     #endregion
 
     #region Props
 
     public ref readonly Rc<IFrameSource> Inner => ref m_inner;
-    public ref FrameTime Data => ref *m_data;
 
     #endregion
 
@@ -35,7 +33,21 @@ public sealed unsafe partial class FrameSource
         IFrameSource* ptr;
         NativeLib.Instance.m_lib.CreateFrameSource(&ptr).TryThrowWithMsg();
         m_inner = new(ptr);
-        m_data = m_inner.Data;
+    }
+
+    #endregion
+
+    #region Data
+
+    public FrameTime Data
+    {
+        get
+        {
+            FrameTime ft;
+            m_inner.Get(&ft);
+            return ft;
+        }
+        set => m_inner.Set(&value);
     }
 
     #endregion

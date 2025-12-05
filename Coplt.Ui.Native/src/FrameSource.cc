@@ -1,6 +1,11 @@
 #include "FrameSource.h"
 
-FrameTime* FrameSource::Impl_get_Data()
+void FrameSource::Impl_Get(FrameTime* ft)
 {
-    return &m_frame_time;
+    *ft = m_frame_time;
+}
+
+void FrameSource::Impl_Set(FrameTime const* ft)
+{
+    m_frame_time = *ft;
 }

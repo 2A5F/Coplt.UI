@@ -75,7 +75,8 @@ pub trait IFontManager : IWeak + IUnknown {
 
 #[cocom::interface("92a81f7e-98b1-4c83-b6ac-161fca9469d6")]
 pub trait IFrameSource : IUnknown {
-    fn get_Data(&mut self) -> *mut FrameTime;
+    fn Get(&mut self, ft: *mut FrameTime) -> ();
+    fn Set(&mut self, ft: *const FrameTime) -> ();
 }
 
 #[cocom::interface("f1e64bf0-ffb9-42ce-be78-31871d247883")]
@@ -1920,7 +1921,8 @@ pub mod details {
     pub struct VitualTable_IFrameSource {
         b: <IUnknown as Interface>::VitualTable,
 
-        pub f_get_Data: unsafe extern "C" fn(this: *const IFrameSource) -> *mut FrameTime,
+        pub f_Get: unsafe extern "C" fn(this: *const IFrameSource, ft: *mut FrameTime) -> (),
+        pub f_Set: unsafe extern "C" fn(this: *const IFrameSource, ft: *const FrameTime) -> (),
     }
 
     impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFrameSource, O>
@@ -1929,11 +1931,15 @@ pub mod details {
     {
         pub const VTBL: VitualTable_IFrameSource = VitualTable_IFrameSource {
             b: <IUnknown as Vtbl<O>>::VTBL,
-            f_get_Data: Self::f_get_Data,
+            f_Get: Self::f_Get,
+            f_Set: Self::f_Set,
         };
 
-        unsafe extern "C" fn f_get_Data(this: *const IFrameSource) -> *mut FrameTime {
-            unsafe { (*O::GetObject(this as _)).get_Data() }
+        unsafe extern "C" fn f_Get(this: *const IFrameSource, ft: *mut FrameTime) -> () {
+            unsafe { (*O::GetObject(this as _)).Get(ft) }
+        }
+        unsafe extern "C" fn f_Set(this: *const IFrameSource, ft: *const FrameTime) -> () {
+            unsafe { (*O::GetObject(this as _)).Set(ft) }
         }
     }
 
@@ -2517,7 +2523,8 @@ pub mod impls {
     }
 
     pub trait IFrameSource : IUnknown {
-        fn get_Data(&mut self) -> *mut super::FrameTime;
+        fn Get(&mut self, ft: *mut super::FrameTime) -> ();
+        fn Set(&mut self, ft: *const super::FrameTime) -> ();
     }
 
     pub trait ILayout : IUnknown {

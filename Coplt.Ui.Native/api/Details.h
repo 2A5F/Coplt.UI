@@ -1693,11 +1693,13 @@ template <>
 struct ::Coplt::Internal::VirtualTable<::Coplt::IFrameSource>
 {
     VirtualTable<::Coplt::IUnknown> b;
-    ::Coplt::FrameTime* (*const COPLT_CDECL f_get_Data)(::Coplt::IFrameSource*) noexcept;
+    void (*const COPLT_CDECL f_Get)(::Coplt::IFrameSource*, ::Coplt::FrameTime* ft) noexcept;
+    void (*const COPLT_CDECL f_Set)(::Coplt::IFrameSource*, ::Coplt::FrameTime const* ft) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFrameSource
 {
-    ::Coplt::FrameTime* COPLT_CDECL get_Data(::Coplt::IFrameSource* self) noexcept;
+    void COPLT_CDECL Get(::Coplt::IFrameSource* self, ::Coplt::FrameTime* p0) noexcept;
+    void COPLT_CDECL Set(::Coplt::IFrameSource* self, ::Coplt::FrameTime const* p0) noexcept;
 }
 
 template <>
@@ -1730,7 +1732,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFrameSource>
         static VirtualTable vtb
         {
             .b = ComProxy<::Coplt::IUnknown>::GetVtb(),
-            .f_get_Data = VirtualImpl_Coplt_IFrameSource::get_Data,
+            .f_Get = VirtualImpl_Coplt_IFrameSource::Get,
+            .f_Set = VirtualImpl_Coplt_IFrameSource::Set,
         };
         return vtb;
     };
@@ -1738,7 +1741,8 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFrameSource>
     struct Impl : ComProxy<::Coplt::IUnknown>::Impl
     {
 
-        virtual ::Coplt::FrameTime* Impl_get_Data() = 0;
+        virtual void Impl_Get(::Coplt::FrameTime* ft) = 0;
+        virtual void Impl_Set(::Coplt::FrameTime const* ft) = 0;
     };
 
     template <std::derived_from<::Coplt::IFrameSource> Base = ::Coplt::IFrameSource>
@@ -1756,9 +1760,14 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFrameSource>
         template <class Interface>
         COPLT_FORCE_INLINE static auto AsImpl(Interface* self) { return static_cast<Impl*>(self); }
 
-        static ::Coplt::FrameTime* COPLT_CDECL f_get_Data(::Coplt::IFrameSource* self) noexcept
+        static void COPLT_CDECL f_Get(::Coplt::IFrameSource* self, ::Coplt::FrameTime* p0) noexcept
         {
-            return AsImpl(self)->Impl_get_Data();
+            AsImpl(self)->Impl_Get(p0);
+        }
+
+        static void COPLT_CDECL f_Set(::Coplt::IFrameSource* self, ::Coplt::FrameTime const* p0) noexcept
+        {
+            AsImpl(self)->Impl_Set(p0);
         }
     };
 
@@ -1766,23 +1775,35 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFrameSource>
     constexpr static VirtualTable s_vtb
     {
         .b = ComProxy<::Coplt::IUnknown>::s_vtb<Impl>,
-        .f_get_Data = VirtualImpl<Impl>::f_get_Data,
+        .f_Get = VirtualImpl<Impl>::f_Get,
+        .f_Set = VirtualImpl<Impl>::f_Set,
     };
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFrameSource
 {
 
-    inline ::Coplt::FrameTime* COPLT_CDECL get_Data(::Coplt::IFrameSource* self) noexcept
+    inline void COPLT_CDECL Get(::Coplt::IFrameSource* self, ::Coplt::FrameTime* p0) noexcept
     {
-        ::Coplt::FrameTime* r;
+        struct { } r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
-        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFrameSource, get_Data, ::Coplt::FrameTime*)
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFrameSource, Get, void)
         #endif
-        r = ::Coplt::Internal::AsImpl<::Coplt::IFrameSource>(self)->Impl_get_Data();
+        ::Coplt::Internal::AsImpl<::Coplt::IFrameSource>(self)->Impl_Get(p0);
         #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
-        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFrameSource, get_Data, ::Coplt::FrameTime*)
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFrameSource, Get, void)
         #endif
-        return r;
+    }
+
+    inline void COPLT_CDECL Set(::Coplt::IFrameSource* self, ::Coplt::FrameTime const* p0) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFrameSource, Set, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IFrameSource>(self)->Impl_Set(p0);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFrameSource, Set, void)
+        #endif
     }
 }
 #define COPLT_COM_INTERFACE_BODY_Coplt_IFrameSource\
@@ -1794,9 +1815,13 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFrameSource
 template <>
 struct ::Coplt::Internal::CallComMethod<::Coplt::IFrameSource>
 {
-    static COPLT_FORCE_INLINE ::Coplt::FrameTime* get_Data(::Coplt::IFrameSource* self) noexcept
+    static COPLT_FORCE_INLINE void Get(::Coplt::IFrameSource* self, ::Coplt::FrameTime* p0) noexcept
     {
-        return COPLT_COM_PVTB(IFrameSource, self)->f_get_Data(self);
+        COPLT_COM_PVTB(IFrameSource, self)->f_Get(self, p0);
+    }
+    static COPLT_FORCE_INLINE void Set(::Coplt::IFrameSource* self, ::Coplt::FrameTime const* p0) noexcept
+    {
+        COPLT_COM_PVTB(IFrameSource, self)->f_Set(self, p0);
     }
 };
 

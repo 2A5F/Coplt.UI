@@ -33,7 +33,7 @@ Rc<DWriteFontFace> DWriteFontFace::Get(IFontManager* manager, const Rc<IDWriteFo
 
 void DWriteFontFace::Init(IFontManager* manager, const bool do_register)
 {
-    m_frame_time = *m_frame_source->get_Data();
+    m_frame_source->Get(&m_frame_time);
     InitInfo();
     if (do_register) manager->Add(this);
 }
@@ -101,7 +101,7 @@ void DWriteFontFace::InitInfo()
 void DWriteFontFace::OnStrongCountSub(const u32 old_count)
 {
     if (old_count == 1) return;
-    m_frame_time = *m_frame_source->get_Data();
+    m_frame_source->Get(&m_frame_time);
 }
 
 u64 DWriteFontFace::Impl_get_Id() const

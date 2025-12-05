@@ -96,7 +96,8 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFrameSource
 
-        COPLT_COM_METHOD(get_Data, ::Coplt::FrameTime*, ());
+        COPLT_COM_METHOD(Get, void, (::Coplt::FrameTime* ft), ft);
+        COPLT_COM_METHOD(Set, void, (::Coplt::FrameTime const* ft), ft);
     };
 
     COPLT_COM_INTERFACE(ILayout, "f1e64bf0-ffb9-42ce-be78-31871d247883", ::Coplt::IUnknown)

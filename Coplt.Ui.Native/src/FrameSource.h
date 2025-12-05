@@ -10,7 +10,10 @@ namespace Coplt {
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
-        FrameTime* Impl_get_Data();
+        void Impl_Get(FrameTime* ft);
+
+        COPLT_FORCE_INLINE
+        void Impl_Set(FrameTime const* ft);
 
         COPLT_IMPL_END
     };

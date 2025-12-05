@@ -4914,11 +4914,26 @@
       "guid": "92a81f7e-98b1-4c83-b6ac-161fca9469d6",
       "methods": [
         {
-          "name": "get_Data",
+          "name": "Get",
           "index": 0,
-          "flags": "getter",
-          "return_type": 65,
-          "parameters": []
+          "return_type": 173,
+          "parameters": [
+            {
+              "name": "ft",
+              "type": 65
+            }
+          ]
+        },
+        {
+          "name": "Set",
+          "index": 1,
+          "return_type": 173,
+          "parameters": [
+            {
+              "name": "ft",
+              "type": 177
+            }
+          ]
         }
       ]
     },
