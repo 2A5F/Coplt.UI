@@ -7,6 +7,8 @@ namespace Coplt::LayoutCalc
 {
     using namespace Coplt::Geometry;
 
+    struct CtxNodeRef;
+
     COPLT_RELEASE_FORCE_INLINE inline Axis ToAxis(const WritingDirection direction)
     {
         switch (direction)
@@ -56,6 +58,28 @@ namespace Coplt::LayoutCalc
         LayoutRunMode RunMode;
         LayoutSizingMode SizingMode;
         LayoutRequestedAxis Axis;
+
+        LayoutInputs() = default;
+
+        explicit LayoutInputs(
+            const LayoutRunMode RunMode,
+            const LayoutSizingMode SizingMode,
+            const LayoutRequestedAxis Axis,
+            const Size<std::optional<f32>> KnownDimensions,
+            const Size<std::optional<f32>> ParentSize,
+            const Size<AvailableSpace> AvailableSpace
+        )
+            : KnownWidth(KnownDimensions.Width.value_or(0)), KnownHeight(KnownDimensions.Height.value_or(0)),
+              ParentWidth(ParentSize.Width.value_or(0)), ParentHeight(ParentSize.Height.value_or(0)),
+              AvailableSpaceWidthValue(AvailableSpace.Width.second), AvailableSpaceHeightValue(AvailableSpace.Height.second),
+              HasKnownWidth(KnownDimensions.Width.has_value()), HasKnownHeight(KnownDimensions.Height.has_value()),
+              HasParentWidth(ParentSize.Width.has_value()), HasParentHeight(ParentSize.Height.has_value()),
+              AvailableSpaceWidth(AvailableSpace.Width.first), AvailableSpaceHeight(AvailableSpace.Height.first),
+              RunMode(RunMode),
+              SizingMode(SizingMode),
+              Axis(Axis)
+        {
+        }
     };
 
     struct CacheEntryBase
@@ -268,6 +292,12 @@ namespace Coplt::LayoutCalc
         f32 Ascent{};
         f32 Descent{};
         f32 LineGap{};
+        f32 MinSize{};
+
+        f32 CalcSize(const f32 defined_size) const
+        {
+            return std::max(Ascent + Descent + LineGap, std::max(MinSize, defined_size));
+        }
     };
 
     enum class ParagraphSpanType : u8
@@ -294,6 +324,26 @@ namespace Coplt::LayoutCalc
         std::unreachable();
     }
 
+    struct ParagraphSpanInlineBlockTmpData
+    {
+        LayoutOutput m_layout_output;
+
+        NodeId m_node;
+
+        Size<std::optional<f32>> m_size;
+        Size<std::optional<f32>> m_min_size;
+        Size<std::optional<f32>> m_max_size;
+
+        Rect<std::optional<f32>> m_inset;
+        Rect<f32> m_margin;
+        Rect<f32> m_padding;
+        Rect<f32> m_border;
+
+        ParagraphSpanInlineBlockTmpData() = default;
+
+        explicit ParagraphSpanInlineBlockTmpData(CtxNodeRef node, Size<std::optional<f32>> inner_size);
+    };
+
     struct ParagraphSpan
     {
         u32 NthLine;
@@ -306,9 +356,16 @@ namespace Coplt::LayoutCalc
                 u32 CharLength;
                 u32 GlyphStart;
                 u32 GlyphLength;
+                f32 Ascent;
+                f32 Descent;
             };
 
-            u32 InlineBlockIndex;
+            struct
+            {
+                NodeId Node;
+                u32 InlineBlockIndex;
+                f32 CrossSize;
+            };
         };
 
         // Horizontal is x, Vertical is y

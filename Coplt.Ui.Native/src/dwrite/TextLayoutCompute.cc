@@ -20,7 +20,7 @@ using namespace Coplt::LayoutCalc;
 using namespace Coplt::LayoutCalc::Texts;
 
 HResultE Texts::coplt_ui_layout_text_compute(
-    ITextLayout* layout, NLayoutContext* ctx, const NodeId& node,
+    void* sub_doc, ITextLayout* layout, NLayoutContext* ctx, const NodeId& node,
     const LayoutInputs* inputs, LayoutOutput* outputs
 )
 {
@@ -28,7 +28,7 @@ HResultE Texts::coplt_ui_layout_text_compute(
         [&]
         {
             const auto l = static_cast<TextLayout*>(layout);
-            l->Compute(*outputs, *inputs, CtxNodeRef(ctx, node));
+            l->Compute(sub_doc, *outputs, *inputs, CtxNodeRef(ctx, node));
             return HResultE::Ok;
         }
     );
@@ -139,14 +139,14 @@ void TextLayoutCache::Clear()
     Flags = LayoutCacheFlags::Empty;
 }
 
-void TextLayout::Compute(LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node)
+void TextLayout::Compute(void* sub_doc, LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node)
 {
     m_node = node;
-    out = Compute(inputs);
+    out = Compute(sub_doc, inputs);
     m_node = {};
 }
 
-LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
+LayoutOutput TextLayout::Compute(void* sub_doc, const LayoutInputs& inputs)
 {
     const auto& style = m_node.StyleData();
 
@@ -203,11 +203,12 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
 
     #pragma endregion
 
+    u32 order = 0;
     auto last_available_space = available_space.Normalize(clamped_size, min_size, max_size);
     Size<f32> size{};
     for (auto& data : m_paragraph_datas)
     {
-        auto output = data.ComputeContent(*this, inputs.RunMode, inputs.Axis, max_only, last_available_space, known_dimensions);
+        auto output = data.ComputeContent(sub_doc, *this, order, inputs, max_only, last_available_space, known_dimensions);
         last_available_space = last_available_space.TrySub(GetSize(output));
         if (style.WritingDirection == WritingDirection::Horizontal)
         {
@@ -232,7 +233,7 @@ LayoutOutput TextLayout::Compute(const LayoutInputs& inputs)
 }
 
 LayoutOutput ParagraphData::ComputeContent(
-    TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis, Size<bool> MaxOnly,
+    void* sub_doc, TextLayout& layout, u32& order, const LayoutInputs& inputs, Size<bool> MaxOnly,
     const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
 )
 {
@@ -250,9 +251,10 @@ LayoutOutput ParagraphData::ComputeContent(
 
     if (paragraph.Type == TextParagraphType::Inline)
     {
+        std::vector<ParagraphSpanInlineBlockTmpData> inline_block_tmp_datas{};
         std::vector<ParagraphSpan> spans{};
         std::vector<ParagraphLine> lines{};
-        if (RunMode == LayoutRunMode::ComputeSize)
+        if (inputs.RunMode == LayoutRunMode::ComputeSize)
         {
             spans = std::move(m_final_spans);
             lines = std::move(m_final_lines);
@@ -275,10 +277,93 @@ LayoutOutput ParagraphData::ComputeContent(
             const auto scope = GetScope(same_style);
             const auto& style = scope.StyleData();
             defined_line_height = Resolve(GetLineHeight(style), style.FontSize);
+            const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
 
             if (run.IsInlineBlock(*this))
             {
-                // todo
+                const auto& font = m_font_ranges[run.FontRangeIndex];
+                const auto items = GetItems(font.ItemStart, font.ItemLength);
+                inline_block_tmp_datas.reserve(inline_block_tmp_datas.size() + items.size());
+                for (const auto& item : items)
+                {
+                    COPLT_DEBUG_ASSERT(item.Type == TextItemType::InlineBlock);
+
+                    const u32 inline_block_index = inline_block_tmp_datas.size();
+                    if (inputs.RunMode == LayoutRunMode::PerformLayout)
+                    {
+                        inline_block_tmp_datas.emplace_back(GetScope(item.NodeOrParent), KnownSize);
+                    }
+                    else
+                    {
+                        inline_block_tmp_datas.emplace_back();
+                    }
+                    auto& ibd = inline_block_tmp_datas.back();
+                    auto& sub_outputs = ibd.m_layout_output;
+
+                    Size<::AvailableSpace> available_space = AvailableSpace;
+                    ::AvailableSpace& cross_available_space = available_space.CrossAxis(axis);
+                    if (cross_available_space.first == AvailableSpaceType::Definite)
+                    {
+                        cross_available_space.second = std::max(0.0f, cross_available_space.second - sum_cross);
+                    }
+                    LayoutInputs sub_inputs(
+                        inputs.RunMode, inputs.SizingMode, LayoutRequestedAxis::Both,
+                        Size<std::optional<f32>>(), GetParentSize(inputs), available_space
+                    );
+
+                    ComputeChildLayout(sub_doc, item.NodeOrParent, &sub_inputs, &sub_outputs);
+
+                    const f32 main_size = GetSize(sub_outputs).MainAxis(axis);
+                    const f32 cross_size = GetSize(sub_outputs).CrossAxis(axis);
+
+                    auto cur_line_offset = ctx.CurrentLineOffset;
+                    const auto new_line_offset = ctx.CurrentLineOffset + main_size;
+                    if (allow_wrap && new_line_offset > ctx.AvailableSpace)
+                    {
+                        ctx.NthLine++;
+                        cur_line_offset = 0;
+                        ctx.CurrentLineOffset = main_size;
+
+                        cur_line.NthLine = cur_nth_line;
+                        cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
+                        cur_line.SpanLength = spans.size() - cur_line.SpanStart;
+                        cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
+                        max_main = std::max(max_main, cur_line.MainSize);
+                        sum_cross += cur_line.CrossSize;
+                        lines.push_back(cur_line);
+                        cur_line = ParagraphLine{
+                            .CrossOffset = sum_cross,
+                            .SpanStart = static_cast<u32>(spans.size()),
+                        };
+                        cur_nth_line = ctx.NthLine;
+                    }
+                    else
+                    {
+                        ctx.CurrentLineOffset = new_line_offset;
+                    }
+
+                    if (style.LineAlign == LineAlign::Baseline)
+                    {
+                        // todo baseline
+                        cur_line.MinSize = std::max(cur_line.MinSize, cross_size);
+                    }
+                    else
+                    {
+                        cur_line.MinSize = std::max(cur_line.MinSize, cross_size);
+                    }
+
+                    spans.push_back(
+                        ParagraphSpan{
+                            .NthLine = cur_nth_line,
+                            .Node = item.NodeOrParent,
+                            .InlineBlockIndex = inline_block_index,
+                            .CrossSize = cross_size,
+                            .Offset = cur_line_offset,
+                            .Size = main_size,
+                            .Type = ParagraphSpanType::Block,
+                        }
+                    );
+                }
             }
             else
             {
@@ -287,7 +372,7 @@ LayoutOutput ParagraphData::ComputeContent(
                 cur_line.Descent = std::max(cur_line.Descent, single_line_size.Descent);
                 cur_line.LineGap = std::max(cur_line.LineGap, single_line_size.LineGap);
 
-                auto spans_iter = run.BreakLines(*this, style, ctx);
+                auto spans_iter = run.BreakLines(*this, style, ctx, single_line_size);
                 for (const auto& span : spans_iter)
                 {
                     #ifdef _DEBUG
@@ -310,7 +395,7 @@ LayoutOutput ParagraphData::ComputeContent(
                         cur_line.NthLine = cur_nth_line;
                         cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
                         cur_line.SpanLength = spans.size() - cur_line.SpanStart;
-                        cur_line.CrossSize = std::max(cur_line.Ascent + cur_line.Descent + cur_line.LineGap, defined_line_height);
+                        cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
                         max_main = std::max(max_main, cur_line.MainSize);
                         sum_cross += cur_line.CrossSize;
                         lines.push_back(cur_line);
@@ -330,13 +415,13 @@ LayoutOutput ParagraphData::ComputeContent(
             cur_line.NthLine = cur_nth_line;
             cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
             cur_line.SpanLength = spans.size() - cur_line.SpanStart;
-            cur_line.CrossSize = std::max(cur_line.Ascent + cur_line.Descent + cur_line.LineGap, defined_line_height);
+            cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
             max_main = std::max(max_main, cur_line.MainSize);
             sum_cross += cur_line.CrossSize;
             lines.push_back(cur_line);
         }
 
-        if (RunMode == LayoutRunMode::PerformLayout)
+        if (inputs.RunMode == LayoutRunMode::PerformLayout)
         {
             if (!std::isinf(space_main) && !is_max_only) max_main = space_main;
             switch (root_style.TextAlign)
@@ -357,6 +442,45 @@ LayoutOutput ParagraphData::ComputeContent(
             case TextAlign::Start:
             default:
                 break;
+            }
+            for (auto& line : lines)
+            {
+                for (auto& span : std::span(spans.data() + line.SpanStart, line.SpanLength))
+                {
+                    if (span.Type == ParagraphSpanType::Block)
+                    {
+                        const CtxNodeRef node = GetScope(span.Node);
+                        const auto& data = inline_block_tmp_datas[span.InlineBlockIndex];
+                        // todo
+                        node.CommonData().UnRoundedLayout = LayoutData{
+                            .Order = order++,
+                            .LocationX = 0,
+                            .LocationY = 0,
+                            .Width = data.m_layout_output.Width,
+                            .Height = data.m_layout_output.Height,
+                            .ContentWidth = data.m_layout_output.ContentWidth,
+                            .ContentHeight = data.m_layout_output.ContentHeight,
+                            .ScrollXSize = 0, // todo scroll size
+                            .ScrollYSize = 0,
+                            .BorderTopSize = 0,
+                            .BorderRightSize = 0,
+                            .BorderBottomSize = 0,
+                            .BorderLeftSize = 0,
+                            .PaddingTopSize = 0,
+                            .PaddingRightSize = 0,
+                            .PaddingBottomSize = 0,
+                            .PaddingLeftSize = 0,
+                            .MarginTopSize = 0,
+                            .MarginRightSize = 0,
+                            .MarginBottomSize = 0,
+                            .MarginLeftSize = 0,
+                        };
+                    }
+                    else
+                    {
+                        // todo save text span layout
+                    }
+                }
             }
             m_final_spans = std::move(spans);
             m_final_lines = std::move(lines);
@@ -450,6 +574,7 @@ const ParagraphLineInfo& Run::GetLineInfo(const ParagraphData& data)
         const auto glyph_box_size = metrics.glyphBoxRight - metrics.glyphBoxLeft;
         LineInfo.Ascent = LineInfo.Descent = glyph_box_size * scale * 0.5f;
     }
+    LineInfo.MinSize = LineInfo.Ascent + LineInfo.Descent;
 
     return LineInfo;
 }
@@ -554,9 +679,9 @@ namespace Coplt::LayoutCalc::Texts::Compute
 }
 
 #ifdef _DEBUG
-std::vector<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
+std::vector<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx, const ParagraphLineInfo& line_info) const
 #else
-std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx) const
+std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx, const ParagraphLineInfo& line_info) const
 #endif
 {
     using namespace Coplt::LayoutCalc::Texts::Compute;
@@ -662,6 +787,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
+                            .Ascent = line_info.Ascent,
+                            .Descent = line_info.Descent,
                             .Offset = span_start.Offset,
                             .Size = size,
                             .Type = sub_span.Type,
@@ -686,6 +813,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
+                            .Ascent = line_info.Ascent,
+                            .Descent = line_info.Descent,
                             .Offset = span_start.Offset,
                             .Size = size,
                             .Type = ParagraphSpanType::NewLine,
@@ -721,6 +850,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
+                            .Ascent = line_info.Ascent,
+                            .Descent = line_info.Descent,
                             .Offset = span_start.Offset,
                             .Size = size,
                             .Type = sub_span.Type,
@@ -756,6 +887,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
+                            .Ascent = line_info.Ascent,
+                            .Descent = line_info.Descent,
                             .Offset = span_start.Offset,
                             .Size = size,
                             .Type = break_span_type,
@@ -819,6 +952,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
+                            .Ascent = line_info.Ascent,
+                            .Descent = line_info.Descent,
                             .Offset = span_start.Offset,
                             .Size = size,
                             .Type = sub_span.Type,
@@ -841,6 +976,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                             .CharLength = char_len,
                             .GlyphStart = first_glyph,
                             .GlyphLength = glyph_length,
+                            .Ascent = line_info.Ascent,
+                            .Descent = line_info.Descent,
                             .Offset = span_start.Offset,
                             .Size = size,
                             .Type = type,
@@ -889,6 +1026,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                         .CharLength = char_len,
                         .GlyphStart = first_glyph,
                         .GlyphLength = glyph_length,
+                        .Ascent = line_info.Ascent,
+                        .Descent = line_info.Descent,
                         .Offset = span_start.Offset,
                         .Size = size,
                         .Type = last_type,
@@ -916,6 +1055,8 @@ std::generator<ParagraphSpan> Run::BreakLines(const ParagraphData& data, const S
                         .CharLength = char_len,
                         .GlyphStart = first_glyph,
                         .GlyphLength = glyph_length,
+                        .Ascent = line_info.Ascent,
+                        .Descent = line_info.Descent,
                         .Offset = span_start.Offset,
                         .Size = size,
                         .Type = last_type,

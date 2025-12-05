@@ -79,6 +79,30 @@ namespace Coplt
             OnCatchException(e);
             return DefaultReturnOnError<return_type>();
         }
+        catch (const HResultE& e)
+        {
+            if constexpr (std::is_same_v<return_type, HResult>)
+            {
+                return HResult(e);
+            }
+            else if constexpr (std::is_same_v<return_type, HResultE>)
+            {
+                return e;
+            }
+            return DefaultReturnOnError<return_type>();
+        }
+        catch (const HResult& e)
+        {
+            if constexpr (std::is_same_v<return_type, HResult>)
+            {
+                return e;
+            }
+            else if constexpr (std::is_same_v<return_type, HResultE>)
+            {
+                return static_cast<HResultE>(e);
+            }
+            return DefaultReturnOnError<return_type>();
+        }
     }
 }
 

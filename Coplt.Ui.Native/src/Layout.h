@@ -41,13 +41,15 @@ namespace Coplt::LayoutCalc
         NLayoutContext* ctx;
         NodeId id;
 
-        CtxNodeRef() : ctx(nullptr), id()
+        CtxNodeRef()
+            : ctx(nullptr), id()
         {
         }
 
         explicit CtxNodeRef(
             NLayoutContext* ctx, const NodeId id
-        ) : ctx(ctx), id(id)
+        )
+            : ctx(ctx), id(id)
         {
         }
 
@@ -157,7 +159,7 @@ namespace Coplt::LayoutCalc
                         data.TextLayoutObject = nullptr;
                     }
                 }
-                if (style.TextMode == TextMode::Inline)
+                if (style.Position != Position::Absolute && style.TextMode == TextMode::Inline)
                 {
                     COPLT_DEBUG_ASSERT(parent_style);
                     if (

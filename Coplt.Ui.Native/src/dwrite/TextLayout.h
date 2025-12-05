@@ -155,8 +155,8 @@ namespace Coplt::LayoutCalc::Texts
 
         const Rc<DWriteFontFace>& GetFallbackUndefFont();
 
-        void Compute(LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node);
-        LayoutOutput Compute(const LayoutInputs& inputs);
+        void Compute(void* sub_doc, LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node);
+        LayoutOutput Compute(void* sub_doc, const LayoutInputs& inputs);
     };
 
     // ReSharper disable once CppPolymorphicClassWithNonVirtualPublicDestructor
@@ -298,11 +298,11 @@ namespace Coplt::LayoutCalc::Texts
         const ParagraphLineInfo& GetLineInfo(const ParagraphData& data);
         #ifdef _DEBUG
         std::vector<ParagraphSpan> BreakLines(
-            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
+            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx, const ParagraphLineInfo& line_info
         ) const;
         #else
         std::generator<ParagraphSpan> BreakLines(
-            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx
+            const ParagraphData& data, const StyleData& style, RunBreakLineCtx& ctx, const ParagraphLineInfo& line_info
         ) const;
         #endif
     };
@@ -349,6 +349,7 @@ namespace Coplt::LayoutCalc::Texts
         std::span<TextItem> GetItems() const;
         std::span<TextItem> GetItems(u32 Start, u32 Length) const;
 
+        CtxNodeRef GetScope(NodeId node) const;
         CtxNodeRef GetScope(const TextItem& item) const;
         CtxNodeRef GetScope(const TextScopeRange& range) const;
         CtxNodeRef GetScope(const SameStyleRange& range) const;
@@ -361,7 +362,7 @@ namespace Coplt::LayoutCalc::Texts
         // void AnalyzeGlyphsCarets();
 
         LayoutOutput ComputeContent(
-            TextLayout& layout, LayoutRunMode RunMode, LayoutRequestedAxis Axis, Size<bool> MaxOnly,
+            void* sub_doc, TextLayout& layout, u32& order, const LayoutInputs& inputs, Size<bool> MaxOnly,
             const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
         );
     };

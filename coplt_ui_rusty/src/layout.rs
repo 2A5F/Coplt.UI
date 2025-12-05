@@ -2,7 +2,8 @@ use std::{
     hash::Hash,
     hint::unreachable_unchecked,
     mem::MaybeUninit,
-    ops::{Deref, DerefMut},
+    ops::{Deref, DerefMut, Sub},
+    os::raw::c_void,
 };
 
 use cocom::{HResult, HResultE};
@@ -80,7 +81,7 @@ macro_rules! c_available_space {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn coplt_ui_layout_calc(layout: *mut (), ctx: *mut NLayoutContext) -> HResult {
+pub extern "C" fn coplt_ui_layout_calc(layout: *mut c_void, ctx: *mut NLayoutContext) -> HResult {
     unsafe {
         let r = std::panic::catch_unwind(move || -> HResult {
             for root in unsafe { &mut *(*ctx).roots() }.iter_mut().map(|a| a.1) {
@@ -163,8 +164,9 @@ impl From<taffy::NodeId> for NodeId {
     }
 }
 
+#[repr(C)]
 #[derive(Debug)]
-struct SubDoc(*mut NLayoutContext, *mut RootData, *mut ());
+struct SubDoc(*mut NLayoutContext, *mut RootData, *mut c_void);
 
 impl SubDoc {
     #[inline(always)]
@@ -369,6 +371,35 @@ impl LayoutPartialTree for SubDoc {
                         com::Container::Block => taffy::compute_block_layout(tree, node_id, inputs),
                     }
                 })
+            }
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+extern "C" fn coplt_ui_layout_compute_child_layout(
+    sub_doc: *mut SubDoc,
+    node: *const NodeId,
+    inputs: *const CopltLayoutInputs,
+    output: *mut com::LayoutOutput,
+) -> HResult {
+    unsafe {
+        let r = std::panic::catch_unwind(move || -> HResult {
+            let sub_doc = &mut *sub_doc;
+            let node_id = (*node).into();
+            let inputs = (*inputs).into();
+            *output = sub_doc.compute_child_layout(node_id, inputs).into();
+
+            HResultE::Ok.into()
+        });
+        match r {
+            Ok(r) => r,
+            Err(e) => {
+                if let Some(r) = e.downcast_ref::<HResult>() {
+                    *r
+                } else {
+                    std::panic::resume_unwind(e)
+                }
             }
         }
     }
@@ -1472,7 +1503,8 @@ impl SubDoc {
             let tlo: *mut com::ITextLayout = data.TextLayoutObject;
             let inputs: CopltLayoutInputs = inputs.into();
             let mut outputs = MaybeUninit::uninit();
-            let hr = coplt_ui_layout_text_compute(tlo, self.0, &id, &inputs, outputs.as_mut_ptr());
+            let hr =
+                coplt_ui_layout_text_compute(self, tlo, self.0, &id, &inputs, outputs.as_mut_ptr());
             if hr.is_failure() {
                 std::panic::panic_any(hr);
             }
@@ -1485,13 +1517,14 @@ impl SubDoc {
 unsafe extern "C" {
     #[allow(improper_ctypes)]
     fn coplt_ui_layout_touch_text(
-        layout: *mut (),
+        layout: *mut c_void,
         ctx: *mut NLayoutContext,
         node_index: *const NodeId,
     ) -> HResult;
 
     #[allow(improper_ctypes)]
     fn coplt_ui_layout_text_compute(
+        sub_doc: *mut SubDoc,
         layout: *mut com::ITextLayout,
         ctx: *mut NLayoutContext,
         node_index: *const NodeId,
@@ -1585,6 +1618,68 @@ impl From<LayoutInput> for CopltLayoutInputs {
     }
 }
 
+impl Into<LayoutInput> for CopltLayoutInputs {
+    fn into(self) -> LayoutInput {
+        LayoutInput {
+            run_mode: match self.RunMode {
+                CopltLayoutRunMode::PerformLayout => taffy::RunMode::PerformLayout,
+                CopltLayoutRunMode::ComputeSize => taffy::RunMode::ComputeSize,
+                CopltLayoutRunMode::PerformHiddenLayout => taffy::RunMode::PerformHiddenLayout,
+            },
+            sizing_mode: match self.SizingMode {
+                CopltLayoutSizingMode::ContentSize => taffy::SizingMode::ContentSize,
+                CopltLayoutSizingMode::InherentSize => taffy::SizingMode::InherentSize,
+            },
+            axis: match self.Axis {
+                CopltLayoutRequestedAxis::Horizontal => taffy::RequestedAxis::Horizontal,
+                CopltLayoutRequestedAxis::Vertical => taffy::RequestedAxis::Vertical,
+                CopltLayoutRequestedAxis::Both => taffy::RequestedAxis::Both,
+            },
+            known_dimensions: Size {
+                width: if self.HasKnownWidth {
+                    Some(self.KnownWidth)
+                } else {
+                    None
+                },
+                height: if self.HasKnownHeight {
+                    Some(self.KnownHeight)
+                } else {
+                    None
+                },
+            },
+            parent_size: Size {
+                width: if self.HasParentWidth {
+                    Some(self.ParentWidth)
+                } else {
+                    None
+                },
+                height: if self.HasParentHeight {
+                    Some(self.ParentHeight)
+                } else {
+                    None
+                },
+            },
+            available_space: Size {
+                width: match self.AvailableSpaceWidth {
+                    com::AvailableSpaceType::Definite => {
+                        taffy::AvailableSpace::Definite(self.AvailableSpaceWidthValue)
+                    }
+                    com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
+                    com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
+                },
+                height: match self.AvailableSpaceHeight {
+                    com::AvailableSpaceType::Definite => {
+                        taffy::AvailableSpace::Definite(self.AvailableSpaceHeightValue)
+                    }
+                    com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
+                    com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
+                },
+            },
+            vertical_margins_are_collapsible: taffy::Line::FALSE,
+        }
+    }
+}
+
 impl Into<LayoutOutput> for com::LayoutOutput {
     fn into(self) -> LayoutOutput {
         LayoutOutput {
@@ -1617,6 +1712,30 @@ impl Into<LayoutOutput> for com::LayoutOutput {
                 negative: self.TopMargin.Negative,
             },
             margins_can_collapse_through: self.MarginsCanCollapseThrough,
+        }
+    }
+}
+
+impl From<LayoutOutput> for com::LayoutOutput {
+    fn from(value: LayoutOutput) -> Self {
+        Self {
+            Width: value.size.width,
+            Height: value.size.height,
+            ContentWidth: value.content_size.width,
+            ContentHeight: value.content_size.height,
+            FirstBaselinesX: value.first_baselines.x.unwrap_or_default(),
+            FirstBaselinesY: value.first_baselines.y.unwrap_or_default(),
+            TopMargin: com::LayoutCollapsibleMarginSet {
+                Positive: value.top_margin.positive,
+                Negative: value.top_margin.negative,
+            },
+            BottomMargin: com::LayoutCollapsibleMarginSet {
+                Positive: value.bottom_margin.positive,
+                Negative: value.bottom_margin.negative,
+            },
+            HasFirstBaselinesX: value.first_baselines.x.is_some(),
+            HasFirstBaselinesY: value.first_baselines.y.is_some(),
+            MarginsCanCollapseThrough: value.margins_can_collapse_through,
         }
     }
 }

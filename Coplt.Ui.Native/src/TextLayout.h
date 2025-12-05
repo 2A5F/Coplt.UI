@@ -78,7 +78,21 @@ namespace Coplt::LayoutCalc::Texts
     const char16* GetText(NLayoutContext* ctx, const TextItem* item);
 
     extern "C" HResultE coplt_ui_layout_text_compute(
-        ITextLayout* layout, NLayoutContext* ctx, const NodeId& node,
+        void* sub_doc, ITextLayout* layout, NLayoutContext* ctx, const NodeId& node,
         const LayoutInputs* inputs, LayoutOutput* outputs
     );
+
+    extern "C" HResultE coplt_ui_layout_compute_child_layout(
+        void* sub_doc, const NodeId& node,
+        const LayoutInputs* inputs, LayoutOutput* outputs
+    );
+
+    inline void ComputeChildLayout(
+        void* sub_doc, const NodeId& node,
+        const LayoutInputs* inputs, LayoutOutput* outputs
+    )
+    {
+        const auto r = coplt_ui_layout_compute_child_layout(sub_doc, node, inputs, outputs);
+        if (r != HResultE::Ok) throw r;
+    }
 }

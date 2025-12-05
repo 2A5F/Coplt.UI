@@ -73,6 +73,11 @@ std::span<TextItem> ParagraphData::GetItems(const u32 Start, const u32 Length) c
     return std::span(m_text_layout->m_items.data() + Start, Length);
 }
 
+CtxNodeRef ParagraphData::GetScope(const NodeId node) const
+{
+    return CtxNodeRef(m_text_layout->m_node.ctx, node);
+}
+
 CtxNodeRef ParagraphData::GetScope(const TextItem& item) const
 {
     const auto root_scope = m_text_layout->m_node;
