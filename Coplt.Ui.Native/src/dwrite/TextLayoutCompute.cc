@@ -286,12 +286,12 @@ LayoutOutput ParagraphData::ComputeContent(
                 inline_block_tmp_datas.reserve(inline_block_tmp_datas.size() + items.size());
                 for (const auto& item : items)
                 {
-                    COPLT_DEBUG_ASSERT(item.Type == TextItemType::InlineBlock);
+                    // COPLT_DEBUG_ASSERT(item.Type == TextItemType::InlineBlock);
 
                     const u32 inline_block_index = inline_block_tmp_datas.size();
                     if (inputs.RunMode == LayoutRunMode::PerformLayout)
                     {
-                        inline_block_tmp_datas.emplace_back(GetScope(item.NodeOrParent), KnownSize);
+                        // inline_block_tmp_datas.emplace_back(GetScope(item.NodeOrParent), KnownSize);
                     }
                     else
                     {
@@ -311,7 +311,7 @@ LayoutOutput ParagraphData::ComputeContent(
                         Size<std::optional<f32>>(), GetParentSize(inputs), available_space
                     );
 
-                    ComputeChildLayout(sub_doc, item.NodeOrParent, &sub_inputs, &sub_outputs);
+                    // ComputeChildLayout(sub_doc, item.NodeOrParent, &sub_inputs, &sub_outputs);
 
                     const f32 main_size = GetSize(sub_outputs).MainAxis(axis);
                     const f32 cross_size = GetSize(sub_outputs).CrossAxis(axis);
@@ -355,7 +355,7 @@ LayoutOutput ParagraphData::ComputeContent(
                     spans.push_back(
                         ParagraphSpan{
                             .NthLine = cur_nth_line,
-                            .Node = item.NodeOrParent,
+                            // .Node = item.NodeOrParent,
                             .InlineBlockIndex = inline_block_index,
                             .CrossSize = cross_size,
                             .Offset = cur_line_offset,

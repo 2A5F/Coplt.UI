@@ -19,37 +19,27 @@ public static unsafe partial class Access
         public Document Document { get; } = document;
         public NodeId Id { get; } = document.CreateView();
 
-        public ref StyleData StyleData => ref Document.At<StyleData>(Id);
-        public ref CommonData CommonData => ref Document.At<CommonData>(Id);
+        public ref StyleData StyleData => ref Document.UnsafeAt<StyleData>(Id);
+        public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
         public LayoutView Layout => CommonData.Layout;
-        public ref ChildsData ChildsData => ref Document.At<ChildsData>(Id);
-        public ref ManagedData ManagedData => ref Document.At<ManagedData>(Id);
+        public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
+        public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
 
         public void Add(string text)
         {
-            ChildsData.UnsafeAddText(text);
-            Document.DirtyTextLayout(Id);
+            Document.AddText(Id, text);
         }
 
         public void Add(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
-            ref var parent = ref Document.At<ParentData>(node.Id);
-            if (parent.Parent.HasValue) throw new ArgumentException("Target node already has a parent");
-            ChildsData.UnsafeAdd(node.Id);
-            parent.UnsafeSetParent(Id);
-            Document.DirtyLayout(Id);
+            node.Document.AddChild(Id, node.Id);
         }
 
         public void Remove(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
-            ref var parent = ref Document.At<ParentData>(node.Id);
-            if (parent.Parent != Id) throw new ArgumentException("Target node is not a child of this node");
-            var r = ChildsData.UnsafeRemove(node.Id);
-            Debug.Assert(r);
-            parent.UnsafeRemoveParent();
-            Document.DirtyLayout(Id);
+            node.Document.RemoveChild(Id, node.Id);
         }
     }
 

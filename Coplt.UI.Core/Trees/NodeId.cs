@@ -26,3 +26,26 @@ public record struct NodeId(uint Index, uint Id, NodeType Type)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint NormalizeId(uint id) => id & 0x0FFF_FFFF;
 }
+
+public record struct ViewNode(uint Index)
+{
+    public uint Index = Index;
+
+    public static implicit operator ViewNode(NodeId node) => new(node.Index);
+}
+
+public record struct TextNode(uint Index)
+{
+    public uint Index = Index;
+
+    public static implicit operator TextNode(NodeId node) => new(node.Index);
+}
+
+public record struct ViewOrTextNode(uint Index)
+{
+    public uint Index = Index;
+
+    public static implicit operator ViewOrTextNode(NodeId node) => new(node.Index);
+    public static implicit operator ViewOrTextNode(ViewNode node) => new(node.Index);
+    public static implicit operator ViewOrTextNode(TextNode node) => new(node.Index);
+}

@@ -80,11 +80,12 @@ CtxNodeRef ParagraphData::GetScope(const NodeId node) const
 
 CtxNodeRef ParagraphData::GetScope(const TextItem& item) const
 {
-    const auto root_scope = m_text_layout->m_node;
-    return
-        item.Scope == -1
-        ? root_scope
-        : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
+    // const auto root_scope = m_text_layout->m_node;
+    // return
+    //     item.Scope == -1
+    //     ? root_scope
+    //     : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
+    return {};
 }
 
 CtxNodeRef ParagraphData::GetScope(const TextScopeRange& range) const
@@ -332,60 +333,60 @@ void ParagraphData::AnalyzeFonts()
             style.FontFallback
             ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
             : system_font_fallback.get();
-        if (item.Type == TextItemType::Text)
-        {
-            const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
-            if (
-                cur_item_type == item.Type
-                && cur_fall_back == scope_fallback
-                && cur_font_weight == style.FontWeight
-                && cur_font_width == style.FontWidth.Width
-                && cur_font_italic == style.FontItalic
-                && cur_font_oblique == font_oblique
-            )
-            {
-                if (logic_text_length == 0)
-                {
-                    item_start = i;
-                    logic_text_start = item.LogicTextStart;
-                }
-                item_length++;
-                logic_text_length += item.LogicTextLength;
-                continue;
-            }
-            if (logic_text_length != 0) add_range();
-            item_start = i;
-            item_length = 1;
-            logic_text_start = item.LogicTextStart;
-            logic_text_length = item.LogicTextLength;
-            cur_item_type = item.Type;
-            cur_fall_back = scope_fallback;
-            cur_font_weight = style.FontWeight;
-            cur_font_width = style.FontWidth.Width;
-            cur_font_italic = style.FontItalic;
-            cur_font_oblique = font_oblique;
-        }
-        else
-        {
-            if (cur_item_type == item.Type)
-            {
-                if (logic_text_length == 0)
-                {
-                    item_start = i;
-                    logic_text_start = item.LogicTextStart;
-                }
-                item_length++;
-                logic_text_length += item.LogicTextLength;
-                continue;
-            }
-            if (logic_text_length != 0) add_range();
-            item_start = i;
-            item_length = 1;
-            logic_text_start = item.LogicTextStart;
-            logic_text_length = item.LogicTextLength;
-            cur_item_type = item.Type;
-            cur_fall_back = nullptr;
-        }
+        // if (item.Type == TextItemType::Text)
+        // {
+        //     const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
+        //     if (
+        //         cur_item_type == item.Type
+        //         && cur_fall_back == scope_fallback
+        //         && cur_font_weight == style.FontWeight
+        //         && cur_font_width == style.FontWidth.Width
+        //         && cur_font_italic == style.FontItalic
+        //         && cur_font_oblique == font_oblique
+        //     )
+        //     {
+        //         if (logic_text_length == 0)
+        //         {
+        //             item_start = i;
+        //             logic_text_start = item.LogicTextStart;
+        //         }
+        //         item_length++;
+        //         logic_text_length += item.LogicTextLength;
+        //         continue;
+        //     }
+        //     if (logic_text_length != 0) add_range();
+        //     item_start = i;
+        //     item_length = 1;
+        //     logic_text_start = item.LogicTextStart;
+        //     logic_text_length = item.LogicTextLength;
+        //     cur_item_type = item.Type;
+        //     cur_fall_back = scope_fallback;
+        //     cur_font_weight = style.FontWeight;
+        //     cur_font_width = style.FontWidth.Width;
+        //     cur_font_italic = style.FontItalic;
+        //     cur_font_oblique = font_oblique;
+        // }
+        // else
+        // {
+        //     if (cur_item_type == item.Type)
+        //     {
+        //         if (logic_text_length == 0)
+        //         {
+        //             item_start = i;
+        //             logic_text_start = item.LogicTextStart;
+        //         }
+        //         item_length++;
+        //         logic_text_length += item.LogicTextLength;
+        //         continue;
+        //     }
+        //     if (logic_text_length != 0) add_range();
+        //     item_start = i;
+        //     item_length = 1;
+        //     logic_text_start = item.LogicTextStart;
+        //     logic_text_length = item.LogicTextLength;
+        //     cur_item_type = item.Type;
+        //     cur_fall_back = nullptr;
+        // }
     }
     if (logic_text_length != 0) add_range();
 

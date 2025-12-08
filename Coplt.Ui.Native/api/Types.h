@@ -17,6 +17,9 @@ namespace Coplt {
     struct NativeArc;
 
     template <class T0 /* T */>
+    struct NativeBox;
+
+    template <class T0 /* T */>
     struct NativeList;
 
     struct AABB2DF;
@@ -105,7 +108,17 @@ namespace Coplt {
 
     struct StyleData;
 
+    struct TextData;
+
+    struct TextItem;
+
+    struct TextParagraph;
+
     struct NodeId;
+
+    struct ViewNode;
+
+    struct ViewOrTextNode;
 
     struct IAtlasAllocator;
 
@@ -743,6 +756,29 @@ namespace Coplt {
         TraditionalHanWithLatin = 212,
     };
 
+    enum class RawCharType : ::Coplt::u8
+    {
+        AsIs = 0,
+        LF = 10,
+        CR = 13,
+        HT = 9,
+        VT = 11,
+    };
+
+    enum class TextItemType : ::Coplt::u8
+    {
+        Text = 0,
+        InlineBlock = 1,
+        Block = 2,
+    };
+
+    enum class TextParagraphType : ::Coplt::u8
+    {
+        Inline = 0,
+        Block = 1,
+        AbsoluteBlock = 2,
+    };
+
     enum class NodeType : ::Coplt::u8
     {
         View = 0,
@@ -839,6 +875,12 @@ namespace Coplt {
         ::Coplt::NativeArcInner<T0>* m_ptr;
     };
 
+    template <class T0 /* T */>
+    struct NativeBox
+    {
+        T0* m_ptr;
+    };
+
     struct PathBuilderCmdArc
     {
         ::Coplt::PathBuilderCmdType Type;
@@ -900,17 +942,6 @@ namespace Coplt {
     struct CWStr
     {
         ::Coplt::char16 const* Locale;
-    };
-
-    struct FFIMap
-    {
-        ::Coplt::i32* m_buckets;
-        void* m_entries;
-        ::Coplt::u64 m_fast_mode_multiplier;
-        ::Coplt::i32 m_cap;
-        ::Coplt::i32 m_count;
-        ::Coplt::i32 m_free_list;
-        ::Coplt::i32 m_free_count;
     };
 
     struct FFIOrderedSet
@@ -991,6 +1022,16 @@ namespace Coplt {
         ::Coplt::u32 IdAndType;
     };
 
+    struct ViewNode
+    {
+        ::Coplt::u32 Index;
+    };
+
+    struct ViewOrTextNode
+    {
+        ::Coplt::u32 Index;
+    };
+
     struct Str8
     {
         ::Coplt::u8 const* Data;
@@ -1068,6 +1109,17 @@ namespace Coplt {
         ::Coplt::u64 TimeTicks;
     };
 
+    struct FFIMap
+    {
+        ::Coplt::i32* m_buckets;
+        void* m_entries;
+        ::Coplt::u64 m_fast_mode_multiplier;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_count;
+        ::Coplt::i32 m_free_list;
+        ::Coplt::i32 m_free_count;
+    };
+
     struct FontFallbackBuilderCreateInfo
     {
         bool DisableSystemFallback;
@@ -1133,23 +1185,16 @@ namespace Coplt {
     struct ChildsData
     {
         ::Coplt::FFIOrderedSet m_childs;
-        ::Coplt::FFIMap m_texts;
-        ::Coplt::u32 m_text_id_inc;
-        ::Coplt::u64 m_version;
-        ::Coplt::u64 m_last_version;
+        ::Coplt::NativeBox<::Coplt::TextData> m_text_data;
     };
 
     struct CommonData
     {
-        ITextLayout* TextLayoutObject;
-        ITextLayout* TextLayoutBelongTo;
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutData UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
         ::Coplt::u32 LastLayoutVersion;
-        ::Coplt::u32 LastTextLayoutVersion;
         ::Coplt::u32 LayoutVersion;
-        ::Coplt::u32 TextLayoutVersion;
     };
 
     struct GridContainerStyle
@@ -1285,6 +1330,33 @@ namespace Coplt {
         ::Coplt::TextOrientation TextOrientation;
         ::Coplt::TextOverflow TextOverflow;
         ::Coplt::LengthType LineHeight;
+    };
+
+    struct TextData
+    {
+        ::Coplt::ViewNode m_text_root;
+        ::Coplt::NativeList<::Coplt::TextItem> m_items;
+        ::Coplt::NativeList<::Coplt::TextParagraph> m_paragraph;
+    };
+
+    struct TextItem
+    {
+        ::Coplt::u32 LogicTextStart;
+        ::Coplt::u32 LogicTextLength;
+        ::Coplt::ViewOrTextNode Node;
+        ::Coplt::ViewNode Parent;
+        ::Coplt::ViewNode Container;
+        ::Coplt::TextItemType Type;
+    };
+
+    struct TextParagraph
+    {
+        ::Coplt::NativeList<::Coplt::char16> CollectedText;
+        ::Coplt::NativeList<::Coplt::RawCharType> RawCharMap;
+        ::Coplt::u32 ItemStart;
+        ::Coplt::u32 ItemLength;
+        ::Coplt::u32 LogicTextLength;
+        ::Coplt::TextParagraphType Type;
     };
 
 } // namespace Coplt

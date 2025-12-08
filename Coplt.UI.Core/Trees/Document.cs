@@ -65,7 +65,7 @@ public sealed partial class Document
 
         public Builder()
         {
-            Attach<ParentData>();
+            Attach<HierarchyData>();
             Attach<ChildsData>(storage: StorageType.Pinned);
             Attach<CommonData>(storage: StorageType.Pinned);
             Attach<StyleData>(storage: StorageType.Pinned);
@@ -215,6 +215,12 @@ public sealed partial class Document
 
     #region Instance
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Arche GetArche() => m_arche;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AStorage<T> StorageOf<T>() => m_arche.StorageOf<T>();
+
     public sealed class Arche : IDisposable
     {
         internal readonly ArcheTemplate m_template;
@@ -316,6 +322,8 @@ public sealed partial class Document
     {
         internal SplitMapData<T> m_data = new();
 
+        public ref T GetDataRef() => ref MemoryMarshal.GetArrayDataReference(m_data.m_items!);
+
         public override Action? Dispose => null;
 
         public override Action<int, CtrlOp> Add => (idx, op) =>
@@ -343,6 +351,9 @@ public sealed partial class Document
     {
         internal NSplitMapData<T> m_data = new();
 
+        public T* GetDataPtr() => m_data.m_items;
+        public ref T GetDataRef() => ref *m_data.m_items;
+
         public override Action Dispose => () => m_data.Dispose();
 
         public override Action<int, CtrlOp> Add => (idx, op) =>
@@ -363,8 +374,25 @@ public sealed partial class Document
 
     public ref T At<T>(NodeId id)
     {
+        if (id.Type != NodeType.View) throw new InvalidOperationException();
         var nth = m_arche.IndexOf<T>();
         if (nth < 0) throw new InvalidOperationException();
+        var storage = m_arche.UnsafeStorageAt(nth);
+        return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
+    }
+
+    public unsafe T* PtrAt<T>(NodeId id)
+    {
+        if (id.Type != NodeType.View) throw new InvalidOperationException();
+        var nth = m_arche.IndexOf<T>();
+        if (nth < 0) throw new InvalidOperationException();
+        var storage = m_arche.UnsafeStorageAt(nth);
+        return storage.UnsafeGetDataPtr<T>() + id.Index;
+    }
+
+    public ref T UnsafeAt<T>(NodeId id)
+    {
+        var nth = m_arche.IndexOf<T>();
         var storage = m_arche.UnsafeStorageAt(nth);
         return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
@@ -372,7 +400,6 @@ public sealed partial class Document
     public unsafe T* UnsafePtrAt<T>(NodeId id)
     {
         var nth = m_arche.IndexOf<T>();
-        if (nth < 0) throw new InvalidOperationException();
         var storage = m_arche.UnsafeStorageAt(nth);
         return storage.UnsafeGetDataPtr<T>() + id.Index;
     }
@@ -407,22 +434,66 @@ public sealed partial class Document
     {
         if (id.Type != NodeType.View) throw new InvalidOperationException();
         {
-            ref var parent = ref At<ParentData>(id);
-            if (parent.Parent is { } par)
+            ref var hierarchy = ref UnsafeAt<HierarchyData>(id);
+            if (hierarchy.Parent is { } parent)
             {
-                ref var childs = ref At<ChildsData>(par);
-                childs.UnsafeRemove(id);
+                ref var childs = ref UnsafeAt<ChildsData>(parent);
+                childs.m_childs.Remove(id);
+                DirtyLayout(parent);
             }
         }
         {
-            ref var childs = ref At<ChildsData>(id);
+            ref var childs = ref UnsafeAt<ChildsData>(id);
             foreach (var child in childs)
             {
-                ref var parent = ref At<ParentData>(child);
-                parent.UnsafeRemoveParent();
+                ref var parent = ref UnsafeAt<HierarchyData>(child);
+                parent.Parent = null;
             }
         }
         m_arche.Remove(id.Id);
+        m_roots.Remove(id);
+    }
+
+    public void AddChild(NodeId id, NodeId child)
+    {
+        if (child.Type == NodeType.Text) throw new InvalidOperationException("Cannot add a text node.");
+        ref var child_hierarchy = ref UnsafeAt<HierarchyData>(child);
+        if (child_hierarchy.Parent is not null) throw new ArgumentException("Target child node already has a parent.");
+        ref var childs = ref UnsafeAt<ChildsData>(id);
+        childs.m_childs.Add(child);
+        child_hierarchy.Parent = id;
+        DirtyLayout(child);
+    }
+
+    public void RemoveChild(NodeId id, NodeId child)
+    {
+        ref var childs = ref UnsafeAt<ChildsData>(id);
+        if (child.Type == NodeType.Text)
+        {
+            ref var hierarchy = ref UnsafeAt<HierarchyData>(id);
+            hierarchy.m_texts.Remove(child.Id);
+            childs.m_childs.Remove(child);
+        }
+        else
+        {
+            ref var child_hierarchy = ref UnsafeAt<HierarchyData>(child);
+            if (child_hierarchy.Parent != id) throw new ArgumentException("Target node is not a child of this node.");
+            childs.m_childs.Remove(child);
+            child_hierarchy.Parent = null;
+        }
+        DirtyLayout(id);
+    }
+
+    public NodeId AddText(NodeId id, string Text)
+    {
+        ref var hierarchy = ref UnsafeAt<HierarchyData>(id);
+        var text_id = hierarchy.m_text_id_inc++;
+        hierarchy.m_texts.TryAdd(text_id, Text);
+        ref var childs = ref UnsafeAt<ChildsData>(id);
+        var child = new NodeId(text_id, uint.MaxValue, NodeType.Text);
+        childs.m_childs.Add(child);
+        DirtyLayout(id);
+        return child;
     }
 
     #endregion
@@ -433,24 +504,16 @@ public sealed partial class Document
     {
         while (true)
         {
-            ref var data = ref At<CommonData>(id);
+            ref var data = ref UnsafeAt<CommonData>(id);
             if (data.LayoutVersion != data.LastLayoutVersion) return;
             data.LayoutVersion++;
-            if (At<ParentData>(id).Parent is { } parent)
+            if (UnsafeAt<HierarchyData>(id).Parent is { } parent)
             {
                 id = parent;
                 continue;
             }
             break;
         }
-    }
-
-    public void DirtyTextLayout(NodeId id)
-    {
-        ref var data = ref At<CommonData>(id);
-        if (data.TextLayoutVersion != data.LastTextLayoutVersion) return;
-        data.TextLayoutVersion++;
-        DirtyLayout(id);
     }
 
     #endregion

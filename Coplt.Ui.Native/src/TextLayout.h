@@ -15,16 +15,6 @@ namespace Coplt::LayoutCalc::Texts
         Block,
     };
 
-    struct TextItem
-    {
-        u32 LogicTextStart;
-        u32 LogicTextLength;
-        u32 Scope;
-        u32 TextIndex;
-        NodeId NodeOrParent;
-        TextItemType Type;
-    };
-
     struct TextScopeRange
     {
         u32 ItemStart;
@@ -57,14 +47,6 @@ namespace Coplt::LayoutCalc::Texts
         std::vector<u32> m_scope_stack{};
 
         BaseTextLayoutStorage();
-
-        void ClearCache();
-        void AddText(NodeId Parent, u32 Index, u32 Length);
-        void AddInlineBlock(NodeId Node);
-        void AddBlock(NodeId Node);
-        void StartScope(NodeId Node);
-        void EndScope();
-        void FinishBuild();
 
         // return null if not find
         i32 SearchItem(u32 Paragraph, u32 Position) const;

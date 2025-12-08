@@ -51,14 +51,6 @@ HResult Layout::Impl_Calc(NLayoutContext* ctx)
 HResult Layout::Calc(NLayoutContext* ctx)
 {
     using namespace LayoutCalc;
-    const auto roots = ffi_map<NodeId, RootData>(ctx->roots);
-    for (auto e = roots->GetEnumerator(); e.MoveNext();)
-    {
-        const auto& root = *e.Current().second;
-        const auto node = CtxNodeRef(ctx, root.Node);
-        Phase0(node);
-        Phase1<TextLayout>(node);
-    }
     return Internal::BitCast<HResult>(coplt_ui_layout_calc(this, ctx));
 }
 
@@ -87,16 +79,16 @@ namespace Coplt::LayoutCalc::Texts
         Layout* self, CtxNodeRef node
     )
     {
-        auto& data = node.CommonData();
-        auto& style = node.StyleData();
-        COPLT_DEBUG_ASSERT(style.Container == Container::Text && data.TextLayoutObject);
-
-        const auto is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
-        COPLT_DEBUG_ASSERT(is_text_dirty);
-
-        const auto text_layout = static_cast<TextLayout*>(data.TextLayoutObject);
-
-        text_layout->ReBuild(self, node);
-        data.LastTextLayoutVersion = data.TextLayoutVersion;
+        // auto& data = node.CommonData();
+        // auto& style = node.StyleData();
+        // COPLT_DEBUG_ASSERT(style.Container == Container::Text && data.TextLayoutObject);
+        //
+        // const auto is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
+        // COPLT_DEBUG_ASSERT(is_text_dirty);
+        //
+        // const auto text_layout = static_cast<TextLayout*>(data.TextLayoutObject);
+        //
+        // text_layout->ReBuild(self, node);
+        // data.LastTextLayoutVersion = data.TextLayoutVersion;
     }
 }

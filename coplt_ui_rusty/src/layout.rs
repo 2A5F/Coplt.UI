@@ -25,8 +25,8 @@ use crate::{
     utils::*,
 };
 
-pub mod inline;
-pub use inline::*;
+pub mod text;
+pub use text::*;
 
 #[macro_export]
 macro_rules! c_option {
@@ -1489,28 +1489,30 @@ impl SubDoc {
         let data = self.common_data(id);
         let style = self.style_data(id);
 
-        debug_assert!(matches!(style.Container, Container::Text));
-        debug_assert!(!data.TextLayoutObject.is_null());
-        unsafe {
-            let is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
-            if is_text_dirty {
-                let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
-                if hr.is_failure() {
-                    std::panic::panic_any(hr);
-                }
-            }
+        todo!()
 
-            let tlo: *mut com::ITextLayout = data.TextLayoutObject;
-            let inputs: CopltLayoutInputs = inputs.into();
-            let mut outputs = MaybeUninit::uninit();
-            let hr =
-                coplt_ui_layout_text_compute(self, tlo, self.0, &id, &inputs, outputs.as_mut_ptr());
-            if hr.is_failure() {
-                std::panic::panic_any(hr);
-            }
+        // debug_assert!(matches!(style.Container, Container::Text));
+        // debug_assert!(!data.TextLayoutObject.is_null());
+        // unsafe {
+        //     let is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
+        //     if is_text_dirty {
+        //         let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
+        //         if hr.is_failure() {
+        //             std::panic::panic_any(hr);
+        //         }
+        //     }
 
-            unsafe { outputs.assume_init() }.into()
-        }
+        //     let tlo: *mut com::ITextLayout = data.TextLayoutObject;
+        //     let inputs: CopltLayoutInputs = inputs.into();
+        //     let mut outputs = MaybeUninit::uninit();
+        //     let hr =
+        //         coplt_ui_layout_text_compute(self, tlo, self.0, &id, &inputs, outputs.as_mut_ptr());
+        //     if hr.is_failure() {
+        //         std::panic::panic_any(hr);
+        //     }
+
+        //     unsafe { outputs.assume_init() }.into()
+        // }
     }
 }
 

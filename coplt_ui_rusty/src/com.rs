@@ -776,6 +776,32 @@ pub enum ScriptCode {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum RawCharType {
+    AsIs = 0,
+    LF = 10,
+    CR = 13,
+    HT = 9,
+    VT = 11,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum TextItemType {
+    Text = 0,
+    InlineBlock = 1,
+    Block = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum TextParagraphType {
+    Inline = 0,
+    Block = 1,
+    AbsoluteBlock = 2,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum NodeType {
     View = 0,
     Text = 1,
@@ -806,6 +832,12 @@ pub struct NativeArcInner<T0 /* T */> {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NativeArc<T0 /* T */> {
     pub m_ptr: *mut NativeArcInner<T0>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NativeBox<T0 /* T */> {
+    pub m_ptr: *mut T0,
 }
 
 #[repr(C)]
@@ -1200,24 +1232,17 @@ pub struct TextRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet,
-    pub m_texts: FFIMap,
-    pub m_text_id_inc: u32,
-    pub m_version: u64,
-    pub m_last_version: u64,
+    pub m_text_data: NativeBox<TextData>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
-    pub TextLayoutObject: *mut ITextLayout,
-    pub TextLayoutBelongTo: *mut ITextLayout,
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
     pub LastLayoutVersion: u32,
-    pub LastTextLayoutVersion: u32,
     pub LayoutVersion: u32,
-    pub TextLayoutVersion: u32,
 }
 
 #[repr(C)]
@@ -1360,9 +1385,51 @@ pub struct StyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData {
+    pub m_text_root: ViewNode,
+    pub m_items: NativeList<TextItem>,
+    pub m_paragraph: NativeList<TextParagraph>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextItem {
+    pub LogicTextStart: u32,
+    pub LogicTextLength: u32,
+    pub Node: ViewOrTextNode,
+    pub Parent: ViewNode,
+    pub Container: ViewNode,
+    pub Type: TextItemType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextParagraph {
+    pub CollectedText: NativeList<u16>,
+    pub RawCharMap: NativeList<RawCharType>,
+    pub ItemStart: u32,
+    pub ItemLength: u32,
+    pub LogicTextLength: u32,
+    pub Type: TextParagraphType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NodeId {
     pub Index: u32,
     pub IdAndType: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct ViewNode {
+    pub Index: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct ViewOrTextNode {
+    pub Index: u32,
 }
 
 pub mod details {
