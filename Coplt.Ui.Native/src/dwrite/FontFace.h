@@ -5,6 +5,8 @@
 
 namespace Coplt
 {
+    extern "C" void coplt_ui_dwrite_get_font_face_info(IDWriteFontFace5* face, NFontInfo* info);
+
     struct DWriteFontFace final : ComImpl<DWriteFontFace, IFontFace>
     {
         Rc<IFrameSource> m_frame_source{};

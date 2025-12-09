@@ -1,7 +1,10 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
+use std::any::Any;
+use std::error::Error;
 use std::fmt::Debug;
+use std::panic::UnwindSafe;
 
 mod coplt_alloc {
     use core::alloc::GlobalAlloc;
@@ -60,16 +63,69 @@ mod coplt_alloc {
 }
 
 use cocom::ComPtr;
+use cocom::HResult;
+use cocom::HResultE;
 use cocom::object;
 use coplt_alloc::*;
 
 mod atlas;
 mod col;
 mod com;
+#[cfg(target_os = "windows")]
+mod dwrite;
 mod font_manager;
 mod layout;
 mod unicode_utils;
 mod utils;
+
+#[cfg(target_os = "windows")]
+use dwrite::FontFace;
+
+mod error_message {
+    #[repr(C)]
+    pub struct RustString {
+        pub p_rust_string_data: *const u8,
+        pub rust_string_len: usize,
+    }
+    unsafe extern "C" {
+        pub fn coplt_ui_set_current_error_message(msg: *const RustString);
+    }
+}
+
+pub fn set_current_error_message(msg: String) {
+    use error_message::*;
+
+    unsafe {
+        let str = RustString {
+            rust_string_len: msg.len(),
+            p_rust_string_data: msg.leak().as_ptr(),
+        };
+        coplt_ui_set_current_error_message(&str);
+    }
+}
+
+pub fn feb_hr(f: impl FnOnce() -> anyhow::Result<cocom::HResult> + UnwindSafe) -> cocom::HResult {
+    match std::panic::catch_unwind(f) {
+        Ok(ok) => match ok {
+            Ok(ok) => ok,
+            Err(e) => {
+                let msg = format!("{e:?}");
+                set_current_error_message(msg);
+                cocom::HResultE::Fail.into()
+            }
+        },
+        Err(mut err) => {
+            if let Some(err) = err.downcast_mut::<HResult>() {
+                return *err;
+            } else if let Some(err) = err.downcast_mut::<HResultE>() {
+                return (*err).into();
+            } else {
+                // cannot process
+                std::panic::resume_unwind(err)
+            }
+        }
+    }
+}
 
 mod com_impl {
     use std::ops::{Deref, DerefMut};

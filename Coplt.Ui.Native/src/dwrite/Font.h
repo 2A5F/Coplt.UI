@@ -26,6 +26,6 @@ namespace Coplt
 
         COPLT_IMPL_END
 
-        Rc<DWriteFontFace> CreateFace(IFontManager* manager) const;
+        HResultE CreateFace(IFontManager* manager, IFontFace** out) const;
     };
 }

@@ -6,8 +6,10 @@
 
 namespace Coplt
 {
+    struct Str8;
+
     void SetCurrentErrorMessage(std::string&& err);
-    const std::string& GetCurrentErrorMessage();
+    Str8 GetCurrentErrorMessage();
 
     class Exception
     {
@@ -18,13 +20,15 @@ namespace Coplt
         explicit Exception(
             std::string&& message,
             std::stacktrace&& stacktrace = std::stacktrace::current()
-        ) : m_message(std::forward<std::string>(message)), m_stacktrace(std::forward<std::stacktrace>(stacktrace))
+        )
+            : m_message(std::forward<std::string>(message)), m_stacktrace(std::forward<std::stacktrace>(stacktrace))
         {
         }
 
         explicit Exception(
             std::stacktrace stacktrace = std::stacktrace::current()
-        ) : m_stacktrace(std::move(stacktrace))
+        )
+            : m_stacktrace(std::move(stacktrace))
         {
         }
 

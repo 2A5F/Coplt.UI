@@ -77,20 +77,29 @@ HResult Font::Impl_CreateFace(IFontFace** face, IFontManager* manager) const
     return feb(
         [&]
         {
-            auto out = CreateFace(manager);
-            *face = out.leak();
-            return HResultE::Ok;
+            return CreateFace(manager, face);
         }
     );
 }
 
-Rc<DWriteFontFace> Font::CreateFace(IFontManager* manager) const
+extern "C" HResultE coplt_ui_dwrite_create_font_face(
+    const Rc<IDWriteFontFace5>* face,
+    IFontManager* managerm,
+    IFontFace** out
+);
+
+HResultE Font::CreateFace(IFontManager* manager, IFontFace** out) const
 {
     Rc<IDWriteFontFace3> face3{};
     Rc<IDWriteFontFace5> face5{};
     if (const auto hr = m_font->CreateFontFace(face3.put()); FAILED(hr))
-        throw ComException(hr, "Failed to create font face");
+        return static_cast<HResultE>(hr);
     if (const auto hr = face3->QueryInterface(face5.put()); FAILED(hr))
-        throw ComException(hr, "Failed to create font face");
-    return Rc(new DWriteFontFace(face5, manager, true));
+        return static_cast<HResultE>(hr);
+    const auto hr = coplt_ui_dwrite_create_font_face(&face5, manager, out);
+    if (SUCCEEDED(hr))
+    {
+        manager->Add(*out);
+    }
+    return hr;
 }

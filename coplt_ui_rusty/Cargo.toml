@@ -7,8 +7,12 @@ version = "0.1.0"
 crate-type = ["staticlib"]
 
 [dependencies]
+anyhow = "1"
 cocom = {workspace = true}
 concat-idents = {workspace = true}
 dashmap = {workspace = true}
 etagere = {workspace = true}
 taffy = {workspace = true}
+
+[target.'cfg(windows)'.dependencies]
+windows = {version = "0.62", features = ["Win32_System_Com", "Win32_Graphics_DirectWrite"]}

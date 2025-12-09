@@ -68,10 +68,9 @@ public sealed unsafe partial class Font
 
     public FontFace CreateFace(FontManager manager)
     {
-        throw new NotImplementedException();
-        // IFontFace* face;
-        // m_inner.CreateFace(&face, manager.m_inner).TryThrowWithMsg();
-        // return manager.NativeFontFaceToFontFace(face)!;
+        IFontFace* face;
+        m_inner.CreateFace(&face, manager.m_inner).TryThrowWithMsg();
+        return manager.Get(face)!;
     }
 
     #endregion

@@ -52,8 +52,7 @@ void LibUi::Impl_ClearLogger()
 
 Str8 LibUi::Impl_GetCurrentErrorMessage()
 {
-    const auto& msg = Coplt::GetCurrentErrorMessage();
-    return Str8(reinterpret_cast<u8*>(const_cast<char*>(msg.data())), msg.size());
+    return Coplt::GetCurrentErrorMessage();
 }
 
 extern "C" void coplt_ui_new_atlas_allocator(
