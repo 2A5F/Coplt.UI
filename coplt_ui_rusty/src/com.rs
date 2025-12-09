@@ -309,7 +309,6 @@ pub enum Container {
     Flex = 0,
     Grid = 1,
     Text = 2,
-    Block = 3,
 }
 
 #[repr(u8)]
@@ -447,13 +446,6 @@ pub enum TextDirection {
     Reverse = 1,
     LeftToRight = 2,
     RightToLeft = 3,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum TextMode {
-    Block = 0,
-    Inline = 1,
 }
 
 #[repr(u8)]
@@ -774,37 +766,61 @@ pub enum ScriptCode {
     TraditionalHanWithLatin = 212,
 }
 
-#[repr(u8)]
+#[repr(u64)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum RawCharType {
-    AsIs = 0,
-    LF = 10,
-    CR = 13,
-    HT = 9,
-    VT = 11,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum TextItemType {
-    Text = 0,
-    InlineBlock = 1,
-    Block = 2,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum TextParagraphType {
-    Inline = 0,
-    Block = 1,
-    AbsoluteBlock = 2,
+pub enum TextSpanStyleOverride {
+    None = 0,
+    FontFallback = 1,
+    Locale = 2,
+    TextColorR = 4,
+    TextColorG = 8,
+    TextColorB = 16,
+    TextColorA = 32,
+    Opacity = 64,
+    BackgroundColorR = 128,
+    BackgroundColorG = 256,
+    BackgroundColorB = 512,
+    BackgroundColorA = 1024,
+    InsertTop = 2048,
+    InsertRight = 4096,
+    InsertBottom = 8192,
+    InsertLeft = 16384,
+    MarginTop = 32768,
+    MarginRight = 65536,
+    MarginBottom = 131072,
+    MarginLeft = 262144,
+    PaddingTop = 524288,
+    PaddingRight = 1048576,
+    PaddingBottom = 2097152,
+    PaddingLeft = 4194304,
+    TabSize = 8388608,
+    FontSize = 16777216,
+    FontWidth = 33554432,
+    FontOblique = 67108864,
+    FontWeight = 134217728,
+    LineHeight = 268435456,
+    Cursor = 536870912,
+    PointerEvents = 1073741824,
+    FontItalic = 2147483648,
+    FontOpticalSizing = 4294967296,
+    TextAlign = 8589934592,
+    LineAlign = 17179869184,
+    LocaleMode = 34359738368,
+    TextDirection = 68719476736,
+    WritingDirection = 137438953472,
+    WrapFlags = 274877906944,
+    TextWrap = 549755813888,
+    WordBreak = 1099511627776,
+    TextOrientation = 2199023255552,
+    TextOverflow = 4398046511104,
 }
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum NodeType {
-    View = 0,
-    Text = 1,
+    Null = 0,
+    View = 1,
+    TextSpan = 2,
 }
 
 #[repr(C)]
@@ -832,12 +848,6 @@ pub struct NativeArcInner<T0 /* T */> {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NativeArc<T0 /* T */> {
     pub m_ptr: *mut NativeArcInner<T0>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct NativeBox<T0 /* T */> {
-    pub m_ptr: *mut T0,
 }
 
 #[repr(C)]
@@ -1170,12 +1180,18 @@ pub struct NFontPair {
 pub struct NLayoutContext {
     pub font_manager: *mut IFontManager,
     pub roots: *mut FFIMap,
-    pub node_buckets: *mut i32,
-    pub node_ctrl: *mut NNodeIdCtrl,
-    pub node_common_data: *mut CommonData,
-    pub node_childs_data: *mut ChildsData,
-    pub node_style_data: *mut StyleData,
-    pub node_count: i32,
+    pub view_buckets: *mut i32,
+    pub view_ctrl: *mut NNodeIdCtrl,
+    pub view_common_data: *mut CommonData,
+    pub view_childs_data: *mut ChildsData,
+    pub view_style_data: *mut StyleData,
+    pub text_span_buckets: *mut i32,
+    pub text_span_ctrl: *mut NNodeIdCtrl,
+    pub text_span_common_data: *mut CommonData,
+    pub text_span_data: *mut TextSpanData,
+    pub text_span_style_data: *mut TextSpanStyleData,
+    pub view_count: i32,
+    pub text_span_count: i32,
     pub rounding: bool,
 }
 
@@ -1232,17 +1248,20 @@ pub struct TextRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet,
-    pub m_text_data: NativeBox<TextData>,
+    pub m_texts: NativeList<NativeArc<TextData>>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
+    pub NodeId: u32,
+    pub ParentValue: ViewNode,
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
     pub LastLayoutVersion: u32,
     pub LayoutVersion: u32,
+    pub HasParent: bool,
 }
 
 #[repr(C)]
@@ -1326,7 +1345,6 @@ pub struct StyleData {
     pub Visible: Visible,
     pub Position: Position,
     pub Container: Container,
-    pub TextMode: TextMode,
     pub BoxSizing: BoxSizing,
     pub Cursor: CursorType,
     pub PointerEvents: PointerEvents,
@@ -1386,31 +1404,79 @@ pub struct StyleData {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData {
-    pub m_text_root: ViewNode,
-    pub m_items: NativeList<TextItem>,
-    pub m_paragraph: NativeList<TextParagraph>,
+    pub m_text: NString,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct TextItem {
-    pub LogicTextStart: u32,
-    pub LogicTextLength: u32,
-    pub Node: ViewOrTextNode,
-    pub Parent: ViewNode,
-    pub Container: ViewNode,
-    pub Type: TextItemType,
+pub struct TextSpanData {
+    pub BoundingBoxes: NativeList<AABB2DF>,
+    pub TextIndex: u32,
+    pub TextStart: u32,
+    pub TextLength: u32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct TextParagraph {
-    pub CollectedText: NativeList<u16>,
-    pub RawCharMap: NativeList<RawCharType>,
-    pub ItemStart: u32,
-    pub ItemLength: u32,
-    pub LogicTextLength: u32,
-    pub Type: TextParagraphType,
+pub struct TextSpanStyleData {
+    pub Override: TextSpanStyleOverride,
+    pub FontFallback: *mut IFontFallback,
+    pub Locale: LocaleId,
+    pub TextColorR: f32,
+    pub TextColorG: f32,
+    pub TextColorB: f32,
+    pub TextColorA: f32,
+    pub Opacity: f32,
+    pub BackgroundColorR: f32,
+    pub BackgroundColorG: f32,
+    pub BackgroundColorB: f32,
+    pub BackgroundColorA: f32,
+    pub InsertTopValue: f32,
+    pub InsertRightValue: f32,
+    pub InsertBottomValue: f32,
+    pub InsertLeftValue: f32,
+    pub MarginTopValue: f32,
+    pub MarginRightValue: f32,
+    pub MarginBottomValue: f32,
+    pub MarginLeftValue: f32,
+    pub PaddingTopValue: f32,
+    pub PaddingRightValue: f32,
+    pub PaddingBottomValue: f32,
+    pub PaddingLeftValue: f32,
+    pub TabSizeValue: f32,
+    pub FontSize: f32,
+    pub FontWidth: FontWidth,
+    pub FontOblique: f32,
+    pub FontWeight: FontWeight,
+    pub LineHeightValue: f32,
+    pub Cursor: CursorType,
+    pub PointerEvents: PointerEvents,
+    pub InsertTop: LengthType,
+    pub InsertRight: LengthType,
+    pub InsertBottom: LengthType,
+    pub InsertLeft: LengthType,
+    pub MarginTop: LengthType,
+    pub MarginRight: LengthType,
+    pub MarginBottom: LengthType,
+    pub MarginLeft: LengthType,
+    pub PaddingTop: LengthType,
+    pub PaddingRight: LengthType,
+    pub PaddingBottom: LengthType,
+    pub PaddingLeft: LengthType,
+    pub FontItalic: bool,
+    pub FontOpticalSizing: bool,
+    pub TextAlign: TextAlign,
+    pub LineAlign: LineAlign,
+    pub TabSize: LengthType,
+    pub LocaleMode: LocaleMode,
+    pub TextDirection: TextDirection,
+    pub WritingDirection: WritingDirection,
+    pub WrapFlags: WrapFlags,
+    pub TextWrap: TextWrap,
+    pub WordBreak: WordBreak,
+    pub TextOrientation: TextOrientation,
+    pub TextOverflow: TextOverflow,
+    pub LineHeight: LengthType,
 }
 
 #[repr(C)]
@@ -1423,12 +1489,6 @@ pub struct NodeId {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ViewNode {
-    pub Index: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct ViewOrTextNode {
     pub Index: u32,
 }
 

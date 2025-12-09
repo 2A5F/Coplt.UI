@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
+using Coplt.UI.Native;
 using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
@@ -14,10 +15,45 @@ namespace Coplt.UI.Trees;
 public static unsafe partial class Access
 {
     /// <inheritdoc cref="Access"/>
+    public readonly struct TextSpan
+    {
+        public Document Document { get; }
+        public NodeId Id { get; }
+
+        public TextSpan(View view, string text)
+        {
+            Document = view.Document;
+            Id = Document.CreateTextSpan();
+
+            ref var childs = ref view.ChildsData;
+            var text_data = NativeArc<TextData>.NewZeroed();
+            text_data.Value.m_text = NString.Create(text);
+            var index = childs.m_texts.Count;
+            childs.m_texts.Add(text_data);
+
+            ref var span_data = ref TextSpanData;
+            span_data.TextIndex = (uint)index;
+            span_data.TextStart = 0;
+            span_data.TextLength = (uint)text.Length;
+        }
+
+        public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
+        public LayoutView Layout => CommonData.Layout;
+        public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
+        public ref TextSpanData TextSpanData => ref Document.UnsafeAt<TextSpanData>(Id);
+        public ref TextSpanStyleData TextSpanStyleData => ref Document.UnsafeAt<TextSpanStyleData>(Id);
+    }
+
+    /// <inheritdoc cref="Access"/>
     public readonly struct View(Document document)
     {
         public Document Document { get; } = document;
         public NodeId Id { get; } = document.CreateView();
+
+        public View(View parent) : this(parent.Document)
+        {
+            parent.Add(this);
+        }
 
         public ref StyleData StyleData => ref Document.UnsafeAt<StyleData>(Id);
         public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
@@ -25,10 +61,7 @@ public static unsafe partial class Access
         public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
         public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
 
-        public void Add(string text)
-        {
-            Document.AddText(Id, text);
-        }
+        public TextSpan Add(string text) => new(this, text);
 
         public void Add(View node)
         {
@@ -49,12 +82,6 @@ public static unsafe partial class Access
         {
             get => node.StyleData.Container;
             set => node.StyleData.Container = value;
-        }
-
-        public TextMode TextMode
-        {
-            get => node.StyleData.TextMode;
-            set => node.StyleData.TextMode = value;
         }
 
         public Visible Visible

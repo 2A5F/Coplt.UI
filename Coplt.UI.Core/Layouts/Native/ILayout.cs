@@ -21,14 +21,22 @@ public unsafe struct NLayoutContext
     [ComType<Ptr<FFIMap>>]
     public NativeMap<NodeId, RootData>* roots;
 
-    public int* node_buckets;
+    public int* view_buckets;
     [ComType<Ptr<NNodeIdCtrl>>]
-    public NSplitMapCtrl<uint>.Ctrl* node_ctrl;
-    public CommonData* node_common_data;
-    public ChildsData* node_childs_data;
-    public StyleData* node_style_data;
+    public NSplitMapCtrl<uint>.Ctrl* view_ctrl;
+    public CommonData* view_common_data;
+    public ChildsData* view_childs_data;
+    public StyleData* view_style_data;
+    
+    public int* text_span_buckets;
+    [ComType<Ptr<NNodeIdCtrl>>]
+    public NSplitMapCtrl<uint>.Ctrl* text_span_ctrl;
+    public CommonData* text_span_common_data;
+    public TextSpanData* text_span_data;
+    public TextSpanStyleData* text_span_style_data;
 
-    public int node_count;
+    public int view_count;
+    public int text_span_count;
 
     public bool rounding;
 }

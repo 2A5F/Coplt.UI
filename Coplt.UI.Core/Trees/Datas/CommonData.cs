@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.Mathematics;
 using Coplt.UI.Native;
@@ -9,14 +8,37 @@ namespace Coplt.UI.Trees.Datas;
 [Dropping]
 public partial record struct CommonData()
 {
+    internal uint NodeId = uint.MaxValue;
+    internal ViewNode ParentValue = new(uint.MaxValue);
+
     internal LayoutData FinalLayout;
     internal LayoutData UnRoundedLayout;
     internal LayoutCache LayoutCache;
 
     internal uint LastLayoutVersion;
-    
-    public uint LayoutVersion;
-    
+
+    internal uint LayoutVersion;
+
+    internal bool HasParent = false;
+
+    public ViewNode? Parent
+    {
+        get => HasParent ? ParentValue : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                ParentValue = value.Value;
+                HasParent = true;
+            }
+            else
+            {
+                HasParent = false;
+                ParentValue = new(uint.MaxValue);
+            }
+        }
+    }
+
     [UnscopedRef]
     public LayoutView Layout => new(ref this);
 }
@@ -38,6 +60,16 @@ public ref struct LayoutView(ref CommonData Data)
     public float4 Padding => new(Data.FinalLayout.PaddingTopSize, Data.FinalLayout.PaddingRightSize, Data.FinalLayout.PaddingBottomSize,
         Data.FinalLayout.PaddingLeftSize);
 
+    public float4 BoundingBox => new(Location, Location + Size);
+
     public override string ToString() =>
         $"<view x=\"{Data.FinalLayout.LocationX}\" y=\"{Data.FinalLayout.LocationY}\" z=\"{Order}\" width=\"{Data.FinalLayout.Width}\" height=\"{Data.FinalLayout.Height}\" content=\"{Data.FinalLayout.ContentWidth} {Data.FinalLayout.ContentHeight}\" margin=\"{Data.FinalLayout.MarginTopSize} {Data.FinalLayout.MarginRightSize} {Data.FinalLayout.MarginBottomSize} {Data.FinalLayout.MarginLeftSize}\" padding=\"{Data.FinalLayout.PaddingTopSize} {Data.FinalLayout.PaddingRightSize} {Data.FinalLayout.PaddingBottomSize} {Data.FinalLayout.PaddingLeftSize}\" border=\"{Data.FinalLayout.BorderTopSize} {Data.FinalLayout.BorderRightSize} {Data.FinalLayout.BorderBottomSize} {Data.FinalLayout.BorderLeftSize}\" />";
+}
+
+public static class CommonDataEx
+{
+    extension(in CommonData data)
+    {
+        public uint NodeId => data.NodeId;
+    }
 }

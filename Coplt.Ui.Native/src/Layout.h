@@ -21,19 +21,22 @@ namespace Coplt::LayoutCalc
     COPLT_FORCE_INLINE
     ChildsData* GetChildsData(NLayoutContext* ctx, u32 index)
     {
-        return &ctx->node_childs_data[index];
+        return nullptr;
+        // return &ctx->node_childs_data[index];
     }
 
     COPLT_FORCE_INLINE
     StyleData* GetStyleData(NLayoutContext* ctx, u32 index)
     {
-        return &ctx->node_style_data[index];
+        return nullptr;
+        // return &ctx->node_style_data[index];
     }
 
     COPLT_FORCE_INLINE
     CommonData* GetCommonData(NLayoutContext* ctx, u32 index)
     {
-        return &ctx->node_common_data[index];
+        return nullptr;
+        // return &ctx->node_common_data[index];
     }
 
     struct CtxNodeRef

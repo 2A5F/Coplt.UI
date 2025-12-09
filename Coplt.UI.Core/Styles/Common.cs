@@ -18,16 +18,6 @@ public enum Container : byte
     Flex,
     Grid,
     Text,
-    Block,
-}
-
-/// <summary>
-/// Behavior when the outer container is <see cref="Container.Text"/>
-/// </summary>
-public enum TextMode : byte
-{
-    Block,
-    Inline,
 }
 
 // /// <summary>

@@ -2,6 +2,7 @@
 
 public enum NodeType : byte
 {
-    View = 0,
-    Text = 1,
+    Null = 0,
+    View = 1,
+    TextSpan = 2,
 }

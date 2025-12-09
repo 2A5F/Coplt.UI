@@ -27,25 +27,18 @@ public record struct NodeId(uint Index, uint Id, NodeType Type)
     public static uint NormalizeId(uint id) => id & 0x0FFF_FFFF;
 }
 
-public record struct ViewNode(uint Index)
+public readonly record struct ViewNode(uint Index)
 {
-    public uint Index = Index;
+    public readonly uint Index = Index;
 
-    public static implicit operator ViewNode(NodeId node) => new(node.Index);
+    public static implicit operator ViewNode(NodeId node) => 
+        node.Type is not NodeType.View ? throw new InvalidCastException() : new(node.Index);
 }
 
-public record struct TextNode(uint Index)
+public readonly record struct TextSpanNode(uint Index)
 {
-    public uint Index = Index;
+    public readonly uint Index = Index;
 
-    public static implicit operator TextNode(NodeId node) => new(node.Index);
-}
-
-public record struct ViewOrTextNode(uint Index)
-{
-    public uint Index = Index;
-
-    public static implicit operator ViewOrTextNode(NodeId node) => new(node.Index);
-    public static implicit operator ViewOrTextNode(ViewNode node) => new(node.Index);
-    public static implicit operator ViewOrTextNode(TextNode node) => new(node.Index);
+    public static implicit operator TextSpanNode(NodeId node) =>
+        node.Type is not NodeType.TextSpan ? throw new InvalidCastException() : new(node.Index);
 }

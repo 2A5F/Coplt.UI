@@ -1,12 +1,12 @@
-﻿using System.Collections.Frozen;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Layouts;
 using Coplt.UI.Miscellaneous;
-using Coplt.UI.Styles;
+using Coplt.UI.Native;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
 using Coplt.UI.Trees.Modules;
@@ -22,7 +22,9 @@ public sealed partial class Document
 
     internal readonly Template m_template;
     [Drop(Order = 10)]
-    internal readonly Arche m_arche;
+    internal readonly Arche m_view_arche;
+    [Drop(Order = 10)]
+    internal readonly Arche m_text_span_arche;
     [Drop]
     internal NativeMap<NodeId, RootData> m_roots;
     // ReSharper disable once CollectionNeverQueried.Global
@@ -41,7 +43,8 @@ public sealed partial class Document
         m_template = template;
         m_frame_source = frame_source ?? new();
         m_font_manager = font_manager ?? new(m_frame_source);
-        m_arche = m_template.m_arche.Create();
+        m_view_arche = m_template.m_view_arche.Create();
+        m_text_span_arche = m_template.m_text_span_arche.Create();
         m_modules = new IModule[m_template.m_modules.Length];
         m_modules_update = new Action<Document>[m_template.m_modules.Length];
         for (var i = 0; i < m_template.m_modules.Length; i++)
@@ -59,17 +62,18 @@ public sealed partial class Document
     public sealed class Builder
     {
         private readonly Dictionary<Type, AModuleTemplate> m_modules = new();
-        private readonly Dictionary<Type, AStorageTemplate> m_types = new();
+        private readonly Dictionary<ArcheTarget, Dictionary<Type, AStorageTemplate>> m_types = new();
         private FrameSource? m_frame_source;
         private FontManager? m_font_manager;
 
         public Builder()
         {
-            Attach<HierarchyData>();
-            Attach<ChildsData>(storage: StorageType.Pinned);
-            Attach<CommonData>(storage: StorageType.Pinned);
-            Attach<StyleData>(storage: StorageType.Pinned);
-            Attach<ManagedData>();
+            Attach<ManagedData>(ArcheTarget.All);
+            Attach<CommonData>(ArcheTarget.All, storage: StorageType.Pinned);
+            Attach<ChildsData>(ArcheTarget.View, storage: StorageType.Pinned);
+            Attach<StyleData>(ArcheTarget.View, storage: StorageType.Pinned);
+            Attach<TextSpanData>(ArcheTarget.TextSpan, storage: StorageType.Pinned);
+            Attach<TextSpanStyleData>(ArcheTarget.TextSpan, storage: StorageType.Pinned);
             With<LayoutModule>();
         }
 
@@ -86,12 +90,19 @@ public sealed partial class Document
             return this;
         }
 
-        public Builder Attach<T>(StorageType storage = StorageType.Default)
+        public Builder Attach<T>(StorageType storage = StorageType.Default) where T : new()
+            => Attach<T>(ArcheTarget.All, storage: storage);
+        public Builder Attach<T>(ArcheTarget targets, StorageType storage = StorageType.Default)
             where T : new()
         {
-            ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(m_types, typeof(T), out var exists);
-            if (exists) throw new ArgumentException($"Type {typeof(T)} has already been attached.");
-            t = new StorageTemplate<T>(storage);
+            foreach (var target in targets)
+            {
+                ref var types = ref CollectionsMarshal.GetValueRefOrAddDefault(m_types, target, out var exists);
+                if (!exists) types = new();
+                ref var t = ref CollectionsMarshal.GetValueRefOrAddDefault(types!, typeof(T), out exists);
+                if (exists) throw new ArgumentException($"Type {typeof(T)} has already been attached.");
+                t = new StorageTemplate<T>(storage);
+            }
             return this;
         }
 
@@ -101,7 +112,11 @@ public sealed partial class Document
             return this;
         }
 
-        public Template Build() => new(new ArcheTemplate(m_types), m_modules.Values.ToArray());
+        public Template Build() => new(
+            new ArcheTemplate(m_types[ArcheTarget.View]),
+            new ArcheTemplate(m_types[ArcheTarget.TextSpan]),
+            m_modules.Values.ToArray()
+        );
 
         public Document Create() => Build().Create(m_frame_source, m_font_manager);
     }
@@ -137,12 +152,14 @@ public sealed partial class Document
 
     public sealed class Template
     {
-        internal readonly ArcheTemplate m_arche;
+        internal readonly ArcheTemplate m_view_arche;
+        internal readonly ArcheTemplate m_text_span_arche;
         internal readonly AModuleTemplate[] m_modules;
 
-        internal Template(ArcheTemplate arche, AModuleTemplate[] modules)
+        internal Template(ArcheTemplate view_arche, ArcheTemplate text_span_arche, AModuleTemplate[] modules)
         {
-            m_arche = arche;
+            m_view_arche = view_arche;
+            m_text_span_arche = text_span_arche;
             m_modules = modules;
         }
 
@@ -216,10 +233,14 @@ public sealed partial class Document
     #region Instance
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Arche GetArche() => m_arche;
+    public Arche ViewArche() => m_view_arche;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Arche TextSpanArche() => m_text_span_arche;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public AStorage<T> StorageOf<T>() => m_arche.StorageOf<T>();
+    public AStorage<T> ViewStorageOf<T>() => m_view_arche.StorageOf<T>();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AStorage<T> TextSpanStorageOf<T>() => m_text_span_arche.StorageOf<T>();
 
     public sealed class Arche : IDisposable
     {
@@ -267,6 +288,10 @@ public sealed partial class Document
             }
             m_ctrl.Dispose();
         }
+
+        public int GetRawCount() => m_ctrl.m_count;
+        public unsafe int* GetBuckets() => m_ctrl.m_buckets;
+        public unsafe NSplitMapCtrl<uint>.Ctrl* GetCtrls() => m_ctrl.m_ctrls.m_items;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AStorage<T> StorageOf<T>() => (AStorage<T>)UnsafeStorageAt(IndexOf<T>());
@@ -372,35 +397,44 @@ public sealed partial class Document
 
     #region At
 
+    public Arche ArcheOf(NodeId id) => id.Type switch
+    {
+        NodeType.View => m_view_arche,
+        NodeType.TextSpan => m_text_span_arche,
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
     public ref T At<T>(NodeId id)
     {
-        if (id.Type != NodeType.View) throw new InvalidOperationException();
-        var nth = m_arche.IndexOf<T>();
+        var arche = ArcheOf(id);
+        var nth = arche.IndexOf<T>();
         if (nth < 0) throw new InvalidOperationException();
-        var storage = m_arche.UnsafeStorageAt(nth);
+        var storage = arche.UnsafeStorageAt(nth);
         return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
 
     public unsafe T* PtrAt<T>(NodeId id)
     {
-        if (id.Type != NodeType.View) throw new InvalidOperationException();
-        var nth = m_arche.IndexOf<T>();
+        var arche = ArcheOf(id);
+        var nth = arche.IndexOf<T>();
         if (nth < 0) throw new InvalidOperationException();
-        var storage = m_arche.UnsafeStorageAt(nth);
+        var storage = arche.UnsafeStorageAt(nth);
         return storage.UnsafeGetDataPtr<T>() + id.Index;
     }
 
     public ref T UnsafeAt<T>(NodeId id)
     {
-        var nth = m_arche.IndexOf<T>();
-        var storage = m_arche.UnsafeStorageAt(nth);
+        var arche = ArcheOf(id);
+        var nth = arche.IndexOf<T>();
+        var storage = arche.UnsafeStorageAt(nth);
         return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
 
     public unsafe T* UnsafePtrAt<T>(NodeId id)
     {
-        var nth = m_arche.IndexOf<T>();
-        var storage = m_arche.UnsafeStorageAt(nth);
+        var arche = ArcheOf(id);
+        var nth = arche.IndexOf<T>();
+        var storage = arche.UnsafeStorageAt(nth);
         return storage.UnsafeGetDataPtr<T>() + id.Index;
     }
 
@@ -411,6 +445,7 @@ public sealed partial class Document
     public ref RootData AddRoot(NodeId id) => ref AddRoot(id, AvailableSpace.MinContent, AvailableSpace.MinContent);
     public ref RootData AddRoot(NodeId id, AvailableSpace X, AvailableSpace Y, bool UseRounding = true)
     {
+        if (id.Type != NodeType.View) throw new InvalidOperationException("Root must be view.");
         ref var root = ref m_roots.GetValueRefOrUninitialized(id, out _);
         root.Node = id;
         root.AvailableSpaceXValue = X.Value;
@@ -426,90 +461,90 @@ public sealed partial class Document
     public NodeId CreateView()
     {
         var id = m_node_id_inc++;
-        var index = m_arche.Add(id);
+        var index = m_view_arche.Add(id);
+        m_view_arche.UnsafeGetDataRefAt<CommonData>(index).NodeId = id;
         return new((uint)index, id, NodeType.View);
     }
 
-    public void RemoveView(NodeId id)
+    public NodeId CreateTextSpan()
     {
-        if (id.Type != NodeType.View) throw new InvalidOperationException();
+        var id = m_node_id_inc++;
+        var index = m_text_span_arche.Add(id);
+        m_text_span_arche.UnsafeGetDataRefAt<CommonData>(index).NodeId = id;
+        return new((uint)index, id, NodeType.TextSpan);
+    }
+
+    public void RemoveNode(NodeId id)
+    {
+        ref var common = ref UnsafeAt<CommonData>(id);
         {
-            ref var hierarchy = ref UnsafeAt<HierarchyData>(id);
-            if (hierarchy.Parent is { } parent)
+            if (common.Parent is { } parent)
             {
-                ref var childs = ref UnsafeAt<ChildsData>(parent);
+                ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)parent.Index);
                 childs.m_childs.Remove(id);
                 DirtyLayout(parent);
             }
         }
+        switch (id.Type)
         {
-            ref var childs = ref UnsafeAt<ChildsData>(id);
-            foreach (var child in childs)
+            case NodeType.Null:
             {
-                ref var parent = ref UnsafeAt<HierarchyData>(child);
-                parent.Parent = null;
+                ref var childs = ref UnsafeAt<ChildsData>(id);
+                foreach (var child in childs)
+                {
+                    ref var parent = ref UnsafeAt<CommonData>(child);
+                    parent.Parent = null;
+                }
+                m_view_arche.Remove(id.Id);
+                m_roots.Remove(id);
+                break;
             }
+            case NodeType.View:
+            {
+                m_text_span_arche.Remove(id.Id);
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
-        m_arche.Remove(id.Id);
-        m_roots.Remove(id);
     }
 
-    public void AddChild(NodeId id, NodeId child)
+    public void AddChild(ViewNode id, NodeId child)
     {
-        if (child.Type == NodeType.Text) throw new InvalidOperationException("Cannot add a text node.");
-        ref var child_hierarchy = ref UnsafeAt<HierarchyData>(child);
-        if (child_hierarchy.Parent is not null) throw new ArgumentException("Target child node already has a parent.");
-        ref var childs = ref UnsafeAt<ChildsData>(id);
+        ref var child_common = ref UnsafeAt<CommonData>(child);
+        if (child_common.Parent is not null) throw new ArgumentException("Target child node already has a parent.");
+        ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)id.Index);
         childs.m_childs.Add(child);
-        child_hierarchy.Parent = id;
+        child_common.Parent = id;
         DirtyLayout(child);
     }
 
-    public void RemoveChild(NodeId id, NodeId child)
+    public void RemoveChild(ViewNode id, NodeId child)
     {
-        ref var childs = ref UnsafeAt<ChildsData>(id);
-        if (child.Type == NodeType.Text)
-        {
-            ref var hierarchy = ref UnsafeAt<HierarchyData>(id);
-            hierarchy.m_texts.Remove(child.Id);
-            childs.m_childs.Remove(child);
-        }
-        else
-        {
-            ref var child_hierarchy = ref UnsafeAt<HierarchyData>(child);
-            if (child_hierarchy.Parent != id) throw new ArgumentException("Target node is not a child of this node.");
-            childs.m_childs.Remove(child);
-            child_hierarchy.Parent = null;
-        }
+        ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)id.Index);
+        ref var child_common = ref UnsafeAt<CommonData>(child);
+        if (child_common.Parent != id) throw new ArgumentException("Target node is not a child of this node.");
+        childs.m_childs.Remove(child);
+        child_common.Parent = null;
         DirtyLayout(id);
-    }
-
-    public NodeId AddText(NodeId id, string Text)
-    {
-        ref var hierarchy = ref UnsafeAt<HierarchyData>(id);
-        var text_id = hierarchy.m_text_id_inc++;
-        hierarchy.m_texts.TryAdd(text_id, Text);
-        ref var childs = ref UnsafeAt<ChildsData>(id);
-        var child = new NodeId(text_id, uint.MaxValue, NodeType.Text);
-        childs.m_childs.Add(child);
-        DirtyLayout(id);
-        return child;
     }
 
     #endregion
 
     #region Dirty
 
-    public void DirtyLayout(NodeId id)
+    public void DirtyLayout(ViewNode view)
     {
+        var node = view;
         while (true)
         {
-            ref var data = ref UnsafeAt<CommonData>(id);
+            ref var data = ref m_view_arche.UnsafeGetDataRefAt<CommonData>((int)node.Index);
             if (data.LayoutVersion != data.LastLayoutVersion) return;
             data.LayoutVersion++;
-            if (UnsafeAt<HierarchyData>(id).Parent is { } parent)
+            data.LayoutCache.Flags = LayoutCacheFlags.Empty;
+            if (data.Parent is { } parent)
             {
-                id = parent;
+                node = parent;
                 continue;
             }
             break;
@@ -531,8 +566,38 @@ public sealed partial class Document
     #endregion
 }
 
+[Flags]
+public enum ArcheTarget : byte
+{
+    None = 0,
+    View = 1 << 0,
+    TextSpan = 1 << 1,
+    All = View | TextSpan,
+}
+
+public struct ArcheTargetEnumerator(ArcheTarget last)
+{
+    private ArcheTarget last = last;
+
+    public ArcheTarget Current { get; set; }
+
+    public bool MoveNext()
+    {
+        if (last == ArcheTarget.None) return false;
+        var offset = BitOperations.TrailingZeroCount((int)last);
+        Current = (ArcheTarget)(1 << offset);
+        last &= ~Current;
+        return true;
+    }
+}
+
 public static class DocumentEx
 {
+    extension(ArcheTarget self)
+    {
+        public ArcheTargetEnumerator GetEnumerator() => new(self);
+    }
+
     extension(Document.AStorage self)
     {
         public Document.Storage<T> AsCommon<T>() where T : new() => (Document.Storage<T>)self;

@@ -93,7 +93,6 @@ public partial record struct StyleData()
     public Visible Visible = Visible.Visible;
     public Position Position = Position.Relative;
     public Container Container = Container.Flex;
-    public TextMode TextMode = TextMode.Block;
     public BoxSizing BoxSizing = BoxSizing.BorderBox;
     // public FloatInText Float = FloatInText.None; // not support yet
 
@@ -195,4 +194,163 @@ public partial record struct GridContainerStyle
     public NativeList<NativeList<GridName>> GridTemplateColumnNames;
     [Drop]
     public NativeList<NativeList<GridName>> GridTemplateRowNames;
+}
+
+[Flags]
+public enum TextSpanStyleOverride : ulong
+{
+    None = 0,
+
+    FontFallback = 1 << 0,
+    Locale = 1 << 1,
+
+    TextColorR = 1 << 2,
+    TextColorG = 1 << 3,
+    TextColorB = 1 << 4,
+    TextColorA = 1 << 5,
+
+    Opacity = 1 << 6,
+
+    BackgroundColorR = 1 << 7,
+    BackgroundColorG = 1 << 8,
+    BackgroundColorB = 1 << 9,
+    BackgroundColorA = 1 << 10,
+
+    InsertTop = 1 << 11,
+    InsertRight = 1 << 12,
+    InsertBottom = 1 << 13,
+    InsertLeft = 1 << 14,
+
+    MarginTop = 1 << 15,
+    MarginRight = 1 << 16,
+    MarginBottom = 1 << 17,
+    MarginLeft = 1 << 18,
+
+    PaddingTop = 1 << 19,
+    PaddingRight = 1 << 20,
+    PaddingBottom = 1 << 21,
+    PaddingLeft = 1 << 22,
+
+    TabSize = 1 << 23,
+
+    FontSize = 1 << 24,
+    FontWidth = 1 << 25,
+    FontOblique = 1 << 26,
+    FontWeight = 1 << 27,
+
+    LineHeight = 1 << 28,
+
+    Cursor = 1 << 29,
+    PointerEvents = 1 << 30,
+
+    FontItalic = 1UL << 31,
+    FontOpticalSizing = 1UL << 32,
+
+    TextAlign = 1UL << 33,
+    LineAlign = 1UL << 34,
+    LocaleMode = 1UL << 35,
+    TextDirection = 1UL << 36,
+    WritingDirection = 1UL << 37,
+    WrapFlags = 1UL << 38,
+    TextWrap = 1UL << 39,
+    WordBreak = 1UL << 40,
+    TextOrientation = 1UL << 41,
+    TextOverflow = 1UL << 42,
+}
+
+[Dropping]
+public partial record struct TextSpanStyleData()
+{
+    public TextSpanStyleOverride Override;
+
+    /// <summary>
+    /// Optional, default use system font fallback
+    /// </summary>
+    [Drop]
+    [ComType<Ptr<IFontFallback>>]
+    public Rc<IFontFallback> FontFallback;
+    public LocaleId Locale;
+
+    public float TextColorR = 1;
+    public float TextColorG = 1;
+    public float TextColorB = 1;
+    public float TextColorA = 1;
+
+    public float Opacity = 1;
+
+    public float BackgroundColorR = 1;
+    public float BackgroundColorG = 1;
+    public float BackgroundColorB = 1;
+    public float BackgroundColorA = 0;
+
+    public float InsertTopValue = 0;
+    public float InsertRightValue = 0;
+    public float InsertBottomValue = 0;
+    public float InsertLeftValue = 0;
+
+    public float MarginTopValue = 0;
+    public float MarginRightValue = 0;
+    public float MarginBottomValue = 0;
+    public float MarginLeftValue = 0;
+
+    public float PaddingTopValue = 0;
+    public float PaddingRightValue = 0;
+    public float PaddingBottomValue = 0;
+    public float PaddingLeftValue = 0;
+
+    public float TabSizeValue = 4;
+
+    public float FontSize = 16;
+    public FontWidth FontWidth = new(1);
+    public float FontOblique = -20;
+    public FontWeight FontWeight = FontWeight.Normal;
+
+    public float LineHeightValue = 1.2f;
+
+    public CursorType Cursor = CursorType.Default;
+    public PointerEvents PointerEvents = PointerEvents.Auto;
+
+    public LengthType InsertTop = LengthType.Auto;
+    public LengthType InsertRight = LengthType.Auto;
+    public LengthType InsertBottom = LengthType.Auto;
+    public LengthType InsertLeft = LengthType.Auto;
+
+    public LengthType MarginTop = LengthType.Fixed;
+    public LengthType MarginRight = LengthType.Fixed;
+    public LengthType MarginBottom = LengthType.Fixed;
+    public LengthType MarginLeft = LengthType.Fixed;
+
+    public LengthType PaddingTop = LengthType.Fixed;
+    public LengthType PaddingRight = LengthType.Fixed;
+    public LengthType PaddingBottom = LengthType.Fixed;
+    public LengthType PaddingLeft = LengthType.Fixed;
+
+    public bool FontItalic = false;
+    public bool FontOpticalSizing = true;
+
+    public TextAlign TextAlign = TextAlign.Start;
+    public LineAlign LineAlign = LineAlign.Start;
+    public LengthType TabSize = LengthType.Percent;
+    public LocaleMode LocaleMode = LocaleMode.Normal;
+    public TextDirection TextDirection = TextDirection.Forward;
+    public WritingDirection WritingDirection = WritingDirection.Horizontal;
+    public WrapFlags WrapFlags = WrapFlags.None;
+    public TextWrap TextWrap = TextWrap.Wrap;
+    public WordBreak WordBreak = WordBreak.Auto;
+    public TextOrientation TextOrientation = TextOrientation.Mixed;
+    public TextOverflow TextOverflow = TextOverflow.Clip;
+    public LengthType LineHeight = LengthType.Percent;
+
+    public void SetFontFallback(FontFallback? Fallback)
+    {
+        FontFallback.Dispose();
+        if (Fallback == null)
+        {
+            Override &= TextSpanStyleOverride.FontFallback;
+            return;
+        }
+        Fallback.m_inner.AddRef();
+        FontFallback = Fallback.m_inner;
+        Override |= TextSpanStyleOverride.FontFallback;
+    }
 }

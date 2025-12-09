@@ -32,6 +32,7 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
 
     #region Drop
 
+    [Drop]
     private void Drop()
     {
         if (m_ptr == null) return;
@@ -63,6 +64,13 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
     public static NativeArc<T> New()
     {
         var ptr = NativeLib.Alloc<NativeArcInner<T>>();
+        ptr->m_count = 1;
+        return new(ptr);
+    }
+
+    public static NativeArc<T> NewZeroed()
+    {
+        var ptr = NativeLib.ZAlloc<NativeArcInner<T>>();
         ptr->m_count = 1;
         return new(ptr);
     }

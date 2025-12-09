@@ -346,15 +346,15 @@ namespace Coplt::LayoutCalc::Texts
 
         std::vector<Paragraph>& GetTextLayoutParagraphs() const;
         Paragraph& GetParagraph() const;
-        std::span<TextItem> GetItems() const;
-        std::span<TextItem> GetItems(u32 Start, u32 Length) const;
+        // std::span<TextItem> GetItems() const;
+        // std::span<TextItem> GetItems(u32 Start, u32 Length) const;
 
         CtxNodeRef GetScope(NodeId node) const;
-        CtxNodeRef GetScope(const TextItem& item) const;
+        // CtxNodeRef GetScope(const TextItem& item) const;
         CtxNodeRef GetScope(const TextScopeRange& range) const;
         CtxNodeRef GetScope(const SameStyleRange& range) const;
 
-        void CollectChars();
+        // void CollectChars();
         void AnalyzeFonts();
         void AnalyzeStyles();
         void CollectRuns();

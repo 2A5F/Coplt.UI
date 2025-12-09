@@ -237,262 +237,264 @@ LayoutOutput ParagraphData::ComputeContent(
     const Size<AvailableSpace>& AvailableSpace, const Size<std::optional<f32>>& KnownSize
 )
 {
-    const auto& root_style = layout.m_node.StyleData();
-    const auto& paragraph = layout.m_paragraphs[m_index];
-    const auto axis = ToAxis(root_style.WritingDirection);
+    return {};
 
-    const bool is_max_only = MaxOnly.MainAxis(axis);
-    const auto space = AvailableSpace.Or(KnownSize);
-    const auto space_main = space.MainAxis(axis).value_or(std::numeric_limits<f32>::infinity());
-
-    Size<f32> result_size{};
-    auto& max_main = result_size.MainAxis(axis);
-    auto& sum_cross = result_size.CrossAxis(axis);
-
-    if (paragraph.Type == TextParagraphType::Inline)
-    {
-        std::vector<ParagraphSpanInlineBlockTmpData> inline_block_tmp_datas{};
-        std::vector<ParagraphSpan> spans{};
-        std::vector<ParagraphLine> lines{};
-        if (inputs.RunMode == LayoutRunMode::ComputeSize)
-        {
-            spans = std::move(m_final_spans);
-            lines = std::move(m_final_lines);
-            spans.clear();
-            lines.clear();
-        }
-
-        ParagraphLine cur_line{};
-
-        u32 cur_nth_line = 0;
-        RunBreakLineCtx ctx{
-            .NthLine = 0,
-            .AvailableSpace = space_main
-        };
-
-        f32 defined_line_height = Resolve(GetLineHeight(root_style), root_style.FontSize);
-        for (auto& run : m_runs)
-        {
-            const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
-            const auto scope = GetScope(same_style);
-            const auto& style = scope.StyleData();
-            defined_line_height = Resolve(GetLineHeight(style), style.FontSize);
-            const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
-
-            if (run.IsInlineBlock(*this))
-            {
-                const auto& font = m_font_ranges[run.FontRangeIndex];
-                const auto items = GetItems(font.ItemStart, font.ItemLength);
-                inline_block_tmp_datas.reserve(inline_block_tmp_datas.size() + items.size());
-                for (const auto& item : items)
-                {
-                    // COPLT_DEBUG_ASSERT(item.Type == TextItemType::InlineBlock);
-
-                    const u32 inline_block_index = inline_block_tmp_datas.size();
-                    if (inputs.RunMode == LayoutRunMode::PerformLayout)
-                    {
-                        // inline_block_tmp_datas.emplace_back(GetScope(item.NodeOrParent), KnownSize);
-                    }
-                    else
-                    {
-                        inline_block_tmp_datas.emplace_back();
-                    }
-                    auto& ibd = inline_block_tmp_datas.back();
-                    auto& sub_outputs = ibd.m_layout_output;
-
-                    Size<::AvailableSpace> available_space = AvailableSpace;
-                    ::AvailableSpace& cross_available_space = available_space.CrossAxis(axis);
-                    if (cross_available_space.first == AvailableSpaceType::Definite)
-                    {
-                        cross_available_space.second = std::max(0.0f, cross_available_space.second - sum_cross);
-                    }
-                    LayoutInputs sub_inputs(
-                        inputs.RunMode, inputs.SizingMode, LayoutRequestedAxis::Both,
-                        Size<std::optional<f32>>(), GetParentSize(inputs), available_space
-                    );
-
-                    // ComputeChildLayout(sub_doc, item.NodeOrParent, &sub_inputs, &sub_outputs);
-
-                    const f32 main_size = GetSize(sub_outputs).MainAxis(axis);
-                    const f32 cross_size = GetSize(sub_outputs).CrossAxis(axis);
-
-                    auto cur_line_offset = ctx.CurrentLineOffset;
-                    const auto new_line_offset = ctx.CurrentLineOffset + main_size;
-                    if (allow_wrap && new_line_offset > ctx.AvailableSpace)
-                    {
-                        ctx.NthLine++;
-                        cur_line_offset = 0;
-                        ctx.CurrentLineOffset = main_size;
-
-                        cur_line.NthLine = cur_nth_line;
-                        cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
-                        cur_line.SpanLength = spans.size() - cur_line.SpanStart;
-                        cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
-                        max_main = std::max(max_main, cur_line.MainSize);
-                        sum_cross += cur_line.CrossSize;
-                        lines.push_back(cur_line);
-                        cur_line = ParagraphLine{
-                            .CrossOffset = sum_cross,
-                            .SpanStart = static_cast<u32>(spans.size()),
-                        };
-                        cur_nth_line = ctx.NthLine;
-                    }
-                    else
-                    {
-                        ctx.CurrentLineOffset = new_line_offset;
-                    }
-
-                    if (style.LineAlign == LineAlign::Baseline)
-                    {
-                        // todo baseline
-                        cur_line.MinSize = std::max(cur_line.MinSize, cross_size);
-                    }
-                    else
-                    {
-                        cur_line.MinSize = std::max(cur_line.MinSize, cross_size);
-                    }
-
-                    spans.push_back(
-                        ParagraphSpan{
-                            .NthLine = cur_nth_line,
-                            // .Node = item.NodeOrParent,
-                            .InlineBlockIndex = inline_block_index,
-                            .CrossSize = cross_size,
-                            .Offset = cur_line_offset,
-                            .Size = main_size,
-                            .Type = ParagraphSpanType::Block,
-                        }
-                    );
-                }
-            }
-            else
-            {
-                const auto& single_line_size = run.GetLineInfo(*this);
-                cur_line.Ascent = std::max(cur_line.Ascent, single_line_size.Ascent);
-                cur_line.Descent = std::max(cur_line.Descent, single_line_size.Descent);
-                cur_line.LineGap = std::max(cur_line.LineGap, single_line_size.LineGap);
-
-                auto spans_iter = run.BreakLines(*this, style, ctx, single_line_size);
-                for (const auto& span : spans_iter)
-                {
-                    #ifdef _DEBUG
-                    // if (Logger().IsEnabled(LogLevel::Trace))
-                    // {
-                    //     std::wstring text(m_chars.data() + run.Start + span.CharStart, span.CharLength);
-                    //     Logger().Log(
-                    //         LogLevel::Trace,
-                    //         fmt::format(
-                    //             L"line {:<6} {:>15.7f} .. {:<15.7f} {:>15.7f} ; {} {:>6}..{:<6} \"{}\"",
-                    //             span.NthLine, span.Offset, span.Offset + span.Size, span.Size,
-                    //             ToStr16Pad(span.Type), run.Start + span.CharStart, run.Start + span.CharStart + span.CharLength, text
-                    //         )
-                    //     );
-                    // }
-                    #endif
-
-                    if (span.NthLine != cur_nth_line)
-                    {
-                        cur_line.NthLine = cur_nth_line;
-                        cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
-                        cur_line.SpanLength = spans.size() - cur_line.SpanStart;
-                        cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
-                        max_main = std::max(max_main, cur_line.MainSize);
-                        sum_cross += cur_line.CrossSize;
-                        lines.push_back(cur_line);
-                        cur_line = ParagraphLine{
-                            .CrossOffset = sum_cross,
-                            .SpanStart = static_cast<u32>(spans.size()),
-                        };
-                        cur_nth_line = span.NthLine;
-                    }
-                    spans.push_back(span);
-                }
-            }
-        }
-
-        if (spans.size() != cur_line.SpanStart)
-        {
-            cur_line.NthLine = cur_nth_line;
-            cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
-            cur_line.SpanLength = spans.size() - cur_line.SpanStart;
-            cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
-            max_main = std::max(max_main, cur_line.MainSize);
-            sum_cross += cur_line.CrossSize;
-            lines.push_back(cur_line);
-        }
-
-        if (inputs.RunMode == LayoutRunMode::PerformLayout)
-        {
-            if (!std::isinf(space_main) && !is_max_only) max_main = space_main;
-            switch (root_style.TextAlign)
-            {
-            case TextAlign::End:
-                for (auto& line : lines)
-                {
-                    line.MainOffset = max_main - line.MainSize;
-                }
-                break;
-
-            case TextAlign::Center:
-                for (auto& line : lines)
-                {
-                    line.MainOffset = (max_main - line.MainSize) / 2;
-                }
-                break;
-            case TextAlign::Start:
-            default:
-                break;
-            }
-            for (auto& line : lines)
-            {
-                for (auto& span : std::span(spans.data() + line.SpanStart, line.SpanLength))
-                {
-                    if (span.Type == ParagraphSpanType::Block)
-                    {
-                        const CtxNodeRef node = GetScope(span.Node);
-                        const auto& data = inline_block_tmp_datas[span.InlineBlockIndex];
-                        // todo
-                        node.CommonData().UnRoundedLayout = LayoutData{
-                            .Order = order++,
-                            .LocationX = 0,
-                            .LocationY = 0,
-                            .Width = data.m_layout_output.Width,
-                            .Height = data.m_layout_output.Height,
-                            .ContentWidth = data.m_layout_output.ContentWidth,
-                            .ContentHeight = data.m_layout_output.ContentHeight,
-                            .ScrollXSize = 0, // todo scroll size
-                            .ScrollYSize = 0,
-                            .BorderTopSize = 0,
-                            .BorderRightSize = 0,
-                            .BorderBottomSize = 0,
-                            .BorderLeftSize = 0,
-                            .PaddingTopSize = 0,
-                            .PaddingRightSize = 0,
-                            .PaddingBottomSize = 0,
-                            .PaddingLeftSize = 0,
-                            .MarginTopSize = 0,
-                            .MarginRightSize = 0,
-                            .MarginBottomSize = 0,
-                            .MarginLeftSize = 0,
-                        };
-                    }
-                    else
-                    {
-                        // todo save text span layout
-                    }
-                }
-            }
-            m_final_spans = std::move(spans);
-            m_final_lines = std::move(lines);
-        }
-    }
-    else
-    {
-        //not support float layout yet
-        // todo block
-    }
-
-    return LayoutOutputFromOuterSize(result_size);
+    // const auto& root_style = layout.m_node.StyleData();
+    // const auto& paragraph = layout.m_paragraphs[m_index];
+    // const auto axis = ToAxis(root_style.WritingDirection);
+    //
+    // const bool is_max_only = MaxOnly.MainAxis(axis);
+    // const auto space = AvailableSpace.Or(KnownSize);
+    // const auto space_main = space.MainAxis(axis).value_or(std::numeric_limits<f32>::infinity());
+    //
+    // Size<f32> result_size{};
+    // auto& max_main = result_size.MainAxis(axis);
+    // auto& sum_cross = result_size.CrossAxis(axis);
+    //
+    // if (paragraph.Type == TextParagraphType::Inline)
+    // {
+    //     std::vector<ParagraphSpanInlineBlockTmpData> inline_block_tmp_datas{};
+    //     std::vector<ParagraphSpan> spans{};
+    //     std::vector<ParagraphLine> lines{};
+    //     if (inputs.RunMode == LayoutRunMode::ComputeSize)
+    //     {
+    //         spans = std::move(m_final_spans);
+    //         lines = std::move(m_final_lines);
+    //         spans.clear();
+    //         lines.clear();
+    //     }
+    //
+    //     ParagraphLine cur_line{};
+    //
+    //     u32 cur_nth_line = 0;
+    //     RunBreakLineCtx ctx{
+    //         .NthLine = 0,
+    //         .AvailableSpace = space_main
+    //     };
+    //
+    //     f32 defined_line_height = Resolve(GetLineHeight(root_style), root_style.FontSize);
+    //     for (auto& run : m_runs)
+    //     {
+    //         const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
+    //         const auto scope = GetScope(same_style);
+    //         const auto& style = scope.StyleData();
+    //         defined_line_height = Resolve(GetLineHeight(style), style.FontSize);
+    //         const auto allow_wrap = style.TextWrap != TextWrap::NoWrap;
+    //
+    //         if (run.IsInlineBlock(*this))
+    //         {
+    //             const auto& font = m_font_ranges[run.FontRangeIndex];
+    //             const auto items = GetItems(font.ItemStart, font.ItemLength);
+    //             inline_block_tmp_datas.reserve(inline_block_tmp_datas.size() + items.size());
+    //             for (const auto& item : items)
+    //             {
+    //                 // COPLT_DEBUG_ASSERT(item.Type == TextItemType::InlineBlock);
+    //
+    //                 const u32 inline_block_index = inline_block_tmp_datas.size();
+    //                 if (inputs.RunMode == LayoutRunMode::PerformLayout)
+    //                 {
+    //                     // inline_block_tmp_datas.emplace_back(GetScope(item.NodeOrParent), KnownSize);
+    //                 }
+    //                 else
+    //                 {
+    //                     inline_block_tmp_datas.emplace_back();
+    //                 }
+    //                 auto& ibd = inline_block_tmp_datas.back();
+    //                 auto& sub_outputs = ibd.m_layout_output;
+    //
+    //                 Size<::AvailableSpace> available_space = AvailableSpace;
+    //                 ::AvailableSpace& cross_available_space = available_space.CrossAxis(axis);
+    //                 if (cross_available_space.first == AvailableSpaceType::Definite)
+    //                 {
+    //                     cross_available_space.second = std::max(0.0f, cross_available_space.second - sum_cross);
+    //                 }
+    //                 LayoutInputs sub_inputs(
+    //                     inputs.RunMode, inputs.SizingMode, LayoutRequestedAxis::Both,
+    //                     Size<std::optional<f32>>(), GetParentSize(inputs), available_space
+    //                 );
+    //
+    //                 // ComputeChildLayout(sub_doc, item.NodeOrParent, &sub_inputs, &sub_outputs);
+    //
+    //                 const f32 main_size = GetSize(sub_outputs).MainAxis(axis);
+    //                 const f32 cross_size = GetSize(sub_outputs).CrossAxis(axis);
+    //
+    //                 auto cur_line_offset = ctx.CurrentLineOffset;
+    //                 const auto new_line_offset = ctx.CurrentLineOffset + main_size;
+    //                 if (allow_wrap && new_line_offset > ctx.AvailableSpace)
+    //                 {
+    //                     ctx.NthLine++;
+    //                     cur_line_offset = 0;
+    //                     ctx.CurrentLineOffset = main_size;
+    //
+    //                     cur_line.NthLine = cur_nth_line;
+    //                     cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
+    //                     cur_line.SpanLength = spans.size() - cur_line.SpanStart;
+    //                     cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
+    //                     max_main = std::max(max_main, cur_line.MainSize);
+    //                     sum_cross += cur_line.CrossSize;
+    //                     lines.push_back(cur_line);
+    //                     cur_line = ParagraphLine{
+    //                         .CrossOffset = sum_cross,
+    //                         .SpanStart = static_cast<u32>(spans.size()),
+    //                     };
+    //                     cur_nth_line = ctx.NthLine;
+    //                 }
+    //                 else
+    //                 {
+    //                     ctx.CurrentLineOffset = new_line_offset;
+    //                 }
+    //
+    //                 if (style.LineAlign == LineAlign::Baseline)
+    //                 {
+    //                     // todo baseline
+    //                     cur_line.MinSize = std::max(cur_line.MinSize, cross_size);
+    //                 }
+    //                 else
+    //                 {
+    //                     cur_line.MinSize = std::max(cur_line.MinSize, cross_size);
+    //                 }
+    //
+    //                 spans.push_back(
+    //                     ParagraphSpan{
+    //                         .NthLine = cur_nth_line,
+    //                         // .Node = item.NodeOrParent,
+    //                         .InlineBlockIndex = inline_block_index,
+    //                         .CrossSize = cross_size,
+    //                         .Offset = cur_line_offset,
+    //                         .Size = main_size,
+    //                         .Type = ParagraphSpanType::Block,
+    //                     }
+    //                 );
+    //             }
+    //         }
+    //         else
+    //         {
+    //             const auto& single_line_size = run.GetLineInfo(*this);
+    //             cur_line.Ascent = std::max(cur_line.Ascent, single_line_size.Ascent);
+    //             cur_line.Descent = std::max(cur_line.Descent, single_line_size.Descent);
+    //             cur_line.LineGap = std::max(cur_line.LineGap, single_line_size.LineGap);
+    //
+    //             auto spans_iter = run.BreakLines(*this, style, ctx, single_line_size);
+    //             for (const auto& span : spans_iter)
+    //             {
+    //                 #ifdef _DEBUG
+    //                 // if (Logger().IsEnabled(LogLevel::Trace))
+    //                 // {
+    //                 //     std::wstring text(m_chars.data() + run.Start + span.CharStart, span.CharLength);
+    //                 //     Logger().Log(
+    //                 //         LogLevel::Trace,
+    //                 //         fmt::format(
+    //                 //             L"line {:<6} {:>15.7f} .. {:<15.7f} {:>15.7f} ; {} {:>6}..{:<6} \"{}\"",
+    //                 //             span.NthLine, span.Offset, span.Offset + span.Size, span.Size,
+    //                 //             ToStr16Pad(span.Type), run.Start + span.CharStart, run.Start + span.CharStart + span.CharLength, text
+    //                 //         )
+    //                 //     );
+    //                 // }
+    //                 #endif
+    //
+    //                 if (span.NthLine != cur_nth_line)
+    //                 {
+    //                     cur_line.NthLine = cur_nth_line;
+    //                     cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
+    //                     cur_line.SpanLength = spans.size() - cur_line.SpanStart;
+    //                     cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
+    //                     max_main = std::max(max_main, cur_line.MainSize);
+    //                     sum_cross += cur_line.CrossSize;
+    //                     lines.push_back(cur_line);
+    //                     cur_line = ParagraphLine{
+    //                         .CrossOffset = sum_cross,
+    //                         .SpanStart = static_cast<u32>(spans.size()),
+    //                     };
+    //                     cur_nth_line = span.NthLine;
+    //                 }
+    //                 spans.push_back(span);
+    //             }
+    //         }
+    //     }
+    //
+    //     if (spans.size() != cur_line.SpanStart)
+    //     {
+    //         cur_line.NthLine = cur_nth_line;
+    //         cur_line.MainSize = spans.empty() ? 0 : spans.back().Offset + spans.back().Size;
+    //         cur_line.SpanLength = spans.size() - cur_line.SpanStart;
+    //         cur_line.CrossSize = cur_line.CalcSize(defined_line_height);
+    //         max_main = std::max(max_main, cur_line.MainSize);
+    //         sum_cross += cur_line.CrossSize;
+    //         lines.push_back(cur_line);
+    //     }
+    //
+    //     if (inputs.RunMode == LayoutRunMode::PerformLayout)
+    //     {
+    //         if (!std::isinf(space_main) && !is_max_only) max_main = space_main;
+    //         switch (root_style.TextAlign)
+    //         {
+    //         case TextAlign::End:
+    //             for (auto& line : lines)
+    //             {
+    //                 line.MainOffset = max_main - line.MainSize;
+    //             }
+    //             break;
+    //
+    //         case TextAlign::Center:
+    //             for (auto& line : lines)
+    //             {
+    //                 line.MainOffset = (max_main - line.MainSize) / 2;
+    //             }
+    //             break;
+    //         case TextAlign::Start:
+    //         default:
+    //             break;
+    //         }
+    //         for (auto& line : lines)
+    //         {
+    //             for (auto& span : std::span(spans.data() + line.SpanStart, line.SpanLength))
+    //             {
+    //                 if (span.Type == ParagraphSpanType::Block)
+    //                 {
+    //                     const CtxNodeRef node = GetScope(span.Node);
+    //                     const auto& data = inline_block_tmp_datas[span.InlineBlockIndex];
+    //                     // todo
+    //                     node.CommonData().UnRoundedLayout = LayoutData{
+    //                         .Order = order++,
+    //                         .LocationX = 0,
+    //                         .LocationY = 0,
+    //                         .Width = data.m_layout_output.Width,
+    //                         .Height = data.m_layout_output.Height,
+    //                         .ContentWidth = data.m_layout_output.ContentWidth,
+    //                         .ContentHeight = data.m_layout_output.ContentHeight,
+    //                         .ScrollXSize = 0, // todo scroll size
+    //                         .ScrollYSize = 0,
+    //                         .BorderTopSize = 0,
+    //                         .BorderRightSize = 0,
+    //                         .BorderBottomSize = 0,
+    //                         .BorderLeftSize = 0,
+    //                         .PaddingTopSize = 0,
+    //                         .PaddingRightSize = 0,
+    //                         .PaddingBottomSize = 0,
+    //                         .PaddingLeftSize = 0,
+    //                         .MarginTopSize = 0,
+    //                         .MarginRightSize = 0,
+    //                         .MarginBottomSize = 0,
+    //                         .MarginLeftSize = 0,
+    //                     };
+    //                 }
+    //                 else
+    //                 {
+    //                     // todo save text span layout
+    //                 }
+    //             }
+    //         }
+    //         m_final_spans = std::move(spans);
+    //         m_final_lines = std::move(lines);
+    //     }
+    // }
+    // else
+    // {
+    //     //not support float layout yet
+    //     // todo block
+    // }
+    //
+    // return LayoutOutputFromOuterSize(result_size);
 }
 
 std::span<const char16> Run::Chars(const ParagraphData& data) const
