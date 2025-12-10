@@ -25,7 +25,10 @@ use crate::{
     utils::*,
 };
 
-pub mod text;
+mod com_impl;
+pub use com_impl::*;
+
+mod text;
 pub use text::*;
 
 #[macro_export]
@@ -57,60 +60,27 @@ macro_rules! c_option {
 #[macro_export]
 macro_rules! c_available_space {
     ( $self:ident.$name:ident ) => {
-        concat_idents!(value_name = $name, Value {
+        ::concat_idents::concat_idents!(value_name = $name, Value {
             match $self.$name {
-                com::AvailableSpaceType::Definite => {
+                $crate::com::AvailableSpaceType::Definite => {
                     taffy::AvailableSpace::Definite($self.value_name)
                 }
-                com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
-                com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
+                $crate::com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
+                $crate::com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
             }
         })
     };
     ( $self:expr => $name:ident ) => {
-        concat_idents!(value_name = $name, Value {
+        ::concat_idents::concat_idents!(value_name = $name, Value {
             match $self.$name {
-                com::AvailableSpaceType::Definite => {
+                $crate::com::AvailableSpaceType::Definite => {
                     taffy::AvailableSpace::Definite($self.value_name)
                 }
-                com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
-                com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
+                $crate::com::AvailableSpaceType::MinContent => taffy::AvailableSpace::MinContent,
+                $crate::com::AvailableSpaceType::MaxContent => taffy::AvailableSpace::MaxContent,
             }
         })
     };
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn coplt_ui_layout_calc(layout: *mut c_void, ctx: *mut NLayoutContext) -> HResult {
-    unsafe {
-        let r = std::panic::catch_unwind(move || -> HResult {
-            for root in unsafe { &mut *(*ctx).roots() }.iter_mut().map(|a| a.1) {
-                let mut sub_doc = SubDoc(ctx, root as *mut _, layout);
-                let root_data = *sub_doc.root_data();
-                let available_space = taffy::Size {
-                    width: c_available_space!(root_data.AvailableSpaceX),
-                    height: c_available_space!(root_data.AvailableSpaceY),
-                };
-                let root_id = root.Node.into();
-                taffy::compute_root_layout(&mut sub_doc, root_id, available_space);
-                if root_data.UseRounding {
-                    taffy::round_layout(&mut sub_doc, root_id);
-                }
-            }
-
-            HResultE::Ok.into()
-        });
-        match r {
-            Ok(r) => r,
-            Err(e) => {
-                if let Some(r) = e.downcast_ref::<HResult>() {
-                    *r
-                } else {
-                    std::panic::resume_unwind(e)
-                }
-            }
-        }
-    }
 }
 
 impl NLayoutContext {
@@ -166,7 +136,7 @@ impl From<taffy::NodeId> for NodeId {
 
 #[repr(C)]
 #[derive(Debug)]
-struct SubDoc(*mut NLayoutContext, *mut RootData, *mut c_void);
+struct SubDoc(*mut NLayoutContext, *mut RootData, *mut com_impl::Layout);
 
 impl SubDoc {
     #[inline(always)]
@@ -406,35 +376,6 @@ impl LayoutPartialTree for SubDoc {
                         com::Container::Text => tree.compute_text_layout(id, inputs),
                     }
                 })
-            }
-        }
-    }
-}
-
-#[unsafe(no_mangle)]
-extern "C" fn coplt_ui_layout_compute_child_layout(
-    sub_doc: *mut SubDoc,
-    node: *const NodeId,
-    inputs: *const CopltLayoutInputs,
-    output: *mut com::LayoutOutput,
-) -> HResult {
-    unsafe {
-        let r = std::panic::catch_unwind(move || -> HResult {
-            let sub_doc = &mut *sub_doc;
-            let node_id = (*node).into();
-            let inputs = (*inputs).into();
-            *output = sub_doc.compute_child_layout(node_id, inputs).into();
-
-            HResultE::Ok.into()
-        });
-        match r {
-            Ok(r) => r,
-            Err(e) => {
-                if let Some(r) = e.downcast_ref::<HResult>() {
-                    *r
-                } else {
-                    std::panic::resume_unwind(e)
-                }
             }
         }
     }
@@ -1521,53 +1462,8 @@ impl SubDoc {
         id: NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
-        let data = self.common_data(id);
-        let style = self.style_data(id);
-
-        todo!()
-
-        // debug_assert!(matches!(style.Container, Container::Text));
-        // debug_assert!(!data.TextLayoutObject.is_null());
-        // unsafe {
-        //     let is_text_dirty = data.LastTextLayoutVersion != data.TextLayoutVersion;
-        //     if is_text_dirty {
-        //         let hr = coplt_ui_layout_touch_text(self.2, self.0, &id);
-        //         if hr.is_failure() {
-        //             std::panic::panic_any(hr);
-        //         }
-        //     }
-
-        //     let tlo: *mut com::ITextLayout = data.TextLayoutObject;
-        //     let inputs: CopltLayoutInputs = inputs.into();
-        //     let mut outputs = MaybeUninit::uninit();
-        //     let hr =
-        //         coplt_ui_layout_text_compute(self, tlo, self.0, &id, &inputs, outputs.as_mut_ptr());
-        //     if hr.is_failure() {
-        //         std::panic::panic_any(hr);
-        //     }
-
-        //     unsafe { outputs.assume_init() }.into()
-        // }
+        unsafe { (*self.2).compute_text_layout(self, id, inputs) }
     }
-}
-
-unsafe extern "C" {
-    #[allow(improper_ctypes)]
-    fn coplt_ui_layout_touch_text(
-        layout: *mut c_void,
-        ctx: *mut NLayoutContext,
-        node_index: *const NodeId,
-    ) -> HResult;
-
-    #[allow(improper_ctypes)]
-    fn coplt_ui_layout_text_compute(
-        sub_doc: *mut SubDoc,
-        layout: *mut com::ITextLayout,
-        ctx: *mut NLayoutContext,
-        node_index: *const NodeId,
-        inputs: *const CopltLayoutInputs,
-        outputs: *mut com::LayoutOutput,
-    ) -> HResult;
 }
 
 #[repr(u8)]

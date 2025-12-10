@@ -19,5 +19,7 @@ namespace Coplt
         Rc<IFontFallback> GetSystemFontFallback() const;
 
         Rc<IFontFallbackBuilder> CreateFontFallbackBuilder(const FontFallbackBuilderCreateInfo& info) const;
+
+        HResultE CreateLayout(ILayout** out) const;
     };
 }

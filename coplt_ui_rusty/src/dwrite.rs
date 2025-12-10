@@ -20,8 +20,8 @@ use windows::{
     Win32::{
         Foundation::{CloseHandle, GENERIC_READ, HANDLE},
         Graphics::DirectWrite::{
-            IDWriteFontFace5, IDWriteFontFileStream, IDWriteLocalFontFileLoader,
-            IDWriteLocalizedStrings,
+            IDWriteFactory7, IDWriteFontFace5, IDWriteFontFallback1, IDWriteFontFileStream,
+            IDWriteLocalFontFileLoader, IDWriteLocalizedStrings,
         },
         Storage::FileSystem::{
             CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ,
@@ -415,3 +415,42 @@ impl FontFace {
         &self.font_ref
     }
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn coplt_ui_dwrite_create_layout(
+    factory: *const IDWriteFactory7,
+    out: *mut *mut ILayout,
+) -> HResult {
+    feb_hr(|| unsafe {
+        let layout = crate::layout::Layout::new(DwLayout::new((*factory).clone())?);
+        *out = layout.leak();
+        Ok(HResultE::Ok.into())
+    })
+}
+
+#[derive(Debug)]
+pub struct DwLayout {
+    dw_factory: IDWriteFactory7,
+    system_font_fallback: IDWriteFontFallback1,
+}
+
+impl DwLayout {
+    pub fn new(dw_factory: IDWriteFactory7) -> anyhow::Result<Self> {
+        unsafe {
+            let font_fallback = dw_factory.GetSystemFontFallback()?;
+            let system_font_fallback = font_fallback.cast()?;
+            Ok(Self {
+                dw_factory,
+                system_font_fallback,
+            })
+        }
+    }
+}
+
+impl crate::layout::Layout {
+    pub fn new(dw: DwLayout) -> ObjectPtr<Self> {
+        Self { inner: dw }.make_object()
+    }
+}
+
+impl crate::layout::LayoutInner for DwLayout {}

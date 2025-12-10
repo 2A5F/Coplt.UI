@@ -30,3 +30,10 @@ Rc<IFontFallbackBuilder> TextBackend::CreateFontFallbackBuilder(const FontFallba
 {
     return Rc(new FontFallbackBuilder(this, info));
 }
+
+extern "C" HResultE coplt_ui_dwrite_create_layout(const Rc<IDWriteFactory7>* factory, ILayout** out);
+
+HResultE TextBackend::CreateLayout(ILayout** out) const
+{
+    return coplt_ui_dwrite_create_layout(&m_dw_factory, out);
+}
