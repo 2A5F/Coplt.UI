@@ -1,4 +1,10 @@
-use std::{ffi::c_void, mem::MaybeUninit, ptr::NonNull};
+use std::{
+    ffi::c_void,
+    mem::MaybeUninit,
+    panic::{RefUnwindSafe, UnwindSafe},
+    path::Path,
+    ptr::NonNull,
+};
 
 use crate::{com::*, feb_hr};
 use cocom::{
@@ -7,18 +13,56 @@ use cocom::{
     object::{Object, ObjectPtr},
     pmp,
 };
-use windows::Win32::Graphics::DirectWrite::{IDWriteFontFace5, IDWriteLocalizedStrings};
+use dashmap::DashMap;
+use harfrust::FontRef;
+use read_fonts::collections::int_set::Domain;
+use windows::{
+    Win32::{
+        Foundation::{CloseHandle, GENERIC_READ, HANDLE},
+        Graphics::DirectWrite::{
+            IDWriteFontFace5, IDWriteFontFileStream, IDWriteLocalFontFileLoader,
+            IDWriteLocalizedStrings,
+        },
+        Storage::FileSystem::{
+            CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ,
+            FILE_SHARE_WRITE, GetFileSizeEx, OPEN_EXISTING,
+        },
+        System::Memory::{
+            CreateFileMappingW, FILE_MAP_READ, MEMORY_MAPPED_VIEW_ADDRESS, MapViewOfFile,
+            PAGE_READONLY, UnmapViewOfFile,
+        },
+    },
+    core::BOOL,
+};
+use windows_core::{Free, HSTRING, HStringBuilder, Interface, PCWSTR};
 
-#[repr(C)]
 #[derive(Debug)]
+pub struct Handle(HANDLE);
+
+impl Drop for Handle {
+    fn drop(&mut self) {
+        unsafe {
+            self.0.free();
+        }
+    }
+}
+
 #[cocom::object(IFontFace)]
 pub struct FontFace {
     dw_face: IDWriteFontFace5,
+    font_tables: DashMap<font_types::Tag, Option<TableHandle>>,
     frame_source: ComPtr<IFrameSource>,
     manager: ComWeak<IFontManager>,
     frame_time: FrameTime,
     info: NFontInfo,
+    file: FontFile,
+    font_ref: FontRef<'static>,
 }
+
+unsafe impl Send for FontFace {}
+unsafe impl Sync for FontFace {}
+impl UnwindSafe for FontFace {}
+impl RefUnwindSafe for FontFace {}
 
 unsafe extern "C" {
     #[allow(improper_ctypes)]
@@ -31,17 +75,24 @@ pub extern "C" fn coplt_ui_dwrite_create_font_face(
     manager: *mut IFontManager,
     out: *mut *mut IFontFace,
 ) -> HResult {
-    unsafe {
-        let face = FontFace::new((*face).clone(), manager);
+    feb_hr(|| unsafe {
+        let face = FontFace::new((*face).clone(), manager)?;
         *out = face.leak();
-        HResultE::Ok.into()
-    }
+        Ok(HResultE::Ok.into())
+    })
 }
 
 impl FontFace {
-    pub fn new(face: IDWriteFontFace5, manager: *mut IFontManager) -> ObjectPtr<Self> {
+    pub fn new(
+        face: IDWriteFontFace5,
+        manager: *mut IFontManager,
+    ) -> anyhow::Result<ObjectPtr<Self>> {
         unsafe {
-            Object::inplace(|this: *mut Self| {
+            let file = FontFile::load(&face)?;
+            let font_ref = file.get_font_ref(&face)?;
+            Ok(Object::inplace(|this: *mut Self| {
+                pmp!(this; .font_tables).write(DashMap::new());
+
                 let frame_source = /*move*/ (*manager).GetFrameSource();
                 (*frame_source).Get(pmp!(this; .frame_time));
 
@@ -57,7 +108,9 @@ impl FontFace {
                 pmp!(this; .manager).write(ComWeak::downgrade(NonNull::new_unchecked(
                     /*clone*/ manager,
                 )));
-            })
+                pmp!(this; .file).write(file);
+                pmp!(this; .font_ref).write(font_ref);
+            }))
         }
     }
 }
@@ -160,5 +213,205 @@ impl FontFace {
             }
             Ok(())
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum FontFile {
+    Mmap {
+        file: Handle,
+        mmap: Handle,
+        view: MEMORY_MAPPED_VIEW_ADDRESS,
+        size: i64,
+    },
+    Stream {
+        stream: IDWriteFontFileStream,
+        size: u64,
+        fragment_start: *mut c_void,
+        fragment_context: *mut c_void,
+    },
+}
+
+impl Drop for FontFile {
+    fn drop(&mut self) {
+        match self {
+            FontFile::Mmap { view, .. } => unsafe {
+                UnmapViewOfFile(*view);
+            },
+            FontFile::Stream {
+                stream,
+                fragment_context,
+                ..
+            } => unsafe {
+                stream.ReleaseFileFragment(*fragment_context);
+            },
+        }
+    }
+}
+
+impl FontFile {
+    pub fn load(face: &IDWriteFontFace5) -> anyhow::Result<Self> {
+        unsafe {
+            let face_ref = face.GetFontFaceReference()?;
+            let file = face_ref.GetFontFile()?;
+            let mut font_file_reference_key = std::ptr::null_mut();
+            let mut font_file_reference_key_size = 0;
+            file.GetReferenceKey(
+                &mut font_file_reference_key,
+                &mut font_file_reference_key_size,
+            )?;
+            let loader = file.GetLoader()?;
+            if let Ok(loader) = loader.cast::<IDWriteLocalFontFileLoader>() {
+                let path_len = loader.GetFilePathLengthFromKey(
+                    font_file_reference_key,
+                    font_file_reference_key_size,
+                )?;
+                let mut path = vec![0; path_len as usize + 1];
+                loader.GetFilePathFromKey(
+                    font_file_reference_key,
+                    font_file_reference_key_size,
+                    &mut path,
+                )?;
+                FontFile::new_mmap(PCWSTR::from_raw(path.as_mut_ptr()))
+            } else {
+                let stream = loader
+                    .CreateStreamFromKey(font_file_reference_key, font_file_reference_key_size)?;
+                let file_size = stream.GetFileSize()?;
+
+                let mut fragment_start = std::ptr::null_mut();
+                let mut fragment_context = std::ptr::null_mut();
+                stream.ReadFileFragment(
+                    &mut fragment_start,
+                    0,
+                    file_size,
+                    &mut fragment_context,
+                )?;
+
+                Ok(Self::Stream {
+                    stream,
+                    size: file_size,
+                    fragment_start,
+                    fragment_context,
+                })
+            }
+        }
+    }
+
+    pub fn new_mmap(path: impl windows_core::Param<windows_core::PCWSTR>) -> anyhow::Result<Self> {
+        unsafe {
+            let file = Handle(CreateFileW(
+                path,
+                GENERIC_READ.0,
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                None,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                None,
+            )?);
+            let mut file_size = 0;
+            GetFileSizeEx(file.0, &mut file_size)?;
+            let mmap = Handle(CreateFileMappingW(file.0, None, PAGE_READONLY, 0, 0, None)?);
+            let view = MapViewOfFile(mmap.0, FILE_MAP_READ, 0, 0, 0);
+            Ok(Self::Mmap {
+                file,
+                mmap,
+                view,
+                size: file_size,
+            })
+        }
+    }
+}
+
+impl FontFile {
+    pub unsafe fn get_font_ref(&self, face: &IDWriteFontFace5) -> anyhow::Result<FontRef<'static>> {
+        unsafe {
+            let index = face.GetIndex();
+            match self {
+                FontFile::Mmap { view, size, .. } => Ok(FontRef::from_index(
+                    unsafe { std::slice::from_raw_parts(view.Value as _, *size as usize) },
+                    index,
+                )?),
+                FontFile::Stream {
+                    size,
+                    fragment_start,
+                    ..
+                } => Ok(FontRef::from_index(
+                    unsafe { std::slice::from_raw_parts(*fragment_start as _, *size as usize) },
+                    index,
+                )?),
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+struct TableHandle {
+    face: IDWriteFontFace5,
+    table_context: *mut c_void,
+    table_data: *mut c_void,
+    table_size: u32,
+}
+
+unsafe impl Send for TableHandle {}
+unsafe impl Sync for TableHandle {}
+impl UnwindSafe for TableHandle {}
+impl RefUnwindSafe for TableHandle {}
+
+impl Drop for TableHandle {
+    fn drop(&mut self) {
+        unsafe {
+            self.face.ReleaseFontTable(self.table_context);
+        }
+    }
+}
+
+impl<'a> read_fonts::TableProvider<'a> for FontFace {
+    fn data_for_tag(&self, tag: font_types::Tag) -> Option<read_fonts::FontData<'a>> {
+        fn make_font_data(table: &TableHandle) -> read_fonts::FontData<'static> {
+            unsafe {
+                read_fonts::FontData::new(std::slice::from_raw_parts(
+                    table.table_data as *const u8,
+                    table.table_size as usize,
+                ))
+            }
+        }
+        match self.font_tables.entry(tag) {
+            dashmap::Entry::Occupied(entry) => entry.get().as_ref().map(make_font_data),
+            dashmap::Entry::Vacant(entry) => entry
+                .insert((|| {
+                    let mut table_data = std::ptr::null_mut();
+                    let mut table_size = 0;
+                    let mut table_context = std::ptr::null_mut();
+                    let mut exists = false.into();
+                    unsafe {
+                        self.dw_face
+                            .TryGetFontTable(
+                                tag.to_u32(),
+                                &mut table_data,
+                                &mut table_size,
+                                &mut table_context,
+                                &mut exists,
+                            )
+                            .ok()?
+                    };
+                    if !exists.as_bool() {
+                        return None;
+                    }
+                    Some(TableHandle {
+                        face: self.dw_face.clone(),
+                        table_context,
+                        table_data,
+                        table_size,
+                    })
+                })())
+                .as_ref()
+                .map(make_font_data),
+        }
+    }
+}
+
+impl FontFace {
+    pub fn font_ref<'a>(&'a self) -> &'a FontRef<'a> {
+        &self.font_ref
     }
 }
