@@ -16,18 +16,11 @@ public partial record struct TextSpanData
     /// </summary>
     public uint TextIndex;
     /// <summary>
-    /// span start in <see cref="TextData.m_text"/>
+    /// span start in <see cref="ChildsData.m_texts"/> :: <see cref="NString"/>
     /// </summary>
     public uint TextStart;
     /// <summary>
-    /// span length in <see cref="TextData.m_text"/>
+    /// span length in <see cref="ChildsData.m_texts"/> :: <see cref="NString"/>
     /// </summary>
     public uint TextLength;
-}
-
-[Dropping]
-public partial record struct TextData
-{
-    [Drop]
-    internal NString m_text;
 }

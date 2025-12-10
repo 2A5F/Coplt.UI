@@ -1213,6 +1213,13 @@ pub struct NString {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct OpaqueObject {
+    pub Ptr: *mut core::ffi::c_void,
+    pub Drop: *mut core::ffi::c_void,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontWidth {
     pub Width: f32,
 }
@@ -1248,17 +1255,18 @@ pub struct TextRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet,
-    pub m_texts: NativeList<NativeArc<TextData>>,
+    pub m_texts: NativeList<NString>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
-    pub NodeId: u32,
-    pub ParentValue: ViewNode,
+    pub m_text_data: NativeArc<TextData>,
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
+    pub NodeId: u32,
+    pub ParentValue: ViewNode,
     pub LastLayoutVersion: u32,
     pub LayoutVersion: u32,
     pub HasParent: bool,
@@ -1404,7 +1412,16 @@ pub struct StyleData {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData {
-    pub m_text: NString,
+    pub m_native_data: OpaqueObject,
+    pub m_font_ranges: NativeList<TextData_FontRange>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_FontRange {
+    pub Start: u32,
+    pub Length: u32,
+    pub m_font_face: *mut IFontFace,
 }
 
 #[repr(C)]

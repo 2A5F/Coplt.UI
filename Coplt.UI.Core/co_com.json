@@ -65,7 +65,7 @@
           "Debug": false,
           "PartialEq": false,
           "PartialOrd": false
-        }
+        },
       }
     }
   ]

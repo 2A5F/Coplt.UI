@@ -114,7 +114,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
             }
             else if (value != m_cap)
             {
-                if (m_size > 0)
+                if (value > 0)
                 {
                     m_items = ReAlloc(m_items, value);
                 }

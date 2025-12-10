@@ -87,6 +87,8 @@ namespace Coplt {
 
     struct NString;
 
+    struct OpaqueObject;
+
     struct FontWidth;
 
     struct LocaleId;
@@ -106,6 +108,8 @@ namespace Coplt {
     struct StyleData;
 
     struct TextData;
+
+    struct TextData_FontRange;
 
     struct TextSpanData;
 
@@ -1005,11 +1009,10 @@ namespace Coplt {
         ::Coplt::f32 MarginLeftSize;
     };
 
-    struct NString
+    struct OpaqueObject
     {
-        ::Coplt::char16 const* m_str;
-        void* m_handle;
-        ::Coplt::i32 m_len;
+        void* Ptr;
+        void* Drop;
     };
 
     struct FontWidth
@@ -1181,6 +1184,13 @@ namespace Coplt {
         ::Coplt::NodeId Key;
     };
 
+    struct NString
+    {
+        ::Coplt::char16 const* m_str;
+        void* m_handle;
+        ::Coplt::i32 m_len;
+    };
+
     struct TextRange
     {
         ::Coplt::CWStr Locale;
@@ -1194,16 +1204,17 @@ namespace Coplt {
     struct ChildsData
     {
         ::Coplt::FFIOrderedSet m_childs;
-        ::Coplt::NativeList<::Coplt::NativeArc<::Coplt::TextData>> m_texts;
+        ::Coplt::NativeList<::Coplt::NString> m_texts;
     };
 
     struct CommonData
     {
-        ::Coplt::u32 NodeId;
-        ::Coplt::ViewNode ParentValue;
+        ::Coplt::NativeArc<::Coplt::TextData> m_text_data;
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutData UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
+        ::Coplt::u32 NodeId;
+        ::Coplt::ViewNode ParentValue;
         ::Coplt::u32 LastLayoutVersion;
         ::Coplt::u32 LayoutVersion;
         bool HasParent;
@@ -1345,7 +1356,15 @@ namespace Coplt {
 
     struct TextData
     {
-        ::Coplt::NString m_text;
+        ::Coplt::OpaqueObject m_native_data;
+        ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
+    };
+
+    struct TextData_FontRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 Length;
+        IFontFace* m_font_face;
     };
 
     struct TextSpanData

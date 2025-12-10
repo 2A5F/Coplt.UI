@@ -26,10 +26,8 @@ public static unsafe partial class Access
             Id = Document.CreateTextSpan();
 
             ref var childs = ref view.ChildsData;
-            var text_data = NativeArc<TextData>.NewZeroed();
-            text_data.Value.m_text = NString.Create(text);
             var index = childs.m_texts.Count;
-            childs.m_texts.Add(text_data);
+            childs.m_texts.Add(NString.Create(text));
 
             ref var span_data = ref TextSpanData;
             span_data.TextIndex = (uint)index;

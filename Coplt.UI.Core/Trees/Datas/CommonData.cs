@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Coplt.Dropping;
 using Coplt.Mathematics;
+using Coplt.UI.Collections;
 using Coplt.UI.Native;
 
 namespace Coplt.UI.Trees.Datas;
@@ -8,18 +9,28 @@ namespace Coplt.UI.Trees.Datas;
 [Dropping]
 public partial record struct CommonData()
 {
-    internal uint NodeId = uint.MaxValue;
-    internal ViewNode ParentValue = new(uint.MaxValue);
+    [Drop]
+    public NativeArc<TextData> m_text_data; // optional , only exists when text layout
 
     internal LayoutData FinalLayout;
     internal LayoutData UnRoundedLayout;
     internal LayoutCache LayoutCache;
+    
+    internal uint NodeId = uint.MaxValue;
+    internal ViewNode ParentValue = new(uint.MaxValue);
 
+    /// <summary>
+    /// layout compute sync this to LayoutVersion
+    /// </summary>
     internal uint LastLayoutVersion;
-
+    /// <summary>
+    /// dirty inc this
+    /// </summary>
     internal uint LayoutVersion;
 
     internal bool HasParent = false;
+    
+    public bool IsLayoutDirty => LastLayoutVersion != LayoutVersion;
 
     public ViewNode? Parent
     {

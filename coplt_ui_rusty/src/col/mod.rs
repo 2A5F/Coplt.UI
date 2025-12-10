@@ -2,12 +2,14 @@ pub mod arc;
 pub mod enumerator;
 pub mod hash;
 pub mod hash_helpers;
+pub mod list;
 pub mod map;
 pub mod ordered_set;
 
 pub use arc::NArc;
 pub use enumerator::*;
 pub use hash::*;
+pub use list::NList;
 pub use ordered_set::OrderedSet;
 
 use crate::com::NodeId;

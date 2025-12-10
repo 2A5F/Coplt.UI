@@ -140,22 +140,22 @@ struct SubDoc(*mut NLayoutContext, *mut RootData, *mut com_impl::Layout);
 
 impl SubDoc {
     #[inline(always)]
-    pub fn root_data(&self) -> &mut RootData {
+    pub fn root_data(&self) -> &'static mut RootData {
         unsafe { &mut *self.1 }
     }
 
     #[inline(always)]
-    pub fn ctx(&self) -> &mut NLayoutContext {
+    pub fn ctx(&self) -> &'static mut NLayoutContext {
         unsafe { &mut *self.0 }
     }
 
     #[inline(always)]
-    pub fn childs(&self, id: NodeId) -> &mut OrderedSet<NodeId> {
+    pub fn childs(&self, id: NodeId) -> &'static mut OrderedSet<NodeId> {
         unsafe { &mut *((&mut self.childs_data(id).m_childs) as *mut _ as *mut OrderedSet<NodeId>) }
     }
 
     #[inline(always)]
-    pub fn common_data(&self, id: NodeId) -> &mut CommonData {
+    pub fn common_data(&self, id: NodeId) -> &'static mut CommonData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_common_data.add(id.index() as usize) },
@@ -166,7 +166,7 @@ impl SubDoc {
     }
 
     #[inline(always)]
-    pub fn childs_data(&self, id: NodeId) -> &mut ChildsData {
+    pub fn childs_data(&self, id: NodeId) -> &'static mut ChildsData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_childs_data.add(id.index() as usize) },
@@ -175,7 +175,7 @@ impl SubDoc {
     }
 
     #[inline(always)]
-    pub fn style_data(&self, id: NodeId) -> &mut StyleData {
+    pub fn style_data(&self, id: NodeId) -> &'static mut StyleData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_style_data.add(id.index() as usize) },
@@ -184,7 +184,7 @@ impl SubDoc {
     }
 
     #[inline(always)]
-    pub fn text_span_data(&self, id: NodeId) -> &mut TextSpanData {
+    pub fn text_span_data(&self, id: NodeId) -> &'static mut TextSpanData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => panic!("view douse not have text span datas"),
@@ -195,7 +195,7 @@ impl SubDoc {
     }
 
     #[inline(always)]
-    pub fn text_span_style_data(&self, id: NodeId) -> &mut TextSpanStyleData {
+    pub fn text_span_style_data(&self, id: NodeId) -> &'static mut TextSpanStyleData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => panic!("view douse not have text span styles"),
@@ -347,6 +347,7 @@ impl LayoutPartialTree for SubDoc {
     ) -> taffy::LayoutOutput {
         let id = NodeId::from(node_id);
         match id.typ() {
+            // todo: simple layout for independent text
             NodeType::Null | NodeType::TextSpan => taffy::LayoutOutput::HIDDEN,
             NodeType::View => {
                 taffy::compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {

@@ -128,9 +128,16 @@ pub fn feb_hr(f: impl FnOnce() -> anyhow::Result<cocom::HResult> + UnwindSafe) -
 }
 
 mod com_impl {
-    use std::ops::{Deref, DerefMut};
+    use std::{
+        ffi::c_void,
+        ops::{Deref, DerefMut},
+    };
 
-    use crate::{col::NArc, com::NativeArc};
+    use crate::{
+        col::{NArc, NList},
+        com::{CommonData, NativeArc, NativeList, OpaqueObject, TextData},
+        layout::FontRange,
+    };
 
     use super::*;
 
@@ -207,6 +214,49 @@ mod com_impl {
     impl<T> DerefMut for NativeArc<T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
             self.as_n_arc_mut()
+        }
+    }
+
+    impl OpaqueObject {
+        pub unsafe fn new<T>(obj: Box<T>) -> Self {
+            unsafe extern "C" fn do_drop<T>(obj: *mut c_void) {
+                if obj.is_null() {
+                    return;
+                }
+                let obj = obj as *mut T;
+                drop(unsafe { Box::from_raw(obj) });
+            }
+
+            let obj = Box::leak(obj);
+            let f: unsafe extern "C" fn(obj: *mut c_void) = do_drop::<T>;
+            Self {
+                Ptr: obj as *mut _ as _,
+                Drop: f as _,
+            }
+        }
+        pub fn free(&mut self) {
+            unsafe {
+                if self.Ptr.is_null() || self.Drop.is_null() {
+                    return;
+                }
+                let do_drop: unsafe extern "C" fn(obj: *mut c_void) =
+                    std::mem::transmute(self.Drop);
+                (do_drop)(self.Ptr);
+                self.Ptr = std::ptr::null_mut();
+                self.Drop = std::ptr::null_mut();
+            }
+        }
+    }
+
+    impl CommonData {
+        pub fn text_data(&mut self) -> &mut NArc<TextData> {
+            unsafe { std::mem::transmute(&mut self.m_text_data) }
+        }
+    }
+
+    impl TextData {
+        pub fn font_ranges(&mut self) -> &mut NList<FontRange> {
+            unsafe { std::mem::transmute(&mut self.m_font_ranges) }
         }
     }
 }
