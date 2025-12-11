@@ -24,6 +24,8 @@ public sealed partial class Document
     [Drop(Order = 10)]
     internal readonly Arche m_view_arche;
     [Drop(Order = 10)]
+    internal readonly Arche m_text_paragraph_arche;
+    [Drop(Order = 10)]
     internal readonly Arche m_text_span_arche;
     [Drop]
     internal NativeMap<NodeId, RootData> m_roots;
@@ -44,6 +46,7 @@ public sealed partial class Document
         m_frame_source = frame_source ?? new();
         m_font_manager = font_manager ?? new(m_frame_source);
         m_view_arche = m_template.m_view_arche.Create();
+        m_text_paragraph_arche = m_template.m_text_paragraph_arche.Create();
         m_text_span_arche = m_template.m_text_span_arche.Create();
         m_modules = new IModule[m_template.m_modules.Length];
         m_modules_update = new Action<Document>[m_template.m_modules.Length];
@@ -70,10 +73,11 @@ public sealed partial class Document
         {
             Attach<ManagedData>(ArcheTarget.All);
             Attach<CommonData>(ArcheTarget.All, storage: StorageType.Pinned);
-            Attach<ChildsData>(ArcheTarget.View, storage: StorageType.Pinned);
+            Attach<ChildsData>(ArcheTarget.View | ArcheTarget.TextParagraph, storage: StorageType.Pinned);
             Attach<StyleData>(ArcheTarget.View, storage: StorageType.Pinned);
+            Attach<TextStyleData>(ArcheTarget.TextParagraph | ArcheTarget.TextSpan, storage: StorageType.Pinned);
+            Attach<TextParagraphData>(ArcheTarget.TextParagraph, storage: StorageType.Pinned);
             Attach<TextSpanData>(ArcheTarget.TextSpan, storage: StorageType.Pinned);
-            Attach<TextSpanStyleData>(ArcheTarget.TextSpan, storage: StorageType.Pinned);
             With<LayoutModule>();
         }
 
@@ -114,6 +118,7 @@ public sealed partial class Document
 
         public Template Build() => new(
             new ArcheTemplate(m_types[ArcheTarget.View]),
+            new ArcheTemplate(m_types[ArcheTarget.TextParagraph]),
             new ArcheTemplate(m_types[ArcheTarget.TextSpan]),
             m_modules.Values.ToArray()
         );
@@ -153,12 +158,14 @@ public sealed partial class Document
     public sealed class Template
     {
         internal readonly ArcheTemplate m_view_arche;
+        internal readonly ArcheTemplate m_text_paragraph_arche;
         internal readonly ArcheTemplate m_text_span_arche;
         internal readonly AModuleTemplate[] m_modules;
 
-        internal Template(ArcheTemplate view_arche, ArcheTemplate text_span_arche, AModuleTemplate[] modules)
+        internal Template(ArcheTemplate view_arche, ArcheTemplate text_paragraph_arche, ArcheTemplate text_span_arche, AModuleTemplate[] modules)
         {
             m_view_arche = view_arche;
+            m_text_paragraph_arche = text_paragraph_arche;
             m_text_span_arche = text_span_arche;
             m_modules = modules;
         }
@@ -235,10 +242,14 @@ public sealed partial class Document
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Arche ViewArche() => m_view_arche;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Arche TextParagraphArche() => m_text_paragraph_arche;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Arche TextSpanArche() => m_text_span_arche;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AStorage<T> ViewStorageOf<T>() => m_view_arche.StorageOf<T>();
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public AStorage<T> TextParagraphStorageOf<T>() => m_text_paragraph_arche.StorageOf<T>();
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public AStorage<T> TextSpanStorageOf<T>() => m_text_span_arche.StorageOf<T>();
 
@@ -400,6 +411,7 @@ public sealed partial class Document
     public Arche ArcheOf(NodeId id) => id.Type switch
     {
         NodeType.View => m_view_arche,
+        NodeType.TextParagraph => m_text_paragraph_arche,
         NodeType.TextSpan => m_text_span_arche,
         _ => throw new ArgumentOutOfRangeException()
     };
@@ -466,6 +478,14 @@ public sealed partial class Document
         return new((uint)index, id, NodeType.View);
     }
 
+    public NodeId CreateTextParagraph()
+    {
+        var id = m_node_id_inc++;
+        var index = m_text_paragraph_arche.Add(id);
+        m_text_paragraph_arche.UnsafeGetDataRefAt<CommonData>(index).NodeId = id;
+        return new((uint)index, id, NodeType.TextParagraph);
+    }
+
     public NodeId CreateTextSpan()
     {
         var id = m_node_id_inc++;
@@ -476,18 +496,19 @@ public sealed partial class Document
 
     public void RemoveNode(NodeId id)
     {
+        if (id.Type == NodeType.Null) return;
         ref var common = ref UnsafeAt<CommonData>(id);
         {
             if (common.Parent is { } parent)
             {
-                ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)parent.Index);
+                ref var childs = ref UnsafeAt<ChildsData>(parent);
                 childs.m_childs.Remove(id);
                 DirtyLayout(parent);
             }
         }
         switch (id.Type)
         {
-            case NodeType.Null:
+            case NodeType.View:
             {
                 ref var childs = ref UnsafeAt<ChildsData>(id);
                 foreach (var child in childs)
@@ -499,7 +520,18 @@ public sealed partial class Document
                 m_roots.Remove(id);
                 break;
             }
-            case NodeType.View:
+            case NodeType.TextParagraph:
+            {
+                ref var childs = ref UnsafeAt<ChildsData>(id);
+                foreach (var child in childs)
+                {
+                    ref var parent = ref UnsafeAt<CommonData>(child);
+                    parent.Parent = null;
+                }
+                m_text_paragraph_arche.Remove(id.Id);
+                break;
+            }
+            case NodeType.TextSpan:
             {
                 m_text_span_arche.Remove(id.Id);
                 break;
@@ -509,19 +541,37 @@ public sealed partial class Document
         }
     }
 
-    public void AddChild(ViewNode id, NodeId child)
+    public void AddChild(NodeId id, NodeId child)
     {
         ref var child_common = ref UnsafeAt<CommonData>(child);
         if (child_common.Parent is not null) throw new ArgumentException("Target child node already has a parent.");
-        ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)id.Index);
-        childs.m_childs.Add(child);
+        switch (id.Type)
+        {
+            case NodeType.View:
+            {
+                if (child.Type == NodeType.TextSpan) throw new InvalidOperationException("Cannot add a text span to a view.");
+                ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)id.Index);
+                childs.m_childs.Add(child);
+                break;
+            }
+            case NodeType.TextParagraph:
+            {
+                if (child.Type != NodeType.TextSpan) throw new InvalidOperationException("Can only add a text span to a text paragraph.");
+                ref var childs = ref m_text_paragraph_arche.UnsafeGetDataRefAt<ChildsData>((int)id.Index);
+                childs.m_childs.Add(child);
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(id), $"{id.Type} can not have childs.");
+        }
+
         child_common.Parent = id;
         DirtyLayout(child);
     }
 
-    public void RemoveChild(ViewNode id, NodeId child)
+    public void RemoveChild(NodeId id, NodeId child)
     {
-        ref var childs = ref m_view_arche.UnsafeGetDataRefAt<ChildsData>((int)id.Index);
+        ref var childs = ref UnsafeAt<ChildsData>(id);
         ref var child_common = ref UnsafeAt<CommonData>(child);
         if (child_common.Parent != id) throw new ArgumentException("Target node is not a child of this node.");
         childs.m_childs.Remove(child);
@@ -533,13 +583,12 @@ public sealed partial class Document
 
     #region Dirty
 
-    public void DirtyLayout(ViewNode view)
+    public void DirtyLayout(NodeId node)
     {
-        var node = view;
         while (true)
         {
-            ref var data = ref m_view_arche.UnsafeGetDataRefAt<CommonData>((int)node.Index);
-            if (data.LayoutVersion != data.LastLayoutVersion) return;
+            ref var data = ref UnsafeAt<CommonData>(node);
+            if (data.IsLayoutDirty) return;
             data.LayoutVersion++;
             data.LayoutCache.Flags = LayoutCacheFlags.Empty;
             if (data.Parent is { } parent)
@@ -571,8 +620,9 @@ public enum ArcheTarget : byte
 {
     None = 0,
     View = 1 << 0,
-    TextSpan = 1 << 1,
-    All = View | TextSpan,
+    TextParagraph = 1 << 1,
+    TextSpan = 1 << 2,
+    All = View | TextParagraph | TextSpan,
 }
 
 public struct ArcheTargetEnumerator(ArcheTarget last)

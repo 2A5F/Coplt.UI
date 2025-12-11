@@ -107,17 +107,15 @@ namespace Coplt {
 
     struct StyleData;
 
-    struct TextData;
-
     struct TextData_FontRange;
+
+    struct TextParagraphData;
 
     struct TextSpanData;
 
-    struct TextSpanStyleData;
+    struct TextStyleData;
 
     struct NodeId;
-
-    struct ViewNode;
 
     struct IAtlasAllocator;
 
@@ -748,7 +746,7 @@ namespace Coplt {
         TraditionalHanWithLatin = 212,
     };
 
-    COPLT_ENUM_FLAGS(TextSpanStyleOverride, ::Coplt::u64)
+    COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
     {
         None = 0,
         FontFallback = 1,
@@ -800,7 +798,8 @@ namespace Coplt {
     {
         Null = 0,
         View = 1,
-        TextSpan = 2,
+        TextParagraph = 2,
+        TextSpan = 3,
     };
 
     struct LayoutCollapsibleMarginSet
@@ -1009,6 +1008,13 @@ namespace Coplt {
         ::Coplt::f32 MarginLeftSize;
     };
 
+    struct NString
+    {
+        ::Coplt::char16 const* m_str;
+        void* m_handle;
+        ::Coplt::i32 m_len;
+    };
+
     struct OpaqueObject
     {
         void* Ptr;
@@ -1038,11 +1044,6 @@ namespace Coplt {
     {
         ::Coplt::u32 Index;
         ::Coplt::u32 IdAndType;
-    };
-
-    struct ViewNode
-    {
-        ::Coplt::u32 Index;
     };
 
     struct Str8
@@ -1167,12 +1168,19 @@ namespace Coplt {
         ::Coplt::CommonData* view_common_data;
         ::Coplt::ChildsData* view_childs_data;
         ::Coplt::StyleData* view_style_data;
+        ::Coplt::i32* text_paragraph_buckets;
+        ::Coplt::NNodeIdCtrl* text_paragraph_ctrl;
+        ::Coplt::CommonData* text_paragraph_common_data;
+        ::Coplt::ChildsData* text_paragraph_childs_data;
+        ::Coplt::TextParagraphData* text_paragraph_data;
+        ::Coplt::TextStyleData* text_paragraph_style_data;
         ::Coplt::i32* text_span_buckets;
         ::Coplt::NNodeIdCtrl* text_span_ctrl;
         ::Coplt::CommonData* text_span_common_data;
         ::Coplt::TextSpanData* text_span_data;
-        ::Coplt::TextSpanStyleData* text_span_style_data;
+        ::Coplt::TextStyleData* text_span_style_data;
         ::Coplt::i32 view_count;
+        ::Coplt::i32 text_paragraph_count;
         ::Coplt::i32 text_span_count;
         bool rounding;
     };
@@ -1182,13 +1190,6 @@ namespace Coplt {
         ::Coplt::i32 HashCode;
         ::Coplt::i32 Next;
         ::Coplt::NodeId Key;
-    };
-
-    struct NString
-    {
-        ::Coplt::char16 const* m_str;
-        void* m_handle;
-        ::Coplt::i32 m_len;
     };
 
     struct TextRange
@@ -1204,17 +1205,15 @@ namespace Coplt {
     struct ChildsData
     {
         ::Coplt::FFIOrderedSet m_childs;
-        ::Coplt::NativeList<::Coplt::NString> m_texts;
     };
 
     struct CommonData
     {
-        ::Coplt::NativeArc<::Coplt::TextData> m_text_data;
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutData UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
         ::Coplt::u32 NodeId;
-        ::Coplt::ViewNode ParentValue;
+        ::Coplt::NodeId ParentValue;
         ::Coplt::u32 LastLayoutVersion;
         ::Coplt::u32 LayoutVersion;
         bool HasParent;
@@ -1354,12 +1353,6 @@ namespace Coplt {
         ::Coplt::LengthType LineHeight;
     };
 
-    struct TextData
-    {
-        ::Coplt::OpaqueObject m_native_data;
-        ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
-    };
-
     struct TextData_FontRange
     {
         ::Coplt::u32 Start;
@@ -1367,17 +1360,26 @@ namespace Coplt {
         IFontFace* m_font_face;
     };
 
+    struct TextParagraphData
+    {
+        ::Coplt::OpaqueObject m_native_data;
+        ::Coplt::NString m_text;
+        ::Coplt::NativeList<::Coplt::u32> m_break_points;
+        ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
+        ::Coplt::u32 LastTextVersion;
+        ::Coplt::u32 TextVersion;
+    };
+
     struct TextSpanData
     {
         ::Coplt::NativeList<::Coplt::AABB2DF> BoundingBoxes;
-        ::Coplt::u32 TextIndex;
         ::Coplt::u32 TextStart;
         ::Coplt::u32 TextLength;
     };
 
-    struct TextSpanStyleData
+    struct TextStyleData
     {
-        ::Coplt::TextSpanStyleOverride Override;
+        ::Coplt::TextStyleOverride Override;
         IFontFallback* FontFallback;
         ::Coplt::LocaleId Locale;
         ::Coplt::f32 TextColorR;

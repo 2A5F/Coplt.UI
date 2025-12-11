@@ -9,18 +9,15 @@ namespace Coplt.UI.Trees.Datas;
 [Dropping]
 public partial record struct CommonData()
 {
-    [Drop]
-    public NativeArc<TextData> m_text_data; // optional , only exists when text layout
-
     internal LayoutData FinalLayout;
     internal LayoutData UnRoundedLayout;
     internal LayoutCache LayoutCache;
     
     internal uint NodeId = uint.MaxValue;
-    internal ViewNode ParentValue = new(uint.MaxValue);
+    internal NodeId ParentValue;
 
     /// <summary>
-    /// layout compute sync this to LayoutVersion
+    /// layout compute sync this to <see cref="LayoutVersion"/>
     /// </summary>
     internal uint LastLayoutVersion;
     /// <summary>
@@ -32,7 +29,7 @@ public partial record struct CommonData()
     
     public bool IsLayoutDirty => LastLayoutVersion != LayoutVersion;
 
-    public ViewNode? Parent
+    public NodeId? Parent
     {
         get => HasParent ? ParentValue : null;
         set
@@ -45,7 +42,7 @@ public partial record struct CommonData()
             else
             {
                 HasParent = false;
-                ParentValue = new(uint.MaxValue);
+                ParentValue = default;
             }
         }
     }

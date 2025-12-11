@@ -4,5 +4,6 @@ public enum NodeType : byte
 {
     Null = 0,
     View = 1,
-    TextSpan = 2,
+    TextParagraph = 2,
+    TextSpan = 3,
 }

@@ -4,6 +4,7 @@ use std::{
 };
 
 use cocom::{ComPtr, HResultE, MakeObject, object::ObjectPtr};
+use icu::segmenter::LineSegmenter;
 use windows::Win32::Graphics::DirectWrite::IDWriteFactory7;
 
 use crate::{
@@ -13,6 +14,14 @@ use crate::{
     dwrite::DwLayout,
     feb_hr,
 };
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct FontRange {
+    start: u32,
+    length: u32,
+    font_face: ComPtr<IFontFace>,
+}
 
 #[derive(Debug)]
 #[cocom::object(ILayout)]
@@ -55,51 +64,60 @@ impl Layout {
         id: NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
+        debug_assert!(matches!(id.typ(), NodeType::View));
+
         let common = doc.common_data(id);
-        let childs_data = doc.childs_data(id);
         let style = doc.style_data(id);
         let childs = doc.childs(id);
 
-        if common.m_text_data.m_ptr.is_null() || common.LastLayoutVersion != common.LayoutVersion {
-            self.sync_text_data(doc, common, childs_data, style, childs);
+        // todo
+
+        for child in childs.iter() {
+            match child.typ() {
+                NodeType::Null | NodeType::TextSpan => continue,
+                NodeType::View => {
+                    // todo inline block
+                }
+                NodeType::TextParagraph => {
+                    let r = self.compute_text_paragraph_layout(doc, *child, inputs, style);
+                    // todo
+                }
+            }
         }
-        debug_assert!(!common.m_text_data.m_ptr.is_null());
-        let text_data = common.text_data().val_mut().unwrap();
 
         // todo
 
         taffy::LayoutOutput::HIDDEN
     }
 
-    fn sync_text_data(
+    fn compute_text_paragraph_layout(
         &self,
         doc: &mut super::SubDoc,
-        common: &mut CommonData,
-        childs_data: &mut ChildsData,
-        style: &mut StyleData,
-        childs: &mut OrderedSet<NodeId>,
+        id: NodeId,
+        inputs: taffy::LayoutInput,
+        root_style: &StyleData,
     ) {
-        if common.m_text_data.m_ptr.is_null() {
-            *common.text_data() = unsafe { NArc::new_zeroed() };
-        }
-        let text_data = common.text_data().val_mut().unwrap();
+        let common = doc.common_data(id);
+        let childs = doc.childs(id);
+        let paragraph = doc.text_paragraph_data(id);
+        let style = doc.text_style_data(id);
 
-        for child in childs
-            .iter()
-            .filter(|child| matches!(child.typ(), NodeType::TextSpan))
-        {
-            let text_span_common = doc.common_data(*child);
-            let text_span_data = doc.text_span_data(*child);
-            let text_span_style = doc.text_span_style_data(*child);
-            // todo
+        if paragraph.is_text_dirty() {
+            Self::sync_text_info(paragraph);
         }
     }
-}
 
-#[repr(C)]
-#[derive(Debug)]
-pub struct FontRange {
-    start: u32,
-    length: u32,
-    font_face: ComPtr<IFontFace>,
+    fn sync_text_info(paragraph: &mut TextParagraphData) {
+        let text = &*{ paragraph.m_text };
+
+        {
+            let break_points = paragraph.break_points();
+            break_points.clear();
+            break_points.add_range(
+                LineSegmenter::new_auto(Default::default())
+                    .segment_utf16(text)
+                    .map(|a| a as u32),
+            );
+        }
+    }
 }

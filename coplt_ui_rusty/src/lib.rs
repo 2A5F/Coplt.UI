@@ -135,7 +135,10 @@ mod com_impl {
 
     use crate::{
         col::{NArc, NList},
-        com::{CommonData, NativeArc, NativeList, OpaqueObject, TextData},
+        com::{
+            ChildsData, CommonData, NString, NativeArc, NativeList, OpaqueObject,
+            TextParagraphData, TextSpanData,
+        },
         layout::FontRange,
     };
 
@@ -248,13 +251,31 @@ mod com_impl {
         }
     }
 
-    impl CommonData {
-        pub fn text_data(&mut self) -> &mut NArc<TextData> {
-            unsafe { std::mem::transmute(&mut self.m_text_data) }
+    impl Deref for NString {
+        type Target = [u16];
+
+        fn deref(&self) -> &Self::Target {
+            unsafe { std::slice::from_raw_parts(self.m_str, self.m_len as usize) }
         }
     }
 
-    impl TextData {
+    impl CommonData {
+        pub fn is_layout_dirty(&self) -> bool {
+            self.LayoutVersion != self.LastLayoutVersion
+        }
+    }
+
+    impl TextSpanData {}
+
+    impl TextParagraphData {
+        pub fn is_text_dirty(&self) -> bool {
+            self.TextVersion != self.LastTextVersion
+        }
+
+        pub fn break_points(&mut self) -> &mut NList<u32> {
+            unsafe { std::mem::transmute(&mut self.m_break_points) }
+        }
+
         pub fn font_ranges(&mut self) -> &mut NList<FontRange> {
             unsafe { std::mem::transmute(&mut self.m_font_ranges) }
         }

@@ -197,7 +197,7 @@ public partial record struct GridContainerStyle
 }
 
 [Flags]
-public enum TextSpanStyleOverride : ulong
+public enum TextStyleOverride : ulong
 {
     None = 0,
 
@@ -259,9 +259,9 @@ public enum TextSpanStyleOverride : ulong
 }
 
 [Dropping]
-public partial record struct TextSpanStyleData()
+public partial record struct TextStyleData()
 {
-    public TextSpanStyleOverride Override;
+    public TextStyleOverride Override;
 
     /// <summary>
     /// Optional, default use system font fallback
@@ -346,11 +346,11 @@ public partial record struct TextSpanStyleData()
         FontFallback.Dispose();
         if (Fallback == null)
         {
-            Override &= TextSpanStyleOverride.FontFallback;
+            Override &= TextStyleOverride.FontFallback;
             return;
         }
         Fallback.m_inner.AddRef();
         FontFallback = Fallback.m_inner;
-        Override |= TextSpanStyleOverride.FontFallback;
+        Override |= TextStyleOverride.FontFallback;
     }
 }

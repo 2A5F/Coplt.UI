@@ -15,31 +15,34 @@ namespace Coplt.UI.Trees;
 public static unsafe partial class Access
 {
     /// <inheritdoc cref="Access"/>
-    public readonly struct TextSpan
+    public readonly struct TextParagraph(Document document)
     {
-        public Document Document { get; }
-        public NodeId Id { get; }
+        public Document Document { get; } = document;
+        public NodeId Id { get; } = document.CreateTextParagraph();
 
-        public TextSpan(View view, string text)
+        public TextParagraph(View parent) : this(parent.Document)
         {
-            Document = view.Document;
-            Id = Document.CreateTextSpan();
-
-            ref var childs = ref view.ChildsData;
-            var index = childs.m_texts.Count;
-            childs.m_texts.Add(NString.Create(text));
-
-            ref var span_data = ref TextSpanData;
-            span_data.TextIndex = (uint)index;
-            span_data.TextStart = 0;
-            span_data.TextLength = (uint)text.Length;
+            parent.Add(this);
         }
 
+        public ref TextParagraphData Data => ref Document.UnsafeAt<TextParagraphData>(Id);
+        public ref TextStyleData StyleData => ref Document.UnsafeAt<TextStyleData>(Id);
         public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
         public LayoutView Layout => CommonData.Layout;
+        public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
         public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
-        public ref TextSpanData TextSpanData => ref Document.UnsafeAt<TextSpanData>(Id);
-        public ref TextSpanStyleData TextSpanStyleData => ref Document.UnsafeAt<TextSpanStyleData>(Id);
+
+        public void Add(View node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.AddChild(Id, node.Id);
+        }
+
+        public void Remove(View node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.RemoveChild(Id, node.Id);
+        }
     }
 
     /// <inheritdoc cref="Access"/>
@@ -59,8 +62,6 @@ public static unsafe partial class Access
         public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
         public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
 
-        public TextSpan Add(string text) => new(this, text);
-
         public void Add(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
@@ -71,6 +72,25 @@ public static unsafe partial class Access
         {
             if (node.Document != Document) throw new InvalidOperationException();
             node.Document.RemoveChild(Id, node.Id);
+        }
+        public void Add(TextParagraph node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.AddChild(Id, node.Id);
+        }
+
+        public void Remove(TextParagraph node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.RemoveChild(Id, node.Id);
+        }
+
+        public TextParagraph Add(string text)
+        {
+            return  new TextParagraph(this)
+            {
+                Text = text
+            };
         }
     }
 
@@ -226,6 +246,15 @@ public static unsafe partial class Access
                 style.GridRowStart = value;
                 style.GridRowEnd = value;
             }
+        }
+    }
+
+    extension(TextParagraph node)
+    {
+        public string Text
+        {
+            get => node.Data.Text;
+            set => node.Data.Text = value;
         }
     }
 }

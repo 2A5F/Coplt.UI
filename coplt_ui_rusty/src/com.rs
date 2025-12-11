@@ -768,7 +768,7 @@ pub enum ScriptCode {
 
 #[repr(u64)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum TextSpanStyleOverride {
+pub enum TextStyleOverride {
     None = 0,
     FontFallback = 1,
     Locale = 2,
@@ -820,7 +820,8 @@ pub enum TextSpanStyleOverride {
 pub enum NodeType {
     Null = 0,
     View = 1,
-    TextSpan = 2,
+    TextParagraph = 2,
+    TextSpan = 3,
 }
 
 #[repr(C)]
@@ -1185,12 +1186,19 @@ pub struct NLayoutContext {
     pub view_common_data: *mut CommonData,
     pub view_childs_data: *mut ChildsData,
     pub view_style_data: *mut StyleData,
+    pub text_paragraph_buckets: *mut i32,
+    pub text_paragraph_ctrl: *mut NNodeIdCtrl,
+    pub text_paragraph_common_data: *mut CommonData,
+    pub text_paragraph_childs_data: *mut ChildsData,
+    pub text_paragraph_data: *mut TextParagraphData,
+    pub text_paragraph_style_data: *mut TextStyleData,
     pub text_span_buckets: *mut i32,
     pub text_span_ctrl: *mut NNodeIdCtrl,
     pub text_span_common_data: *mut CommonData,
     pub text_span_data: *mut TextSpanData,
-    pub text_span_style_data: *mut TextSpanStyleData,
+    pub text_span_style_data: *mut TextStyleData,
     pub view_count: i32,
+    pub text_paragraph_count: i32,
     pub text_span_count: i32,
     pub rounding: bool,
 }
@@ -1255,18 +1263,16 @@ pub struct TextRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet,
-    pub m_texts: NativeList<NString>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
-    pub m_text_data: NativeArc<TextData>,
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
     pub NodeId: u32,
-    pub ParentValue: ViewNode,
+    pub ParentValue: NodeId,
     pub LastLayoutVersion: u32,
     pub LayoutVersion: u32,
     pub HasParent: bool,
@@ -1411,13 +1417,6 @@ pub struct StyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct TextData {
-    pub m_native_data: OpaqueObject,
-    pub m_font_ranges: NativeList<TextData_FontRange>,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_FontRange {
     pub Start: u32,
     pub Length: u32,
@@ -1426,17 +1425,27 @@ pub struct TextData_FontRange {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextParagraphData {
+    pub m_native_data: OpaqueObject,
+    pub m_text: NString,
+    pub m_break_points: NativeList<u32>,
+    pub m_font_ranges: NativeList<TextData_FontRange>,
+    pub LastTextVersion: u32,
+    pub TextVersion: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextSpanData {
     pub BoundingBoxes: NativeList<AABB2DF>,
-    pub TextIndex: u32,
     pub TextStart: u32,
     pub TextLength: u32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct TextSpanStyleData {
-    pub Override: TextSpanStyleOverride,
+pub struct TextStyleData {
+    pub Override: TextStyleOverride,
     pub FontFallback: *mut IFontFallback,
     pub Locale: LocaleId,
     pub TextColorR: f32,
@@ -1501,12 +1510,6 @@ pub struct TextSpanStyleData {
 pub struct NodeId {
     pub Index: u32,
     pub IdAndType: u32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct ViewNode {
-    pub Index: u32,
 }
 
 pub mod details {

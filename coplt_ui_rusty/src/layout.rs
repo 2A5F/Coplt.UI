@@ -20,7 +20,8 @@ use crate::{
     col::{OrderedSet, StrideSlice, map::NativeMap, ordered_set},
     com::{
         self, ChildsData, CommonData, Container, GridName, GridNameType, ILib, LayoutCache,
-        NLayoutContext, NodeId, NodeType, RootData, StyleData, TextSpanData, TextSpanStyleData,
+        NLayoutContext, NodeId, NodeType, RootData, StyleData, TextParagraphData, TextSpanData,
+        TextStyleData,
     },
     utils::*,
 };
@@ -159,6 +160,12 @@ impl SubDoc {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_common_data.add(id.index() as usize) },
+            NodeType::TextParagraph => unsafe {
+                &mut *self
+                    .ctx()
+                    .text_paragraph_common_data
+                    .add(id.index() as usize)
+            },
             NodeType::TextSpan => unsafe {
                 &mut *self.ctx().text_span_common_data.add(id.index() as usize)
             },
@@ -170,7 +177,13 @@ impl SubDoc {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_childs_data.add(id.index() as usize) },
-            NodeType::TextSpan => panic!("text span douse not have childs"),
+            NodeType::TextParagraph => unsafe {
+                &mut *self
+                    .ctx()
+                    .text_paragraph_childs_data
+                    .add(id.index() as usize)
+            },
+            NodeType::TextSpan => panic!("text span does not have childs"),
         }
     }
 
@@ -179,7 +192,37 @@ impl SubDoc {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_style_data.add(id.index() as usize) },
-            NodeType::TextSpan => panic!("text span douse not have styles"),
+            NodeType::TextParagraph => panic!("text paragraph does not have styles"),
+            NodeType::TextSpan => panic!("text span does not have styles"),
+        }
+    }
+
+    #[inline(always)]
+    pub fn text_style_data(&self, id: NodeId) -> &'static mut TextStyleData {
+        match id.typ() {
+            NodeType::Null => panic!("null node"),
+            NodeType::View => panic!("view does not have text styles"),
+            NodeType::TextParagraph => unsafe {
+                &mut *self
+                    .ctx()
+                    .text_paragraph_style_data
+                    .add(id.index() as usize)
+            },
+            NodeType::TextSpan => unsafe {
+                &mut *self.ctx().text_span_style_data.add(id.index() as usize)
+            },
+        }
+    }
+
+    #[inline(always)]
+    pub fn text_paragraph_data(&self, id: NodeId) -> &'static mut TextParagraphData {
+        match id.typ() {
+            NodeType::Null => panic!("null node"),
+            NodeType::View => panic!("view does not have text span datas"),
+            NodeType::TextSpan => panic!("text span does not have text paragraph datas"),
+            NodeType::TextParagraph => unsafe {
+                &mut *self.ctx().text_paragraph_data.add(id.index() as usize)
+            },
         }
     }
 
@@ -187,20 +230,10 @@ impl SubDoc {
     pub fn text_span_data(&self, id: NodeId) -> &'static mut TextSpanData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
-            NodeType::View => panic!("view douse not have text span datas"),
+            NodeType::View => panic!("view does not have text span datas"),
+            NodeType::TextParagraph => panic!("text paragraph does not have text span datas"),
             NodeType::TextSpan => unsafe {
                 &mut *self.ctx().text_span_data.add(id.index() as usize)
-            },
-        }
-    }
-
-    #[inline(always)]
-    pub fn text_span_style_data(&self, id: NodeId) -> &'static mut TextSpanStyleData {
-        match id.typ() {
-            NodeType::Null => panic!("null node"),
-            NodeType::View => panic!("view douse not have text span styles"),
-            NodeType::TextSpan => unsafe {
-                &mut *self.ctx().text_span_style_data.add(id.index() as usize)
             },
         }
     }
@@ -347,8 +380,9 @@ impl LayoutPartialTree for SubDoc {
     ) -> taffy::LayoutOutput {
         let id = NodeId::from(node_id);
         match id.typ() {
-            // todo: simple layout for independent text
-            NodeType::Null | NodeType::TextSpan => taffy::LayoutOutput::HIDDEN,
+            NodeType::Null | NodeType::TextParagraph | NodeType::TextSpan => {
+                taffy::LayoutOutput::HIDDEN
+            }
             NodeType::View => {
                 taffy::compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
                     if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
@@ -377,6 +411,10 @@ impl LayoutPartialTree for SubDoc {
                         com::Container::Text => tree.compute_text_layout(id, inputs),
                     }
                 })
+            }
+            NodeType::TextParagraph => {
+                // todo: simple layout for independent text
+                taffy::LayoutOutput::HIDDEN
             }
         }
     }

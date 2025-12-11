@@ -28,14 +28,23 @@ public unsafe struct NLayoutContext
     public ChildsData* view_childs_data;
     public StyleData* view_style_data;
     
+    public int* text_paragraph_buckets;
+    [ComType<Ptr<NNodeIdCtrl>>]
+    public NSplitMapCtrl<uint>.Ctrl* text_paragraph_ctrl;
+    public CommonData* text_paragraph_common_data;
+    public ChildsData* text_paragraph_childs_data;
+    public TextParagraphData* text_paragraph_data;
+    public TextStyleData* text_paragraph_style_data;
+    
     public int* text_span_buckets;
     [ComType<Ptr<NNodeIdCtrl>>]
     public NSplitMapCtrl<uint>.Ctrl* text_span_ctrl;
     public CommonData* text_span_common_data;
     public TextSpanData* text_span_data;
-    public TextSpanStyleData* text_span_style_data;
+    public TextStyleData* text_span_style_data;
 
     public int view_count;
+    public int text_paragraph_count;
     public int text_span_count;
 
     public bool rounding;

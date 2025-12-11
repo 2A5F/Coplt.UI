@@ -31,14 +31,22 @@ public readonly record struct ViewNode(uint Index)
 {
     public readonly uint Index = Index;
 
-    public static implicit operator ViewNode(NodeId node) => 
+    public static explicit operator ViewNode(NodeId node) =>
         node.Type is not NodeType.View ? throw new InvalidCastException() : new(node.Index);
+}
+
+public readonly record struct TextParagraphNode(uint Index)
+{
+    public readonly uint Index = Index;
+
+    public static explicit operator TextParagraphNode(NodeId node) =>
+        node.Type is not NodeType.TextParagraph ? throw new InvalidCastException() : new(node.Index);
 }
 
 public readonly record struct TextSpanNode(uint Index)
 {
     public readonly uint Index = Index;
 
-    public static implicit operator TextSpanNode(NodeId node) =>
+    public static explicit operator TextSpanNode(NodeId node) =>
         node.Type is not NodeType.TextSpan ? throw new InvalidCastException() : new(node.Index);
 }
