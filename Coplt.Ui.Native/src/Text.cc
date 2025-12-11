@@ -49,7 +49,8 @@ namespace Coplt::UnicodeUtils
                     locale[lang_len + 1 + i] = country[i];
                 }
                 return reinterpret_cast<usize>(locale);
-            }));
+            }
+        ));
     }
 }
 
@@ -77,14 +78,16 @@ void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
         {
             if (li != 0)
             {
-                out.Add(TextRange{
-                    .Start = cur_i,
-                    .Length = li - cur_i,
-                    .Script = static_cast<ScriptCode>(cur_script),
-                    .Category = static_cast<CharCategory>(cur_category),
-                    .ScriptIsRtl = static_cast<bool>(uscript_isRightToLeft(cur_script)),
-                    .Locale = UnicodeUtils::LikelyLocale(cur_script),
-                });
+                out.Add(
+                    TextRange{
+                        .Start = cur_i,
+                        .Length = li - cur_i,
+                        .Script = static_cast<ScriptCode>(cur_script),
+                        .Category = static_cast<CharCategory>(cur_category),
+                        .ScriptIsRtl = static_cast<bool>(uscript_isRightToLeft(cur_script)),
+                        .Locale = UnicodeUtils::LikelyLocale(cur_script),
+                    }
+                );
                 cur_i = li;
             }
             cur_script = script;
@@ -92,13 +95,15 @@ void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
         }
     }
     {
-        out.Add(TextRange{
-            .Start = cur_i,
-            .Length = len - cur_i,
-            .Script = static_cast<ScriptCode>(cur_script),
-            .Category = static_cast<CharCategory>(cur_category),
-            .ScriptIsRtl = static_cast<bool>(uscript_isRightToLeft(cur_script)),
-            .Locale = UnicodeUtils::LikelyLocale(cur_script),
-        });
+        out.Add(
+            TextRange{
+                .Start = cur_i,
+                .Length = len - cur_i,
+                .Script = static_cast<ScriptCode>(cur_script),
+                .Category = static_cast<CharCategory>(cur_category),
+                .ScriptIsRtl = static_cast<bool>(uscript_isRightToLeft(cur_script)),
+                .Locale = UnicodeUtils::LikelyLocale(cur_script),
+            }
+        );
     }
 }

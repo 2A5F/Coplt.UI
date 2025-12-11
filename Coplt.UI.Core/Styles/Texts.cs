@@ -138,8 +138,8 @@ public enum TextDirection : byte
 {
     Forward,
     Reverse,
-    LeftToRight,
-    RightToLeft,
+    LeftToRight = Forward,
+    RightToLeft = Reverse,
 }
 
 public enum WritingDirection : byte

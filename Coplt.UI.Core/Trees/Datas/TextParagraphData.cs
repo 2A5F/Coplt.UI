@@ -19,6 +19,8 @@ public unsafe partial struct TextParagraphData
     [Drop]
     public NativeList<TextData_ScriptRange> m_script_ranges;
     [Drop]
+    public NativeList<TextData_BidiRange> m_bidi_ranges;
+    [Drop]
     public NativeList<TextData_FontRange> m_font_ranges;
 
     /// <summary>
@@ -60,11 +62,15 @@ public unsafe partial record struct TextData_FontRange
     public Rc<IFontFace> m_font_face;
 }
 
-[Flags]
-public enum BidiFlags : byte
+public record struct TextData_BidiRange
 {
-    None = 0,
-    Mirror = 1 << 0,
-    BracketOpen = 1 << 1,
-    BracketClose = 1 << 2,
+    public uint Start;
+    public uint Length;
+    public BidiDirection Direction;
+}
+
+public enum BidiDirection : byte
+{
+    LeftToRight,
+    RightToLeft,
 }

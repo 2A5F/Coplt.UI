@@ -109,6 +109,8 @@ namespace Coplt {
 
     struct StyleData;
 
+    struct TextData_BidiRange;
+
     struct TextData_FontRange;
 
     struct TextData_ScriptRange;
@@ -432,8 +434,8 @@ namespace Coplt {
     {
         Forward = 0,
         Reverse = 1,
-        LeftToRight = 2,
-        RightToLeft = 3,
+        LeftToRight = 0,
+        RightToLeft = 1,
     };
 
     enum class TextOrientation : ::Coplt::u8
@@ -748,6 +750,12 @@ namespace Coplt {
         TaiYo = 210,
         TolongSiki = 211,
         TraditionalHanWithLatin = 212,
+    };
+
+    enum class BidiDirection : ::Coplt::u8
+    {
+        LeftToRight = 0,
+        RightToLeft = 1,
     };
 
     COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
@@ -1363,6 +1371,13 @@ namespace Coplt {
         ::Coplt::LengthType LineHeight;
     };
 
+    struct TextData_BidiRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 Length;
+        ::Coplt::BidiDirection Direction;
+    };
+
     struct TextData_FontRange
     {
         ::Coplt::u32 Start;
@@ -1384,6 +1399,7 @@ namespace Coplt {
         ::Coplt::NativeBitSet m_break_points;
         ::Coplt::NativeList<::Coplt::u32> m_grapheme_cluster;
         ::Coplt::NativeList<::Coplt::TextData_ScriptRange> m_script_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_BidiRange> m_bidi_ranges;
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;

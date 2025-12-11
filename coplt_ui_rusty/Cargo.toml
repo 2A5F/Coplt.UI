@@ -14,9 +14,8 @@ dashmap = {workspace = true}
 etagere = {workspace = true}
 font-types = {workspace = true}
 harfrust = {workspace = true}
-read-fonts = {workspace = true}
-# rust_icu = {version="5.4", }
 icu = "2.1"
+read-fonts = {workspace = true}
 taffy = {workspace = true}
 
 [target.'cfg(windows)'.dependencies]

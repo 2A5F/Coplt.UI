@@ -1,5 +1,6 @@
 use std::{
     char::decode_utf16,
+    os::raw::c_void,
     panic::{RefUnwindSafe, UnwindSafe},
     process::Child,
 };
@@ -20,6 +21,7 @@ use crate::{
     com::*,
     dwrite::DwLayout,
     feb_hr,
+    icu4c::{UBiDi, UBiDiDirection, UBiDiLevel},
     utf16::Utf16Indices,
 };
 
@@ -111,15 +113,21 @@ impl Layout {
         let style = doc.text_style_data(id);
 
         if paragraph.is_text_dirty() {
-            Self::sync_text_info(paragraph);
+            Self::sync_text_info(paragraph, root_style, style);
         }
     }
 
-    fn sync_text_info(paragraph: &mut TextParagraphData) {
+    fn sync_text_info(
+        paragraph: &mut TextParagraphData,
+        root_style: &StyleData,
+        style: &TextStyleData,
+    ) {
         analyze_scripts(paragraph);
         analyze_break_points(paragraph);
         analyze_graphemes(paragraph);
-        analyze_bidi(paragraph);
+        if let Err(e) = analyze_bidi(paragraph, root_style, style) {
+            std::panic::panic_any(e);
+        }
 
         return;
 
@@ -201,22 +209,44 @@ impl Layout {
             }
         }
 
-        fn analyze_bidi(paragraph: &mut TextParagraphData) {
+        fn analyze_bidi(
+            paragraph: &mut TextParagraphData,
+            root_style: &StyleData,
+            style: &TextStyleData,
+        ) -> anyhow::Result<()> {
             let text = &*{ paragraph.m_text };
 
-            // let script_ranges = paragraph.script_ranges();
-            // script_ranges.clear();
+            let bidi_ranges = paragraph.bidi_ranges();
+            bidi_ranges.clear();
 
             if text.is_empty() {
-                return;
+                return Ok(());
             }
 
-            let bidi_class = CodePointMapData::<BidiClass>::new();
-            let bidi_control = CodePointSetData::new::<BidiControl>();
+            let mut bidi = UBiDi::new();
+            bidi.set_para(
+                text,
+                // todo text style override
+                match root_style.TextDirection {
+                    TextDirection::Forward => UBiDiLevel::LeftToRight,
+                    TextDirection::Reverse => UBiDiLevel::RightToLeft,
+                },
+            )?;
 
-            for (i, c) in Utf16Indices::new(text) {
-                let class = bidi_class.get32(c);
+            let runs = bidi.count_runs()?;
+            for i in 0..runs {
+                let run = bidi.get_visual_run(i);
+                bidi_ranges.add(TextData_BidiRange {
+                    Start: run.logical_start as u32,
+                    Length: run.length as u32,
+                    Direction: match run.direction {
+                        UBiDiDirection::RightToLeft => BidiDirection::RightToLeft,
+                        _ => BidiDirection::LeftToRight,
+                    },
+                });
             }
+
+            Ok(())
         }
     }
 }

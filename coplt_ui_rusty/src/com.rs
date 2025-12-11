@@ -444,8 +444,6 @@ pub enum TextAlign {
 pub enum TextDirection {
     Forward = 0,
     Reverse = 1,
-    LeftToRight = 2,
-    RightToLeft = 3,
 }
 
 #[repr(u8)]
@@ -764,6 +762,13 @@ pub enum ScriptCode {
     TaiYo = 210,
     TolongSiki = 211,
     TraditionalHanWithLatin = 212,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum BidiDirection {
+    LeftToRight = 0,
+    RightToLeft = 1,
 }
 
 #[repr(u64)]
@@ -1424,6 +1429,14 @@ pub struct StyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_BidiRange {
+    pub Start: u32,
+    pub Length: u32,
+    pub Direction: BidiDirection,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_FontRange {
     pub Start: u32,
     pub Length: u32,
@@ -1446,6 +1459,7 @@ pub struct TextParagraphData {
     pub m_break_points: NativeBitSet,
     pub m_grapheme_cluster: NativeList<u32>,
     pub m_script_ranges: NativeList<TextData_ScriptRange>,
+    pub m_bidi_ranges: NativeList<TextData_BidiRange>,
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub LastTextVersion: u32,
     pub TextVersion: u32,

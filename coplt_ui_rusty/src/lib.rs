@@ -74,6 +74,7 @@ mod com;
 #[cfg(target_os = "windows")]
 mod dwrite;
 mod font_manager;
+mod icu4c;
 mod layout;
 mod unicode_utils;
 mod utf16;
@@ -120,6 +121,10 @@ pub fn feb_hr(f: impl FnOnce() -> anyhow::Result<cocom::HResult> + UnwindSafe) -
                 return *err;
             } else if let Some(err) = err.downcast_mut::<HResultE>() {
                 return (*err).into();
+            } else if let Some(e) = err.downcast_mut::<anyhow::Error>() {
+                let msg = format!("{e:?}");
+                set_current_error_message(msg);
+                cocom::HResultE::Fail.into()
             } else {
                 // cannot process
                 std::panic::resume_unwind(err)
@@ -138,7 +143,7 @@ mod com_impl {
         col::{NArc, NBitSet, NList},
         com::{
             ChildsData, CommonData, NString, NativeArc, NativeList, OpaqueObject,
-            TextData_ScriptRange, TextParagraphData, TextSpanData,
+            TextData_BidiRange, TextData_ScriptRange, TextParagraphData, TextSpanData,
         },
         layout::FontRange,
     };
@@ -283,6 +288,10 @@ mod com_impl {
 
         pub fn script_ranges(&mut self) -> &mut NList<TextData_ScriptRange> {
             unsafe { std::mem::transmute(&mut self.m_script_ranges) }
+        }
+
+        pub fn bidi_ranges(&mut self) -> &mut NList<TextData_BidiRange> {
+            unsafe { std::mem::transmute(&mut self.m_bidi_ranges) }
         }
 
         pub fn font_ranges(&mut self) -> &mut NList<FontRange> {
