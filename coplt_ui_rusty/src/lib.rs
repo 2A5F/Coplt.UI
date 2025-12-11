@@ -76,6 +76,7 @@ mod dwrite;
 mod font_manager;
 mod layout;
 mod unicode_utils;
+mod utf16;
 mod utils;
 
 #[cfg(target_os = "windows")]
@@ -134,10 +135,10 @@ mod com_impl {
     };
 
     use crate::{
-        col::{NArc, NList},
+        col::{NArc, NBitSet, NList},
         com::{
             ChildsData, CommonData, NString, NativeArc, NativeList, OpaqueObject,
-            TextParagraphData, TextSpanData,
+            TextData_ScriptRange, TextParagraphData, TextSpanData,
         },
         layout::FontRange,
     };
@@ -272,8 +273,16 @@ mod com_impl {
             self.TextVersion != self.LastTextVersion
         }
 
-        pub fn break_points(&mut self) -> &mut NList<u32> {
+        pub fn break_points(&mut self) -> &mut NBitSet {
             unsafe { std::mem::transmute(&mut self.m_break_points) }
+        }
+
+        pub fn grapheme_cluster(&mut self) -> &mut NList<u32> {
+            unsafe { std::mem::transmute(&mut self.m_grapheme_cluster) }
+        }
+
+        pub fn script_ranges(&mut self) -> &mut NList<TextData_ScriptRange> {
+            unsafe { std::mem::transmute(&mut self.m_script_ranges) }
         }
 
         pub fn font_ranges(&mut self) -> &mut NList<FontRange> {

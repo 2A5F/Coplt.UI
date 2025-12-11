@@ -853,6 +853,13 @@ pub struct NativeArc<T0 /* T */> {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NativeBitSet {
+    pub m_items: *mut u64,
+    pub m_size: i32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NativeList<T0 /* T */> {
     pub m_items: *mut T0,
     pub m_cap: i32,
@@ -1425,10 +1432,20 @@ pub struct TextData_FontRange {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_ScriptRange {
+    pub Start: u32,
+    pub Length: u32,
+    pub Script: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextParagraphData {
     pub m_native_data: OpaqueObject,
     pub m_text: NString,
-    pub m_break_points: NativeList<u32>,
+    pub m_break_points: NativeBitSet,
+    pub m_grapheme_cluster: NativeList<u32>,
+    pub m_script_ranges: NativeList<TextData_ScriptRange>,
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub LastTextVersion: u32,
     pub TextVersion: u32,

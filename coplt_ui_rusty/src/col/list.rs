@@ -135,6 +135,13 @@ impl<T> NList<T> {
         }
         self.cap = cap;
     }
+
+    pub fn ensure_cap(&mut self, cap: i32) {
+        if cap >= self.cap {
+            return;
+        }
+        self.set_cap(cap);
+    }
 }
 
 impl<T> NList<T> {

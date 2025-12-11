@@ -13,7 +13,11 @@ public unsafe partial struct TextParagraphData
     [Drop]
     public NString m_text;
     [Drop]
-    public NativeList<uint> m_break_points;
+    public NativeBitSet m_break_points; // stored can break after char at same index
+    [Drop]
+    public NativeList<uint> m_grapheme_cluster;
+    [Drop]
+    public NativeList<TextData_ScriptRange> m_script_ranges;
     [Drop]
     public NativeList<TextData_FontRange> m_font_ranges;
 
@@ -40,11 +44,27 @@ public unsafe partial struct TextParagraphData
     }
 }
 
+public record struct TextData_ScriptRange
+{
+    public uint Start;
+    public uint Length;
+    public ushort Script;
+}
+
 [Dropping]
-public unsafe partial struct TextData_FontRange
+public unsafe partial record struct TextData_FontRange
 {
     public uint Start;
     public uint Length;
     [ComType<Ptr<IFontFace>>]
     public Rc<IFontFace> m_font_face;
+}
+
+[Flags]
+public enum BidiFlags : byte
+{
+    None = 0,
+    Mirror = 1 << 0,
+    BracketOpen = 1 << 1,
+    BracketClose = 1 << 2,
 }

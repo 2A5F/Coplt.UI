@@ -16,6 +16,8 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeArc;
 
+    struct NativeBitSet;
+
     template <class T0 /* T */>
     struct NativeList;
 
@@ -108,6 +110,8 @@ namespace Coplt {
     struct StyleData;
 
     struct TextData_FontRange;
+
+    struct TextData_ScriptRange;
 
     struct TextParagraphData;
 
@@ -892,6 +896,12 @@ namespace Coplt {
         ::Coplt::NativeArcInner<T0>* m_ptr;
     };
 
+    struct NativeBitSet
+    {
+        ::Coplt::u64* m_items;
+        ::Coplt::i32 m_size;
+    };
+
     struct PathBuilderCmdArc
     {
         ::Coplt::PathBuilderCmdType Type;
@@ -1360,11 +1370,20 @@ namespace Coplt {
         IFontFace* m_font_face;
     };
 
+    struct TextData_ScriptRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 Length;
+        ::Coplt::u16 Script;
+    };
+
     struct TextParagraphData
     {
         ::Coplt::OpaqueObject m_native_data;
         ::Coplt::NString m_text;
-        ::Coplt::NativeList<::Coplt::u32> m_break_points;
+        ::Coplt::NativeBitSet m_break_points;
+        ::Coplt::NativeList<::Coplt::u32> m_grapheme_cluster;
+        ::Coplt::NativeList<::Coplt::TextData_ScriptRange> m_script_ranges;
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;
