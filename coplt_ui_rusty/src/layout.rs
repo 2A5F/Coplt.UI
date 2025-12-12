@@ -136,10 +136,10 @@ impl From<taffy::NodeId> for NodeId {
 }
 
 #[repr(C)]
-#[derive(Debug)]
-struct SubDoc(*mut NLayoutContext, *mut RootData, *mut com_impl::Layout);
+#[derive(Debug, Clone, Copy)]
+pub struct SubDocInner(*mut NLayoutContext, *mut RootData);
 
-impl SubDoc {
+impl SubDocInner {
     #[inline(always)]
     pub fn root_data(&self) -> &'static mut RootData {
         unsafe { &mut *self.1 }
@@ -239,6 +239,27 @@ impl SubDoc {
     }
 }
 
+#[repr(C)]
+#[derive(Debug)]
+pub struct SubDoc<'a> {
+    pub layout: &'a mut Layout,
+    pub inner: SubDocInner,
+}
+
+impl<'a> Deref for SubDoc<'a> {
+    type Target = SubDocInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<'a> DerefMut for SubDoc<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
 #[inline(always)]
 fn get_layout(src: &com::LayoutData) -> taffy::Layout {
     taffy::Layout {
@@ -305,7 +326,7 @@ fn set_layout(dst: &mut com::LayoutData, src: &taffy::Layout) {
     dst.MarginLeftSize = src.margin.left;
 }
 
-struct ChildIter(ordered_set::PtrCopyIter<NodeId>);
+pub struct ChildIter(ordered_set::PtrCopyIter<NodeId>);
 
 impl ChildIter {
     #[inline(always)]
@@ -337,7 +358,7 @@ impl Iterator for ChildIter {
     }
 }
 
-impl TraversePartialTree for SubDoc {
+impl<'a> TraversePartialTree for SubDoc<'a> {
     type ChildIter = ChildIter;
 
     #[inline(always)]
@@ -351,13 +372,13 @@ impl TraversePartialTree for SubDoc {
     }
 }
 
-impl TraverseTree for SubDoc {}
+impl<'a> TraverseTree for SubDoc<'a> {}
 
-impl LayoutPartialTree for SubDoc {
-    type CoreContainerStyle<'a>
-        = StyleHandle<'a>
+impl<'a> LayoutPartialTree for SubDoc<'a> {
+    type CoreContainerStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
     type CustomIdent = GridName;
 
@@ -420,7 +441,7 @@ impl LayoutPartialTree for SubDoc {
     }
 }
 
-impl RoundTree for SubDoc {
+impl<'a> RoundTree for SubDoc<'a> {
     #[inline(always)]
     fn get_unrounded_layout(&self, node_id: taffy::NodeId) -> taffy::Layout {
         let id = NodeId::from(node_id);
@@ -442,7 +463,7 @@ impl RoundTree for SubDoc {
     }
 }
 
-impl CacheTree for SubDoc {
+impl<'a> CacheTree for SubDoc<'a> {
     #[inline(always)]
     fn cache_get(
         &self,
@@ -484,16 +505,16 @@ impl CacheTree for SubDoc {
     }
 }
 
-impl LayoutBlockContainer for SubDoc {
-    type BlockContainerStyle<'a>
-        = StyleHandle<'a>
+impl<'a> LayoutBlockContainer for SubDoc<'a> {
+    type BlockContainerStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
-    type BlockItemStyle<'a>
-        = StyleHandle<'a>
+    type BlockItemStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
     #[inline(always)]
     fn get_block_container_style(&self, node_id: taffy::NodeId) -> Self::BlockContainerStyle<'_> {
@@ -506,16 +527,16 @@ impl LayoutBlockContainer for SubDoc {
     }
 }
 
-impl LayoutFlexboxContainer for SubDoc {
-    type FlexboxContainerStyle<'a>
-        = StyleHandle<'a>
+impl<'a> LayoutFlexboxContainer for SubDoc<'a> {
+    type FlexboxContainerStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
-    type FlexboxItemStyle<'a>
-        = StyleHandle<'a>
+    type FlexboxItemStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
     #[inline(always)]
     fn get_flexbox_container_style(
@@ -531,16 +552,16 @@ impl LayoutFlexboxContainer for SubDoc {
     }
 }
 
-impl LayoutGridContainer for SubDoc {
-    type GridContainerStyle<'a>
-        = StyleHandle<'a>
+impl<'a> LayoutGridContainer for SubDoc<'a> {
+    type GridContainerStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
-    type GridItemStyle<'a>
-        = StyleHandle<'a>
+    type GridItemStyle<'b>
+        = StyleHandle<'b>
     where
-        Self: 'a;
+        Self: 'b;
 
     #[inline(always)]
     fn get_grid_container_style(&self, node_id: taffy::NodeId) -> Self::GridContainerStyle<'_> {
@@ -554,7 +575,7 @@ impl LayoutGridContainer for SubDoc {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct StyleHandle<'a>(&'a SubDoc, NodeId);
+pub struct StyleHandle<'a>(&'a SubDoc<'a>, NodeId);
 
 macro_rules! common_style {
     [ $self:ident.$s:ident => $i:expr ] => {
@@ -1494,14 +1515,14 @@ impl<'a> GridItemStyle for StyleHandle<'a> {
     }
 }
 
-impl SubDoc {
+impl<'a> SubDoc<'a> {
     #[inline(always)]
     pub fn compute_text_layout(
         &mut self,
         id: NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
-        unsafe { (*self.2).compute_text_layout(self, id, inputs) }
+        unsafe { self.layout.compute_text_layout(&mut self.inner, id, inputs) }
     }
 }
 
@@ -1710,4 +1731,8 @@ impl From<LayoutOutput> for com::LayoutOutput {
             MarginsCanCollapseThrough: value.margins_can_collapse_through,
         }
     }
+}
+
+impl com::TextStyleData {
+    // todo text style override; wait cocom flags enum
 }

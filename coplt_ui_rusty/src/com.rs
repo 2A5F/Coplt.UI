@@ -1445,6 +1445,15 @@ pub struct TextData_FontRange {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_SameStyleRange {
+    pub Start: u32,
+    pub Length: u32,
+    pub FirstSpanValue: TextSpanNode,
+    pub HasFirstSpan: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_ScriptRange {
     pub Start: u32,
     pub Length: u32,
@@ -1460,6 +1469,7 @@ pub struct TextParagraphData {
     pub m_grapheme_cluster: NativeList<u32>,
     pub m_script_ranges: NativeList<TextData_ScriptRange>,
     pub m_bidi_ranges: NativeList<TextData_BidiRange>,
+    pub m_same_style_ranges: NativeList<TextData_SameStyleRange>,
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub LastTextVersion: u32,
     pub TextVersion: u32,
@@ -1541,6 +1551,12 @@ pub struct TextStyleData {
 pub struct NodeId {
     pub Index: u32,
     pub IdAndType: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextSpanNode {
+    pub Index: u32,
 }
 
 pub mod details {

@@ -1,7 +1,8 @@
 use std::{
     char::decode_utf16,
+    ops::Deref,
     os::raw::c_void,
-    panic::{RefUnwindSafe, UnwindSafe},
+    panic::{AssertUnwindSafe, RefUnwindSafe, UnwindSafe},
     process::Child,
 };
 
@@ -41,15 +42,23 @@ pub struct Layout {
 }
 
 pub(crate) trait LayoutInner {
-    // todo
+    fn analyze_fonts(
+        &mut self,
+        doc: &mut super::SubDocInner,
+        paragraph: &mut TextParagraphData,
+        root_style: &StyleData,
+        style: &TextStyleData,
+    ) -> anyhow::Result<()>;
 }
 
 impl impls::ILayout for Layout {
     fn Calc(&mut self, ctx: *mut crate::com::NLayoutContext) -> cocom::HResult {
-        let this = self as *mut _;
-        feb_hr(|| unsafe {
+        feb_hr(AssertUnwindSafe(|| {
             for root in unsafe { &mut *(*ctx).roots() }.iter_mut().map(|a| a.1) {
-                let mut sub_doc = super::SubDoc(ctx, root as *mut _, this);
+                let mut sub_doc = super::SubDoc {
+                    layout: self,
+                    inner: super::SubDocInner(ctx, root as *mut _),
+                };
                 let root_data = *sub_doc.root_data();
                 let available_space = taffy::Size {
                     width: c_available_space!(root_data.AvailableSpaceX),
@@ -63,14 +72,14 @@ impl impls::ILayout for Layout {
             }
 
             Ok(HResultE::Ok.into())
-        })
+        }))
     }
 }
 
 impl Layout {
     pub(super) fn compute_text_layout(
-        &self,
-        doc: &mut super::SubDoc,
+        &mut self,
+        doc: &mut super::SubDocInner,
         id: NodeId,
         inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
@@ -101,8 +110,8 @@ impl Layout {
     }
 
     fn compute_text_paragraph_layout(
-        &self,
-        doc: &mut super::SubDoc,
+        &mut self,
+        doc: &mut super::SubDocInner,
         id: NodeId,
         inputs: taffy::LayoutInput,
         root_style: &StyleData,
@@ -113,11 +122,13 @@ impl Layout {
         let style = doc.text_style_data(id);
 
         if paragraph.is_text_dirty() {
-            Self::sync_text_info(paragraph, root_style, style);
+            self.sync_text_info(doc, paragraph, root_style, style);
         }
     }
 
     fn sync_text_info(
+        &mut self,
+        doc: &mut super::SubDocInner,
         paragraph: &mut TextParagraphData,
         root_style: &StyleData,
         style: &TextStyleData,
@@ -125,7 +136,13 @@ impl Layout {
         analyze_scripts(paragraph);
         analyze_break_points(paragraph);
         analyze_graphemes(paragraph);
+        analyze_same_style(doc, paragraph, root_style, style);
+
         if let Err(e) = analyze_bidi(paragraph, root_style, style) {
+            std::panic::panic_any(e);
+        }
+
+        if let Err(e) = self.inner.analyze_fonts(doc, paragraph, root_style, style) {
             std::panic::panic_any(e);
         }
 
@@ -247,6 +264,15 @@ impl Layout {
             }
 
             Ok(())
+        }
+
+        fn analyze_same_style(
+            doc: &mut super::SubDocInner,
+            paragraph: &mut TextParagraphData,
+            root_style: &StyleData,
+            style: &TextStyleData,
+        ) {
+            // todo
         }
     }
 }

@@ -6,7 +6,12 @@ use std::{
     ptr::NonNull,
 };
 
-use crate::{com::*, feb_hr};
+use crate::{
+    col::NList,
+    com::*,
+    feb_hr,
+    layout::{FontRange, SubDocInner},
+};
 use cocom::{
     ComPtr, ComWeak, HResult, HResultE, MakeObject, MakeObjectWeak,
     impls::{ObjectBox, ObjectBoxNew},
@@ -16,25 +21,25 @@ use cocom::{
 use dashmap::DashMap;
 use harfrust::FontRef;
 use read_fonts::collections::int_set::Domain;
-use windows::{
-    Win32::{
-        Foundation::{CloseHandle, GENERIC_READ, HANDLE},
-        Graphics::DirectWrite::{
-            IDWriteFactory7, IDWriteFontFace5, IDWriteFontFallback1, IDWriteFontFileStream,
-            IDWriteLocalFontFileLoader, IDWriteLocalizedStrings,
-        },
-        Storage::FileSystem::{
-            CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_FLAGS_AND_ATTRIBUTES, FILE_SHARE_READ,
-            FILE_SHARE_WRITE, GetFileSizeEx, OPEN_EXISTING,
-        },
-        System::Memory::{
-            CreateFileMappingW, FILE_MAP_READ, MEMORY_MAPPED_VIEW_ADDRESS, MapViewOfFile,
-            PAGE_READONLY, UnmapViewOfFile,
-        },
+use windows::Win32::{
+    Foundation::{GENERIC_READ, HANDLE},
+    Graphics::DirectWrite::{
+        DWRITE_READING_DIRECTION, DWRITE_READING_DIRECTION_BOTTOM_TO_TOP,
+        DWRITE_READING_DIRECTION_LEFT_TO_RIGHT, DWRITE_READING_DIRECTION_RIGHT_TO_LEFT,
+        DWRITE_READING_DIRECTION_TOP_TO_BOTTOM, IDWriteFactory7, IDWriteFontFace5,
+        IDWriteFontFallback1, IDWriteFontFileStream, IDWriteLocalFontFileLoader,
+        IDWriteLocalizedStrings, IDWriteTextAnalysisSource, IDWriteTextAnalysisSource_Impl,
     },
-    core::BOOL,
+    Storage::FileSystem::{
+        CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SHARE_WRITE, GetFileSizeEx,
+        OPEN_EXISTING,
+    },
+    System::Memory::{
+        CreateFileMappingW, FILE_MAP_READ, MEMORY_MAPPED_VIEW_ADDRESS, MapViewOfFile,
+        PAGE_READONLY, UnmapViewOfFile,
+    },
 };
-use windows_core::{Free, HSTRING, HStringBuilder, Interface, PCWSTR};
+use windows_core::{Free, HSTRING, HStringBuilder, Interface, PCWSTR, implement};
 
 #[derive(Debug)]
 pub struct Handle(HANDLE);
@@ -428,10 +433,87 @@ pub extern "C" fn coplt_ui_dwrite_create_layout(
     })
 }
 
+#[implement(IDWriteTextAnalysisSource)]
+struct OneSpaceTextAnalysisSource;
+
+impl IDWriteTextAnalysisSource_Impl for OneSpaceTextAnalysisSource_Impl {
+    fn GetTextAtPosition(
+        &self,
+        textposition: u32,
+        textstring: *mut *mut u16,
+        textlength: *mut u32,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            if textposition == 0 {
+                static DATA: [u16; 2] = [0x20, 0];
+                *textstring = (&DATA).as_ptr() as _;
+                *textlength = 1;
+            } else {
+                *textstring = std::ptr::null_mut();
+                *textlength = 0;
+            }
+        }
+        Ok(())
+    }
+
+    fn GetTextBeforePosition(
+        &self,
+        textposition: u32,
+        textstring: *mut *mut u16,
+        textlength: *mut u32,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            if textposition == 1 {
+                static DATA: [u16; 2] = [0x20, 0];
+                *textstring = (&DATA).as_ptr() as _;
+                *textlength = 1;
+            } else {
+                *textstring = std::ptr::null_mut();
+                *textlength = 0;
+            }
+        }
+        Ok(())
+    }
+
+    fn GetParagraphReadingDirection(
+        &self,
+    ) -> windows::Win32::Graphics::DirectWrite::DWRITE_READING_DIRECTION {
+        windows::Win32::Graphics::DirectWrite::DWRITE_READING_DIRECTION_LEFT_TO_RIGHT
+    }
+
+    fn GetLocaleName(
+        &self,
+        textposition: u32,
+        textlength: *mut u32,
+        localename: *mut *mut u16,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            *textlength = 0;
+            *localename = std::ptr::null_mut();
+        }
+        Ok(())
+    }
+
+    fn GetNumberSubstitution(
+        &self,
+        textposition: u32,
+        textlength: *mut u32,
+        numbersubstitution: windows_core::OutRef<
+            windows::Win32::Graphics::DirectWrite::IDWriteNumberSubstitution,
+        >,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            *textlength = 0;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 pub struct DwLayout {
-    dw_factory: IDWriteFactory7,
-    system_font_fallback: IDWriteFontFallback1,
+    pub dw_factory: IDWriteFactory7,
+    pub system_font_fallback: IDWriteFontFallback1,
+    pub undef_font: Option<IDWriteFontFace5>,
 }
 
 impl DwLayout {
@@ -442,8 +524,35 @@ impl DwLayout {
             Ok(Self {
                 dw_factory,
                 system_font_fallback,
+                undef_font: None,
             })
         }
+    }
+
+    pub fn get_undef_font(&mut self, doc: &SubDocInner) -> anyhow::Result<&IDWriteFontFace5> {
+        if self.undef_font.is_none() {
+            let fm = unsafe { &(*doc.ctx().font_manager) };
+            let ostas: IDWriteTextAnalysisSource = OneSpaceTextAnalysisSource.into();
+            let mut mapped_len = 0;
+            let mut scale = 0.0;
+            let mut mapped_font = None;
+            unsafe {
+                self.system_font_fallback.MapCharacters(
+                    &ostas,
+                    0,
+                    1,
+                    None,
+                    None,
+                    &[],
+                    &mut mapped_len,
+                    &mut scale,
+                    &mut mapped_font,
+                )?;
+            }
+
+            self.undef_font = mapped_font;
+        }
+        Ok((self.undef_font.as_ref().unwrap()))
     }
 }
 
@@ -453,8 +562,127 @@ impl crate::layout::Layout {
     }
 }
 
-impl crate::layout::LayoutInner for DwLayout {}
+impl crate::layout::LayoutInner for DwLayout {
+    fn analyze_fonts(
+        &mut self,
+        doc: &mut SubDocInner,
+        paragraph: &mut TextParagraphData,
+        root_style: &StyleData,
+        style: &TextStyleData,
+    ) -> anyhow::Result<()> {
+        let text = &*{ paragraph.m_text };
 
-impl DwLayout {
-    
+        let font_ranges = paragraph.font_ranges();
+        font_ranges.clear();
+
+        if text.is_empty() {
+            return Ok(());
+        }
+
+        let unde_font = self.get_undef_font(doc)?;
+
+        // todo style
+        let dir = match (root_style.TextDirection, root_style.WritingDirection) {
+            (TextDirection::Forward, WritingDirection::Horizontal) => {
+                DWRITE_READING_DIRECTION_LEFT_TO_RIGHT
+            }
+            (TextDirection::Forward, WritingDirection::Vertical) => {
+                DWRITE_READING_DIRECTION_TOP_TO_BOTTOM
+            }
+            (TextDirection::Reverse, WritingDirection::Horizontal) => {
+                DWRITE_READING_DIRECTION_RIGHT_TO_LEFT
+            }
+            (TextDirection::Reverse, WritingDirection::Vertical) => {
+                DWRITE_READING_DIRECTION_BOTTOM_TO_TOP
+            }
+        };
+
+        let tas: IDWriteTextAnalysisSource = TextAnalysisSource {
+            unde_font,
+            text,
+            dir,
+        }
+        .into();
+
+        // todo
+
+        Ok(())
+    }
+}
+
+#[implement(IDWriteTextAnalysisSource)]
+struct TextAnalysisSource<'a> {
+    unde_font: &'a IDWriteFontFace5,
+    text: &'a [u16],
+    dir: DWRITE_READING_DIRECTION,
+}
+
+impl<'a> IDWriteTextAnalysisSource_Impl for TextAnalysisSource_Impl<'a> {
+    fn GetTextAtPosition(
+        &self,
+        textposition: u32,
+        textstring: *mut *mut u16,
+        textlength: *mut u32,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            if textposition >= self.text.len() as u32 {
+                *textstring = std::ptr::null_mut();
+                *textlength = 0;
+            } else {
+                *textstring = (self.text.as_ptr() as *mut u16).add(textposition as usize);
+                *textlength = self.text.len() as u32 - textposition;
+            }
+        }
+        Ok(())
+    }
+
+    fn GetTextBeforePosition(
+        &self,
+        textposition: u32,
+        textstring: *mut *mut u16,
+        textlength: *mut u32,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            if textposition >= self.text.len() as u32 {
+                *textstring = std::ptr::null_mut();
+                *textlength = 0;
+            } else {
+                *textstring = self.text.as_ptr() as *mut u16;
+                *textlength = textposition;
+            }
+        }
+        Ok(())
+    }
+
+    fn GetParagraphReadingDirection(&self) -> DWRITE_READING_DIRECTION {
+        self.dir
+    }
+
+    fn GetLocaleName(
+        &self,
+        textposition: u32,
+        textlength: *mut u32,
+        localename: *mut *mut u16,
+    ) -> windows_core::Result<()> {
+        // todo impl
+        unsafe {
+            *textlength = 0;
+            *localename = std::ptr::null_mut();
+        }
+        Ok(())
+    }
+
+    fn GetNumberSubstitution(
+        &self,
+        textposition: u32,
+        textlength: *mut u32,
+        numbersubstitution: windows_core::OutRef<
+            windows::Win32::Graphics::DirectWrite::IDWriteNumberSubstitution,
+        >,
+    ) -> windows_core::Result<()> {
+        unsafe {
+            *textlength = 0;
+        }
+        Ok(())
+    }
 }

@@ -113,6 +113,8 @@ namespace Coplt {
 
     struct TextData_FontRange;
 
+    struct TextData_SameStyleRange;
+
     struct TextData_ScriptRange;
 
     struct TextParagraphData;
@@ -122,6 +124,8 @@ namespace Coplt {
     struct TextStyleData;
 
     struct NodeId;
+
+    struct TextSpanNode;
 
     struct IAtlasAllocator;
 
@@ -1064,6 +1068,11 @@ namespace Coplt {
         ::Coplt::u32 IdAndType;
     };
 
+    struct TextSpanNode
+    {
+        ::Coplt::u32 Index;
+    };
+
     struct Str8
     {
         ::Coplt::u8 const* Data;
@@ -1385,6 +1394,14 @@ namespace Coplt {
         IFontFace* m_font_face;
     };
 
+    struct TextData_SameStyleRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 Length;
+        ::Coplt::TextSpanNode FirstSpanValue;
+        bool HasFirstSpan;
+    };
+
     struct TextData_ScriptRange
     {
         ::Coplt::u32 Start;
@@ -1400,6 +1417,7 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::u32> m_grapheme_cluster;
         ::Coplt::NativeList<::Coplt::TextData_ScriptRange> m_script_ranges;
         ::Coplt::NativeList<::Coplt::TextData_BidiRange> m_bidi_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_SameStyleRange> m_same_style_ranges;
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;

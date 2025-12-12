@@ -21,6 +21,8 @@ public unsafe partial struct TextParagraphData
     [Drop]
     public NativeList<TextData_BidiRange> m_bidi_ranges;
     [Drop]
+    public NativeList<TextData_SameStyleRange> m_same_style_ranges;
+    [Drop]
     public NativeList<TextData_FontRange> m_font_ranges;
 
     /// <summary>
@@ -51,6 +53,32 @@ public record struct TextData_ScriptRange
     public uint Start;
     public uint Length;
     public ushort Script;
+}
+
+public record struct TextData_SameStyleRange
+{
+    public uint Start;
+    public uint Length;
+    public TextSpanNode FirstSpanValue;
+    public bool HasFirstSpan;
+
+    public TextSpanNode? FirstSpan
+    {
+        readonly get => HasFirstSpan ? FirstSpanValue : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                FirstSpanValue = value.Value;
+                HasFirstSpan = true;
+            }
+            else
+            {
+                HasFirstSpan = false;
+                FirstSpanValue = default;
+            }
+        }
+    }
 }
 
 [Dropping]
