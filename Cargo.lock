@@ -110,6 +110,7 @@ dependencies = [
  "icu",
  "read-fonts",
  "taffy",
+ "tuples",
  "windows",
  "windows-core",
 ]
@@ -886,6 +887,12 @@ dependencies = [
  "serde_core",
  "zerovec",
 ]
+
+[[package]]
+name = "tuples"
+version = "1.20.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8c2f26d5a2cdc9f4d501969b8392371f3b43afab03aa607380ad387fc4c0ea3b"
 
 [[package]]
 name = "unicode-ident"

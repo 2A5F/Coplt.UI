@@ -13,3 +13,6 @@
 [submodule "ThirdParty/corrosion"]
 	path = ThirdParty/corrosion
 	url = https://github.com/corrosion-rs/corrosion
+[submodule "ThirdParty/tuplers"]
+	path = ThirdParty/tuplers
+	url = https://github.com/libsugar/tuplers

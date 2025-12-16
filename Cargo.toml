@@ -10,5 +10,7 @@ dashmap = "6.1"
 etagere = "0.2"
 font-types = "0.10"
 harfrust = "0.4"
+icu = "2.1"
 read-fonts = "0.36"
 taffy = {path = "taffy"}
+tuples = "1.20"

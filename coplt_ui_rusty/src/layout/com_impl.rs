@@ -122,13 +122,14 @@ impl Layout {
         let style = doc.text_style_data(id);
 
         if paragraph.is_text_dirty() {
-            self.sync_text_info(doc, paragraph, root_style, style);
+            self.sync_text_info(doc, id, paragraph, root_style, style);
         }
     }
 
     fn sync_text_info(
         &mut self,
         doc: &mut super::SubDocInner,
+        id: NodeId,
         paragraph: &mut TextParagraphData,
         root_style: &StyleData,
         style: &TextStyleData,
@@ -136,7 +137,7 @@ impl Layout {
         analyze_scripts(paragraph);
         analyze_break_points(paragraph);
         analyze_graphemes(paragraph);
-        analyze_same_style(doc, paragraph, root_style, style);
+        analyze_same_style(doc, id, paragraph, root_style, style);
 
         if let Err(e) = analyze_bidi(paragraph, root_style, style) {
             std::panic::panic_any(e);
@@ -268,11 +269,20 @@ impl Layout {
 
         fn analyze_same_style(
             doc: &mut super::SubDocInner,
+            id: NodeId,
             paragraph: &mut TextParagraphData,
             root_style: &StyleData,
             style: &TextStyleData,
         ) {
-            // todo
+            let childs = doc.childs(id);
+            for child in childs
+                .iter()
+                .copied()
+                .filter(|child| matches!(child.typ(), NodeType::TextSpan))
+            {
+                let text_span_data = doc.text_span_data(child);
+                // todo
+            }
         }
     }
 }
