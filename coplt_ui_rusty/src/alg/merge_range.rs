@@ -1,19 +1,15 @@
 use std::ops::Range;
 
-use tuples::TupleUniformMap;
-
-pub trait GetRange {
-    fn get_range(&self) -> Range<usize>;
+pub trait GetRangeIter {
+    fn get_range_iter(&self) -> &dyn Iterator<Item = Range<usize>>;
 }
 
-#[derive(Debug)]
-pub struct MergeRangeIter<Inputs> {
-    inputs: Inputs,
+pub struct MergeRangeIter<'a, const N: usize> {
+    inputs: [&'a dyn Iterator<Item = Range<usize>>; N],
 }
 
-pub fn merge_span<Inputs, Mapper>(inputs: Inputs, mapper: Mapper) -> MergeRangeIter<Inputs>
-where
-    Mapper: tuples::TupleUniformMapperBy<Inputs, Range<usize>, usize>,
-{
+pub fn merge_span<const N: usize>(
+    inputs: [&'_ dyn Iterator<Item = Range<usize>>; N],
+) -> MergeRangeIter<'_, N> {
     MergeRangeIter { inputs }
 }

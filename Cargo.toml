@@ -13,4 +13,3 @@ harfrust = "0.4"
 icu = "2.1"
 read-fonts = "0.36"
 taffy = {path = "taffy"}
-tuples = "1.20"
