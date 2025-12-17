@@ -8,7 +8,8 @@ version = "0.1.0"
 crate-type = ["staticlib"]
 
 [dependencies]
-anyhow = "1"
+anyhow = {workspace = true}
+bitflags = {workspace = true}
 cocom = {workspace = true}
 concat-idents = {workspace = true}
 coplt_ui_rust_common = {workspace = true}

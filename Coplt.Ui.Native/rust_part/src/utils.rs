@@ -1,4 +1,4 @@
-use crate::com::LayoutCache;
+use crate::com::{LayoutCache, LayoutCacheFlags};
 use crate::{layout::*, *};
 use concat_idents::concat_idents;
 
@@ -10,7 +10,7 @@ pub fn cache_get(
 ) -> Option<taffy::LayoutOutput> {
     match run_mode {
         taffy::RunMode::PerformLayout => {
-            if data.Flags as u16 & com::LayoutCacheFlags::Final as u16 == 0 {
+            if data.Flags.contains(com::LayoutCacheFlags::Final) {
                 return None;
             }
             let entry_known_dimensions = taffy::Size {
@@ -103,7 +103,7 @@ pub fn cache_get(
             macro_rules! check {
                     ( $n:tt ) => {
                         concat_idents!(has_name = Measure, $n {
-                            if data.Flags as u16 & com::LayoutCacheFlags::has_name as u16 != 0 {
+                            if data.Flags.contains(com::LayoutCacheFlags::has_name) {
                                 concat_idents!(val_name = MeasureEntries, $n {
                                     if let Some(r) = check(&data.val_name) {
                                         return Some(r);
@@ -137,9 +137,7 @@ pub fn cache_store(
 ) {
     match run_mode {
         taffy::RunMode::PerformLayout => {
-            data.Flags = unsafe {
-                std::mem::transmute(data.Flags as u16 | com::LayoutCacheFlags::Final as u16)
-            };
+            data.Flags |= com::LayoutCacheFlags::Final;
             data.FinalLayoutEntry = com::LayoutCacheEntryLayoutOutput {
                 KnownDimensionsWidthValue: known_dimensions.width.unwrap_or_default(),
                 KnownDimensionsHeightValue: known_dimensions.height.unwrap_or_default(),
@@ -188,7 +186,7 @@ pub fn cache_store(
             let i = taffy::Cache::compute_cache_slot(known_dimensions, available_space);
             let items =
                 unsafe { std::slice::from_raw_parts_mut(&mut data.MeasureEntries0 as *mut _, 9) };
-            data.Flags = unsafe { std::mem::transmute(data.Flags as u16 | 1 << (i + 1) as u16) };
+            data.Flags |= LayoutCacheFlags::from(1u16 << (i + 1));
             items[i] = com::LayoutCacheEntrySize {
                 KnownDimensionsWidthValue: known_dimensions.width.unwrap_or_default(),
                 KnownDimensionsHeightValue: known_dimensions.height.unwrap_or_default(),

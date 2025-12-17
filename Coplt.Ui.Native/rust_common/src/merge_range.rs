@@ -62,7 +62,7 @@ async fn gen_merge_ranges<const N: usize>(
                 start: last_pos,
                 end: next_pos,
             };
-            last_pos = range.end;
+            last_pos = next_pos;
             ctx.Yield((range, State::get_indexes(&states))).await;
         }
     }

@@ -280,20 +280,35 @@ pub enum LogLevel {
     Fatal = 5,
 }
 
-#[repr(u16)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum LayoutCacheFlags {
-    Empty = 0,
-    Final = 1,
-    Measure0 = 2,
-    Measure1 = 4,
-    Measure2 = 8,
-    Measure3 = 16,
-    Measure4 = 32,
-    Measure5 = 64,
-    Measure6 = 128,
-    Measure7 = 256,
-    Measure8 = 512,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct LayoutCacheFlags : u16 {
+        const Empty = 0;
+        const Final = 1;
+        const Measure0 = 2;
+        const Measure1 = 4;
+        const Measure2 = 8;
+        const Measure3 = 16;
+        const Measure4 = 32;
+        const Measure5 = 64;
+        const Measure6 = 128;
+        const Measure7 = 256;
+        const Measure8 = 512;
+        const _ = !0;
+    }
+}
+
+impl From<u16> for LayoutCacheFlags {
+    fn from(value: u16) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<LayoutCacheFlags> for u16 {
+    fn from(value: LayoutCacheFlags) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(u8)]
@@ -484,15 +499,30 @@ pub enum WordBreak {
     KeepAll = 2,
 }
 
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum WrapFlags {
-    None = 0,
-    AllowNewLine = 1,
-    WrapInSpace = 2,
-    TrimStart = 4,
-    TrimEnd = 8,
-    Trim = 12,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct WrapFlags : u8 {
+        const None = 0;
+        const AllowNewLine = 1;
+        const WrapInSpace = 2;
+        const TrimStart = 4;
+        const TrimEnd = 8;
+        const Trim = 12;
+        const _ = !0;
+    }
+}
+
+impl From<u8> for WrapFlags {
+    fn from(value: u8) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<WrapFlags> for u8 {
+    fn from(value: WrapFlags) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(u8)]
@@ -537,12 +567,27 @@ pub enum CharCategory {
     FinalPunctuation = 29,
 }
 
-#[repr(i32)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum FontFlags {
-    None = 0,
-    Color = 1,
-    Monospaced = 2,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct FontFlags : i32 {
+        const None = 0;
+        const Color = 1;
+        const Monospaced = 2;
+        const _ = !0;
+    }
+}
+
+impl From<i32> for FontFlags {
+    fn from(value: i32) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<FontFlags> for i32 {
+    fn from(value: FontFlags) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(i32)]
@@ -771,53 +816,68 @@ pub enum BidiDirection {
     RightToLeft = 1,
 }
 
-#[repr(u64)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum TextStyleOverride {
-    None = 0,
-    FontFallback = 1,
-    Locale = 2,
-    TextColorR = 4,
-    TextColorG = 8,
-    TextColorB = 16,
-    TextColorA = 32,
-    Opacity = 64,
-    BackgroundColorR = 128,
-    BackgroundColorG = 256,
-    BackgroundColorB = 512,
-    BackgroundColorA = 1024,
-    InsertTop = 2048,
-    InsertRight = 4096,
-    InsertBottom = 8192,
-    InsertLeft = 16384,
-    MarginTop = 32768,
-    MarginRight = 65536,
-    MarginBottom = 131072,
-    MarginLeft = 262144,
-    PaddingTop = 524288,
-    PaddingRight = 1048576,
-    PaddingBottom = 2097152,
-    PaddingLeft = 4194304,
-    TabSize = 8388608,
-    FontSize = 16777216,
-    FontWidth = 33554432,
-    FontOblique = 67108864,
-    FontWeight = 134217728,
-    LineHeight = 268435456,
-    Cursor = 536870912,
-    PointerEvents = 1073741824,
-    FontItalic = 2147483648,
-    FontOpticalSizing = 4294967296,
-    TextAlign = 8589934592,
-    LineAlign = 17179869184,
-    LocaleMode = 34359738368,
-    TextDirection = 68719476736,
-    WritingDirection = 137438953472,
-    WrapFlags = 274877906944,
-    TextWrap = 549755813888,
-    WordBreak = 1099511627776,
-    TextOrientation = 2199023255552,
-    TextOverflow = 4398046511104,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct TextStyleOverride : u64 {
+        const None = 0;
+        const FontFallback = 1;
+        const Locale = 2;
+        const TextColorR = 4;
+        const TextColorG = 8;
+        const TextColorB = 16;
+        const TextColorA = 32;
+        const Opacity = 64;
+        const BackgroundColorR = 128;
+        const BackgroundColorG = 256;
+        const BackgroundColorB = 512;
+        const BackgroundColorA = 1024;
+        const InsertTop = 2048;
+        const InsertRight = 4096;
+        const InsertBottom = 8192;
+        const InsertLeft = 16384;
+        const MarginTop = 32768;
+        const MarginRight = 65536;
+        const MarginBottom = 131072;
+        const MarginLeft = 262144;
+        const PaddingTop = 524288;
+        const PaddingRight = 1048576;
+        const PaddingBottom = 2097152;
+        const PaddingLeft = 4194304;
+        const TabSize = 8388608;
+        const FontSize = 16777216;
+        const FontWidth = 33554432;
+        const FontOblique = 67108864;
+        const FontWeight = 134217728;
+        const LineHeight = 268435456;
+        const Cursor = 536870912;
+        const PointerEvents = 1073741824;
+        const FontItalic = 2147483648;
+        const FontOpticalSizing = 4294967296;
+        const TextAlign = 8589934592;
+        const LineAlign = 17179869184;
+        const LocaleMode = 34359738368;
+        const TextDirection = 68719476736;
+        const WritingDirection = 137438953472;
+        const WrapFlags = 274877906944;
+        const TextWrap = 549755813888;
+        const WordBreak = 1099511627776;
+        const TextOrientation = 2199023255552;
+        const TextOverflow = 4398046511104;
+        const _ = !0;
+    }
+}
+
+impl From<u64> for TextStyleOverride {
+    fn from(value: u64) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<TextStyleOverride> for u64 {
+    fn from(value: TextStyleOverride) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(u8)]

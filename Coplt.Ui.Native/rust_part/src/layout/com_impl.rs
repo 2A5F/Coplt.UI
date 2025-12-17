@@ -281,6 +281,7 @@ impl Layout {
                 .filter(|child| matches!(child.typ(), NodeType::TextSpan))
             {
                 let text_span_data = doc.text_span_data(child);
+                let text_span_style = doc.text_style_data(child);
                 // todo
             }
         }

@@ -59,7 +59,7 @@
     },
     {
       "type": "rust",
-      "path": "../coplt_ui_rusty/src/com.rs",
+      "path": "../Coplt.Ui.Native/rust_part/src/com.rs",
       "override": {
         "GridTemplateComponent": {
           "Debug": false,

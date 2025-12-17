@@ -4,6 +4,8 @@ members = ["Coplt.Ui.Native/rust_common", "Coplt.Ui.Native/rust_part"]
 resolver = "3"
 
 [workspace.dependencies]
+anyhow = "1"
+bitflags = "2"
 cocom = {path = "Coplt.Com2/cocom_rs"}
 concat-idents = "1"
 coplt_ui_rust_common = {path = "Coplt.Ui.Native/rust_common"}
