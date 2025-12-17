@@ -1,6 +1,6 @@
 [workspace]
 exclude = ["taffy", "Coplt.Com2"]
-members = ["coplt_ui_rusty"]
+members = ["Coplt.Ui.Native/rust_part"]
 resolver = "3"
 
 [workspace.dependencies]

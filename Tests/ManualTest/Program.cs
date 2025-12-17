@@ -10,53 +10,53 @@ using Coplt.UI.Trees;
 
 NativeLib.Instance.SetLogger((l, msg) => Console.WriteLine($"[{l}] {msg}"));
 
-// var fm = new FontManager(new FrameSource());
-// var start = Stopwatch.GetTimestamp();
-// var b = FontCollection.SystemCollection;
-// var end = Stopwatch.GetTimestamp();
-// var elapsed = Stopwatch.GetElapsedTime(start, end);
-// var d = b.DefaultFamily;
-// var fonts = d.GetFonts();
-// Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}μs");
-// foreach (var font in fonts)
-// {
-//     start = Stopwatch.GetTimestamp();
-//     var face = font.CreateFace(fm);
-//     end = Stopwatch.GetTimestamp();
-//     elapsed = Stopwatch.GetElapsedTime(start, end);
-//     Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}μs; {face}");
-// }
-
-
-
-var ff = FontFallback.Create("Calibri");
-// var ff = FontFallback.Create("Microsoft YaHei UI");
-Console.WriteLine(ff);
-
-using var doc = new Document.Builder().Create();
-var node = new Access.View(doc)
-{
-    MaxWidth = 100, Height = Length.Auto,
-    Container = Container.Text,
-    FontFallback = ff,
-    WrapFlags = WrapFlags.AllowNewLine,
-};
-doc.AddRoot(node.Id);
-// node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
-// node.Add("有朋自远方来");
-// var inline_box = new Access.View(doc) { Width = 30, Height = 30 };
-// node.Add(inline_box);
-// node.Add("不亦乐乎");
-// node.Add("Never Gonna Give You Up");
-// node.Add("fia");
-// node.Add("!=");
-// node.Add("😀");
-// node.Add("a c");
-// node.Add("123 阿斯顿 asd");
-node.Add("有朋自远方来 ياخشىمۇسىز");
+var fm = new FontManager(new FrameSource());
 var start = Stopwatch.GetTimestamp();
-doc.Update();
+var b = FontCollection.SystemCollection;
 var end = Stopwatch.GetTimestamp();
 var elapsed = Stopwatch.GetElapsedTime(start, end);
-Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}us");
-Console.WriteLine(node.Layout.ToString());
+var d = b.DefaultFamily;
+var fonts = d.GetFonts();
+Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}μs");
+foreach (var font in fonts)
+{
+    start = Stopwatch.GetTimestamp();
+    var face = font.CreateFace(fm);
+    end = Stopwatch.GetTimestamp();
+    elapsed = Stopwatch.GetElapsedTime(start, end);
+    Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}μs; {face}");
+}
+
+//
+//
+// var ff = FontFallback.Create("Calibri");
+// // var ff = FontFallback.Create("Microsoft YaHei UI");
+// Console.WriteLine(ff);
+//
+// using var doc = new Document.Builder().Create();
+// var node = new Access.View(doc)
+// {
+//     MaxWidth = 100, Height = Length.Auto,
+//     Container = Container.Text,
+//     FontFallback = ff,
+//     WrapFlags = WrapFlags.AllowNewLine,
+// };
+// doc.AddRoot(node.Id);
+// // node.Add("123 阿斯顿 asd ياخشىمۇسىز 😊😅ひらがな");
+// // node.Add("有朋自远方来");
+// // var inline_box = new Access.View(doc) { Width = 30, Height = 30 };
+// // node.Add(inline_box);
+// // node.Add("不亦乐乎");
+// // node.Add("Never Gonna Give You Up");
+// // node.Add("fia");
+// // node.Add("!=");
+// // node.Add("😀");
+// // node.Add("a c");
+// // node.Add("123 阿斯顿 asd");
+// node.Add("有朋自远方来 ياخشىمۇسىز");
+// var start = Stopwatch.GetTimestamp();
+// doc.Update();
+// var end = Stopwatch.GetTimestamp();
+// var elapsed = Stopwatch.GetElapsedTime(start, end);
+// Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}us");
+// Console.WriteLine(node.Layout.ToString());

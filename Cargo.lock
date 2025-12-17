@@ -97,7 +97,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "coplt_ui_rusty"
+name = "coplt_ui_rust_part"
 version = "0.1.0"
 dependencies = [
  "anyhow",
