@@ -4,20 +4,18 @@ use std::ops::Range;
 
 use crate::*;
 
-pub fn merge_span<const N: usize>(
-    inputs: [&'_ mut dyn Iterator<Item = Range<usize>>; N],
-) -> impl Iterator<Item = Range<usize>> {
-    a_gen(|ctx| gen_merge_span(ctx, inputs)).to_iter()
+pub fn merge_ranges<const N: usize>(
+    inputs: [&'_ mut dyn Iterator<Item = (/* index */ u32, Range<u32>)>; N],
+) -> impl Iterator<Item = (Range<u32>, /* index */ [u32; N])> {
+    a_gen(move |ctx| gen_merge_ranges(ctx, inputs)).to_iter()
 }
 
-async fn gen_merge_span<const N: usize>(
-    ctx: AGen<Range<usize>>,
-    inputs: [&'_ mut dyn Iterator<Item = Range<usize>>; N],
+async fn gen_merge_ranges<const N: usize>(
+    ctx: AGen<(Range<u32>, /* index */ [u32; N])>,
+    inputs: [&'_ mut dyn Iterator<Item = (/* index */ u32, Range<u32>)>; N],
 ) -> Option<()> {
     let mut states = [const { State::None }; N];
-    let mut last_pos = 0;
-
-    let (min_pos, min_range) = (0..N)
+    let mut last_pos = (0..N)
         .into_iter()
         .filter_map(|n| {
             let ref mut state = states[n];
@@ -31,44 +29,101 @@ async fn gen_merge_span<const N: usize>(
             if let State::End = state {
                 None
             } else {
-                Some((n, unsafe { state.some().clone() }))
+                Some(unsafe { state.some().1.start })
             }
         })
-        .min_by_key(|a| a.1.start)?;
+        .min()?;
 
-    debug_assert!(min_pos >= last_pos);
+    loop {
+        let next_pos = (0..N)
+            .into_iter()
+            .filter_map(|n| {
+                let ref mut state = states[n];
+                let range = state.try_some()?;
+                while range.1.end <= last_pos {
+                    match inputs[n].next() {
+                        Some(v) => *range = v,
+                        None => {
+                            *state = State::End;
+                            return None;
+                        }
+                    }
+                }
+                if range.1.start > last_pos {
+                    Some(range.1.start)
+                } else {
+                    Some(range.1.end)
+                }
+            })
+            .min()?;
 
-    let off = min_pos - last_pos;
-    if off > 0 {
-        last_pos = min_pos;
-        ctx.Yield(Range {
-            start: min_pos,
-            end: min_pos + off,
-        })
-        .await;
+        if next_pos > last_pos {
+            let range = Range {
+                start: last_pos,
+                end: next_pos,
+            };
+            last_pos = range.end;
+            ctx.Yield((range, State::get_indexes(&states))).await;
+        }
     }
-
-    // todo
-    todo!()
 }
 
 enum State {
     None,
-    Some(Range<usize>),
+    Some((u32, Range<u32>)),
     End,
 }
 
 impl State {
-    unsafe fn some(&mut self) -> &mut Range<usize> {
+    pub fn get_indexes<const N: usize>(this: &[State; N]) -> [u32; N] {
+        let mut arr = [0; N];
+        for (i, item) in this.iter().enumerate() {
+            unsafe { arr[i] = item.some_const().0 }
+        }
+        arr
+    }
+
+    unsafe fn some_const(&self) -> &(u32, Range<u32>) {
         match self {
             State::Some(range) => range,
             _ => unreachable!(),
         }
     }
-    fn try_some(&mut self) -> Option<&mut Range<usize>> {
+
+    unsafe fn some(&mut self) -> &mut (u32, Range<u32>) {
+        match self {
+            State::Some(range) => range,
+            _ => unreachable!(),
+        }
+    }
+    fn try_some(&mut self) -> Option<&mut (u32, Range<u32>)> {
         match self {
             State::Some(range) => Some(range),
             _ => None,
         }
     }
+}
+
+#[test]
+fn test_1() {
+    let data = ([0..10, 10..20, 20..30], [5..10, 25..30]);
+    let a: &mut dyn Iterator<Item = (/* index */ u32, Range<u32>)> =
+        &mut data.0.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
+    let b: &mut dyn Iterator<Item = (/* index */ u32, Range<u32>)> =
+        &mut data.1.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
+    let r = merge_ranges([a, b]);
+    let v: Vec<_> = r.collect();
+    println!("{v:?}");
+}
+
+#[test]
+fn test_2() {
+    let data = ([0..10, 10..20, 20..30], [0..5, 5..10, 10..30]);
+    let a: &mut dyn Iterator<Item = (/* index */ u32, Range<u32>)> =
+        &mut data.0.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
+    let b: &mut dyn Iterator<Item = (/* index */ u32, Range<u32>)> =
+        &mut data.1.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
+    let r = merge_ranges([a, b]);
+    let v: Vec<_> = r.collect();
+    println!("{v:?}");
 }
