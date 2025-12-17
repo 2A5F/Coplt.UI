@@ -4,7 +4,7 @@ use std::{
     task::{Context, RawWaker, RawWakerVTable, Waker},
 };
 
-pub fn a_gen<T>(f: impl AsyncFnOnce(AGen<T>) -> Option<()>) -> impl Iterator<Item = T> {
+pub fn a_gen<T: Unpin>(f: impl AsyncFnOnce(AGen<T>) -> Option<()>) -> impl Iterator<Item = T> {
     AGenIter {
         yield_value: Option::<T>::None,
         fu: f(AGen(PhantomData)),
@@ -13,21 +13,26 @@ pub fn a_gen<T>(f: impl AsyncFnOnce(AGen<T>) -> Option<()>) -> impl Iterator<Ite
 
 pub struct AGen<T>(PhantomData<*mut T>);
 
-impl<T> AGen<T> {
+impl<T: Unpin> AGen<T> {
     #[allow(non_snake_case)]
     pub fn Yield(&self, val: T) -> impl Future {
-        AGenYield(val)
+        AGenYield(Some(val))
     }
 }
 
-pub struct AGenYield<T>(T);
+pub struct AGenYield<T>(Option<T>);
 
-impl<T> Future for AGenYield<T> {
+impl<T: Unpin> Future for AGenYield<T> {
     type Output = ();
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> std::task::Poll<Self::Output> {
-        let iter = cx.waker().data() as *mut Option<T>;
-        std::task::Poll::Pending
+        if let Some(val) = self.get_mut().0.take() {
+            let iter = cx.waker().data() as *mut Option<T>;
+            unsafe { std::ptr::replace(iter, Some(val)) };
+            std::task::Poll::Pending
+        } else {
+            std::task::Poll::Ready(())
+        }
     }
 }
 
