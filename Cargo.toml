@@ -1,11 +1,12 @@
 [workspace]
 exclude = ["taffy", "Coplt.Com2"]
-members = ["Coplt.Ui.Native/rust_part"]
+members = ["Coplt.Ui.Native/rust_common", "Coplt.Ui.Native/rust_part"]
 resolver = "3"
 
 [workspace.dependencies]
 cocom = {path = "Coplt.Com2/cocom_rs"}
 concat-idents = "1"
+coplt_ui_rust_common = {path = "Coplt.Ui.Native/rust_common"}
 dashmap = "6.1"
 etagere = "0.2"
 font-types = "0.10"

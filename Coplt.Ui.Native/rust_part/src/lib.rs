@@ -68,7 +68,6 @@ use cocom::HResultE;
 use cocom::object;
 use coplt_alloc::*;
 
-mod alg;
 mod atlas;
 mod col;
 mod com;

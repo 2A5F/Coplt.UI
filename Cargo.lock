@@ -97,12 +97,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "coplt_ui_rust_common"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dashmap",
+]
+
+[[package]]
 name = "coplt_ui_rust_part"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "cocom",
  "concat-idents",
+ "coplt_ui_rust_common",
  "dashmap",
  "etagere",
  "font-types",

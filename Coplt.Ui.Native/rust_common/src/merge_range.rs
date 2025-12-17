@@ -1,11 +1,13 @@
+#![allow(unused)]
+
 use std::ops::Range;
 
-use crate::alg::*;
+use crate::*;
 
 pub fn merge_span<const N: usize>(
     inputs: [&'_ mut dyn Iterator<Item = Range<usize>>; N],
 ) -> impl Iterator<Item = Range<usize>> {
-    a_gen(|ctx| gen_merge_span(ctx, inputs))
+    a_gen(|ctx| gen_merge_span(ctx, inputs)).to_iter()
 }
 
 async fn gen_merge_span<const N: usize>(
