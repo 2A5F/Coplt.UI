@@ -35,9 +35,9 @@ pub use text::*;
 #[macro_export]
 macro_rules! c_option {
     ( #val ; $self:expr => $name:ident  ) => {
-        concat_idents!(has_name = Has, $name {
+        ::concat_idents::concat_idents!(has_name = Has, $name {
             if $self.has_name {
-                concat_idents!(value_name = $name, Value {
+                ::concat_idents::concat_idents!(value_name = $name, Value {
                     Some($self.value_name)
                 })
             } else {
@@ -47,7 +47,7 @@ macro_rules! c_option {
         })
     };
     ( $self:expr => $name:ident  ) => {
-        concat_idents!(has_name = Has, $name {
+        ::concat_idents::concat_idents!(has_name = Has, $name {
             if $self.has_name {
                 Some($self.$name)
             } else {
@@ -577,18 +577,6 @@ impl<'a> LayoutGridContainer for SubDoc<'a> {
 #[derive(Debug, Clone, Copy)]
 pub struct StyleHandle<'a>(&'a SubDoc<'a>, NodeId);
 
-macro_rules! common_style {
-    [ $self:ident.$s:ident => $i:expr ] => {
-         (*(*$self.0).0).$s.add($i as usize)
-    };
-}
-
-macro_rules! view_style {
-    [ $self:ident.$s:ident => $i:expr ] => {
-         (*(*$self.0).0).$s.add($i as usize)
-    };
-}
-
 impl Hash for GridNameType {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         core::mem::discriminant(self).hash(state);
@@ -644,68 +632,73 @@ impl<'a> Deref for StyleHandle<'a> {
     }
 }
 
+#[macro_export]
 macro_rules! c_overflow {
     ( $self:ident.$name:ident ) => {
         match $self.style().$name {
-            com::Overflow::Visible => taffy::Overflow::Visible,
-            com::Overflow::Clip => taffy::Overflow::Clip,
-            com::Overflow::Hidden => taffy::Overflow::Hidden,
+            $crate::com::Overflow::Visible => ::taffy::Overflow::Visible,
+            $crate::com::Overflow::Clip => ::taffy::Overflow::Clip,
+            $crate::com::Overflow::Hidden => ::taffy::Overflow::Hidden,
         }
     };
 }
 
+#[macro_export]
 macro_rules! c_position {
     ( $self:ident.$name:ident ) => {
         match $self.style().$name {
-            com::Position::Relative => taffy::Position::Relative,
-            com::Position::Absolute => taffy::Position::Absolute,
+            $crate::com::Position::Relative => ::taffy::Position::Relative,
+            $crate::com::Position::Absolute => ::taffy::Position::Absolute,
         }
     };
 }
 
+#[macro_export]
 macro_rules! c_length_percentage_auto {
     ( $self:expr => $name:ident ) => {
-        concat_idents!(value_name = $name, Value {
+        ::concat_idents::concat_idents!(value_name = $name, Value {
             match $self.$name {
-                com::LengthType::Fixed => {
-                    taffy::LengthPercentageAuto::length($self.value_name)
+                $crate::com::LengthType::Fixed => {
+                    ::taffy::LengthPercentageAuto::length($self.value_name)
                 }
-                com::LengthType::Percent => {
-                    taffy::LengthPercentageAuto::percent($self.value_name)
+                $crate::com::LengthType::Percent => {
+                    ::taffy::LengthPercentageAuto::percent($self.value_name)
                 }
-                com::LengthType::Auto => taffy::LengthPercentageAuto::auto(),
+                $crate::com::LengthType::Auto => ::taffy::LengthPercentageAuto::auto(),
             }
         })
     };
 }
 
+#[macro_export]
 macro_rules! c_dimension {
     ( $self:expr => $name:ident ) => {
-        concat_idents!(value_name = $name, Value {
+        ::concat_idents::concat_idents!(value_name = $name, Value {
             match $self.$name {
-                com::LengthType::Fixed => {
-                    taffy::Dimension::length($self.value_name)
+                $crate::com::LengthType::Fixed => {
+                    ::taffy::Dimension::length($self.value_name)
                 }
-                com::LengthType::Percent => {
-                    taffy::Dimension::percent($self.value_name)
+                $crate::com::LengthType::Percent => {
+                    ::taffy::Dimension::percent($self.value_name)
                 }
-                com::LengthType::Auto => taffy::Dimension::auto(),
+                $crate::com::LengthType::Auto => ::taffy::Dimension::auto(),
             }
         })
     };
 }
 
+#[macro_export]
 macro_rules! c_length_percentage {
     ( $self:expr => $name:ident ) => {
-        concat_idents!(value_name = $name, Value {
+        ::concat_idents::concat_idents!(value_name = $name, Value {
             match $self.$name {
-                com::LengthType::Fixed => {
-                    taffy::LengthPercentage::length($self.value_name)
+                $crate::com::LengthType::Fixed => {
+                    ::taffy::LengthPercentage::length($self.value_name)
                 }
-                com::LengthType::Percent => {
-                    taffy::LengthPercentage::percent($self.value_name)
+                $crate::com::LengthType::Percent => {
+                    ::taffy::LengthPercentage::percent($self.value_name)
                 }
-                com::LengthType::Auto => taffy::LengthPercentage::length(0.0),
+                $crate::com::LengthType::Auto => ::taffy::LengthPercentage::length(0.0),
             }
         })
     };

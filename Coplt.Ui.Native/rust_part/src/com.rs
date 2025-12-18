@@ -419,13 +419,6 @@ pub enum LineAlign {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum LocaleMode {
-    Normal = 0,
-    ByScript = 1,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Overflow {
     Visible = 0,
     Clip = 1,
@@ -1476,7 +1469,6 @@ pub struct StyleData {
     pub TextAlign: TextAlign,
     pub LineAlign: LineAlign,
     pub TabSize: LengthType,
-    pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
     pub WrapFlags: WrapFlags,
@@ -1595,7 +1587,6 @@ pub struct TextStyleData {
     pub TextAlign: TextAlign,
     pub LineAlign: LineAlign,
     pub TabSize: LengthType,
-    pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
     pub WrapFlags: WrapFlags,

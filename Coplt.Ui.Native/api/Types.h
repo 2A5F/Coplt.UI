@@ -402,12 +402,6 @@ namespace Coplt {
         Center = 3,
     };
 
-    enum class LocaleMode : ::Coplt::u8
-    {
-        Normal = 0,
-        ByScript = 1,
-    };
-
     enum class Overflow : ::Coplt::u8
     {
         Visible = 0,
@@ -1369,7 +1363,6 @@ namespace Coplt {
         ::Coplt::TextAlign TextAlign;
         ::Coplt::LineAlign LineAlign;
         ::Coplt::LengthType TabSize;
-        ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;
         ::Coplt::WrapFlags WrapFlags;
@@ -1481,7 +1474,6 @@ namespace Coplt {
         ::Coplt::TextAlign TextAlign;
         ::Coplt::LineAlign LineAlign;
         ::Coplt::LengthType TabSize;
-        ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;
         ::Coplt::WrapFlags WrapFlags;

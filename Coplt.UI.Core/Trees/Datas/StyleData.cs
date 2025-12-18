@@ -157,7 +157,6 @@ public partial record struct StyleData()
     public TextAlign TextAlign = TextAlign.Start;
     public LineAlign LineAlign = LineAlign.Start;
     public LengthType TabSize = LengthType.Percent;
-    public LocaleMode LocaleMode = LocaleMode.Normal;
     public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
     public WrapFlags WrapFlags = WrapFlags.None;
@@ -331,7 +330,6 @@ public partial record struct TextStyleData()
     public TextAlign TextAlign = TextAlign.Start;
     public LineAlign LineAlign = LineAlign.Start;
     public LengthType TabSize = LengthType.Percent;
-    public LocaleMode LocaleMode = LocaleMode.Normal;
     public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
     public WrapFlags WrapFlags = WrapFlags.None;

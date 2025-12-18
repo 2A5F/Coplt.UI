@@ -910,42 +910,42 @@ HRESULT TextAnalysisSource::GetLocaleName(
             *localeName = scope_style.Locale.Name;
             return S_OK;
         }
-        if (scope_style.LocaleMode == LocaleMode::ByScript)
-        {
-            const auto& script_ranges = m_paragraph_data->m_script_ranges;
-            if (script_ranges.empty() || textPosition >= paragraph.LogicTextLength)
-            {
-                *textLength = 0;
-                *localeName = nullptr;
-                return S_OK;
-            }
-            if (paragraph.Type == TextParagraphType::Block)
-            {
-                *textLength = 1;
-                *localeName = nullptr;
-                return S_OK;
-            }
-            const auto index = Algorithm::BinarySearch(
-                script_ranges.data(), static_cast<i32>(script_ranges.size()), textPosition,
-                [](const ScriptRange& item, const u32 pos)
-                {
-                    if (pos < item.Start) return 1;
-                    if (pos >= item.Start + item.Length) return -1;
-                    return 0;
-                }
-            );
-            if (index < 0)
-            {
-                *textLength = 0;
-                *localeName = nullptr;
-                return S_OK;
-            }
-            const auto& range = script_ranges[index];
-            const auto offset = textPosition - range.Start;
-            *textLength = range.Length - offset;
-            *localeName = range.Locale;
-            return S_OK;
-        }
+        // if (scope_style.LocaleMode == LocaleMode::ByScript)
+        // {
+        //     const auto& script_ranges = m_paragraph_data->m_script_ranges;
+        //     if (script_ranges.empty() || textPosition >= paragraph.LogicTextLength)
+        //     {
+        //         *textLength = 0;
+        //         *localeName = nullptr;
+        //         return S_OK;
+        //     }
+        //     if (paragraph.Type == TextParagraphType::Block)
+        //     {
+        //         *textLength = 1;
+        //         *localeName = nullptr;
+        //         return S_OK;
+        //     }
+        //     const auto index = Algorithm::BinarySearch(
+        //         script_ranges.data(), static_cast<i32>(script_ranges.size()), textPosition,
+        //         [](const ScriptRange& item, const u32 pos)
+        //         {
+        //             if (pos < item.Start) return 1;
+        //             if (pos >= item.Start + item.Length) return -1;
+        //             return 0;
+        //         }
+        //     );
+        //     if (index < 0)
+        //     {
+        //         *textLength = 0;
+        //         *localeName = nullptr;
+        //         return S_OK;
+        //     }
+        //     const auto& range = script_ranges[index];
+        //     const auto offset = textPosition - range.Start;
+        //     *textLength = range.Length - offset;
+        //     *localeName = range.Locale;
+        //     return S_OK;
+        // }
     }
     *textLength = 0;
     *localeName = L"";

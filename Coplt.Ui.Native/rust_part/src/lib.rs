@@ -62,10 +62,7 @@ mod coplt_alloc {
     }
 }
 
-use cocom::ComPtr;
-use cocom::HResult;
-use cocom::HResultE;
-use cocom::object;
+use cocom::{ComPtr, HResult, HResultE, object};
 use coplt_alloc::*;
 
 mod atlas;
@@ -139,11 +136,16 @@ mod com_impl {
         ops::{Deref, DerefMut},
     };
 
+    use taffy::{LengthPercentage, LengthPercentageAuto};
+
     use crate::{
         col::{NArc, NBitSet, NList},
         com::{
-            ChildsData, CommonData, NString, NativeArc, NativeList, OpaqueObject,
-            TextData_BidiRange, TextData_ScriptRange, TextParagraphData, TextSpanData,
+            ChildsData, CommonData, CursorType, FontWeight, FontWidth, IFontFallback, LineAlign,
+            LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents, TextAlign,
+            TextData_BidiRange, TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow,
+            TextParagraphData, TextSpanData, TextStyleData, TextStyleOverride, TextWrap, WordBreak,
+            WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
@@ -268,6 +270,82 @@ mod com_impl {
     impl CommonData {
         pub fn is_layout_dirty(&self) -> bool {
             self.LayoutVersion != self.LastLayoutVersion
+        }
+    }
+
+    macro_rules! GetTextStyle {
+        { $src:expr => $name:ident { $get:ident } } => {
+            if $src.Override.contains(TextStyleOverride::$name) {
+                Some($get!{ $src => $name })
+            } else {
+                None
+            }
+        };
+        { $src:expr => $name:ident } => {
+            if $src.Override.contains(TextStyleOverride::$name) {
+                Some($src.$name)
+            } else {
+                None
+            }
+        };
+        { fn $name:ident -> $type:ty $({ $get:ident })? } => {
+            pub fn $name(&self) -> Option<$type> {
+                GetTextStyle!(self => $name $({ $get })?)
+            }
+        };
+        { impl $struct:ty { $(fn $name:ident -> $type:ty $({ $get:ident })?;)* } } => {
+            #[allow(non_snake_case)]
+            impl $struct {
+                $(GetTextStyle! { fn $name -> $type $({ $get })? })*
+            }
+        };
+    }
+
+    GetTextStyle! {
+        impl TextStyleData
+        {
+            fn FontFallback -> *mut IFontFallback;
+            fn Locale -> LocaleId;
+            fn TextColorR -> f32;
+            fn TextColorG -> f32;
+            fn TextColorB -> f32;
+            fn TextColorA -> f32;
+            fn Opacity -> f32;
+            fn BackgroundColorR -> f32;
+            fn BackgroundColorG -> f32;
+            fn BackgroundColorB -> f32;
+            fn BackgroundColorA -> f32;
+            fn InsertLeft -> LengthPercentageAuto { c_length_percentage_auto };
+            fn InsertTop -> LengthPercentageAuto { c_length_percentage_auto };
+            fn InsertRight -> LengthPercentageAuto { c_length_percentage_auto };
+            fn InsertBottom -> LengthPercentageAuto { c_length_percentage_auto };
+            fn MarginLeft -> LengthPercentageAuto { c_length_percentage_auto };
+            fn MarginTop -> LengthPercentageAuto { c_length_percentage_auto };
+            fn MarginRight -> LengthPercentageAuto { c_length_percentage_auto };
+            fn MarginBottom -> LengthPercentageAuto { c_length_percentage_auto };
+            fn PaddingLeft -> LengthPercentage { c_length_percentage };
+            fn PaddingTop -> LengthPercentage { c_length_percentage };
+            fn PaddingRight -> LengthPercentage { c_length_percentage };
+            fn PaddingBottom -> LengthPercentage { c_length_percentage };
+            fn TabSize -> LengthPercentageAuto { c_length_percentage_auto };
+            fn FontSize -> f32;
+            fn FontWidth -> FontWidth;
+            fn FontOblique -> f32;
+            fn FontWeight -> FontWeight;
+            fn LineHeight -> LengthPercentage { c_length_percentage };
+            fn Cursor -> CursorType;
+            fn PointerEvents -> PointerEvents;
+            fn FontItalic -> bool;
+            fn FontOpticalSizing -> bool;
+            fn TextAlign -> TextAlign;
+            fn LineAlign -> LineAlign;
+            fn TextDirection -> TextDirection;
+            fn WritingDirection -> WritingDirection;
+            fn WrapFlags -> WrapFlags;
+            fn TextWrap -> TextWrap;
+            fn WordBreak -> WordBreak;
+            fn TextOrientation -> TextOrientation;
+            fn TextOverflow -> TextOverflow;
         }
     }
 

@@ -4,54 +4,54 @@
       "kind": "fn",
       "index": 88,
       "params": [
-        194,
-        190
+        193,
+        189
       ]
     },
     {
       "kind": "fn",
-      "index": 173,
+      "index": 172,
       "params": [
-        194,
+        193,
         76
       ]
     },
     {
       "kind": "fn",
-      "index": 193,
+      "index": 192,
       "params": [
-        194
+        193
       ]
     },
     {
       "kind": "fn",
-      "index": 193,
+      "index": 192,
       "params": [
-        194,
+        193,
         76,
         12,
-        180,
-        194
+        179,
+        193
       ]
     },
     {
       "kind": "fn",
-      "index": 193,
+      "index": 192,
       "params": [
-        194,
+        193,
         88,
-        190
+        189
       ]
     },
     {
       "kind": "fn",
-      "index": 193,
+      "index": 192,
       "params": [
-        194,
-        175,
-        180,
-        175,
-        180
+        193,
+        174,
+        179,
+        174,
+        179
       ]
     },
     {
@@ -95,7 +95,7 @@
       "kind": "struct",
       "index": 3,
       "params": [
-        152
+        151
       ]
     },
     {
@@ -148,12 +148,19 @@
       "kind": "struct",
       "index": 5,
       "params": [
-        146
+        145
       ]
     },
     {
       "kind": "ptr",
       "index": 23
+    },
+    {
+      "kind": "struct",
+      "index": 5,
+      "params": [
+        156
+      ]
     },
     {
       "kind": "struct",
@@ -180,14 +187,7 @@
       "kind": "struct",
       "index": 5,
       "params": [
-        160
-      ]
-    },
-    {
-      "kind": "struct",
-      "index": 5,
-      "params": [
-        188
+        187
       ]
     },
     {
@@ -643,16 +643,12 @@
       "index": 38
     },
     {
-      "kind": "enum",
-      "index": 39
-    },
-    {
       "kind": "struct",
       "index": 43
     },
     {
       "kind": "enum",
-      "index": 40
+      "index": 39
     },
     {
       "kind": "struct",
@@ -660,7 +656,7 @@
     },
     {
       "kind": "enum",
-      "index": 41
+      "index": 40
     },
     {
       "kind": "struct",
@@ -668,7 +664,7 @@
     },
     {
       "kind": "ptr",
-      "index": 148
+      "index": 147
     },
     {
       "kind": "struct",
@@ -676,7 +672,7 @@
     },
     {
       "kind": "ptr",
-      "index": 150
+      "index": 149
     },
     {
       "kind": "struct",
@@ -688,7 +684,7 @@
     },
     {
       "kind": "ptr",
-      "index": 153
+      "index": 152
     },
     {
       "kind": "struct",
@@ -696,7 +692,7 @@
     },
     {
       "kind": "ptr",
-      "index": 155
+      "index": 154
     },
     {
       "kind": "struct",
@@ -720,7 +716,7 @@
     },
     {
       "kind": "ptr",
-      "index": 161
+      "index": 160
     },
     {
       "kind": "struct",
@@ -728,7 +724,7 @@
     },
     {
       "kind": "ptr",
-      "index": 163
+      "index": 162
     },
     {
       "kind": "struct",
@@ -736,11 +732,11 @@
     },
     {
       "kind": "ptr",
-      "index": 165
+      "index": 164
     },
     {
       "kind": "enum",
-      "index": 42
+      "index": 41
     },
     {
       "kind": "struct",
@@ -748,7 +744,7 @@
     },
     {
       "kind": "enum",
-      "index": 43
+      "index": 42
     },
     {
       "kind": "struct",
@@ -759,7 +755,7 @@
     },
     {
       "kind": "ptr",
-      "index": 171
+      "index": 170
     },
     {
       "kind": "u_int8"
@@ -769,7 +765,7 @@
     },
     {
       "kind": "ptr",
-      "index": 174
+      "index": 173
     },
     {
       "kind": "double"
@@ -788,7 +784,7 @@
     },
     {
       "kind": "ptr",
-      "index": 180
+      "index": 179
     },
     {
       "kind": "int64"
@@ -813,14 +809,14 @@
     },
     {
       "kind": "ptr",
-      "index": 188
+      "index": 187
     },
     {
       "kind": "u_int64"
     },
     {
       "kind": "ptr",
-      "index": 190
+      "index": 189
     },
     {
       "kind": "u_int_ptr"
@@ -830,7 +826,7 @@
     },
     {
       "kind": "ptr",
-      "index": 193
+      "index": 192
     },
     {
       "kind": "ptr",
@@ -893,28 +889,28 @@
     },
     {
       "kind": "ptr",
+      "index": 172,
+      "flags": "const"
+    },
+    {
+      "kind": "ptr",
       "index": 173,
       "flags": "const"
     },
     {
       "kind": "ptr",
-      "index": 174,
+      "index": 203,
       "flags": "const"
     },
     {
       "kind": "ptr",
-      "index": 204,
-      "flags": "const"
-    },
-    {
-      "kind": "ptr",
-      "index": 206
+      "index": 205
     }
   ],
   "enums": [
     {
       "name": "StrKind",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Str8",
@@ -928,7 +924,7 @@
     },
     {
       "name": "AtlasAllocatorType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Common",
@@ -942,7 +938,7 @@
     },
     {
       "name": "FillRule",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "EvenOdd",
@@ -956,7 +952,7 @@
     },
     {
       "name": "LineCap",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Butt",
@@ -974,7 +970,7 @@
     },
     {
       "name": "LineJoin",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Miter",
@@ -996,7 +992,7 @@
     },
     {
       "name": "PathBuilderCmdType",
-      "underlying": 188,
+      "underlying": 187,
       "items": [
         {
           "name": "Close",
@@ -1026,7 +1022,7 @@
     },
     {
       "name": "Orientation",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Horizontal",
@@ -1040,7 +1036,7 @@
     },
     {
       "name": "AlignType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "None",
@@ -1090,7 +1086,7 @@
     },
     {
       "name": "GridNameType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Name",
@@ -1108,7 +1104,7 @@
     },
     {
       "name": "GridPlacementType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Auto",
@@ -1134,7 +1130,7 @@
     },
     {
       "name": "GridTemplateComponentType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Single",
@@ -1148,7 +1144,7 @@
     },
     {
       "name": "LengthType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Fixed",
@@ -1166,7 +1162,7 @@
     },
     {
       "name": "RepetitionType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Count",
@@ -1184,7 +1180,7 @@
     },
     {
       "name": "SizingType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Auto",
@@ -1218,7 +1214,7 @@
     },
     {
       "name": "AvailableSpaceType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Definite",
@@ -1236,7 +1232,7 @@
     },
     {
       "name": "LogLevel",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Trace",
@@ -1267,7 +1263,7 @@
     {
       "name": "LayoutCacheFlags",
       "flags": "flags",
-      "underlying": 187,
+      "underlying": 186,
       "items": [
         {
           "name": "Empty",
@@ -1317,7 +1313,7 @@
     },
     {
       "name": "BoxSizing",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "BorderBox",
@@ -1331,7 +1327,7 @@
     },
     {
       "name": "Container",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Flex",
@@ -1349,7 +1345,7 @@
     },
     {
       "name": "CursorType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Default",
@@ -1491,7 +1487,7 @@
     },
     {
       "name": "FlexDirection",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Column",
@@ -1513,7 +1509,7 @@
     },
     {
       "name": "FlexWrap",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "NoWrap",
@@ -1531,7 +1527,7 @@
     },
     {
       "name": "FontWeight",
-      "underlying": 180,
+      "underlying": 179,
       "items": [
         {
           "name": "None",
@@ -1585,7 +1581,7 @@
     },
     {
       "name": "GridAutoFlow",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Row",
@@ -1607,7 +1603,7 @@
     },
     {
       "name": "LineAlign",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Baseline",
@@ -1628,22 +1624,8 @@
       ]
     },
     {
-      "name": "LocaleMode",
-      "underlying": 173,
-      "items": [
-        {
-          "name": "Normal",
-          "value": "0"
-        },
-        {
-          "name": "ByScript",
-          "value": "1"
-        }
-      ]
-    },
-    {
       "name": "Overflow",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Visible",
@@ -1661,7 +1643,7 @@
     },
     {
       "name": "PointerEvents",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Auto",
@@ -1675,7 +1657,7 @@
     },
     {
       "name": "Position",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Relative",
@@ -1689,7 +1671,7 @@
     },
     {
       "name": "TextAlign",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Start",
@@ -1707,7 +1689,7 @@
     },
     {
       "name": "TextDirection",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Forward",
@@ -1729,7 +1711,7 @@
     },
     {
       "name": "TextOrientation",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Mixed",
@@ -1747,7 +1729,7 @@
     },
     {
       "name": "TextOverflow",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Clip",
@@ -1761,7 +1743,7 @@
     },
     {
       "name": "TextWrap",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Wrap",
@@ -1775,7 +1757,7 @@
     },
     {
       "name": "Visible",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Visible",
@@ -1793,7 +1775,7 @@
     },
     {
       "name": "WordBreak",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Auto",
@@ -1812,7 +1794,7 @@
     {
       "name": "WrapFlags",
       "flags": "flags",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "None",
@@ -1842,7 +1824,7 @@
     },
     {
       "name": "WritingDirection",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Horizontal",
@@ -1856,7 +1838,7 @@
     },
     {
       "name": "CharCategory",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Unassigned",
@@ -1987,7 +1969,7 @@
     {
       "name": "FontFlags",
       "flags": "flags",
-      "underlying": 180,
+      "underlying": 179,
       "items": [
         {
           "name": "None",
@@ -2005,7 +1987,7 @@
     },
     {
       "name": "ScriptCode",
-      "underlying": 180,
+      "underlying": 179,
       "items": [
         {
           "name": "InvalidCode",
@@ -2887,7 +2869,7 @@
     },
     {
       "name": "BidiDirection",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "LeftToRight",
@@ -2902,7 +2884,7 @@
     {
       "name": "TextStyleOverride",
       "flags": "flags",
-      "underlying": 190,
+      "underlying": 189,
       "items": [
         {
           "name": "None",
@@ -3084,7 +3066,7 @@
     },
     {
       "name": "NodeType",
-      "underlying": 173,
+      "underlying": 172,
       "items": [
         {
           "name": "Null",
@@ -3110,11 +3092,11 @@
       "name": "Str16",
       "fields": [
         {
-          "type": 209,
+          "type": 208,
           "name": "Data"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Size"
         }
       ]
@@ -3123,11 +3105,11 @@
       "name": "Str8",
       "fields": [
         {
-          "type": 208,
+          "type": 207,
           "name": "Data"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Size"
         }
       ]
@@ -3139,7 +3121,7 @@
       ],
       "fields": [
         {
-          "type": 190,
+          "type": 189,
           "name": "m_count"
         },
         {
@@ -3164,11 +3146,11 @@
       "name": "NativeBitSet",
       "fields": [
         {
-          "type": 191,
+          "type": 190,
           "name": "m_items"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_size"
         }
       ]
@@ -3184,11 +3166,11 @@
           "name": "m_items"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_cap"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_size"
         }
       ]
@@ -3197,19 +3179,19 @@
       "name": "AABB2DF",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "MinX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MinY"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MaxX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MaxY"
         }
       ]
@@ -3218,19 +3200,19 @@
       "name": "AABB2DI",
       "fields": [
         {
-          "type": 180,
+          "type": 179,
           "name": "MinX"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "MinY"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "MaxX"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "MaxY"
         }
       ]
@@ -3269,27 +3251,27 @@
           "name": "Type"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "CenterX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "CenterY"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "RadiiX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "RadiiY"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "SweepAngle"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "XRotation"
         }
       ]
@@ -3302,27 +3284,27 @@
           "name": "Type"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Ctrl0X"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Ctrl0Y"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Ctrl1X"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Ctrl1Y"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ToX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ToY"
         }
       ]
@@ -3335,19 +3317,19 @@
           "name": "Type"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "CtrlX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "CtrlY"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ToX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ToY"
         }
       ]
@@ -3360,11 +3342,11 @@
           "name": "Type"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "X"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Y"
         }
       ]
@@ -3373,7 +3355,7 @@
       "name": "TessFillOptions",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "ToLerance"
         },
         {
@@ -3385,7 +3367,7 @@
           "name": "SweepOrientation"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HandleIntersections"
         }
       ]
@@ -3394,15 +3376,15 @@
       "name": "TessStrokeOptions",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "ToLerance"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "LineWidth"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MiterLimit"
         },
         {
@@ -3423,7 +3405,7 @@
       "name": "GridName",
       "fields": [
         {
-          "type": 180,
+          "type": 179,
           "name": "Id"
         },
         {
@@ -3436,11 +3418,11 @@
       "name": "GridPlacement",
       "fields": [
         {
-          "type": 180,
+          "type": 179,
           "name": "Name"
         },
         {
-          "type": 179,
+          "type": 178,
           "name": "Value1"
         },
         {
@@ -3461,19 +3443,19 @@
           "name": "Id"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "RowStart"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "RowEnd"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "ColumnStart"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "ColumnEnd"
         }
       ]
@@ -3517,7 +3499,7 @@
           "name": "LineIds"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "RepetitionValue"
         },
         {
@@ -3530,7 +3512,7 @@
       "name": "SizingValue",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "Value"
         },
         {
@@ -3564,11 +3546,11 @@
       "name": "FrameTime",
       "fields": [
         {
-          "type": 190,
+          "type": 189,
           "name": "NthFrame"
         },
         {
-          "type": 190,
+          "type": 189,
           "name": "TimeTicks"
         }
       ]
@@ -3577,7 +3559,7 @@
       "name": "CWStr",
       "fields": [
         {
-          "type": 209,
+          "type": 208,
           "name": "Locale"
         }
       ]
@@ -3586,31 +3568,31 @@
       "name": "FFIMap",
       "fields": [
         {
-          "type": 181,
+          "type": 180,
           "name": "m_buckets"
         },
         {
-          "type": 194,
+          "type": 193,
           "name": "m_entries"
         },
         {
-          "type": 190,
+          "type": 189,
           "name": "m_fast_mode_multiplier"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_cap"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_count"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_free_list"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_free_count"
         }
       ]
@@ -3619,39 +3601,39 @@
       "name": "FFIOrderedSet",
       "fields": [
         {
-          "type": 181,
+          "type": 180,
           "name": "m_buckets"
         },
         {
-          "type": 194,
+          "type": 193,
           "name": "m_nodes"
         },
         {
-          "type": 190,
+          "type": 189,
           "name": "m_fast_mode_multiplier"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_cap"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_first"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_last"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_count"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_free_list"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_free_count"
         }
       ]
@@ -3660,7 +3642,7 @@
       "name": "FontFallbackBuilderCreateInfo",
       "fields": [
         {
-          "type": 171,
+          "type": 170,
           "name": "DisableSystemFallback"
         }
       ]
@@ -3673,7 +3655,7 @@
           "name": "Name"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Local"
         }
       ]
@@ -3731,27 +3713,27 @@
       "name": "LayoutCacheEntryLayoutOutput",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "KnownDimensionsWidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "KnownDimensionsHeightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AvailableSpaceWidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AvailableSpaceHeightValue"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasKnownDimensionsWidth"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasKnownDimensionsHeight"
         },
         {
@@ -3772,27 +3754,27 @@
       "name": "LayoutCacheEntrySize",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "KnownDimensionsWidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "KnownDimensionsHeightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AvailableSpaceWidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AvailableSpaceHeightValue"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasKnownDimensionsWidth"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasKnownDimensionsHeight"
         },
         {
@@ -3804,11 +3786,11 @@
           "name": "AvailableSpaceHeight"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ContentWidth"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ContentHeight"
         }
       ]
@@ -3817,11 +3799,11 @@
       "name": "LayoutCollapsibleMarginSet",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "Positive"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Negative"
         }
       ]
@@ -3830,87 +3812,87 @@
       "name": "LayoutData",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Order"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "LocationX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "LocationY"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Width"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Height"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ContentWidth"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ContentHeight"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ScrollXSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ScrollYSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderTopSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderRightSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderBottomSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderLeftSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingTopSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingRightSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingBottomSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingLeftSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginTopSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginRightSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginBottomSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginLeftSize"
         }
       ]
@@ -3919,27 +3901,27 @@
       "name": "LayoutOutput",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "Width"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Height"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ContentWidth"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ContentHeight"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FirstBaselinesX"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FirstBaselinesY"
         },
         {
@@ -3951,15 +3933,15 @@
           "name": "BottomMargin"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasFirstBaselinesX"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasFirstBaselinesY"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "MarginsCanCollapseThrough"
         }
       ]
@@ -3968,7 +3950,7 @@
       "name": "NFontInfo",
       "fields": [
         {
-          "type": 144,
+          "type": 143,
           "name": "Metrics"
         },
         {
@@ -3980,7 +3962,7 @@
           "name": "Weight"
         },
         {
-          "type": 143,
+          "type": 142,
           "name": "Flags"
         }
       ]
@@ -4006,87 +3988,87 @@
           "name": "font_manager"
         },
         {
-          "type": 199,
+          "type": 198,
           "name": "roots"
         },
         {
-          "type": 181,
+          "type": 180,
           "name": "view_buckets"
         },
         {
-          "type": 207,
+          "type": 206,
           "name": "view_ctrl"
         },
         {
-          "type": 151,
+          "type": 150,
           "name": "view_common_data"
         },
         {
-          "type": 149,
+          "type": 148,
           "name": "view_childs_data"
         },
         {
-          "type": 156,
+          "type": 155,
           "name": "view_style_data"
         },
         {
-          "type": 181,
+          "type": 180,
           "name": "text_paragraph_buckets"
         },
         {
-          "type": 207,
+          "type": 206,
           "name": "text_paragraph_ctrl"
         },
         {
-          "type": 151,
+          "type": 150,
           "name": "text_paragraph_common_data"
         },
         {
-          "type": 149,
+          "type": 148,
           "name": "text_paragraph_childs_data"
         },
         {
-          "type": 162,
+          "type": 161,
           "name": "text_paragraph_data"
         },
         {
-          "type": 166,
+          "type": 165,
           "name": "text_paragraph_style_data"
         },
         {
-          "type": 181,
+          "type": 180,
           "name": "text_span_buckets"
         },
         {
-          "type": 207,
+          "type": 206,
           "name": "text_span_ctrl"
         },
         {
-          "type": 151,
+          "type": 150,
           "name": "text_span_common_data"
         },
         {
-          "type": 164,
+          "type": 163,
           "name": "text_span_data"
         },
         {
-          "type": 166,
+          "type": 165,
           "name": "text_span_style_data"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "view_count"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "text_paragraph_count"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "text_span_count"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "rounding"
         }
       ]
@@ -4095,15 +4077,15 @@
       "name": "NNodeIdCtrl",
       "fields": [
         {
-          "type": 180,
+          "type": 179,
           "name": "HashCode"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "Next"
         },
         {
-          "type": 168,
+          "type": 167,
           "name": "Key"
         }
       ]
@@ -4112,15 +4094,15 @@
       "name": "NString",
       "fields": [
         {
-          "type": 209,
+          "type": 208,
           "name": "m_str"
         },
         {
-          "type": 194,
+          "type": 193,
           "name": "m_handle"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "m_len"
         }
       ]
@@ -4129,11 +4111,11 @@
       "name": "OpaqueObject",
       "fields": [
         {
-          "type": 194,
+          "type": 193,
           "name": "Ptr"
         },
         {
-          "type": 195,
+          "type": 194,
           "name": "Drop"
         }
       ]
@@ -4142,7 +4124,7 @@
       "name": "FontWidth",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "Width"
         }
       ]
@@ -4151,7 +4133,7 @@
       "name": "LocaleId",
       "fields": [
         {
-          "type": 175,
+          "type": 174,
           "name": "Name"
         }
       ]
@@ -4160,23 +4142,23 @@
       "name": "FontMetrics",
       "fields": [
         {
-          "type": 185,
+          "type": 184,
           "name": "Ascent"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Descent"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Leading"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "LineHeight"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "UnitsPerEm"
         }
       ]
@@ -4189,23 +4171,23 @@
           "name": "Locale"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "Start"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "Length"
         },
         {
-          "type": 145,
+          "type": 144,
           "name": "Script"
         },
         {
-          "type": 142,
+          "type": 141,
           "name": "Category"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "ScriptIsRtl"
         }
       ]
@@ -4235,23 +4217,23 @@
           "name": "LayoutCache"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "NodeId"
         },
         {
-          "type": 168,
+          "type": 167,
           "name": "ParentValue"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "LastLayoutVersion"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "LayoutVersion"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasParent"
         }
       ]
@@ -4293,15 +4275,15 @@
       "name": "RootData",
       "fields": [
         {
-          "type": 168,
+          "type": 167,
           "name": "Node"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AvailableSpaceXValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AvailableSpaceYValue"
         },
         {
@@ -4313,7 +4295,7 @@
           "name": "AvailableSpaceY"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "UseRounding"
         }
       ]
@@ -4326,7 +4308,7 @@
           "name": "Grid"
         },
         {
-          "type": 203,
+          "type": 202,
           "name": "FontFallback"
         },
         {
@@ -4334,167 +4316,167 @@
           "name": "Locale"
         },
         {
-          "type": 180,
+          "type": 179,
           "name": "ZIndex"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorR"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorG"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorB"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorA"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Opacity"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorR"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorG"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorB"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorA"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "ScrollBarSize"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "WidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "HeightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MinWidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MinHeightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MaxWidthValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MaxHeightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "AspectRatioValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BorderLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "GapXValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "GapYValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FlexGrow"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FlexShrink"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FlexBasisValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TabSizeValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FontSize"
         },
         {
@@ -4502,7 +4484,7 @@
           "name": "FontWidth"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FontOblique"
         },
         {
@@ -4510,7 +4492,7 @@
           "name": "FontWeight"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "LineHeightValue"
         },
         {
@@ -4530,11 +4512,11 @@
           "name": "GridColumnEnd"
         },
         {
-          "type": 138,
+          "type": 137,
           "name": "Visible"
         },
         {
-          "type": 132,
+          "type": 131,
           "name": "Position"
         },
         {
@@ -4550,15 +4532,15 @@
           "name": "Cursor"
         },
         {
-          "type": 131,
+          "type": 130,
           "name": "PointerEvents"
         },
         {
-          "type": 130,
+          "type": 129,
           "name": "OverflowX"
         },
         {
-          "type": 130,
+          "type": 129,
           "name": "OverflowY"
         },
         {
@@ -4650,7 +4632,7 @@
           "name": "BorderLeft"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasAspectRatio"
         },
         {
@@ -4702,15 +4684,15 @@
           "name": "FlexBasis"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "FontItalic"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "FontOpticalSizing"
         },
         {
-          "type": 133,
+          "type": 132,
           "name": "TextAlign"
         },
         {
@@ -4722,35 +4704,31 @@
           "name": "TabSize"
         },
         {
-          "type": 129,
-          "name": "LocaleMode"
-        },
-        {
-          "type": 134,
+          "type": 133,
           "name": "TextDirection"
         },
         {
-          "type": 141,
+          "type": 140,
           "name": "WritingDirection"
         },
         {
-          "type": 140,
+          "type": 139,
           "name": "WrapFlags"
         },
         {
-          "type": 137,
+          "type": 136,
           "name": "TextWrap"
         },
         {
-          "type": 139,
+          "type": 138,
           "name": "WordBreak"
         },
         {
-          "type": 135,
+          "type": 134,
           "name": "TextOrientation"
         },
         {
-          "type": 136,
+          "type": 135,
           "name": "TextOverflow"
         },
         {
@@ -4763,15 +4741,15 @@
       "name": "TextData_BidiRange",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Start"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Length"
         },
         {
-          "type": 147,
+          "type": 146,
           "name": "Direction"
         }
       ]
@@ -4780,15 +4758,15 @@
       "name": "TextData_FontRange",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Start"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Length"
         },
         {
-          "type": 202,
+          "type": 201,
           "name": "m_font_face"
         }
       ]
@@ -4797,19 +4775,19 @@
       "name": "TextData_SameStyleRange",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Start"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Length"
         },
         {
-          "type": 170,
+          "type": 169,
           "name": "FirstSpanValue"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "HasFirstSpan"
         }
       ]
@@ -4818,15 +4796,15 @@
       "name": "TextData_ScriptRange",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Start"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "Length"
         },
         {
-          "type": 187,
+          "type": 186,
           "name": "Script"
         }
       ]
@@ -4867,11 +4845,11 @@
           "name": "m_font_ranges"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "LastTextVersion"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "TextVersion"
         }
       ]
@@ -4884,11 +4862,11 @@
           "name": "BoundingBoxes"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "TextStart"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "TextLength"
         }
       ]
@@ -4897,11 +4875,11 @@
       "name": "TextStyleData",
       "fields": [
         {
-          "type": 167,
+          "type": 166,
           "name": "Override"
         },
         {
-          "type": 203,
+          "type": 202,
           "name": "FontFallback"
         },
         {
@@ -4909,95 +4887,95 @@
           "name": "Locale"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorR"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorG"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorB"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TextColorA"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "Opacity"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorR"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorG"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorB"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "BackgroundColorA"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "InsertLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "MarginLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingTopValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingRightValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingBottomValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "PaddingLeftValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "TabSizeValue"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FontSize"
         },
         {
@@ -5005,7 +4983,7 @@
           "name": "FontWidth"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "FontOblique"
         },
         {
@@ -5013,7 +4991,7 @@
           "name": "FontWeight"
         },
         {
-          "type": 185,
+          "type": 184,
           "name": "LineHeightValue"
         },
         {
@@ -5021,7 +4999,7 @@
           "name": "Cursor"
         },
         {
-          "type": 131,
+          "type": 130,
           "name": "PointerEvents"
         },
         {
@@ -5073,15 +5051,15 @@
           "name": "PaddingLeft"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "FontItalic"
         },
         {
-          "type": 171,
+          "type": 170,
           "name": "FontOpticalSizing"
         },
         {
-          "type": 133,
+          "type": 132,
           "name": "TextAlign"
         },
         {
@@ -5093,35 +5071,31 @@
           "name": "TabSize"
         },
         {
-          "type": 129,
-          "name": "LocaleMode"
-        },
-        {
-          "type": 134,
+          "type": 133,
           "name": "TextDirection"
         },
         {
-          "type": 141,
+          "type": 140,
           "name": "WritingDirection"
         },
         {
-          "type": 140,
+          "type": 139,
           "name": "WrapFlags"
         },
         {
-          "type": 137,
+          "type": 136,
           "name": "TextWrap"
         },
         {
-          "type": 139,
+          "type": 138,
           "name": "WordBreak"
         },
         {
-          "type": 135,
+          "type": 134,
           "name": "TextOrientation"
         },
         {
-          "type": 136,
+          "type": 135,
           "name": "TextOverflow"
         },
         {
@@ -5134,11 +5108,11 @@
       "name": "NodeId",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Index"
         },
         {
-          "type": 188,
+          "type": 187,
           "name": "IdAndType"
         }
       ]
@@ -5147,7 +5121,7 @@
       "name": "TextSpanNode",
       "fields": [
         {
-          "type": 188,
+          "type": 187,
           "name": "Index"
         }
       ]
@@ -5162,47 +5136,47 @@
         {
           "name": "Clear",
           "index": 0,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         },
         {
           "name": "get_IsEmpty",
           "index": 1,
           "flags": "getter",
-          "return_type": 171,
+          "return_type": 170,
           "parameters": []
         },
         {
           "name": "GetSize",
           "index": 2,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "out_width",
-              "type": 181
+              "type": 180
             },
             {
               "name": "out_height",
-              "type": 181
+              "type": 180
             }
           ]
         },
         {
           "name": "Allocate",
           "index": 3,
-          "return_type": 171,
+          "return_type": 170,
           "parameters": [
             {
               "name": "width",
-              "type": 180
+              "type": 179
             },
             {
               "name": "height",
-              "type": 180
+              "type": 179
             },
             {
               "name": "out_id",
-              "type": 189
+              "type": 188
             },
             {
               "name": "out_rect",
@@ -5213,11 +5187,11 @@
         {
           "name": "Deallocate",
           "index": 4,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "id",
-              "type": 188
+              "type": 187
             }
           ]
         }
@@ -5232,7 +5206,7 @@
           "name": "get_Info",
           "index": 0,
           "flags": "const, getter",
-          "return_type": 205,
+          "return_type": 204,
           "parameters": []
         },
         {
@@ -5263,25 +5237,25 @@
           "name": "GetFamilies",
           "index": 0,
           "flags": "const",
-          "return_type": 210,
+          "return_type": 209,
           "parameters": [
             {
               "name": "count",
               "flags": "out",
-              "type": 189
+              "type": 188
             }
           ]
         },
         {
           "name": "ClearNativeFamiliesCache",
           "index": 1,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         },
         {
           "name": "FindDefaultFamily",
           "index": 2,
-          "return_type": 188,
+          "return_type": 187,
           "parameters": []
         }
       ]
@@ -5295,21 +5269,21 @@
           "name": "get_Id",
           "index": 0,
           "flags": "const, getter",
-          "return_type": 190,
+          "return_type": 189,
           "parameters": []
         },
         {
           "name": "get_RefCount",
           "index": 1,
           "flags": "const, getter",
-          "return_type": 188,
+          "return_type": 187,
           "parameters": []
         },
         {
           "name": "get_FrameTime",
           "index": 2,
           "flags": "const, getter",
-          "return_type": 198,
+          "return_type": 197,
           "parameters": []
         },
         {
@@ -5330,14 +5304,14 @@
           "name": "get_Info",
           "index": 5,
           "flags": "const, getter",
-          "return_type": 205,
+          "return_type": 204,
           "parameters": []
         },
         {
           "name": "Equals",
           "index": 6,
           "flags": "const",
-          "return_type": 171,
+          "return_type": 170,
           "parameters": [
             {
               "name": "other",
@@ -5349,7 +5323,7 @@
           "name": "HashCode",
           "index": 7,
           "flags": "const",
-          "return_type": 180,
+          "return_type": 179,
           "parameters": []
         },
         {
@@ -5360,7 +5334,7 @@
           "parameters": [
             {
               "name": "ctx",
-              "type": 194
+              "type": 193
             },
             {
               "name": "add",
@@ -5376,7 +5350,7 @@
           "parameters": [
             {
               "name": "ctx",
-              "type": 194
+              "type": 193
             },
             {
               "name": "add",
@@ -5415,15 +5389,15 @@
           "parameters": [
             {
               "name": "name",
-              "type": 209
+              "type": 208
             },
             {
               "name": "length",
-              "type": 180
+              "type": 179
             },
             {
               "name": "exists",
-              "type": 172
+              "type": 171
             }
           ]
         },
@@ -5434,19 +5408,19 @@
           "parameters": [
             {
               "name": "locale",
-              "type": 209
+              "type": 208
             },
             {
               "name": "name",
-              "type": 209
+              "type": 208
             },
             {
               "name": "name_length",
-              "type": 180
+              "type": 179
             },
             {
               "name": "exists",
-              "type": 172
+              "type": 171
             }
           ]
         }
@@ -5461,12 +5435,12 @@
           "name": "GetLocalNames",
           "index": 0,
           "flags": "const",
-          "return_type": 196,
+          "return_type": 195,
           "parameters": [
             {
               "name": "length",
               "flags": "out",
-              "type": 189
+              "type": 188
             }
           ]
         },
@@ -5474,19 +5448,19 @@
           "name": "GetNames",
           "index": 1,
           "flags": "const",
-          "return_type": 201,
+          "return_type": 200,
           "parameters": [
             {
               "name": "length",
               "flags": "out",
-              "type": 189
+              "type": 188
             }
           ]
         },
         {
           "name": "ClearNativeNamesCache",
           "index": 2,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         },
         {
@@ -5497,19 +5471,19 @@
             {
               "name": "length",
               "flags": "out",
-              "type": 189
+              "type": 188
             },
             {
               "name": "pair",
               "flags": "out",
-              "type": 211
+              "type": 210
             }
           ]
         },
         {
           "name": "ClearNativeFontsCache",
           "index": 4,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         }
       ]
@@ -5523,11 +5497,11 @@
         {
           "name": "SetAssocUpdate",
           "index": 0,
-          "return_type": 190,
+          "return_type": 189,
           "parameters": [
             {
               "name": "Data",
-              "type": 194
+              "type": 193
             },
             {
               "name": "OnDrop",
@@ -5546,11 +5520,11 @@
         {
           "name": "RemoveAssocUpdate",
           "index": 1,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "AssocUpdateId",
-              "type": 190
+              "type": 189
             }
           ]
         },
@@ -5563,35 +5537,35 @@
         {
           "name": "SetExpireFrame",
           "index": 3,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "FrameCount",
-              "type": 190
+              "type": 189
             }
           ]
         },
         {
           "name": "SetExpireTime",
           "index": 4,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "TimeTicks",
-              "type": 190
+              "type": 189
             }
           ]
         },
         {
           "name": "Collect",
           "index": 5,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         },
         {
           "name": "Add",
           "index": 6,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "Face",
@@ -5606,11 +5580,11 @@
           "parameters": [
             {
               "name": "Id",
-              "type": 190
+              "type": 189
             },
             {
               "name": "Data",
-              "type": 194
+              "type": 193
             },
             {
               "name": "OnAdd",
@@ -5625,7 +5599,7 @@
           "parameters": [
             {
               "name": "Id",
-              "type": 190
+              "type": 189
             }
           ]
         }
@@ -5639,7 +5613,7 @@
         {
           "name": "Get",
           "index": 0,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "ft",
@@ -5650,11 +5624,11 @@
         {
           "name": "Set",
           "index": 1,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "ft",
-              "type": 198
+              "type": 197
             }
           ]
         }
@@ -5686,11 +5660,11 @@
         {
           "name": "SetLogger",
           "index": 0,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "obj",
-              "type": 194
+              "type": 193
             },
             {
               "name": "logger",
@@ -5709,7 +5683,7 @@
         {
           "name": "ClearLogger",
           "index": 1,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         },
         {
@@ -5729,11 +5703,11 @@
             },
             {
               "name": "Width",
-              "type": 180
+              "type": 179
             },
             {
               "name": "Height",
-              "type": 180
+              "type": 179
             },
             {
               "name": "aa",
@@ -5800,7 +5774,7 @@
             },
             {
               "name": "info",
-              "type": 200
+              "type": 199
             }
           ]
         },
@@ -5826,11 +5800,11 @@
             },
             {
               "name": "chars",
-              "type": 209
+              "type": 208
             },
             {
               "name": "len",
-              "type": 180
+              "type": 179
             }
           ]
         }
@@ -5844,7 +5818,7 @@
         {
           "name": "CalcAABB",
           "index": 0,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "out_aabb",
@@ -5873,151 +5847,151 @@
         {
           "name": "Reserve",
           "index": 1,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "Endpoints",
-              "type": 180
+              "type": 179
             },
             {
               "name": "CtrlPoints",
-              "type": 180
+              "type": 179
             }
           ]
         },
         {
           "name": "Batch",
           "index": 2,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "cmds",
-              "type": 197
+              "type": 196
             },
             {
               "name": "num_cmds",
-              "type": 180
+              "type": 179
             }
           ]
         },
         {
           "name": "Close",
           "index": 3,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": []
         },
         {
           "name": "MoveTo",
           "index": 4,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "y",
-              "type": 185
+              "type": 184
             }
           ]
         },
         {
           "name": "LineTo",
           "index": 5,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "y",
-              "type": 185
+              "type": 184
             }
           ]
         },
         {
           "name": "QuadraticBezierTo",
           "index": 6,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "ctrl_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "ctrl_y",
-              "type": 185
+              "type": 184
             },
             {
               "name": "to_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "to_y",
-              "type": 185
+              "type": 184
             }
           ]
         },
         {
           "name": "CubicBezierTo",
           "index": 7,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "ctrl0_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "ctrl0_y",
-              "type": 185
+              "type": 184
             },
             {
               "name": "ctrl1_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "ctrl1_y",
-              "type": 185
+              "type": 184
             },
             {
               "name": "to_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "to_y",
-              "type": 185
+              "type": 184
             }
           ]
         },
         {
           "name": "Arc",
           "index": 8,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "center_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "center_y",
-              "type": 185
+              "type": 184
             },
             {
               "name": "radii_x",
-              "type": 185
+              "type": 184
             },
             {
               "name": "radii_y",
-              "type": 185
+              "type": 184
             },
             {
               "name": "sweep_angle",
-              "type": 185
+              "type": 184
             },
             {
               "name": "x_rotation",
-              "type": 185
+              "type": 184
             }
           ]
         }
@@ -6031,15 +6005,15 @@
         {
           "name": "Some",
           "index": 0,
-          "return_type": 193,
+          "return_type": 192,
           "parameters": [
             {
               "name": "a",
-              "type": 169
+              "type": 168
             },
             {
               "name": "b",
-              "type": 154
+              "type": 153
             },
             {
               "name": "c",
@@ -6107,21 +6081,21 @@
           "name": "AddRefWeak",
           "index": 0,
           "flags": "const",
-          "return_type": 188,
+          "return_type": 187,
           "parameters": []
         },
         {
           "name": "ReleaseWeak",
           "index": 1,
           "flags": "const",
-          "return_type": 188,
+          "return_type": 187,
           "parameters": []
         },
         {
           "name": "TryUpgrade",
           "index": 2,
           "flags": "const",
-          "return_type": 171,
+          "return_type": 170,
           "parameters": []
         }
       ]
