@@ -420,7 +420,7 @@ public sealed partial class Document
     {
         var arche = ArcheOf(id);
         var nth = arche.IndexOf<T>();
-        if (nth < 0) throw new InvalidOperationException();
+        if (nth < 0) throw new InvalidOperationException($"{typeof(T)} dose not exists in {{ {id.Type} }} node");
         var storage = arche.UnsafeStorageAt(nth);
         return ref Unsafe.Add(ref storage.UnsafeGetDataRef<T>(), id.Index);
     }
@@ -429,7 +429,7 @@ public sealed partial class Document
     {
         var arche = ArcheOf(id);
         var nth = arche.IndexOf<T>();
-        if (nth < 0) throw new InvalidOperationException();
+        if (nth < 0) throw new InvalidOperationException($"{typeof(T)} dose not exists in {{ {id.Type} }} node");
         var storage = arche.UnsafeStorageAt(nth);
         return storage.UnsafeGetDataPtr<T>() + id.Index;
     }

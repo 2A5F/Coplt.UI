@@ -4,6 +4,7 @@ use std::{
     os::raw::c_void,
     panic::{AssertUnwindSafe, RefUnwindSafe, UnwindSafe},
     process::Child,
+    u32,
 };
 
 use cocom::{ComPtr, HResultE, MakeObject, object::ObjectPtr};
@@ -14,10 +15,11 @@ use icu::{
     },
     segmenter::{GraphemeClusterSegmenter, LineSegmenter},
 };
+use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero};
 use windows::Win32::Graphics::DirectWrite::IDWriteFactory7;
 
 use crate::{
-    c_available_space,
+    IsZeroLength, c_available_space,
     col::{NArc, OrderedSet},
     com::*,
     dwrite::DwLayout,
@@ -274,6 +276,45 @@ impl Layout {
             root_style: &StyleData,
             style: &TextStyleData,
         ) {
+            let text = &*{ paragraph.m_text };
+
+            let same_style_ranges: &mut crate::col::NList<TextData_SameStyleRange> =
+                paragraph.same_style_ranges();
+            same_style_ranges.clear();
+
+            if text.is_empty() {
+                return;
+            }
+
+            let root_font_size = style.FontSize().unwrap_or(root_style.FontSize);
+            let root_text_orientation = style
+                .TextOrientation()
+                .unwrap_or(root_style.TextOrientation);
+
+            let mut font_size = root_font_size;
+            let mut text_orientation = root_text_orientation;
+
+            let mut first_span = None;
+            let mut cur_start = 0;
+            let mut cur_end = 0;
+
+            #[inline(always)]
+            fn add_range(
+                ssr: &mut crate::col::NList<TextData_SameStyleRange>,
+                start: u32,
+                length: u32,
+                span: Option<u32>,
+            ) {
+                ssr.push(TextData_SameStyleRange {
+                    Start: start,
+                    Length: length,
+                    HasFirstSpan: span.is_some(),
+                    FirstSpanValue: TextSpanNode {
+                        Index: span.unwrap_or_default(),
+                    },
+                });
+            }
+
             let childs = doc.childs(id);
             for child in childs
                 .iter()
@@ -282,7 +323,82 @@ impl Layout {
             {
                 let text_span_data = doc.text_span_data(child);
                 let text_span_style = doc.text_style_data(child);
-                // todo
+
+                let start = text_span_data.TextStart;
+                let length = text_span_data.TextLength;
+                let end = start + length;
+                if end < cur_end {
+                    continue;
+                }
+                let start = start.max(cur_end);
+
+                if start > cur_end {
+                    if font_size != root_font_size || text_orientation != root_text_orientation {
+                        font_size = root_font_size;
+                        text_orientation = root_text_orientation;
+
+                        if cur_end != cur_start {
+                            add_range(
+                                same_style_ranges,
+                                cur_start,
+                                cur_end - cur_start,
+                                first_span,
+                            );
+                            cur_start = cur_end;
+                            first_span = None;
+                        }
+                    }
+                    cur_end = start;
+                }
+
+                let child_font_size = text_span_style.FontSize().unwrap_or(root_font_size);
+                let child_text_orientation = text_span_style
+                    .TextOrientation()
+                    .unwrap_or(root_text_orientation);
+
+                if !text_span_style.InsertLeft().is_zero_length()
+                    || !text_span_style.InsertTop().is_zero_length()
+                    || !text_span_style.InsertRight().is_zero_length()
+                    || !text_span_style.InsertBottom().is_zero_length()
+                    || !text_span_style.MarginLeft().is_zero_length()
+                    || !text_span_style.MarginTop().is_zero_length()
+                    || !text_span_style.MarginRight().is_zero_length()
+                    || !text_span_style.MarginBottom().is_zero_length()
+                    || !text_span_style.PaddingLeft().is_zero_length()
+                    || !text_span_style.PaddingTop().is_zero_length()
+                    || !text_span_style.PaddingRight().is_zero_length()
+                    || !text_span_style.PaddingBottom().is_zero_length()
+                    || child_font_size != font_size
+                    || child_text_orientation != text_orientation
+                {
+                    if cur_end != cur_start {
+                        add_range(
+                            same_style_ranges,
+                            cur_start,
+                            cur_end - cur_start,
+                            first_span,
+                        );
+                    }
+                    cur_start = start;
+                    first_span = Some(child.Index);
+                    font_size = child_font_size;
+                    text_orientation = child_text_orientation;
+                }
+                cur_end = end;
+            }
+
+            if cur_end != cur_start {
+                add_range(
+                    same_style_ranges,
+                    cur_start,
+                    cur_end - cur_start,
+                    first_span,
+                );
+            }
+
+            let text_len = text.len() as u32;
+            if cur_end != text_len {
+                add_range(same_style_ranges, cur_end, text_len - cur_end, None);
             }
         }
     }

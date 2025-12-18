@@ -87,7 +87,7 @@ public static unsafe partial class Access
 
         public TextParagraph Add(string text)
         {
-            return  new TextParagraph(this)
+            return new TextParagraph(this)
             {
                 Text = text
             };

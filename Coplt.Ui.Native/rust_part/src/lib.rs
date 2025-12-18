@@ -79,6 +79,7 @@ mod utils;
 
 #[cfg(target_os = "windows")]
 use dwrite::FontFace;
+use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero};
 
 mod error_message {
     #[repr(C)]
@@ -130,22 +131,47 @@ pub fn feb_hr(f: impl FnOnce() -> anyhow::Result<cocom::HResult> + UnwindSafe) -
     }
 }
 
+pub trait IsZeroLength {
+    fn is_zero_length(&self) -> bool;
+}
+
+impl<T: IsZeroLength> IsZeroLength for Option<T> {
+    fn is_zero_length(&self) -> bool {
+        match self {
+            Some(v) => v.is_zero_length(),
+            None => true,
+        }
+    }
+}
+
+impl IsZeroLength for LengthPercentageAuto {
+    fn is_zero_length(&self) -> bool {
+        self.resolve_or_zero(None, |_, _| 0.0) <= 0.0
+    }
+}
+
+impl IsZeroLength for LengthPercentage {
+    fn is_zero_length(&self) -> bool {
+        self.resolve_or_zero(None, |_, _| 0.0) <= 0.0
+    }
+}
+
 mod com_impl {
     use std::{
         ffi::c_void,
         ops::{Deref, DerefMut},
     };
 
-    use taffy::{LengthPercentage, LengthPercentageAuto};
+    use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero};
 
     use crate::{
         col::{NArc, NBitSet, NList},
         com::{
             ChildsData, CommonData, CursorType, FontWeight, FontWidth, IFontFallback, LineAlign,
             LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents, TextAlign,
-            TextData_BidiRange, TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow,
-            TextParagraphData, TextSpanData, TextStyleData, TextStyleOverride, TextWrap, WordBreak,
-            WrapFlags, WritingDirection,
+            TextData_BidiRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection,
+            TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextStyleData,
+            TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
@@ -370,6 +396,10 @@ mod com_impl {
 
         pub fn bidi_ranges(&mut self) -> &mut NList<TextData_BidiRange> {
             unsafe { std::mem::transmute(&mut self.m_bidi_ranges) }
+        }
+
+        pub fn same_style_ranges(&mut self) -> &mut NList<TextData_SameStyleRange> {
+            unsafe { std::mem::transmute(&mut self.m_same_style_ranges) }
         }
 
         pub fn font_ranges(&mut self) -> &mut NList<FontRange> {
