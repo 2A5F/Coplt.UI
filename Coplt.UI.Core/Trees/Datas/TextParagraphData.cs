@@ -2,6 +2,7 @@ using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
 using Coplt.UI.Native;
+using Coplt.UI.Styles;
 
 namespace Coplt.UI.Trees.Datas;
 
@@ -22,6 +23,8 @@ public unsafe partial struct TextParagraphData
     public NativeList<TextData_BidiRange> m_bidi_ranges;
     [Drop]
     public NativeList<TextData_SameStyleRange> m_same_style_ranges;
+    [Drop]
+    public NativeList<TextData_LocaleRange> m_locale_ranges;
     [Drop]
     public NativeList<TextData_FontRange> m_font_ranges;
 
@@ -79,6 +82,13 @@ public record struct TextData_SameStyleRange
             }
         }
     }
+}
+
+public record struct TextData_LocaleRange
+{
+    public uint Start;
+    public uint Length;
+    public LocaleId Locale;
 }
 
 [Dropping]

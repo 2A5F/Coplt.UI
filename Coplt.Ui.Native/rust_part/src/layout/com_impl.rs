@@ -140,6 +140,7 @@ impl Layout {
         analyze_break_points(paragraph);
         analyze_graphemes(paragraph);
         analyze_same_style(doc, id, paragraph, root_style, style);
+        analyze_locale(doc, id, paragraph, root_style, style);
 
         if let Err(e) = analyze_bidi(paragraph, root_style, style) {
             std::panic::panic_any(e);
@@ -399,6 +400,95 @@ impl Layout {
             let text_len = text.len() as u32;
             if cur_end != text_len {
                 add_range(same_style_ranges, cur_end, text_len - cur_end, None);
+            }
+        }
+
+        fn analyze_locale(
+            doc: &mut super::SubDocInner,
+            id: NodeId,
+            paragraph: &mut TextParagraphData,
+            root_style: &StyleData,
+            style: &TextStyleData,
+        ) {
+            let text = &*{ paragraph.m_text };
+
+            let locale_ranges: &mut crate::col::NList<TextData_LocaleRange> =
+                paragraph.locale_ranges();
+            locale_ranges.clear();
+
+            if text.is_empty() {
+                return;
+            }
+
+            let root_locale = style.Locale().unwrap_or(root_style.Locale);
+
+            let mut locale = root_locale;
+
+            let mut cur_start = 0;
+            let mut cur_end = 0;
+
+            #[inline(always)]
+            fn add_range(
+                ssr: &mut crate::col::NList<TextData_LocaleRange>,
+                start: u32,
+                length: u32,
+                locale: LocaleId,
+            ) {
+                ssr.push(TextData_LocaleRange {
+                    Start: start,
+                    Length: length,
+                    Locale: locale,
+                });
+            }
+
+            let childs = doc.childs(id);
+            for child in childs
+                .iter()
+                .copied()
+                .filter(|child| matches!(child.typ(), NodeType::TextSpan))
+            {
+                let text_span_data = doc.text_span_data(child);
+                let text_span_style = doc.text_style_data(child);
+
+                let start = text_span_data.TextStart;
+                let length = text_span_data.TextLength;
+                let end = start + length;
+                if end < cur_end {
+                    continue;
+                }
+                let start = start.max(cur_end);
+
+                if start > cur_end {
+                    if locale != root_locale {
+                        if cur_end != cur_start {
+                            add_range(locale_ranges, cur_start, cur_end - cur_start, locale);
+                            cur_start = cur_end;
+                        }
+
+                        locale = root_locale;
+                    }
+                    cur_end = start;
+                }
+
+                let child_locale = text_span_style.Locale().unwrap_or(root_locale);
+
+                if child_locale != locale {
+                    if cur_end != cur_start {
+                        add_range(locale_ranges, cur_start, cur_end - cur_start, locale);
+                    }
+                    cur_start = start;
+                    locale = child_locale;
+                }
+                cur_end = end;
+            }
+
+            if cur_end != cur_start {
+                add_range(locale_ranges, cur_start, cur_end - cur_start, locale);
+            }
+
+            let text_len = text.len() as u32;
+            if cur_end != text_len {
+                add_range(locale_ranges, cur_end, text_len - cur_end, root_locale);
             }
         }
     }

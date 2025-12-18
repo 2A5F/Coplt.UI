@@ -1497,6 +1497,14 @@ pub struct TextData_FontRange {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_LocaleRange {
+    pub Start: u32,
+    pub Length: u32,
+    pub Locale: LocaleId,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_SameStyleRange {
     pub Start: u32,
     pub Length: u32,
@@ -1522,6 +1530,7 @@ pub struct TextParagraphData {
     pub m_script_ranges: NativeList<TextData_ScriptRange>,
     pub m_bidi_ranges: NativeList<TextData_BidiRange>,
     pub m_same_style_ranges: NativeList<TextData_SameStyleRange>,
+    pub m_locale_ranges: NativeList<TextData_LocaleRange>,
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub LastTextVersion: u32,
     pub TextVersion: u32,

@@ -581,8 +581,12 @@ impl crate::layout::LayoutInner for DwLayout {
 
         let unde_font = self.get_undef_font(doc)?;
 
-        // todo style
-        let dir = match (root_style.TextDirection, root_style.WritingDirection) {
+        let text_direction = style.TextDirection().unwrap_or(root_style.TextDirection);
+        let writing_direction = style
+            .WritingDirection()
+            .unwrap_or(root_style.WritingDirection);
+
+        let dir = match (text_direction, writing_direction) {
             (TextDirection::Forward, WritingDirection::Horizontal) => {
                 DWRITE_READING_DIRECTION_LEFT_TO_RIGHT
             }

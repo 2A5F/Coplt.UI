@@ -113,6 +113,8 @@ namespace Coplt {
 
     struct TextData_FontRange;
 
+    struct TextData_LocaleRange;
+
     struct TextData_SameStyleRange;
 
     struct TextData_ScriptRange;
@@ -1387,6 +1389,13 @@ namespace Coplt {
         IFontFace* m_font_face;
     };
 
+    struct TextData_LocaleRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 Length;
+        ::Coplt::LocaleId Locale;
+    };
+
     struct TextData_SameStyleRange
     {
         ::Coplt::u32 Start;
@@ -1411,6 +1420,7 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_ScriptRange> m_script_ranges;
         ::Coplt::NativeList<::Coplt::TextData_BidiRange> m_bidi_ranges;
         ::Coplt::NativeList<::Coplt::TextData_SameStyleRange> m_same_style_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_LocaleRange> m_locale_ranges;
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;
