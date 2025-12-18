@@ -28,6 +28,8 @@ public unsafe partial struct TextParagraphData
     public NativeList<TextData_LocaleRange> m_locale_ranges;
     [Drop]
     public NativeList<TextData_FontRange> m_font_ranges;
+    [Drop]
+    public NativeList<TextData_RunRange> m_run_ranges;
 
     /// <summary>
     /// layout compute sync this to <see cref="TextVersion"/>
@@ -124,4 +126,16 @@ public enum BidiDirection : byte
 {
     LeftToRight,
     RightToLeft,
+}
+
+public record struct TextData_RunRange
+{
+    public uint Start;
+    public uint End;
+    public uint ScriptRange;
+    public uint BidiRange;
+    public uint StyleRange;
+    public uint FontRange;
+
+    public uint Length => End - Start;
 }

@@ -169,7 +169,7 @@ mod com_impl {
         com::{
             ChildsData, CommonData, CursorType, FontWeight, FontWidth, IFontFallback, LineAlign,
             LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents, TextAlign,
-            TextData_BidiRange, TextData_LocaleRange, TextData_SameStyleRange,
+            TextData_BidiRange, TextData_LocaleRange, TextData_RunRange, TextData_SameStyleRange,
             TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow, TextParagraphData,
             TextSpanData, TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags,
             WritingDirection,
@@ -383,6 +383,10 @@ mod com_impl {
             self.TextVersion != self.LastTextVersion
         }
 
+        pub fn sync_text_dirty(&mut self) {
+            self.LastTextVersion = self.TextVersion
+        }
+
         pub fn break_points(&mut self) -> &'static mut NBitSet {
             unsafe { std::mem::transmute(&mut self.m_break_points) }
         }
@@ -409,6 +413,10 @@ mod com_impl {
 
         pub fn font_ranges(&mut self) -> &'static mut NList<FontRange> {
             unsafe { std::mem::transmute(&mut self.m_font_ranges) }
+        }
+
+        pub fn run_ranges(&mut self) -> &'static mut NList<TextData_RunRange> {
+            unsafe { std::mem::transmute(&mut self.m_run_ranges) }
         }
     }
 

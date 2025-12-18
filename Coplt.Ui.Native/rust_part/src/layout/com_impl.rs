@@ -8,7 +8,7 @@ use std::{
 };
 
 use cocom::{ComPtr, HResultE, MakeObject, object::ObjectPtr};
-use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen};
+use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen, merge_ranges};
 use icu::{
     properties::{
         CodePointMapData, CodePointSetData,
@@ -155,6 +155,11 @@ impl Layout {
             std::panic::panic_any(e);
         }
 
+        build_runs(paragraph);
+        
+        // todo shape
+
+        paragraph.sync_text_dirty();
         return;
 
         fn analyze_scripts(paragraph: &mut TextParagraphData) {
@@ -356,6 +361,51 @@ impl Layout {
                     Start: range.start,
                     End: range.end,
                     Locale: locale,
+                });
+            }
+        }
+
+        fn build_runs(paragraph: &mut TextParagraphData) {
+            let text = &*{ paragraph.m_text };
+
+            let run_ranges = paragraph.run_ranges();
+            run_ranges.clear();
+
+            if text.is_empty() {
+                return;
+            }
+
+            let script_ranges: &[_] = paragraph.script_ranges();
+            let bidi_ranges: &[_] = paragraph.bidi_ranges();
+            let same_style_ranges: &[_] = paragraph.same_style_ranges();
+            let font_ranges: &[_] = paragraph.font_ranges();
+
+            let inputs: [&mut dyn Iterator<Item = (/* index */ u32, Range<u32>)>; _] = [
+                &mut script_ranges
+                    .iter()
+                    .enumerate()
+                    .map(|(n, r)| (n as u32, r.Start..r.End)),
+                &mut bidi_ranges
+                    .iter()
+                    .enumerate()
+                    .map(|(n, r)| (n as u32, r.Start..r.End)),
+                &mut same_style_ranges
+                    .iter()
+                    .enumerate()
+                    .map(|(n, r)| (n as u32, r.Start..r.End)),
+                &mut font_ranges
+                    .iter()
+                    .enumerate()
+                    .map(|(n, r)| (n as u32, r.start..r.end)),
+            ];
+            for (range, [script, bidi, style, font]) in merge_ranges(inputs) {
+                run_ranges.push(TextData_RunRange {
+                    Start: range.start,
+                    End: range.end,
+                    ScriptRange: script,
+                    BidiRange: bidi,
+                    StyleRange: style,
+                    FontRange: font,
                 });
             }
         }

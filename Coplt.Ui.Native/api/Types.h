@@ -115,6 +115,8 @@ namespace Coplt {
 
     struct TextData_LocaleRange;
 
+    struct TextData_RunRange;
+
     struct TextData_SameStyleRange;
 
     struct TextData_ScriptRange;
@@ -1396,6 +1398,16 @@ namespace Coplt {
         ::Coplt::LocaleId Locale;
     };
 
+    struct TextData_RunRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::u32 ScriptRange;
+        ::Coplt::u32 BidiRange;
+        ::Coplt::u32 StyleRange;
+        ::Coplt::u32 FontRange;
+    };
+
     struct TextData_SameStyleRange
     {
         ::Coplt::u32 Start;
@@ -1422,6 +1434,7 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_SameStyleRange> m_same_style_ranges;
         ::Coplt::NativeList<::Coplt::TextData_LocaleRange> m_locale_ranges;
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;
     };
