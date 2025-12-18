@@ -1,3 +1,5 @@
+use std::ffi::c_void;
+
 use crate::com::{LayoutCache, LayoutCacheFlags};
 use crate::{layout::*, *};
 use concat_idents::concat_idents;
@@ -257,4 +259,36 @@ where
     );
 
     computed_size_and_baselines
+}
+
+#[derive(Debug)]
+pub struct ManagedHandle(
+    pub *mut c_void,
+    pub Option<unsafe extern "C" fn(*mut core::ffi::c_void) -> ()>,
+);
+
+impl ManagedHandle {
+    pub fn new(h: *mut c_void, f: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> Self {
+        if (f as usize) == 0 {
+            Self(h, None)
+        } else {
+            Self(h, Some(f))
+        }
+    }
+}
+
+impl Default for ManagedHandle {
+    fn default() -> Self {
+        Self(Default::default(), Default::default())
+    }
+}
+
+impl Drop for ManagedHandle {
+    fn drop(&mut self) {
+        unsafe {
+            if let Some(f) = self.1 {
+                f(self.0)
+            }
+        }
+    }
 }

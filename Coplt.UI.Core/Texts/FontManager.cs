@@ -39,6 +39,9 @@ public sealed unsafe partial class FontManager
         m_inner = new(p_fm);
         m_managed_assoc = new();
         SetAssocUpdate(m_managed_assoc);
+
+        var weak_handle = GCHandle.ToIntPtr(GCHandle.Alloc(this, GCHandleType.Weak));
+        m_inner.SetManagedHandle((void*)weak_handle, &NativeUtils.FreeGcHandle);
     }
 
     #endregion

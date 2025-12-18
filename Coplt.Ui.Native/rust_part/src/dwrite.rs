@@ -13,6 +13,7 @@ use crate::{
     feb_hr,
     font_manager::FontManager,
     layout::{FontRange, SubDocInner},
+    utils::ManagedHandle,
 };
 use cocom::{
     ComPtr, ComWeak, HResult, HResultE, MakeObject, MakeObjectWeak,
@@ -58,6 +59,7 @@ impl Drop for Handle {
 
 #[cocom::object(IFontFace)]
 pub struct FontFace {
+    managed_handle: ManagedHandle,
     dw_face: IDWriteFontFace5,
     font_tables: DashMap<font_types::Tag, Option<TableHandle>>,
     frame_source: ComPtr<IFrameSource>,
@@ -110,6 +112,7 @@ impl FontFace {
                     pmp!(this; .info),
                 );
 
+                pmp!(this; .managed_handle).write(Default::default());
                 pmp!(this; .dw_face).write(face);
                 pmp!(this; .frame_source).write(ComPtr::new(NonNull::new_unchecked(
                     /*move*/ frame_source,
@@ -137,6 +140,18 @@ impl FontFace {
 }
 
 impl impls::IFontFace for FontFace {
+    fn SetManagedHandle(
+        &mut self,
+        handle: *mut core::ffi::c_void,
+        on_drop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (),
+    ) -> () {
+        self.managed_handle = ManagedHandle::new(handle, on_drop);
+    }
+
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void {
+        self.managed_handle.0
+    }
+
     fn get_Id(&self) -> u64 {
         unsafe { std::mem::transmute_copy(&self.dw_face) }
     }

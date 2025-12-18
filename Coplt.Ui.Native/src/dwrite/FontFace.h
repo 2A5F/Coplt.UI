@@ -29,6 +29,12 @@ namespace Coplt
         COPLT_IMPL_START
 
         COPLT_FORCE_INLINE
+        void Impl_SetManagedHandle(void* Handle, Func<void, void*>* OnDrop);
+
+        COPLT_FORCE_INLINE
+        void* Impl_GetManagedHandle();
+
+        COPLT_FORCE_INLINE
         u64 Impl_get_Id() const;
 
         COPLT_FORCE_INLINE

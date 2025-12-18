@@ -28,6 +28,8 @@ pub trait IFontCollection : IUnknown {
 
 #[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
 pub trait IFontFace : IUnknown {
+    fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
     fn get_Id(&self) -> u64;
     fn get_RefCount(&self) -> u32;
     fn get_FrameTime(&self) -> *const FrameTime;
@@ -62,6 +64,8 @@ pub trait IFontFamily : IUnknown {
 
 #[cocom::interface("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
 pub trait IFontManager : IWeak + IUnknown {
+    fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
     fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64;
     fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
     fn GetFrameSource(&mut self) -> *mut IFrameSource;
@@ -1815,6 +1819,8 @@ pub mod details {
     pub struct VitualTable_IFontFace {
         b: <IUnknown as Interface>::VitualTable,
 
+        pub f_SetManagedHandle: unsafe extern "C" fn(this: *const IFontFace, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> (),
+        pub f_GetManagedHandle: unsafe extern "C" fn(this: *const IFontFace) -> *mut core::ffi::c_void,
         pub f_get_Id: unsafe extern "C" fn(this: *const IFontFace) -> u64,
         pub f_get_RefCount: unsafe extern "C" fn(this: *const IFontFace) -> u32,
         pub f_get_FrameTime: unsafe extern "C" fn(this: *const IFontFace) -> *const FrameTime,
@@ -1833,6 +1839,8 @@ pub mod details {
     {
         pub const VTBL: VitualTable_IFontFace = VitualTable_IFontFace {
             b: <IUnknown as Vtbl<O>>::VTBL,
+            f_SetManagedHandle: Self::f_SetManagedHandle,
+            f_GetManagedHandle: Self::f_GetManagedHandle,
             f_get_Id: Self::f_get_Id,
             f_get_RefCount: Self::f_get_RefCount,
             f_get_FrameTime: Self::f_get_FrameTime,
@@ -1845,6 +1853,12 @@ pub mod details {
             f_GetFaceNames: Self::f_GetFaceNames,
         };
 
+        unsafe extern "C" fn f_SetManagedHandle(this: *const IFontFace, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> () {
+            unsafe { (*O::GetObject(this as _)).SetManagedHandle(Handle, OnDrop) }
+        }
+        unsafe extern "C" fn f_GetManagedHandle(this: *const IFontFace) -> *mut core::ffi::c_void {
+            unsafe { (*O::GetObject(this as _)).GetManagedHandle() }
+        }
         unsafe extern "C" fn f_get_Id(this: *const IFontFace) -> u64 {
             unsafe { (*O::GetObject(this as _)).get_Id() }
         }
@@ -2085,6 +2099,8 @@ pub mod details {
     pub struct VitualTable_IFontManager {
         b: <IWeak as Interface>::VitualTable,
 
+        pub f_SetManagedHandle: unsafe extern "C" fn(this: *const IFontManager, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> (),
+        pub f_GetManagedHandle: unsafe extern "C" fn(this: *const IFontManager) -> *mut core::ffi::c_void,
         pub f_SetAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64,
         pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, AssocUpdateId: u64) -> (),
         pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontManager) -> *mut IFrameSource,
@@ -2102,6 +2118,8 @@ pub mod details {
     {
         pub const VTBL: VitualTable_IFontManager = VitualTable_IFontManager {
             b: <IWeak as Vtbl<O>>::VTBL,
+            f_SetManagedHandle: Self::f_SetManagedHandle,
+            f_GetManagedHandle: Self::f_GetManagedHandle,
             f_SetAssocUpdate: Self::f_SetAssocUpdate,
             f_RemoveAssocUpdate: Self::f_RemoveAssocUpdate,
             f_GetFrameSource: Self::f_GetFrameSource,
@@ -2113,6 +2131,12 @@ pub mod details {
             f_Get: Self::f_Get,
         };
 
+        unsafe extern "C" fn f_SetManagedHandle(this: *const IFontManager, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> () {
+            unsafe { (*O::GetObject(this as _)).SetManagedHandle(Handle, OnDrop) }
+        }
+        unsafe extern "C" fn f_GetManagedHandle(this: *const IFontManager) -> *mut core::ffi::c_void {
+            unsafe { (*O::GetObject(this as _)).GetManagedHandle() }
+        }
         unsafe extern "C" fn f_SetAssocUpdate(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64 {
             unsafe { (*O::GetObject(this as _)).SetAssocUpdate(Data, OnDrop, OnAdd, OnExpired) }
         }
@@ -2735,6 +2759,8 @@ pub mod impls {
     }
 
     pub trait IFontFace : IUnknown {
+        fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+        fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
         fn get_Id(& self) -> u64;
         fn get_RefCount(& self) -> u32;
         fn get_FrameTime(& self) -> *const super::FrameTime;
@@ -2765,6 +2791,8 @@ pub mod impls {
     }
 
     pub trait IFontManager : IWeak {
+        fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+        fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
         fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> ()) -> u64;
         fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
         fn GetFrameSource(&mut self) -> *mut super::IFrameSource;

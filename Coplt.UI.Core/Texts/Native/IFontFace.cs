@@ -1,12 +1,17 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.UI.Miscellaneous;
+using Coplt.UI.Texts;
 
 namespace Coplt.UI.Native;
 
 [Interface, Guid("09c443bc-9736-4aac-8117-6890555005ff")]
 public unsafe partial struct IFontFace
 {
+    public partial void SetManagedHandle(void* Handle, delegate* unmanaged[Cdecl]<void*, void> OnDrop);
+    public partial void* GetManagedHandle();
+
     public readonly partial ulong Id { get; }
     public readonly partial uint RefCount { get; }
     [ComType<ConstPtr<FrameTime>>]
@@ -31,4 +36,23 @@ public unsafe partial struct IFontFace
         void* ctx,
         delegate* unmanaged[Cdecl]<void* /* ctx */, char* /* lang */, int, char* /* string */, int, void> add
     );
+
+    public FontFace? Manager
+    {
+        get
+        {
+            var handle = GetManagedHandle();
+            if (handle == null) return null;
+            var gc_handle = GCHandle.FromIntPtr((nint)handle);
+            return Unsafe.As<FontFace?>(gc_handle.Target);
+        }
+    }
+}
+
+public static unsafe partial class IFontFaceExtensions
+{
+    extension(Rc<IFontFace> manager)
+    {
+        public FontFace? Manager => manager.Handle->Manager;
+    }
 }

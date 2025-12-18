@@ -1,12 +1,17 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Com;
 using Coplt.UI.Miscellaneous;
+using Coplt.UI.Texts;
 
 namespace Coplt.UI.Native;
 
 [Interface(typeof(IWeak)), Guid("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
 public unsafe partial struct IFontManager
 {
+    public partial void SetManagedHandle(void* Handle, delegate* unmanaged[Cdecl]<void*, void> OnDrop);
+    public partial void* GetManagedHandle();
+
     public partial ulong SetAssocUpdate(
         void* Data,
         delegate* unmanaged[Cdecl]<void*, void> OnDrop,
@@ -39,4 +44,23 @@ public unsafe partial struct IFontManager
     public partial IFontFace* GetOrAdd(ulong Id, void* Data, delegate* unmanaged[Cdecl]<void*, ulong, IFontFace*> OnAdd);
     /// <returns>null if not exists; AddRef will be called</returns>
     public partial IFontFace* Get(ulong Id);
+
+    public FontManager? Manager
+    {
+        get
+        {
+            var handle = GetManagedHandle();
+            if (handle == null) return null;
+            var gc_handle = GCHandle.FromIntPtr((nint)handle);
+            return Unsafe.As<FontManager?>(gc_handle.Target);
+        }
+    }
+}
+
+public static unsafe partial class IFontManagerExtensions
+{
+    extension(Rc<IFontManager> manager)
+    {
+        public FontManager? Manager => manager.Handle->Manager;
+    }
 }

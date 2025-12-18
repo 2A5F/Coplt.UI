@@ -15,7 +15,7 @@ use std::{
 
 use dashmap::DashMap;
 
-use crate::dwrite::FontFace;
+use crate::{dwrite::FontFace, utils::ManagedHandle};
 
 use super::com::*;
 use cocom::{
@@ -80,6 +80,8 @@ impl Drop for AssocUpdate {
 #[cocom::object(IFontManager)]
 #[derive(Debug)]
 pub struct FontManager {
+    managed_handle: ManagedHandle,
+
     frame_source: ComPtr<IFrameSource>,
 
     expire_frame: u64,
@@ -96,6 +98,8 @@ pub struct FontManager {
 impl FontManager {
     pub fn new(frame_source: ComPtr<IFrameSource>) -> Self {
         Self {
+            managed_handle: Default::default(),
+
             frame_source,
 
             expire_frame: 180,
@@ -117,6 +121,18 @@ unsafe impl Sync for FontManager {}
 impl impls::IWeak for FontManager {}
 
 impl impls::IFontManager for FontManager {
+    fn SetManagedHandle(
+        &mut self,
+        Handle: *mut core::ffi::c_void,
+        OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (),
+    ) -> () {
+        self.managed_handle = ManagedHandle::new(Handle, OnDrop);
+    }
+
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void {
+        self.managed_handle.0
+    }
+
     fn SetAssocUpdate(
         &mut self,
         Data: *mut core::ffi::c_void,

@@ -165,6 +165,15 @@ void DWriteFontFace::OnStrongCountSub(const u32 old_count)
     m_frame_source->Get(&m_frame_time);
 }
 
+void DWriteFontFace::Impl_SetManagedHandle(void* Handle, Func<void, void*>* OnDrop)
+{
+}
+
+void* DWriteFontFace::Impl_GetManagedHandle()
+{
+    return nullptr;
+}
+
 u64 DWriteFontFace::Impl_get_Id() const
 {
     return static_cast<u64>(reinterpret_cast<usize>(m_face.get()));

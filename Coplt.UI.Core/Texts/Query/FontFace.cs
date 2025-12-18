@@ -74,6 +74,9 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
         m_id = m_inner.Id;
         m_frame_time = m_inner.FrameTime;
         m_info = m_inner.Info;
+
+        var weak_handle = GCHandle.ToIntPtr(GCHandle.Alloc(this, GCHandleType.Weak));
+        m_inner.SetManagedHandle((void*)weak_handle, &NativeUtils.FreeGcHandle);
     }
 
     #endregion

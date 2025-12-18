@@ -5298,50 +5298,71 @@
       "guid": "09c443bc-9736-4aac-8117-6890555005ff",
       "methods": [
         {
-          "name": "get_Id",
+          "name": "SetManagedHandle",
           "index": 0,
+          "return_type": 194,
+          "parameters": [
+            {
+              "name": "Handle",
+              "type": 195
+            },
+            {
+              "name": "OnDrop",
+              "type": 2
+            }
+          ]
+        },
+        {
+          "name": "GetManagedHandle",
+          "index": 1,
+          "return_type": 195,
+          "parameters": []
+        },
+        {
+          "name": "get_Id",
+          "index": 2,
           "flags": "const, getter",
           "return_type": 191,
           "parameters": []
         },
         {
           "name": "get_RefCount",
-          "index": 1,
+          "index": 3,
           "flags": "const, getter",
           "return_type": 189,
           "parameters": []
         },
         {
           "name": "get_FrameTime",
-          "index": 2,
+          "index": 4,
           "flags": "const, getter",
           "return_type": 199,
           "parameters": []
         },
         {
           "name": "GetFrameSource",
-          "index": 3,
+          "index": 5,
           "flags": "const",
           "return_type": 75,
           "parameters": []
         },
         {
           "name": "GetFontManager",
-          "index": 4,
+          "index": 6,
           "flags": "const",
           "return_type": 99,
           "parameters": []
         },
         {
           "name": "get_Info",
-          "index": 5,
+          "index": 7,
           "flags": "const, getter",
           "return_type": 206,
           "parameters": []
         },
         {
           "name": "Equals",
-          "index": 6,
+          "index": 8,
           "flags": "const",
           "return_type": 172,
           "parameters": [
@@ -5353,14 +5374,14 @@
         },
         {
           "name": "HashCode",
-          "index": 7,
+          "index": 9,
           "flags": "const",
           "return_type": 181,
           "parameters": []
         },
         {
           "name": "GetFamilyNames",
-          "index": 8,
+          "index": 10,
           "flags": "const",
           "return_type": 8,
           "parameters": [
@@ -5376,7 +5397,7 @@
         },
         {
           "name": "GetFaceNames",
-          "index": 9,
+          "index": 11,
           "flags": "const",
           "return_type": 8,
           "parameters": [
@@ -5527,8 +5548,29 @@
       "parent": "9d01e165-12b5-4190-bb46-3d78413de9a5",
       "methods": [
         {
-          "name": "SetAssocUpdate",
+          "name": "SetManagedHandle",
           "index": 0,
+          "return_type": 194,
+          "parameters": [
+            {
+              "name": "Handle",
+              "type": 195
+            },
+            {
+              "name": "OnDrop",
+              "type": 2
+            }
+          ]
+        },
+        {
+          "name": "GetManagedHandle",
+          "index": 1,
+          "return_type": 195,
+          "parameters": []
+        },
+        {
+          "name": "SetAssocUpdate",
+          "index": 2,
           "return_type": 191,
           "parameters": [
             {
@@ -5551,7 +5593,7 @@
         },
         {
           "name": "RemoveAssocUpdate",
-          "index": 1,
+          "index": 3,
           "return_type": 194,
           "parameters": [
             {
@@ -5562,13 +5604,13 @@
         },
         {
           "name": "GetFrameSource",
-          "index": 2,
+          "index": 4,
           "return_type": 75,
           "parameters": []
         },
         {
           "name": "SetExpireFrame",
-          "index": 3,
+          "index": 5,
           "return_type": 194,
           "parameters": [
             {
@@ -5579,7 +5621,7 @@
         },
         {
           "name": "SetExpireTime",
-          "index": 4,
+          "index": 6,
           "return_type": 194,
           "parameters": [
             {
@@ -5590,13 +5632,13 @@
         },
         {
           "name": "Collect",
-          "index": 5,
+          "index": 7,
           "return_type": 194,
           "parameters": []
         },
         {
           "name": "Add",
-          "index": 6,
+          "index": 8,
           "return_type": 194,
           "parameters": [
             {
@@ -5607,7 +5649,7 @@
         },
         {
           "name": "GetOrAdd",
-          "index": 7,
+          "index": 9,
           "return_type": 89,
           "parameters": [
             {
@@ -5626,7 +5668,7 @@
         },
         {
           "name": "Get",
-          "index": 8,
+          "index": 10,
           "return_type": 89,
           "parameters": [
             {

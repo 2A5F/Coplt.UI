@@ -107,6 +107,8 @@ public unsafe partial record struct TextData_FontRange
     public Rc<IFontFace> m_font_face;
 
     public uint Length => End - Start;
+
+    public FontFace? FontFace => !m_font_face ? null : m_font_face.Manager;
 }
 
 public record struct TextData_BidiRange
