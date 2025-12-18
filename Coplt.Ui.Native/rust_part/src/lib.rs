@@ -411,4 +411,50 @@ mod com_impl {
             unsafe { std::mem::transmute(&mut self.m_font_ranges) }
         }
     }
+
+    impl PartialEq<TextData_LocaleRange> for u32 {
+        fn eq(&self, other: &TextData_LocaleRange) -> bool {
+            *self >= other.Start && *self < other.End
+        }
+    }
+
+    impl PartialOrd<TextData_LocaleRange> for u32 {
+        fn partial_cmp(&self, other: &TextData_LocaleRange) -> Option<std::cmp::Ordering> {
+            Some(TextData_LocaleRange::cmp_pos(*self, other))
+        }
+
+        fn lt(&self, other: &TextData_LocaleRange) -> bool {
+            *self < other.Start
+        }
+
+        fn le(&self, other: &TextData_LocaleRange) -> bool {
+            *self < other.End
+        }
+
+        fn gt(&self, other: &TextData_LocaleRange) -> bool {
+            *self >= other.End
+        }
+
+        fn ge(&self, other: &TextData_LocaleRange) -> bool {
+            *self >= other.Start
+        }
+    }
+
+    impl TextData_LocaleRange {
+        pub fn cmp_pos(pos: u32, this: &TextData_LocaleRange) -> std::cmp::Ordering {
+            if pos < this.Start {
+                std::cmp::Ordering::Less
+            } else if pos >= this.End {
+                std::cmp::Ordering::Greater
+            } else {
+                std::cmp::Ordering::Equal
+            }
+        }
+
+        pub fn search_pos(
+            pos: u32,
+        ) -> impl for<'a> Fn(&'a TextData_LocaleRange) -> std::cmp::Ordering {
+            move |this| Self::cmp_pos(pos, this)
+        }
+    }
 }

@@ -604,6 +604,7 @@ impl crate::layout::LayoutInner for DwLayout {
         let tas: IDWriteTextAnalysisSource = TextAnalysisSource {
             unde_font,
             text,
+            locale_ranges: &paragraph.locale_ranges(),
             dir,
         }
         .into();
@@ -618,6 +619,7 @@ impl crate::layout::LayoutInner for DwLayout {
 struct TextAnalysisSource<'a> {
     unde_font: &'a IDWriteFontFace5,
     text: &'a [u16],
+    locale_ranges: &'a [TextData_LocaleRange],
     dir: DWRITE_READING_DIRECTION,
 }
 
@@ -668,10 +670,20 @@ impl<'a> IDWriteTextAnalysisSource_Impl for TextAnalysisSource_Impl<'a> {
         textlength: *mut u32,
         localename: *mut *mut u16,
     ) -> windows_core::Result<()> {
-        // todo impl
-        unsafe {
-            *textlength = 0;
-            *localename = std::ptr::null_mut();
+        if let Ok(pos) = self
+            .locale_ranges
+            .binary_search_by(TextData_LocaleRange::search_pos(textposition))
+        {
+            let range = &self.locale_ranges[pos];
+            unsafe {
+                *textlength = range.End - textposition;
+                *localename = range.Locale.Name;
+            }
+        } else {
+            unsafe {
+                *textlength = 0;
+                *localename = std::ptr::null_mut();
+            }
         }
         Ok(())
     }

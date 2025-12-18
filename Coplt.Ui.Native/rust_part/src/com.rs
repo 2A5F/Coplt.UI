@@ -1483,7 +1483,7 @@ pub struct StyleData {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_BidiRange {
     pub Start: u32,
-    pub Length: u32,
+    pub End: u32,
     pub Direction: BidiDirection,
 }
 
@@ -1491,7 +1491,7 @@ pub struct TextData_BidiRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_FontRange {
     pub Start: u32,
-    pub Length: u32,
+    pub End: u32,
     pub m_font_face: *mut IFontFace,
 }
 
@@ -1499,7 +1499,7 @@ pub struct TextData_FontRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_LocaleRange {
     pub Start: u32,
-    pub Length: u32,
+    pub End: u32,
     pub Locale: LocaleId,
 }
 
@@ -1507,7 +1507,7 @@ pub struct TextData_LocaleRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_SameStyleRange {
     pub Start: u32,
-    pub Length: u32,
+    pub End: u32,
     pub FirstSpanValue: TextSpanNode,
     pub HasFirstSpan: bool,
 }
@@ -1516,7 +1516,7 @@ pub struct TextData_SameStyleRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextData_ScriptRange {
     pub Start: u32,
-    pub Length: u32,
+    pub End: u32,
     pub Script: u16,
 }
 

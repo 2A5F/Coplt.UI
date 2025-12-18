@@ -1378,28 +1378,28 @@ namespace Coplt {
     struct TextData_BidiRange
     {
         ::Coplt::u32 Start;
-        ::Coplt::u32 Length;
+        ::Coplt::u32 End;
         ::Coplt::BidiDirection Direction;
     };
 
     struct TextData_FontRange
     {
         ::Coplt::u32 Start;
-        ::Coplt::u32 Length;
+        ::Coplt::u32 End;
         IFontFace* m_font_face;
     };
 
     struct TextData_LocaleRange
     {
         ::Coplt::u32 Start;
-        ::Coplt::u32 Length;
+        ::Coplt::u32 End;
         ::Coplt::LocaleId Locale;
     };
 
     struct TextData_SameStyleRange
     {
         ::Coplt::u32 Start;
-        ::Coplt::u32 Length;
+        ::Coplt::u32 End;
         ::Coplt::TextSpanNode FirstSpanValue;
         bool HasFirstSpan;
     };
@@ -1407,7 +1407,7 @@ namespace Coplt {
     struct TextData_ScriptRange
     {
         ::Coplt::u32 Start;
-        ::Coplt::u32 Length;
+        ::Coplt::u32 End;
         ::Coplt::u16 Script;
     };
 

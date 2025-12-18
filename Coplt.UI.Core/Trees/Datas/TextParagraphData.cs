@@ -54,16 +54,20 @@ public unsafe partial struct TextParagraphData
 public record struct TextData_ScriptRange
 {
     public uint Start;
-    public uint Length;
+    public uint End;
     public ushort Script;
+
+    public uint Length => End - Start;
 }
 
 public record struct TextData_SameStyleRange
 {
     public uint Start;
-    public uint Length;
+    public uint End;
     public TextSpanNode FirstSpanValue;
     public bool HasFirstSpan;
+
+    public uint Length => End - Start;
 
     public TextSpanNode? FirstSpan
     {
@@ -87,24 +91,30 @@ public record struct TextData_SameStyleRange
 public record struct TextData_LocaleRange
 {
     public uint Start;
-    public uint Length;
+    public uint End;
     public LocaleId Locale;
+
+    public uint Length => End - Start;
 }
 
 [Dropping]
 public unsafe partial record struct TextData_FontRange
 {
     public uint Start;
-    public uint Length;
+    public uint End;
     [ComType<Ptr<IFontFace>>]
     public Rc<IFontFace> m_font_face;
+
+    public uint Length => End - Start;
 }
 
 public record struct TextData_BidiRange
 {
     public uint Start;
-    public uint Length;
+    public uint End;
     public BidiDirection Direction;
+
+    public uint Length => End - Start;
 }
 
 public enum BidiDirection : byte

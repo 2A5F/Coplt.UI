@@ -174,7 +174,7 @@ impl Layout {
                 if script != cur_script {
                     script_ranges.add(TextData_ScriptRange {
                         Start: last_i,
-                        Length: i as u32 - last_i,
+                        End: i as u32,
                         Script: cur_script.to_icu4c_value(),
                     });
                     cur_script = script;
@@ -183,7 +183,7 @@ impl Layout {
             }
             script_ranges.add(TextData_ScriptRange {
                 Start: last_i,
-                Length: text.len() as u32 - last_i,
+                End: text.len() as u32,
                 Script: cur_script.to_icu4c_value(),
             });
         }
@@ -259,7 +259,7 @@ impl Layout {
                 let run = bidi.get_visual_run(i);
                 bidi_ranges.add(TextData_BidiRange {
                     Start: run.logical_start as u32,
-                    Length: run.length as u32,
+                    End: run.logical_start as u32 + run.length as u32,
                     Direction: match run.direction {
                         UBiDiDirection::RightToLeft => BidiDirection::RightToLeft,
                         _ => BidiDirection::LeftToRight,
@@ -303,12 +303,12 @@ impl Layout {
             fn add_range(
                 ssr: &mut crate::col::NList<TextData_SameStyleRange>,
                 start: u32,
-                length: u32,
+                end: u32,
                 span: Option<u32>,
             ) {
                 ssr.push(TextData_SameStyleRange {
                     Start: start,
-                    Length: length,
+                    End: end,
                     HasFirstSpan: span.is_some(),
                     FirstSpanValue: TextSpanNode {
                         Index: span.unwrap_or_default(),
@@ -339,12 +339,7 @@ impl Layout {
                         text_orientation = root_text_orientation;
 
                         if cur_end != cur_start {
-                            add_range(
-                                same_style_ranges,
-                                cur_start,
-                                cur_end - cur_start,
-                                first_span,
-                            );
+                            add_range(same_style_ranges, cur_start, cur_end, first_span);
                             cur_start = cur_end;
                             first_span = None;
                         }
@@ -373,12 +368,7 @@ impl Layout {
                     || child_text_orientation != text_orientation
                 {
                     if cur_end != cur_start {
-                        add_range(
-                            same_style_ranges,
-                            cur_start,
-                            cur_end - cur_start,
-                            first_span,
-                        );
+                        add_range(same_style_ranges, cur_start, cur_end, first_span);
                     }
                     cur_start = start;
                     first_span = Some(child.Index);
@@ -389,17 +379,12 @@ impl Layout {
             }
 
             if cur_end != cur_start {
-                add_range(
-                    same_style_ranges,
-                    cur_start,
-                    cur_end - cur_start,
-                    first_span,
-                );
+                add_range(same_style_ranges, cur_start, cur_end, first_span);
             }
 
             let text_len = text.len() as u32;
             if cur_end != text_len {
-                add_range(same_style_ranges, cur_end, text_len - cur_end, None);
+                add_range(same_style_ranges, cur_end, text_len, None);
             }
         }
 
@@ -431,12 +416,12 @@ impl Layout {
             fn add_range(
                 ssr: &mut crate::col::NList<TextData_LocaleRange>,
                 start: u32,
-                length: u32,
+                end: u32,
                 locale: LocaleId,
             ) {
                 ssr.push(TextData_LocaleRange {
                     Start: start,
-                    Length: length,
+                    End: end,
                     Locale: locale,
                 });
             }
@@ -461,7 +446,7 @@ impl Layout {
                 if start > cur_end {
                     if locale != root_locale {
                         if cur_end != cur_start {
-                            add_range(locale_ranges, cur_start, cur_end - cur_start, locale);
+                            add_range(locale_ranges, cur_start, cur_end, locale);
                             cur_start = cur_end;
                         }
 
@@ -474,7 +459,7 @@ impl Layout {
 
                 if child_locale != locale {
                     if cur_end != cur_start {
-                        add_range(locale_ranges, cur_start, cur_end - cur_start, locale);
+                        add_range(locale_ranges, cur_start, cur_end, locale);
                     }
                     cur_start = start;
                     locale = child_locale;
@@ -483,12 +468,12 @@ impl Layout {
             }
 
             if cur_end != cur_start {
-                add_range(locale_ranges, cur_start, cur_end - cur_start, locale);
+                add_range(locale_ranges, cur_start, cur_end, locale);
             }
 
             let text_len = text.len() as u32;
             if cur_end != text_len {
-                add_range(locale_ranges, cur_end, text_len - cur_end, root_locale);
+                add_range(locale_ranges, cur_end, text_len, root_locale);
             }
         }
     }
