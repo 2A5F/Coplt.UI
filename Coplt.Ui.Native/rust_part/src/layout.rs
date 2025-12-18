@@ -383,7 +383,7 @@ impl<'a> TraverseTree for SubDoc<'a> {}
 
 impl<'a> LayoutPartialTree for SubDoc<'a> {
     type CoreContainerStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
@@ -391,7 +391,7 @@ impl<'a> LayoutPartialTree for SubDoc<'a> {
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: taffy::NodeId) -> Self::CoreContainerStyle<'_> {
-        StyleHandle(self, node_id.into())
+        ViewStyleHandle(self, node_id.into())
     }
 
     #[inline(always)]
@@ -416,7 +416,7 @@ impl<'a> LayoutPartialTree for SubDoc<'a> {
                     if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
                         return taffy::compute_hidden_layout(tree, node_id);
                     }
-                    let style = StyleHandle(tree, id);
+                    let style = ViewStyleHandle(tree, id);
                     let visible = style.Visible;
                     if let com::Visible::Remove = visible {
                         return taffy::compute_hidden_layout(tree, node_id);
@@ -479,6 +479,42 @@ impl<'a> CacheTree for SubDoc<'a> {
         available_space: taffy::Size<taffy::AvailableSpace>,
         run_mode: taffy::RunMode,
     ) -> Option<taffy::LayoutOutput> {
+        (**self).cache_get(node_id, known_dimensions, available_space, run_mode)
+    }
+
+    #[inline(always)]
+    fn cache_store(
+        &mut self,
+        node_id: taffy::NodeId,
+        known_dimensions: taffy::Size<Option<f32>>,
+        available_space: taffy::Size<taffy::AvailableSpace>,
+        run_mode: taffy::RunMode,
+        layout_output: taffy::LayoutOutput,
+    ) {
+        (**self).cache_store(
+            node_id,
+            known_dimensions,
+            available_space,
+            run_mode,
+            layout_output,
+        );
+    }
+
+    #[inline(always)]
+    fn cache_clear(&mut self, node_id: taffy::NodeId) {
+        (**self).cache_clear(node_id);
+    }
+}
+
+impl CacheTree for SubDocInner {
+    #[inline(always)]
+    fn cache_get(
+        &self,
+        node_id: taffy::NodeId,
+        known_dimensions: taffy::Size<Option<f32>>,
+        available_space: taffy::Size<taffy::AvailableSpace>,
+        run_mode: taffy::RunMode,
+    ) -> Option<taffy::LayoutOutput> {
         let id = NodeId::from(node_id);
         let data = &self.common_data(id).LayoutCache;
         cache_get(data, known_dimensions, available_space, run_mode)
@@ -514,34 +550,34 @@ impl<'a> CacheTree for SubDoc<'a> {
 
 impl<'a> LayoutBlockContainer for SubDoc<'a> {
     type BlockContainerStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
     type BlockItemStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
     #[inline(always)]
     fn get_block_container_style(&self, node_id: taffy::NodeId) -> Self::BlockContainerStyle<'_> {
-        StyleHandle(self, node_id.into())
+        ViewStyleHandle(self, node_id.into())
     }
 
     #[inline(always)]
     fn get_block_child_style(&self, child_node_id: taffy::NodeId) -> Self::BlockItemStyle<'_> {
-        StyleHandle(self, child_node_id.into())
+        ViewStyleHandle(self, child_node_id.into())
     }
 }
 
 impl<'a> LayoutFlexboxContainer for SubDoc<'a> {
     type FlexboxContainerStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
     type FlexboxItemStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
@@ -550,39 +586,39 @@ impl<'a> LayoutFlexboxContainer for SubDoc<'a> {
         &self,
         node_id: taffy::NodeId,
     ) -> Self::FlexboxContainerStyle<'_> {
-        StyleHandle(self, node_id.into())
+        ViewStyleHandle(self, node_id.into())
     }
 
     #[inline(always)]
     fn get_flexbox_child_style(&self, child_node_id: taffy::NodeId) -> Self::FlexboxItemStyle<'_> {
-        StyleHandle(self, child_node_id.into())
+        ViewStyleHandle(self, child_node_id.into())
     }
 }
 
 impl<'a> LayoutGridContainer for SubDoc<'a> {
     type GridContainerStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
     type GridItemStyle<'b>
-        = StyleHandle<'b>
+        = ViewStyleHandle<'b>
     where
         Self: 'b;
 
     #[inline(always)]
     fn get_grid_container_style(&self, node_id: taffy::NodeId) -> Self::GridContainerStyle<'_> {
-        StyleHandle(self, node_id.into())
+        ViewStyleHandle(self, node_id.into())
     }
 
     #[inline(always)]
     fn get_grid_child_style(&self, child_node_id: taffy::NodeId) -> Self::GridItemStyle<'_> {
-        StyleHandle(self, child_node_id.into())
+        ViewStyleHandle(self, child_node_id.into())
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct StyleHandle<'a>(&'a SubDoc<'a>, NodeId);
+pub struct ViewStyleHandle<'a>(&'a SubDocInner, NodeId);
 
 impl Hash for GridNameType {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -624,14 +660,14 @@ impl CheapCloneStr for GridName {
     }
 }
 
-impl<'a> StyleHandle<'a> {
+impl<'a> ViewStyleHandle<'a> {
     #[inline(always)]
     pub fn style(&self) -> &StyleData {
         self.0.style_data(self.1)
     }
 }
 
-impl<'a> Deref for StyleHandle<'a> {
+impl<'a> Deref for ViewStyleHandle<'a> {
     type Target = StyleData;
 
     fn deref(&self) -> &Self::Target {
@@ -642,7 +678,7 @@ impl<'a> Deref for StyleHandle<'a> {
 #[macro_export]
 macro_rules! c_overflow {
     ( $self:ident.$name:ident ) => {
-        match $self.style().$name {
+        match $self.$name {
             $crate::com::Overflow::Visible => ::taffy::Overflow::Visible,
             $crate::com::Overflow::Clip => ::taffy::Overflow::Clip,
             $crate::com::Overflow::Hidden => ::taffy::Overflow::Hidden,
@@ -653,7 +689,7 @@ macro_rules! c_overflow {
 #[macro_export]
 macro_rules! c_position {
     ( $self:ident.$name:ident ) => {
-        match $self.style().$name {
+        match $self.$name {
             $crate::com::Position::Relative => ::taffy::Position::Relative,
             $crate::com::Position::Absolute => ::taffy::Position::Absolute,
         }
@@ -711,7 +747,7 @@ macro_rules! c_length_percentage {
     };
 }
 
-impl<'a> CoreStyle for StyleHandle<'a> {
+impl<'a> CoreStyle for ViewStyleHandle<'a> {
     type CustomIdent = GridName;
 
     #[inline(always)]
@@ -832,7 +868,7 @@ impl<'a> CoreStyle for StyleHandle<'a> {
     }
 }
 
-impl<'a> BlockContainerStyle for StyleHandle<'a> {
+impl<'a> BlockContainerStyle for ViewStyleHandle<'a> {
     #[inline(always)]
     fn text_align(&self) -> taffy::TextAlign {
         match self.TextAlign {
@@ -843,14 +879,14 @@ impl<'a> BlockContainerStyle for StyleHandle<'a> {
     }
 }
 
-impl<'a> BlockItemStyle for StyleHandle<'a> {
+impl<'a> BlockItemStyle for ViewStyleHandle<'a> {
     #[inline(always)]
     fn is_table(&self) -> bool {
         false
     }
 }
 
-impl<'a> FlexboxContainerStyle for StyleHandle<'a> {
+impl<'a> FlexboxContainerStyle for ViewStyleHandle<'a> {
     #[inline(always)]
     fn flex_direction(&self) -> taffy::FlexDirection {
         match self.FlexDirection {
@@ -930,7 +966,7 @@ impl<'a> FlexboxContainerStyle for StyleHandle<'a> {
     }
 }
 
-impl<'a> FlexboxItemStyle for StyleHandle<'a> {
+impl<'a> FlexboxItemStyle for ViewStyleHandle<'a> {
     #[inline(always)]
     fn flex_basis(&self) -> taffy::Dimension {
         c_dimension!(self => FlexBasis)
@@ -1270,7 +1306,7 @@ impl<'a> Iterator for GridTemplateAreasIter<'a> {
 
 impl<'a> ExactSizeIterator for GridTemplateAreasIter<'a> {}
 
-impl<'s> GridContainerStyle for StyleHandle<'s> {
+impl<'s> GridContainerStyle for ViewStyleHandle<'s> {
     type Repetition<'a>
         = &'a com::GridTemplateRepetition
     where
@@ -1463,7 +1499,7 @@ impl com::GridPlacement {
     }
 }
 
-impl<'a> GridItemStyle for StyleHandle<'a> {
+impl<'a> GridItemStyle for ViewStyleHandle<'a> {
     #[inline(always)]
     fn grid_row(&self) -> taffy::Line<taffy::GridPlacement<Self::CustomIdent>> {
         taffy::Line {

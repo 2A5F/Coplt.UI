@@ -1,6 +1,6 @@
 use std::{
     char::decode_utf16,
-    ops::{Deref, Range},
+    ops::{Deref, DerefMut, Range},
     os::raw::c_void,
     panic::{AssertUnwindSafe, RefUnwindSafe, UnwindSafe},
     process::Child,
@@ -16,7 +16,10 @@ use icu::{
     },
     segmenter::{GraphemeClusterSegmenter, LineSegmenter},
 };
-use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero, Style};
+use taffy::{
+    CacheTree, CoreStyle, LayoutPartialTree, LengthPercentage, LengthPercentageAuto, ResolveOrZero,
+    RoundTree, Style, TraversePartialTree, TraverseTree,
+};
 use windows::Win32::Graphics::DirectWrite::IDWriteFactory7;
 
 use crate::{
@@ -81,6 +84,26 @@ impl impls::ILayout for Layout {
 }
 
 impl Layout {
+    pub fn compute_hidden_layout(
+        &mut self,
+        doc: &mut super::SubDocInner,
+        id: NodeId,
+    ) -> taffy::LayoutOutput {
+        let data = &mut *doc.common_data(id);
+        super::cache_clear(&mut data.LayoutCache);
+        super::set_layout(&mut data.UnRoundedLayout, &taffy::Layout::with_order(0));
+
+        let childs = doc.childs(id);
+
+        for child in childs.iter() {
+            self.compute_hidden_layout(doc, *child);
+        }
+
+        taffy::LayoutOutput::HIDDEN
+    }
+}
+
+impl Layout {
     pub(super) fn compute_text_layout(
         &mut self,
         doc: &mut super::SubDocInner,
@@ -89,28 +112,33 @@ impl Layout {
     ) -> taffy::LayoutOutput {
         debug_assert!(matches!(id.typ(), NodeType::View));
 
-        let common = doc.common_data(id);
-        let style = doc.style_data(id);
-        let childs = doc.childs(id);
+        taffy::compute_cached_layout(doc, id.into(), inputs, |doc, _, inputs| {
+            if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
+                return self.compute_hidden_layout(doc, id);
+            }
+            let common = doc.common_data(id);
+            let style = doc.style_data(id);
+            let childs = doc.childs(id);
 
-        // todo
+            // todo
 
-        for child in childs.iter() {
-            match child.typ() {
-                NodeType::Null | NodeType::TextSpan => continue,
-                NodeType::View => {
-                    // todo inline block
-                }
-                NodeType::TextParagraph => {
-                    let r = self.compute_text_paragraph_layout(doc, *child, inputs, style);
-                    // todo
+            for child in childs.iter() {
+                match child.typ() {
+                    NodeType::Null | NodeType::TextSpan => continue,
+                    NodeType::View => {
+                        // todo inline block
+                    }
+                    NodeType::TextParagraph => {
+                        let r = self.compute_text_paragraph_layout(doc, *child, inputs, style);
+                        // todo
+                    }
                 }
             }
-        }
 
-        // todo
+            // todo
 
-        taffy::LayoutOutput::HIDDEN
+            taffy::LayoutOutput::HIDDEN
+        })
     }
 
     fn compute_text_paragraph_layout(
@@ -119,15 +147,24 @@ impl Layout {
         id: NodeId,
         inputs: taffy::LayoutInput,
         root_style: &StyleData,
-    ) {
-        let common = doc.common_data(id);
-        let childs = doc.childs(id);
-        let paragraph = doc.text_paragraph_data(id);
-        let style = doc.text_style_data(id);
+    ) -> taffy::LayoutOutput {
+        taffy::compute_cached_layout(doc, id.into(), inputs, |doc, _, inputs| {
+            let common = doc.common_data(id);
+            let childs = doc.childs(id);
+            let paragraph = doc.text_paragraph_data(id);
+            let style = doc.text_style_data(id);
 
-        if paragraph.is_text_dirty() {
-            self.sync_text_info(doc, id, paragraph, root_style, style);
-        }
+            if paragraph.is_text_dirty() {
+                self.sync_text_info(doc, id, paragraph);
+            }
+            // todo add text_style_dirty check
+            if paragraph.is_text_dirty() {
+                self.sync_styled_info(doc, id, paragraph, root_style, style);
+            }
+            paragraph.sync_text_dirty();
+
+            taffy::LayoutOutput::HIDDEN
+        })
     }
 
     fn sync_text_info(
@@ -135,31 +172,10 @@ impl Layout {
         doc: &mut super::SubDocInner,
         id: NodeId,
         paragraph: &mut TextParagraphData,
-        root_style: &StyleData,
-        style: &TextStyleData,
     ) {
         analyze_scripts(paragraph);
         analyze_break_points(paragraph);
         analyze_graphemes(paragraph);
-        analyze_same_style(doc, id, paragraph, root_style, style);
-        analyze_locale(doc, id, paragraph, root_style, style);
-
-        if let Err(e) = analyze_bidi(paragraph, root_style, style) {
-            std::panic::panic_any(e);
-        }
-
-        if let Err(e) = self
-            .inner
-            .analyze_fonts(doc, id, paragraph, root_style, style)
-        {
-            std::panic::panic_any(e);
-        }
-
-        build_runs(paragraph);
-        
-        // todo shape
-
-        paragraph.sync_text_dirty();
         return;
 
         fn analyze_scripts(paragraph: &mut TextParagraphData) {
@@ -239,6 +255,35 @@ impl Layout {
                 grapheme_cluster.add(last_pos as u32);
             }
         }
+    }
+
+    fn sync_styled_info(
+        &mut self,
+        doc: &mut super::SubDocInner,
+        id: NodeId,
+        paragraph: &mut TextParagraphData,
+        root_style: &StyleData,
+        style: &TextStyleData,
+    ) {
+        analyze_same_style(doc, id, paragraph, root_style, style);
+        analyze_locale(doc, id, paragraph, root_style, style);
+
+        if let Err(e) = analyze_bidi(paragraph, root_style, style) {
+            std::panic::panic_any(e);
+        }
+
+        if let Err(e) = self
+            .inner
+            .analyze_fonts(doc, id, paragraph, root_style, style)
+        {
+            std::panic::panic_any(e);
+        }
+
+        build_runs(paragraph);
+
+        // todo shape
+
+        return;
 
         fn analyze_bidi(
             paragraph: &mut TextParagraphData,
@@ -257,8 +302,7 @@ impl Layout {
             let mut bidi = UBiDi::new();
             bidi.set_para(
                 text,
-                // todo text style override
-                match root_style.TextDirection {
+                match style.TextDirection().unwrap_or(root_style.TextDirection) {
                     TextDirection::Forward => UBiDiLevel::LeftToRight,
                     TextDirection::Reverse => UBiDiLevel::RightToLeft,
                 },

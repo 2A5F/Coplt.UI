@@ -1437,6 +1437,8 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;
+        ::Coplt::u32 LastTextStyleVersion;
+        ::Coplt::u32 TextStyleVersion;
     };
 
     struct TextSpanData

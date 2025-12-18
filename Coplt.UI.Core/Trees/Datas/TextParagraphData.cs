@@ -39,8 +39,18 @@ public unsafe partial struct TextParagraphData
     /// dirty inc this
     /// </summary>
     internal uint TextVersion;
+    
+    /// <summary>
+    /// layout compute sync this to <see cref="TextStyleVersion"/>
+    /// </summary>
+    internal uint LastTextStyleVersion;
+    /// <summary>
+    /// dirty inc this
+    /// </summary>
+    internal uint TextStyleVersion;
 
     public bool IsTextDirty => LastTextVersion != TextVersion;
+    public bool IsTextStyleDirty => LastTextStyleVersion != TextStyleVersion;
 
     public string Text
     {
@@ -51,6 +61,11 @@ public unsafe partial struct TextParagraphData
             m_text = NString.Create(value);
             TextVersion++;
         }
+    }
+
+    public void MarkTextStyleDirty()
+    {
+        TextStyleVersion++;
     }
 }
 

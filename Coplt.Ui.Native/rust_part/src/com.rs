@@ -1550,6 +1550,8 @@ pub struct TextParagraphData {
     pub m_run_ranges: NativeList<TextData_RunRange>,
     pub LastTextVersion: u32,
     pub TextVersion: u32,
+    pub LastTextStyleVersion: u32,
+    pub TextStyleVersion: u32,
 }
 
 #[repr(C)]

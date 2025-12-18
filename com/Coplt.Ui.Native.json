@@ -4927,6 +4927,14 @@
         {
           "type": 191,
           "name": "TextVersion"
+        },
+        {
+          "type": 191,
+          "name": "LastTextStyleVersion"
+        },
+        {
+          "type": 191,
+          "name": "TextStyleVersion"
         }
       ]
     },
