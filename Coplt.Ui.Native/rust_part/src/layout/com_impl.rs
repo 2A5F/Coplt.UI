@@ -1,6 +1,6 @@
 use std::{
     char::decode_utf16,
-    ops::Deref,
+    ops::{Deref, Range},
     os::raw::c_void,
     panic::{AssertUnwindSafe, RefUnwindSafe, UnwindSafe},
     process::Child,
@@ -8,6 +8,7 @@ use std::{
 };
 
 use cocom::{ComPtr, HResultE, MakeObject, object::ObjectPtr};
+use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen};
 use icu::{
     properties::{
         CodePointMapData, CodePointSetData,
@@ -15,7 +16,7 @@ use icu::{
     },
     segmenter::{GraphemeClusterSegmenter, LineSegmenter},
 };
-use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero};
+use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero, Style};
 use windows::Win32::Graphics::DirectWrite::IDWriteFactory7;
 
 use crate::{
@@ -31,9 +32,9 @@ use crate::{
 #[repr(C)]
 #[derive(Debug)]
 pub struct FontRange {
-    start: u32,
-    length: u32,
-    font_face: ComPtr<IFontFace>,
+    pub start: u32,
+    pub end: u32,
+    pub font_face: ComPtr<IFontFace>,
 }
 
 #[derive(Debug)]
@@ -47,6 +48,7 @@ pub(crate) trait LayoutInner {
     fn analyze_fonts(
         &mut self,
         doc: &mut super::SubDocInner,
+        id: NodeId,
         paragraph: &mut TextParagraphData,
         root_style: &StyleData,
         style: &TextStyleData,
@@ -146,7 +148,10 @@ impl Layout {
             std::panic::panic_any(e);
         }
 
-        if let Err(e) = self.inner.analyze_fonts(doc, paragraph, root_style, style) {
+        if let Err(e) = self
+            .inner
+            .analyze_fonts(doc, id, paragraph, root_style, style)
+        {
             std::panic::panic_any(e);
         }
 
@@ -279,112 +284,45 @@ impl Layout {
         ) {
             let text = &*{ paragraph.m_text };
 
-            let same_style_ranges: &mut crate::col::NList<TextData_SameStyleRange> =
-                paragraph.same_style_ranges();
+            let same_style_ranges = paragraph.same_style_ranges();
             same_style_ranges.clear();
 
             if text.is_empty() {
                 return;
             }
 
-            let root_font_size = style.FontSize().unwrap_or(root_style.FontSize);
-            let root_text_orientation = style
-                .TextOrientation()
-                .unwrap_or(root_style.TextOrientation);
+            let root_data = SameStyleData::from_style(root_style);
 
-            let mut font_size = root_font_size;
-            let mut text_orientation = root_text_orientation;
-
-            let mut first_span = None;
-            let mut cur_start = 0;
-            let mut cur_end = 0;
-
-            #[inline(always)]
-            fn add_range(
-                ssr: &mut crate::col::NList<TextData_SameStyleRange>,
-                start: u32,
-                end: u32,
-                span: Option<u32>,
+            for (range, _, span) in Layout::iter_child_style_range_with_must_split(
+                doc,
+                id,
+                text,
+                style,
+                root_data,
+                |child_style, base| SameStyleData::new(child_style, base),
+                |child_style| {
+                    !child_style.InsertLeft().is_zero_length()
+                        || !child_style.InsertTop().is_zero_length()
+                        || !child_style.InsertRight().is_zero_length()
+                        || !child_style.InsertBottom().is_zero_length()
+                        || !child_style.MarginLeft().is_zero_length()
+                        || !child_style.MarginTop().is_zero_length()
+                        || !child_style.MarginRight().is_zero_length()
+                        || !child_style.MarginBottom().is_zero_length()
+                        || !child_style.PaddingLeft().is_zero_length()
+                        || !child_style.PaddingTop().is_zero_length()
+                        || !child_style.PaddingRight().is_zero_length()
+                        || !child_style.PaddingBottom().is_zero_length()
+                },
             ) {
-                ssr.push(TextData_SameStyleRange {
-                    Start: start,
-                    End: end,
+                same_style_ranges.push(TextData_SameStyleRange {
+                    Start: range.start,
+                    End: range.end,
                     HasFirstSpan: span.is_some(),
                     FirstSpanValue: TextSpanNode {
                         Index: span.unwrap_or_default(),
                     },
                 });
-            }
-
-            let childs = doc.childs(id);
-            for child in childs
-                .iter()
-                .copied()
-                .filter(|child| matches!(child.typ(), NodeType::TextSpan))
-            {
-                let text_span_data = doc.text_span_data(child);
-                let text_span_style = doc.text_style_data(child);
-
-                let start = text_span_data.TextStart;
-                let length = text_span_data.TextLength;
-                let end = start + length;
-                if end < cur_end {
-                    continue;
-                }
-                let start = start.max(cur_end);
-
-                if start > cur_end {
-                    if font_size != root_font_size || text_orientation != root_text_orientation {
-                        font_size = root_font_size;
-                        text_orientation = root_text_orientation;
-
-                        if cur_end != cur_start {
-                            add_range(same_style_ranges, cur_start, cur_end, first_span);
-                            cur_start = cur_end;
-                            first_span = None;
-                        }
-                    }
-                    cur_end = start;
-                }
-
-                let child_font_size = text_span_style.FontSize().unwrap_or(root_font_size);
-                let child_text_orientation = text_span_style
-                    .TextOrientation()
-                    .unwrap_or(root_text_orientation);
-
-                if !text_span_style.InsertLeft().is_zero_length()
-                    || !text_span_style.InsertTop().is_zero_length()
-                    || !text_span_style.InsertRight().is_zero_length()
-                    || !text_span_style.InsertBottom().is_zero_length()
-                    || !text_span_style.MarginLeft().is_zero_length()
-                    || !text_span_style.MarginTop().is_zero_length()
-                    || !text_span_style.MarginRight().is_zero_length()
-                    || !text_span_style.MarginBottom().is_zero_length()
-                    || !text_span_style.PaddingLeft().is_zero_length()
-                    || !text_span_style.PaddingTop().is_zero_length()
-                    || !text_span_style.PaddingRight().is_zero_length()
-                    || !text_span_style.PaddingBottom().is_zero_length()
-                    || child_font_size != font_size
-                    || child_text_orientation != text_orientation
-                {
-                    if cur_end != cur_start {
-                        add_range(same_style_ranges, cur_start, cur_end, first_span);
-                    }
-                    cur_start = start;
-                    first_span = Some(child.Index);
-                    font_size = child_font_size;
-                    text_orientation = child_text_orientation;
-                }
-                cur_end = end;
-            }
-
-            if cur_end != cur_start {
-                add_range(same_style_ranges, cur_start, cur_end, first_span);
-            }
-
-            let text_len = text.len() as u32;
-            if cur_end != text_len {
-                add_range(same_style_ranges, cur_end, text_len, None);
             }
         }
 
@@ -397,8 +335,7 @@ impl Layout {
         ) {
             let text = &*{ paragraph.m_text };
 
-            let locale_ranges: &mut crate::col::NList<TextData_LocaleRange> =
-                paragraph.locale_ranges();
+            let locale_ranges = paragraph.locale_ranges();
             locale_ranges.clear();
 
             if text.is_empty() {
@@ -407,24 +344,59 @@ impl Layout {
 
             let root_locale = style.Locale().unwrap_or(root_style.Locale);
 
-            let mut locale = root_locale;
-
-            let mut cur_start = 0;
-            let mut cur_end = 0;
-
-            #[inline(always)]
-            fn add_range(
-                ssr: &mut crate::col::NList<TextData_LocaleRange>,
-                start: u32,
-                end: u32,
-                locale: LocaleId,
+            for (range, locale, _) in Layout::iter_child_style_range(
+                doc,
+                id,
+                text,
+                style,
+                root_locale,
+                |child_style, base| child_style.Locale().unwrap_or(*base),
             ) {
-                ssr.push(TextData_LocaleRange {
-                    Start: start,
-                    End: end,
+                locale_ranges.push(TextData_LocaleRange {
+                    Start: range.start,
+                    End: range.end,
                     Locale: locale,
                 });
             }
+        }
+    }
+}
+
+impl Layout {
+    pub fn iter_child_style_range<T: PartialEq + Clone + Unpin>(
+        doc: &mut super::SubDocInner,
+        id: NodeId,
+        text: &[u16],
+        style: &TextStyleData,
+        root_data: T,
+        load_child_data: impl FnMut(&TextStyleData, &T) -> T,
+    ) -> impl Iterator<Item = (Range<u32>, T, Option<u32>)> {
+        Self::iter_child_style_range_with_must_split(
+            doc,
+            id,
+            text,
+            style,
+            root_data,
+            load_child_data,
+            |_| false,
+        )
+    }
+
+    pub fn iter_child_style_range_with_must_split<T: PartialEq + Clone + Unpin>(
+        doc: &mut super::SubDocInner,
+        id: NodeId,
+        text: &[u16],
+        style: &TextStyleData,
+        root_data: T,
+        mut load_child_data: impl FnMut(&TextStyleData, &T) -> T,
+        mut must_split: impl FnMut(&TextStyleData) -> bool,
+    ) -> impl Iterator<Item = (Range<u32>, T, Option<u32>)> {
+        a_gen(async move |ctx: AGen<(Range<u32>, T, Option<u32>)>| {
+            let mut data = root_data.clone();
+
+            let mut first_span = None;
+            let mut cur_start = 0;
+            let mut cur_end = 0;
 
             let childs = doc.childs(id);
             for child in childs
@@ -444,37 +416,77 @@ impl Layout {
                 let start = start.max(cur_end);
 
                 if start > cur_end {
-                    if locale != root_locale {
+                    if data != root_data {
                         if cur_end != cur_start {
-                            add_range(locale_ranges, cur_start, cur_end, locale);
+                            ctx.Yield((cur_start..cur_end, data, first_span)).await;
                             cur_start = cur_end;
+                            first_span = None;
                         }
 
-                        locale = root_locale;
+                        data = root_data.clone();
                     }
                     cur_end = start;
                 }
 
-                let child_locale = text_span_style.Locale().unwrap_or(root_locale);
+                let child_data = load_child_data(text_span_style, &root_data);
 
-                if child_locale != locale {
+                if must_split(text_span_style) || child_data != data {
                     if cur_end != cur_start {
-                        add_range(locale_ranges, cur_start, cur_end, locale);
+                        ctx.Yield((cur_start..cur_end, data, first_span)).await;
                     }
                     cur_start = start;
-                    locale = child_locale;
+                    first_span = Some(child.Index);
+                    data = child_data;
                 }
                 cur_end = end;
             }
 
             if cur_end != cur_start {
-                add_range(locale_ranges, cur_start, cur_end, locale);
+                ctx.Yield((cur_start..cur_end, data, first_span)).await;
             }
 
             let text_len = text.len() as u32;
             if cur_end != text_len {
-                add_range(locale_ranges, cur_end, text_len, root_locale);
+                ctx.Yield((cur_end..text_len, root_data, None)).await;
             }
+        })
+        .to_iter()
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct SameStyleData {
+    pub font_fallback: *mut IFontFallback,
+    pub font_size: f32,
+    pub font_weight: FontWeight,
+    pub font_width: FontWidth,
+    pub font_italic: bool,
+    pub font_oblique: f32,
+    pub text_orientation: TextOrientation,
+}
+
+impl SameStyleData {
+    pub fn from_style(style: &StyleData) -> Self {
+        Self {
+            font_fallback: style.FontFallback,
+            font_size: style.FontSize,
+            font_weight: style.FontWeight,
+            font_width: style.FontWidth,
+            font_italic: style.FontItalic,
+            font_oblique: style.FontOblique,
+            text_orientation: style.TextOrientation,
+        }
+    }
+
+    pub fn new(style: &TextStyleData, fallback: &Self) -> Self {
+        Self {
+            font_fallback: style.FontFallback().unwrap_or(fallback.font_fallback),
+            font_size: style.FontSize().unwrap_or(fallback.font_size),
+            font_weight: style.FontWeight().unwrap_or(fallback.font_weight),
+            font_width: style.FontWidth().unwrap_or(fallback.font_width),
+            font_italic: style.FontItalic().unwrap_or(fallback.font_italic),
+            font_oblique: style.FontOblique().unwrap_or(fallback.font_oblique),
+            text_orientation: style.TextOrientation().unwrap_or(fallback.text_orientation),
         }
     }
 }

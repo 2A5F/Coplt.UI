@@ -21,7 +21,7 @@ use crate::{
     com::{
         self, ChildsData, CommonData, Container, GridName, GridNameType, ILib, LayoutCache,
         NLayoutContext, NodeId, NodeType, RootData, StyleData, TextParagraphData, TextSpanData,
-        TextStyleData,
+        TextSpanNode, TextStyleData,
     },
     utils::*,
 };
@@ -236,6 +236,13 @@ impl SubDocInner {
                 &mut *self.ctx().text_span_data.add(id.index() as usize)
             },
         }
+    }
+}
+
+impl TextSpanNode {
+    #[inline(always)]
+    pub fn text_style_data(&self, doc: &SubDocInner) -> &'static mut TextStyleData {
+        unsafe { &mut *doc.ctx().text_span_style_data.add(self.Index as usize) }
     }
 }
 

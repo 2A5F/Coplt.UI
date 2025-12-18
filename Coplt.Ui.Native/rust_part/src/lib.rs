@@ -383,31 +383,31 @@ mod com_impl {
             self.TextVersion != self.LastTextVersion
         }
 
-        pub fn break_points(&mut self) -> &mut NBitSet {
+        pub fn break_points(&mut self) -> &'static mut NBitSet {
             unsafe { std::mem::transmute(&mut self.m_break_points) }
         }
 
-        pub fn grapheme_cluster(&mut self) -> &mut NList<u32> {
+        pub fn grapheme_cluster(&mut self) -> &'static mut NList<u32> {
             unsafe { std::mem::transmute(&mut self.m_grapheme_cluster) }
         }
 
-        pub fn script_ranges(&mut self) -> &mut NList<TextData_ScriptRange> {
+        pub fn script_ranges(&mut self) -> &'static mut NList<TextData_ScriptRange> {
             unsafe { std::mem::transmute(&mut self.m_script_ranges) }
         }
 
-        pub fn bidi_ranges(&mut self) -> &mut NList<TextData_BidiRange> {
+        pub fn bidi_ranges(&mut self) -> &'static mut NList<TextData_BidiRange> {
             unsafe { std::mem::transmute(&mut self.m_bidi_ranges) }
         }
 
-        pub fn same_style_ranges(&mut self) -> &mut NList<TextData_SameStyleRange> {
+        pub fn same_style_ranges(&mut self) -> &'static mut NList<TextData_SameStyleRange> {
             unsafe { std::mem::transmute(&mut self.m_same_style_ranges) }
         }
 
-        pub fn locale_ranges(&mut self) -> &mut NList<TextData_LocaleRange> {
+        pub fn locale_ranges(&mut self) -> &'static mut NList<TextData_LocaleRange> {
             unsafe { std::mem::transmute(&mut self.m_locale_ranges) }
         }
 
-        pub fn font_ranges(&mut self) -> &mut NList<FontRange> {
+        pub fn font_ranges(&mut self) -> &'static mut NList<FontRange> {
             unsafe { std::mem::transmute(&mut self.m_font_ranges) }
         }
     }

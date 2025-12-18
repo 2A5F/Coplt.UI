@@ -7,9 +7,11 @@ use std::{
 };
 
 use crate::{
+    c_option,
     col::NList,
     com::*,
     feb_hr,
+    font_manager::FontManager,
     layout::{FontRange, SubDocInner},
 };
 use cocom::{
@@ -24,11 +26,13 @@ use read_fonts::collections::int_set::Domain;
 use windows::Win32::{
     Foundation::{GENERIC_READ, HANDLE},
     Graphics::DirectWrite::{
-        DWRITE_READING_DIRECTION, DWRITE_READING_DIRECTION_BOTTOM_TO_TOP,
-        DWRITE_READING_DIRECTION_LEFT_TO_RIGHT, DWRITE_READING_DIRECTION_RIGHT_TO_LEFT,
-        DWRITE_READING_DIRECTION_TOP_TO_BOTTOM, IDWriteFactory7, IDWriteFontFace5,
-        IDWriteFontFallback1, IDWriteFontFileStream, IDWriteLocalFontFileLoader,
-        IDWriteLocalizedStrings, IDWriteTextAnalysisSource, IDWriteTextAnalysisSource_Impl,
+        DWRITE_FONT_AXIS_TAG_ITALIC, DWRITE_FONT_AXIS_TAG_SLANT, DWRITE_FONT_AXIS_TAG_WEIGHT,
+        DWRITE_FONT_AXIS_TAG_WIDTH, DWRITE_FONT_AXIS_VALUE, DWRITE_READING_DIRECTION,
+        DWRITE_READING_DIRECTION_BOTTOM_TO_TOP, DWRITE_READING_DIRECTION_LEFT_TO_RIGHT,
+        DWRITE_READING_DIRECTION_RIGHT_TO_LEFT, DWRITE_READING_DIRECTION_TOP_TO_BOTTOM,
+        IDWriteFactory7, IDWriteFontFace5, IDWriteFontFallback1, IDWriteFontFileStream,
+        IDWriteLocalFontFileLoader, IDWriteLocalizedStrings, IDWriteTextAnalysisSource,
+        IDWriteTextAnalysisSource_Impl,
     },
     Storage::FileSystem::{
         CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SHARE_WRITE, GetFileSizeEx,
@@ -116,6 +120,18 @@ impl FontFace {
                 pmp!(this; .file).write(file);
                 pmp!(this; .font_ref).write(font_ref);
             }))
+        }
+    }
+
+    pub fn get(
+        face: IDWriteFontFace5,
+        manager: *mut IFontManager,
+    ) -> anyhow::Result<ComPtr<IFontFace>> {
+        unsafe {
+            let ptr_manager = manager;
+            let manager = Object::<FontManager>::GetObject(manager);
+            let id: usize = std::mem::transmute_copy(&face);
+            (*manager).get_or_add(id as u64, || Ok(FontFace::new(face, ptr_manager)?.to_com()))
         }
     }
 }
@@ -562,16 +578,33 @@ impl crate::layout::Layout {
     }
 }
 
+unsafe extern "C" {
+    fn coplt_ui_dwrite_get_font_fallback(
+        obj: NonNull<IFontFallback>,
+        out: *mut IDWriteFontFallback1,
+    );
+}
+
+fn get_dwrite_ffb(obj: NonNull<IFontFallback>) -> IDWriteFontFallback1 {
+    unsafe {
+        let mut dfb = MaybeUninit::uninit();
+        coplt_ui_dwrite_get_font_fallback(obj, dfb.as_mut_ptr());
+        dfb.assume_init()
+    }
+}
+
 impl crate::layout::LayoutInner for DwLayout {
     fn analyze_fonts(
         &mut self,
         doc: &mut SubDocInner,
+        id: NodeId,
         paragraph: &mut TextParagraphData,
         root_style: &StyleData,
         style: &TextStyleData,
     ) -> anyhow::Result<()> {
         let text = &*{ paragraph.m_text };
 
+        let same_style_ranges: &[_] = &*paragraph.same_style_ranges();
         let font_ranges = paragraph.font_ranges();
         font_ranges.clear();
 
@@ -579,7 +612,7 @@ impl crate::layout::LayoutInner for DwLayout {
             return Ok(());
         }
 
-        let unde_font = self.get_undef_font(doc)?;
+        let fm = doc.ctx().font_manager;
 
         let text_direction = style.TextDirection().unwrap_or(root_style.TextDirection);
         let writing_direction = style
@@ -602,14 +635,82 @@ impl crate::layout::LayoutInner for DwLayout {
         };
 
         let tas: IDWriteTextAnalysisSource = TextAnalysisSource {
-            unde_font,
             text,
             locale_ranges: &paragraph.locale_ranges(),
             dir,
         }
         .into();
 
-        // todo
+        for ssr in same_style_ranges {
+            let span_style = c_option!(#val; ssr => FirstSpan)
+                .map(|span| &*span.text_style_data(doc))
+                .unwrap_or(style);
+
+            let font_fallback = span_style.FontFallback().unwrap_or(root_style.FontFallback);
+            let font_fallback = NonNull::new(font_fallback)
+                .map(get_dwrite_ffb)
+                .unwrap_or_else(|| self.system_font_fallback.clone());
+
+            let font_weight = span_style.FontWeight().unwrap_or(root_style.FontWeight);
+            let font_width = span_style.FontWidth().unwrap_or(root_style.FontWidth);
+            let font_italic = span_style.FontItalic().unwrap_or(root_style.FontItalic);
+            let font_oblique = span_style.FontOblique().unwrap_or(root_style.FontOblique);
+
+            let axis_values: [DWRITE_FONT_AXIS_VALUE; _] = [
+                DWRITE_FONT_AXIS_VALUE {
+                    axisTag: DWRITE_FONT_AXIS_TAG_WEIGHT,
+                    value: font_weight as i32 as f32,
+                },
+                DWRITE_FONT_AXIS_VALUE {
+                    axisTag: DWRITE_FONT_AXIS_TAG_WIDTH,
+                    value: font_width.Width * 100.0,
+                },
+                DWRITE_FONT_AXIS_VALUE {
+                    axisTag: DWRITE_FONT_AXIS_TAG_ITALIC,
+                    value: if font_italic { 1.0 } else { 0.0 },
+                },
+                DWRITE_FONT_AXIS_VALUE {
+                    axisTag: DWRITE_FONT_AXIS_TAG_SLANT,
+                    value: if font_italic { font_oblique } else { 0.0 },
+                },
+            ];
+
+            unsafe {
+                let mut start = ssr.Start;
+                let mut end = ssr.End;
+                while start < end {
+                    let mut scale = 0.0;
+                    let mut mapped_length = 0;
+                    let mut mapped_fontface = None;
+                    font_fallback.MapCharacters(
+                        &tas,
+                        start,
+                        end - start,
+                        None,
+                        None,
+                        &axis_values,
+                        &mut mapped_length,
+                        &mut scale,
+                        &mut mapped_fontface,
+                    )?;
+                    if mapped_length == 0 {
+                        break;
+                    }
+
+                    let font_face = mapped_fontface
+                        .map_or_else(|| self.get_undef_font(doc).cloned(), Ok)
+                        .and_then(|face| FontFace::get(face, fm))?;
+
+                    font_ranges.push(FontRange {
+                        start,
+                        end: start + mapped_length,
+                        font_face,
+                    });
+
+                    start += mapped_length;
+                }
+            }
+        }
 
         Ok(())
     }
@@ -617,7 +718,6 @@ impl crate::layout::LayoutInner for DwLayout {
 
 #[implement(IDWriteTextAnalysisSource)]
 struct TextAnalysisSource<'a> {
-    unde_font: &'a IDWriteFontFace5,
     text: &'a [u16],
     locale_ranges: &'a [TextData_LocaleRange],
     dir: DWRITE_READING_DIRECTION,

@@ -15,8 +15,14 @@ use std::{
 
 use dashmap::DashMap;
 
+use crate::dwrite::FontFace;
+
 use super::com::*;
-use cocom::{ComPtr, MakeObject, MakeObjectWeak, impls::ObjectBoxNew, object::Object};
+use cocom::{
+    ComPtr, MakeObject, MakeObjectWeak,
+    impls::ObjectBoxNew,
+    object::{Object, ObjectPtr},
+};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn coplt_ui_new_font_manager(
@@ -234,5 +240,27 @@ impl impls::IFontManager for FontManager {
         };
         drop(lock_guard);
         r
+    }
+}
+
+impl FontManager {
+    pub fn get_or_add(
+        &mut self,
+        id: u64,
+        on_add: impl FnOnce() -> anyhow::Result<ComPtr<IFontFace>>,
+    ) -> anyhow::Result<ComPtr<IFontFace>> {
+        let lock_guard = self.op_lock.read().unwrap();
+        let r = match self.id_to_faces.entry(id) {
+            dashmap::Entry::Occupied(entry) => entry.get().clone(),
+            dashmap::Entry::Vacant(entry) => {
+                let r = entry.insert(on_add()?).clone();
+                for au in self.assoc_updates.values() {
+                    au.on_add(r.ptr().as_ptr(), id);
+                }
+                r
+            }
+        };
+        drop(lock_guard);
+        Ok(r)
     }
 }
