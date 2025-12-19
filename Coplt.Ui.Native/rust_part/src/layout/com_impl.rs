@@ -14,7 +14,7 @@ use cocom::{
     object::{Object, ObjectPtr},
 };
 use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen, merge_ranges};
-use harfrust::{ShaperData, ShaperInstance, Tag, UnicodeBuffer, Variation};
+use harfrust::{SerializeFlags, ShaperData, ShaperInstance, Tag, UnicodeBuffer, Variation};
 use icu::{
     properties::{
         CodePointMapData, CodePointSetData,
@@ -22,6 +22,7 @@ use icu::{
     },
     segmenter::{GraphemeClusterSegmenter, LineSegmenter},
 };
+use itertools::Itertools;
 use taffy::{
     CacheTree, CoreStyle, LayoutPartialTree, LengthPercentage, LengthPercentageAuto, ResolveOrZero,
     RoundTree, Style, TraversePartialTree, TraverseTree,
@@ -177,11 +178,11 @@ impl Layout {
             if paragraph.is_text_dirty() {
                 self.sync_text_info(doc, id, paragraph);
             }
-            // todo add text_style_dirty check
-            if paragraph.is_text_dirty() {
+            if paragraph.is_text_dirty() || paragraph.is_text_style_dirty() {
                 self.sync_styled_info(doc, id, paragraph, root_style, style);
             }
             paragraph.sync_text_dirty();
+            paragraph.sync_text_style_dirty();
 
             taffy::LayoutOutput::HIDDEN
         })
@@ -362,7 +363,7 @@ impl Layout {
 
             let root_data = SameStyleData::from_style(root_style);
 
-            for (range, _, span) in Layout::iter_child_style_range_with_must_split(
+            for (range, data, span) in Layout::iter_child_style_range_with_must_split(
                 doc,
                 id,
                 text,
@@ -391,6 +392,7 @@ impl Layout {
                     FirstSpanValue: TextSpanNode {
                         Index: span.unwrap_or_default(),
                     },
+                    ComputedFontSize: data.font_size,
                 });
             }
         }
@@ -470,6 +472,8 @@ impl Layout {
                     BidiRange: bidi,
                     StyleRange: style,
                     FontRange: font,
+                    GlyphStart: 0,
+                    GlyphEnd: 0,
                 });
             }
         }
@@ -482,6 +486,9 @@ impl Layout {
         ) {
             let text = &*{ paragraph.m_text };
 
+            let glyph_datas = paragraph.glyph_datas();
+            glyph_datas.clear();
+
             if text.is_empty() {
                 return;
             }
@@ -492,6 +499,11 @@ impl Layout {
             let writing_direction = style
                 .WritingDirection()
                 .unwrap_or(root_style.WritingDirection);
+
+            let axis_y = match writing_direction {
+                WritingDirection::Horizontal => false,
+                WritingDirection::Vertical => true,
+            };
 
             let dir = match (text_direction, writing_direction) {
                 (TextDirection::Forward, WritingDirection::Horizontal) => {
@@ -575,7 +587,7 @@ impl Layout {
                 .collect();
 
             let mut buffer = UnicodeBuffer::new();
-            for run_range in paragraph.run_ranges().iter() {
+            for run_range in paragraph.run_ranges().iter_mut() {
                 let span_style = run_range
                     .get_style_range(paragraph)
                     .style(doc)
@@ -585,6 +597,7 @@ impl Layout {
                 let sub_text = &text[run_range.Start as usize..run_range.End as usize];
 
                 buffer.push_utf16(sub_text);
+                buffer.set_cluster_level(harfrust::BufferClusterLevel::MonotoneCharacters);
                 buffer.set_direction(dir);
                 let locale = span_style
                     .Locale()
@@ -605,7 +618,36 @@ impl Layout {
                 let shaper = &shapers[run_range.FontRange as usize];
                 let glyph_buffer = shaper.shape(buffer, &features);
 
-                // todo
+                let glyph_len = glyph_buffer.len();
+
+                glyph_datas.ensure_cap(glyph_datas.len() + glyph_len as i32);
+                run_range.GlyphStart = glyph_datas.len() as u32;
+
+                let glyph_infos = glyph_buffer.glyph_infos();
+                let glyph_positions = glyph_buffer.glyph_positions();
+                for (glyph_info, glyph_position) in glyph_infos.iter().zip(glyph_positions.iter()) {
+                    let mut flags = GlyphDataFlags::None;
+                    if glyph_info.unsafe_to_break() {
+                        flags |= GlyphDataFlags::UnsafeToBreak;
+                    }
+                    glyph_datas.push(GlyphData {
+                        Cluster: glyph_info.cluster,
+                        Advance: if axis_y {
+                            glyph_position.y_advance
+                        } else {
+                            glyph_position.x_advance
+                        },
+                        Offset: if axis_y {
+                            glyph_position.x_offset
+                        } else {
+                            glyph_position.y_offset
+                        },
+                        GlyphId: glyph_info.glyph_id as u16,
+                        Flags: flags,
+                    });
+                }
+
+                run_range.GlyphEnd = glyph_datas.len() as u32;
 
                 buffer = glyph_buffer.clear();
             }

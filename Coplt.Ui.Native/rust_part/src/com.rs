@@ -816,6 +816,28 @@ pub enum BidiDirection {
 bitflags::bitflags! {
     #[repr(transparent)]
     #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct GlyphDataFlags : u16 {
+        const None = 0;
+        const UnsafeToBreak = 1;
+        const _ = !0;
+    }
+}
+
+impl From<u16> for GlyphDataFlags {
+    fn from(value: u16) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<GlyphDataFlags> for u16 {
+    fn from(value: GlyphDataFlags) -> Self {
+        value.bits()
+    }
+}
+
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
     pub struct TextStyleOverride : u64 {
         const None = 0;
         const FontFallback = 1;
@@ -1351,6 +1373,16 @@ pub struct CommonData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GlyphData {
+    pub Cluster: u32,
+    pub Advance: i32,
+    pub Offset: i32,
+    pub GlyphId: u16,
+    pub Flags: GlyphDataFlags,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GridContainerStyle {
     pub GridTemplateRows: NativeList<GridTemplateComponent>,
     pub GridTemplateColumns: NativeList<GridTemplateComponent>,
@@ -1521,6 +1553,8 @@ pub struct TextData_RunRange {
     pub BidiRange: u32,
     pub StyleRange: u32,
     pub FontRange: u32,
+    pub GlyphStart: u32,
+    pub GlyphEnd: u32,
 }
 
 #[repr(C)]
@@ -1530,6 +1564,7 @@ pub struct TextData_SameStyleRange {
     pub End: u32,
     pub FirstSpanValue: TextSpanNode,
     pub HasFirstSpan: bool,
+    pub ComputedFontSize: f32,
 }
 
 #[repr(C)]
@@ -1553,6 +1588,7 @@ pub struct TextParagraphData {
     pub m_locale_ranges: NativeList<TextData_LocaleRange>,
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub m_run_ranges: NativeList<TextData_RunRange>,
+    pub m_glyph_datas: NativeList<GlyphData>,
     pub LastTextVersion: u32,
     pub TextVersion: u32,
     pub LastTextStyleVersion: u32,

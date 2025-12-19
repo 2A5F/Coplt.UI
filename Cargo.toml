@@ -14,6 +14,7 @@ etagere = "0.2"
 font-types = "0.10"
 harfrust = "0.4"
 icu = "2.1"
+itertools = "0.14"
 read-fonts = "0.36"
 sys-locale = "0.3.2"
 taffy = {path = "taffy"}

@@ -103,6 +103,8 @@ namespace Coplt {
 
     struct CommonData;
 
+    struct GlyphData;
+
     struct GridContainerStyle;
 
     struct RootData;
@@ -760,6 +762,12 @@ namespace Coplt {
         RightToLeft = 1,
     };
 
+    COPLT_ENUM_FLAGS(GlyphDataFlags, ::Coplt::u16)
+    {
+        None = 0,
+        UnsafeToBreak = 1,
+    };
+
     COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
     {
         None = 0,
@@ -1246,6 +1254,15 @@ namespace Coplt {
         bool HasParent;
     };
 
+    struct GlyphData
+    {
+        ::Coplt::u32 Cluster;
+        ::Coplt::i32 Advance;
+        ::Coplt::i32 Offset;
+        ::Coplt::u16 GlyphId;
+        ::Coplt::GlyphDataFlags Flags;
+    };
+
     struct GridContainerStyle
     {
         ::Coplt::NativeList<::Coplt::GridTemplateComponent> GridTemplateRows;
@@ -1411,6 +1428,8 @@ namespace Coplt {
         ::Coplt::u32 BidiRange;
         ::Coplt::u32 StyleRange;
         ::Coplt::u32 FontRange;
+        ::Coplt::u32 GlyphStart;
+        ::Coplt::u32 GlyphEnd;
     };
 
     struct TextData_SameStyleRange
@@ -1419,6 +1438,7 @@ namespace Coplt {
         ::Coplt::u32 End;
         ::Coplt::TextSpanNode FirstSpanValue;
         bool HasFirstSpan;
+        ::Coplt::f32 ComputedFontSize;
     };
 
     struct TextData_ScriptRange
@@ -1440,6 +1460,7 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_LocaleRange> m_locale_ranges;
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
+        ::Coplt::NativeList<::Coplt::GlyphData> m_glyph_datas;
         ::Coplt::u32 LastTextVersion;
         ::Coplt::u32 TextVersion;
         ::Coplt::u32 LastTextStyleVersion;

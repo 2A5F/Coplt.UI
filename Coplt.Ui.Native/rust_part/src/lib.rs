@@ -180,12 +180,12 @@ mod com_impl {
     use crate::{
         col::{NArc, NBitSet, NList},
         com::{
-            ChildsData, CommonData, CursorType, FontWeight, FontWidth, IFontFallback, LineAlign,
-            LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents, TextAlign,
-            TextData_BidiRange, TextData_FontRange, TextData_LocaleRange, TextData_RunRange,
-            TextData_SameStyleRange, TextData_ScriptRange, TextDirection, TextOrientation,
-            TextOverflow, TextParagraphData, TextSpanData, TextSpanNode, TextStyleData,
-            TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
+            ChildsData, CommonData, CursorType, FontWeight, FontWidth, GlyphData, IFontFallback,
+            LineAlign, LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents,
+            TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange,
+            TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection,
+            TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode,
+            TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
@@ -423,11 +423,19 @@ mod com_impl {
 
     impl TextParagraphData {
         pub fn is_text_dirty(&self) -> bool {
-            self.TextVersion != self.LastTextVersion
+            self.LastTextVersion != self.TextVersion
         }
 
         pub fn sync_text_dirty(&mut self) {
             self.LastTextVersion = self.TextVersion
+        }
+
+        pub fn is_text_style_dirty(&self) -> bool {
+            self.LastTextStyleVersion != self.TextStyleVersion
+        }
+
+        pub fn sync_text_style_dirty(&mut self) {
+            self.LastTextStyleVersion = self.TextStyleVersion
         }
 
         pub fn break_points(&mut self) -> &'static mut NBitSet {
@@ -462,6 +470,10 @@ mod com_impl {
 
         pub fn run_ranges(&mut self) -> &'static mut NList<TextData_RunRange> {
             unsafe { std::mem::transmute(&mut self.m_run_ranges) }
+        }
+
+        pub fn glyph_datas(&mut self) -> &'static mut NList<GlyphData> {
+            unsafe { std::mem::transmute(&mut self.m_glyph_datas) }
         }
     }
 

@@ -30,6 +30,8 @@ public unsafe partial struct TextParagraphData
     public NativeList<TextData_FontRange> m_font_ranges;
     [Drop]
     public NativeList<TextData_RunRange> m_run_ranges;
+    [Drop]
+    public NativeList<GlyphData> m_glyph_datas;
 
     /// <summary>
     /// layout compute sync this to <see cref="TextVersion"/>
@@ -39,7 +41,7 @@ public unsafe partial struct TextParagraphData
     /// dirty inc this
     /// </summary>
     internal uint TextVersion;
-    
+
     /// <summary>
     /// layout compute sync this to <see cref="TextStyleVersion"/>
     /// </summary>
@@ -84,6 +86,8 @@ public record struct TextData_SameStyleRange
     public uint End;
     public TextSpanNode FirstSpanValue;
     public bool HasFirstSpan;
+
+    public float ComputedFontSize;
 
     public uint Length => End - Start;
 
@@ -154,4 +158,25 @@ public record struct TextData_RunRange
     public uint FontRange;
 
     public uint Length => End - Start;
+
+    public uint GlyphStart;
+    public uint GlyphEnd;
+
+    public uint GlyphLength => GlyphEnd - GlyphStart;
+}
+
+public record struct GlyphData
+{
+    public uint Cluster;
+    public int Advance;
+    public int Offset;
+    public ushort GlyphId;
+    public GlyphDataFlags Flags;
+}
+
+[Flags]
+public enum GlyphDataFlags : ushort
+{
+    None = 0,
+    UnsafeToBreak = 1 << 0,
 }

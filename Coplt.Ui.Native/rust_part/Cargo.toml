@@ -18,6 +18,7 @@ etagere = {workspace = true}
 font-types = {workspace = true}
 harfrust = {workspace = true}
 icu = {workspace = true}
+itertools = {workspace = true}
 read-fonts = {workspace = true}
 sys-locale = {workspace = true}
 taffy = {workspace = true}
