@@ -1,8 +1,10 @@
 use std::ffi::c_void;
 
 use crate::com::{LayoutCache, LayoutCacheFlags};
+use crate::utf16::Utf16Indices;
 use crate::{layout::*, *};
 use concat_idents::concat_idents;
+use harfrust::UnicodeBuffer;
 
 pub fn cache_get(
     data: &LayoutCache,
@@ -289,6 +291,19 @@ impl Drop for ManagedHandle {
             if let Some(f) = self.1 {
                 f(self.0)
             }
+        }
+    }
+}
+
+pub trait UnicodeBufferPushUtf16 {
+    fn push_utf16(&mut self, str: &[u16]);
+}
+
+impl UnicodeBufferPushUtf16 for UnicodeBuffer {
+    fn push_utf16(&mut self, str: &[u16]) {
+        self.reserve(str.len());
+        for (index, c) in Utf16Indices::new(str) {
+            self.add(unsafe { char::from_u32_unchecked(c) }, index as u32);
         }
     }
 }

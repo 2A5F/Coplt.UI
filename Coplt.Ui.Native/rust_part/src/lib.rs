@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-use std::any::Any;
 use std::error::Error;
 use std::fmt::Debug;
 use std::panic::UnwindSafe;
+use std::{any::Any, ffi::c_char};
 
 mod coplt_alloc {
     use core::alloc::GlobalAlloc;
@@ -104,6 +104,17 @@ pub fn set_current_error_message(msg: String) {
     }
 }
 
+#[unsafe(no_mangle)]
+pub extern "C" fn coplt_ui_get_user_ui_default_locale_impl(len: *mut usize) -> *const c_char {
+    match sys_locale::get_locale() {
+        Some(str) => unsafe {
+            *len = str.len();
+            str.leak().as_mut_ptr() as *const c_char
+        },
+        None => std::ptr::null_mut(),
+    }
+}
+
 pub fn feb_hr(f: impl FnOnce() -> anyhow::Result<cocom::HResult> + UnwindSafe) -> cocom::HResult {
     match std::panic::catch_unwind(f) {
         Ok(ok) => match ok {
@@ -159,7 +170,9 @@ impl IsZeroLength for LengthPercentage {
 mod com_impl {
     use std::{
         ffi::c_void,
+        fmt::Display,
         ops::{Deref, DerefMut},
+        str::FromStr,
     };
 
     use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero};
@@ -169,10 +182,10 @@ mod com_impl {
         com::{
             ChildsData, CommonData, CursorType, FontWeight, FontWidth, IFontFallback, LineAlign,
             LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents, TextAlign,
-            TextData_BidiRange, TextData_LocaleRange, TextData_RunRange, TextData_SameStyleRange,
-            TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow, TextParagraphData,
-            TextSpanData, TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags,
-            WritingDirection,
+            TextData_BidiRange, TextData_FontRange, TextData_LocaleRange, TextData_RunRange,
+            TextData_SameStyleRange, TextData_ScriptRange, TextDirection, TextOrientation,
+            TextOverflow, TextParagraphData, TextSpanData, TextSpanNode, TextStyleData,
+            TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
@@ -283,6 +296,36 @@ mod com_impl {
                 self.Ptr = std::ptr::null_mut();
                 self.Drop = std::ptr::null_mut();
             }
+        }
+    }
+
+    impl LocaleId {
+        pub fn or(self, other: Self) -> Self {
+            if self.Name.is_null() { other } else { self }
+        }
+
+        pub fn get_utf16(self) -> Option<&'static [u16]> {
+            if self.Name.is_null() {
+                None
+            } else {
+                Some(unsafe { std::slice::from_raw_parts(self.Name as _, self.Length) })
+            }
+        }
+        pub fn get_utf8(self) -> Option<&'static [u8]> {
+            if self.Name.is_null() {
+                None
+            } else {
+                Some(unsafe {
+                    std::slice::from_raw_parts(self.Name.add(self.Length * 2 + 2), self.Length)
+                })
+            }
+        }
+        pub fn get_str(self) -> Option<&'static str> {
+            Some(unsafe { std::str::from_utf8_unchecked(self.get_utf8()?) })
+        }
+        pub fn to_language(self) -> Option<harfrust::Language> {
+            self.get_str()
+                .and_then(|str| harfrust::Language::from_str(str).ok())
         }
     }
 
@@ -412,6 +455,8 @@ mod com_impl {
         }
 
         pub fn font_ranges(&mut self) -> &'static mut NList<FontRange> {
+            debug_assert_eq!(size_of::<FontRange>(), size_of::<TextData_FontRange>());
+
             unsafe { std::mem::transmute(&mut self.m_font_ranges) }
         }
 
@@ -463,6 +508,37 @@ mod com_impl {
             pos: u32,
         ) -> impl for<'a> Fn(&'a TextData_LocaleRange) -> std::cmp::Ordering {
             move |this| Self::cmp_pos(pos, this)
+        }
+    }
+
+    impl TextData_SameStyleRange {
+        pub fn first_span(&self) -> Option<TextSpanNode> {
+            if self.HasFirstSpan {
+                Some(self.FirstSpanValue)
+            } else {
+                None
+            }
+        }
+        pub fn style(&self, doc: &mut layout::SubDocInner) -> Option<&'static mut TextStyleData> {
+            self.first_span().map(|span| span.text_style_data(doc))
+        }
+    }
+
+    impl TextData_RunRange {
+        pub fn get_font_range(&self, paragraph: &mut TextParagraphData) -> &'static mut FontRange {
+            &mut paragraph.font_ranges()[self.FontRange as usize]
+        }
+        pub fn get_style_range(
+            &self,
+            paragraph: &mut TextParagraphData,
+        ) -> &'static mut TextData_SameStyleRange {
+            &mut paragraph.same_style_ranges()[self.StyleRange as usize]
+        }
+        pub fn get_script_range(
+            &self,
+            paragraph: &mut TextParagraphData,
+        ) -> &'static mut TextData_ScriptRange {
+            &mut paragraph.script_ranges()[self.ScriptRange as usize]
         }
     }
 }

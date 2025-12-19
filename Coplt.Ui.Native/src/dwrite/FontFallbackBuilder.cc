@@ -112,12 +112,12 @@ HResult FontFallbackBuilder::Impl_Add(char16 const* name, i32 length, bool* exis
     );
 }
 
-HResult FontFallbackBuilder::Impl_AddLocaled(char16 const* locale, char16 const* name, i32 name_length, bool* exists)
+HResult FontFallbackBuilder::Impl_AddLocaled(LocaleId const* locale, char16 const* name, i32 name_length, bool* exists)
 {
     return feb(
         [&]
         {
-            *exists = Add(locale, name, name_length);
+            *exists = Add(reinterpret_cast<char16 const*>(locale->Name), name, name_length);
             return HResultE::Ok;
         }
     );

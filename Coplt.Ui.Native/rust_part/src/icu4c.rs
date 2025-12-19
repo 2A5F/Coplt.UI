@@ -1,4 +1,4 @@
-use std::ffi::{CStr, c_schar, c_void};
+use std::ffi::{CStr, c_char, c_schar, c_void};
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -240,6 +240,39 @@ impl UBiDi {
             logical_start,
             length,
             direction,
+        }
+    }
+}
+
+pub mod script {
+    use crate::icu4c::UErrorCode;
+    use std::ffi::{CStr, c_char};
+
+    pub fn get_script(codepoint: u32) -> Result<icu::properties::props::Script, UErrorCode> {
+        unsafe extern "C" {
+            fn uscript_getScript(codepoint: u32, err: *mut UErrorCode) -> i32;
+        }
+
+        let mut err = UErrorCode(0);
+
+        let r = unsafe { uscript_getScript(codepoint, &mut err) };
+
+        if err.is_failed() {
+            Err(err)
+        } else {
+            Ok(icu::properties::props::Script::from_icu4c_value(r as _))
+        }
+    }
+
+    pub fn get_short_name(script: icu::properties::props::Script) -> &'static str {
+        unsafe extern "C" {
+            fn uscript_getShortName(script: i32) -> *const c_char;
+        }
+
+        unsafe {
+            let str = uscript_getShortName(script.to_icu4c_value() as i32);
+            let c_str = CStr::from_ptr(str);
+            return str::from_utf8_unchecked(c_str.to_bytes());
         }
     }
 }

@@ -16,6 +16,7 @@ public sealed unsafe class LayoutModule : Document.IModule
             var ctx = new NLayoutContext
             {
                 font_manager = document.m_font_manager.m_inner,
+                default_locale = document.DefaultLocale,
 
                 roots = p_roots,
 

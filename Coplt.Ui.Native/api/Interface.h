@@ -65,7 +65,7 @@ namespace Coplt {
 
         COPLT_COM_METHOD(Build, ::Coplt::HResult, (IFontFallback** ff), ff);
         COPLT_COM_METHOD(Add, ::Coplt::HResult, (::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists), name, length, exists);
-        COPLT_COM_METHOD(AddLocaled, ::Coplt::HResult, (::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists), locale, name, name_length, exists);
+        COPLT_COM_METHOD(AddLocaled, ::Coplt::HResult, (::Coplt::LocaleId const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists), locale, name, name_length, exists);
     };
 
     COPLT_COM_INTERFACE(IFontFamily, "f8009d34-9417-4b87-b23b-b7885d27aeab", ::Coplt::IUnknown)

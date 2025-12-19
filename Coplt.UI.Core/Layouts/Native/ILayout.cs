@@ -2,6 +2,7 @@
 using Coplt.Com;
 using Coplt.UI.Collections;
 using Coplt.UI.Native.Collections;
+using Coplt.UI.Styles;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
 
@@ -17,6 +18,7 @@ public struct NNodeIdCtrl
 public unsafe struct NLayoutContext
 {
     public IFontManager* font_manager;
+    public LocaleId default_locale;
 
     [ComType<Ptr<FFIMap>>]
     public NativeMap<NodeId, RootData>* roots;

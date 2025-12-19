@@ -1048,7 +1048,8 @@ namespace Coplt {
 
     struct LocaleId
     {
-        ::Coplt::char16* Name;
+        ::Coplt::u8* Name;
+        ::Coplt::usize Length;
     };
 
     struct FontMetrics
@@ -1187,6 +1188,7 @@ namespace Coplt {
     struct NLayoutContext
     {
         IFontManager* font_manager;
+        ::Coplt::LocaleId default_locale;
         ::Coplt::FFIMap* roots;
         ::Coplt::i32* view_buckets;
         ::Coplt::NNodeIdCtrl* view_ctrl;
@@ -1257,11 +1259,13 @@ namespace Coplt {
 
     struct RootData
     {
+        ::Coplt::LocaleId DefaultLocale;
         ::Coplt::NodeId Node;
         ::Coplt::f32 AvailableSpaceXValue;
         ::Coplt::f32 AvailableSpaceYValue;
         ::Coplt::AvailableSpaceType AvailableSpaceX;
         ::Coplt::AvailableSpaceType AvailableSpaceY;
+        ::Coplt::f32 Dpi;
         bool UseRounding;
     };
 
@@ -1389,6 +1393,7 @@ namespace Coplt {
         ::Coplt::u32 Start;
         ::Coplt::u32 End;
         IFontFace* m_font_face;
+        ::Coplt::u32 StyleRange;
     };
 
     struct TextData_LocaleRange

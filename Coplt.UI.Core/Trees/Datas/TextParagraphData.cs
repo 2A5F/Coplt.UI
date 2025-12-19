@@ -122,6 +122,7 @@ public unsafe partial record struct TextData_FontRange
     public uint End;
     [ComType<Ptr<IFontFace>>]
     public Rc<IFontFace> m_font_face;
+    public uint StyleRange;
 
     public uint Length => End - Start;
 

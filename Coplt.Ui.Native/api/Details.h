@@ -1044,13 +1044,13 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFallbackBuilder>
     VirtualTable<::Coplt::IUnknown> b;
     ::Coplt::i32 (*const COPLT_CDECL f_Build)(::Coplt::IFontFallbackBuilder*, IFontFallback** ff) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_Add)(::Coplt::IFontFallbackBuilder*, ::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists) noexcept;
-    ::Coplt::i32 (*const COPLT_CDECL f_AddLocaled)(::Coplt::IFontFallbackBuilder*, ::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists) noexcept;
+    ::Coplt::i32 (*const COPLT_CDECL f_AddLocaled)(::Coplt::IFontFallbackBuilder*, ::Coplt::LocaleId const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists) noexcept;
 };
 namespace Coplt::Internal::VirtualImpl_Coplt_IFontFallbackBuilder
 {
     ::Coplt::i32 COPLT_CDECL Build(::Coplt::IFontFallbackBuilder* self, IFontFallback** p0) noexcept;
     ::Coplt::i32 COPLT_CDECL Add(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::i32 p1, bool* p2) noexcept;
-    ::Coplt::i32 COPLT_CDECL AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept;
+    ::Coplt::i32 COPLT_CDECL AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::LocaleId const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept;
 }
 
 template <>
@@ -1095,7 +1095,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFallbackBuilder>
 
         virtual ::Coplt::HResult Impl_Build(IFontFallback** ff) = 0;
         virtual ::Coplt::HResult Impl_Add(::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists) = 0;
-        virtual ::Coplt::HResult Impl_AddLocaled(::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists) = 0;
+        virtual ::Coplt::HResult Impl_AddLocaled(::Coplt::LocaleId const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists) = 0;
     };
 
     template <std::derived_from<::Coplt::IFontFallbackBuilder> Base = ::Coplt::IFontFallbackBuilder>
@@ -1123,7 +1123,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFallbackBuilder>
             return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_Add(p0, p1, p2));
         }
 
-        static ::Coplt::i32 COPLT_CDECL f_AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
+        static ::Coplt::i32 COPLT_CDECL f_AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::LocaleId const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
         {
             return ::Coplt::Internal::BitCast<::Coplt::i32>(AsImpl(self)->Impl_AddLocaled(p0, p1, p2, p3));
         }
@@ -1167,7 +1167,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontFallbackBuilder
         return r;
     }
 
-    inline ::Coplt::i32 COPLT_CDECL AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
+    inline ::Coplt::i32 COPLT_CDECL AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::LocaleId const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
     {
         ::Coplt::i32 r;
         #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
@@ -1197,7 +1197,7 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFallbackBuilder>
     {
         return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IFontFallbackBuilder, self)->f_Add(self, p0, p1, p2));
     }
-    static COPLT_FORCE_INLINE ::Coplt::HResult AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::char16 const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
+    static COPLT_FORCE_INLINE ::Coplt::HResult AddLocaled(::Coplt::IFontFallbackBuilder* self, ::Coplt::LocaleId const* p0, ::Coplt::char16 const* p1, ::Coplt::i32 p2, bool* p3) noexcept
     {
         return ::Coplt::Internal::BitCast<::Coplt::HResult>(COPLT_COM_PVTB(IFontFallbackBuilder, self)->f_AddLocaled(self, p0, p1, p2, p3));
     }

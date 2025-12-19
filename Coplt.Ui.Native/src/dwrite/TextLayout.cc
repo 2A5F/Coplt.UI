@@ -907,7 +907,7 @@ HRESULT TextAnalysisSource::GetLocaleName(
         {
             const auto offset = textPosition - scope_range.LogicTextStart;
             *textLength = scope_range.LogicTextLength - offset;
-            *localeName = scope_style.Locale.Name;
+            *localeName = reinterpret_cast<WCHAR*>(scope_style.Locale.Name);
             return S_OK;
         }
         // if (scope_style.LocaleMode == LocaleMode::ByScript)

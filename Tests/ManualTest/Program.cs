@@ -8,6 +8,7 @@ using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
+using Coplt.UI.Utilities;
 
 NativeLib.Instance.SetLogger((l, msg) => Console.WriteLine($"[{l}] {msg}"));
 
@@ -28,7 +29,8 @@ NativeLib.Instance.SetLogger((l, msg) => Console.WriteLine($"[{l}] {msg}"));
 //     Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}μs; {face}");
 // }
 
-
+var locale = Utils.GetUserUiDefaultLocale();
+Console.WriteLine($"{locale}");
 
 var ff = FontFallback.Create("Calibri");
 // var ff = FontFallback.Create("Microsoft YaHei UI");

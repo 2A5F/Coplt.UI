@@ -50,7 +50,7 @@ pub trait IFontFallback : IUnknown {
 pub trait IFontFallbackBuilder : IUnknown {
     fn Build(&mut self, ff: *mut *mut IFontFallback) -> HResult;
     fn Add(&mut self, name: *const u16, length: i32, exists: *mut bool) -> HResult;
-    fn AddLocaled(&mut self, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
+    fn AddLocaled(&mut self, locale: *const LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
 }
 
 #[cocom::interface("f8009d34-9417-4b87-b23b-b7885d27aeab")]
@@ -1249,6 +1249,7 @@ pub struct NFontPair {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
     pub font_manager: *mut IFontManager,
+    pub default_locale: LocaleId,
     pub roots: *mut FFIMap,
     pub view_buckets: *mut i32,
     pub view_ctrl: *mut NNodeIdCtrl,
@@ -1304,7 +1305,8 @@ pub struct FontWidth {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LocaleId {
-    pub Name: *mut u16,
+    pub Name: *mut u8,
+    pub Length: usize,
 }
 
 #[repr(C)]
@@ -1362,11 +1364,13 @@ pub struct GridContainerStyle {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct RootData {
+    pub DefaultLocale: LocaleId,
     pub Node: NodeId,
     pub AvailableSpaceXValue: f32,
     pub AvailableSpaceYValue: f32,
     pub AvailableSpaceX: AvailableSpaceType,
     pub AvailableSpaceY: AvailableSpaceType,
+    pub Dpi: f32,
     pub UseRounding: bool,
 }
 
@@ -1497,6 +1501,7 @@ pub struct TextData_FontRange {
     pub Start: u32,
     pub End: u32,
     pub m_font_face: *mut IFontFace,
+    pub StyleRange: u32,
 }
 
 #[repr(C)]
@@ -1985,7 +1990,7 @@ pub mod details {
 
         pub f_Build: unsafe extern "C" fn(this: *const IFontFallbackBuilder, ff: *mut *mut IFontFallback) -> HResult,
         pub f_Add: unsafe extern "C" fn(this: *const IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult,
-        pub f_AddLocaled: unsafe extern "C" fn(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
+        pub f_AddLocaled: unsafe extern "C" fn(this: *const IFontFallbackBuilder, locale: *const LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
     }
 
     impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallbackBuilder, O>
@@ -2005,7 +2010,7 @@ pub mod details {
         unsafe extern "C" fn f_Add(this: *const IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult {
             unsafe { (*O::GetObject(this as _)).Add(name, length, exists) }
         }
-        unsafe extern "C" fn f_AddLocaled(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult {
+        unsafe extern "C" fn f_AddLocaled(this: *const IFontFallbackBuilder, locale: *const LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult {
             unsafe { (*O::GetObject(this as _)).AddLocaled(locale, name, name_length, exists) }
         }
     }
@@ -2793,7 +2798,7 @@ pub mod impls {
     pub trait IFontFallbackBuilder : IUnknown {
         fn Build(&mut self, ff: *mut *mut super::IFontFallback) -> HResult;
         fn Add(&mut self, name: *const u16, length: i32, exists: *mut bool) -> HResult;
-        fn AddLocaled(&mut self, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
+        fn AddLocaled(&mut self, locale: *const super::LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
     }
 
     pub trait IFontFamily : IUnknown {

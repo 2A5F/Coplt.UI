@@ -7,6 +7,7 @@ using Coplt.UI.Collections;
 using Coplt.UI.Layouts;
 using Coplt.UI.Miscellaneous;
 using Coplt.UI.Native;
+using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
 using Coplt.UI.Trees.Modules;
@@ -35,6 +36,8 @@ public sealed partial class Document
     internal readonly FrameSource m_frame_source;
     internal readonly FontManager m_font_manager;
     internal uint m_node_id_inc;
+
+    internal LocaleId DefaultLocale = Utils.GetUserUiDefaultLocale();
 
     #endregion
 
@@ -454,18 +457,27 @@ public sealed partial class Document
 
     #region Node
 
-    public ref RootData AddRoot(NodeId id) => ref AddRoot(id, AvailableSpace.MinContent, AvailableSpace.MinContent);
-    public ref RootData AddRoot(NodeId id, AvailableSpace X, AvailableSpace Y, bool UseRounding = true)
+    public ref RootData AddRoot(NodeId Id, LocaleId? DefaultLocale = null, float Dpi = 96) =>
+        ref AddRoot(Id, AvailableSpace.MinContent, AvailableSpace.MinContent, DefaultLocale, Dpi);
+    public ref RootData AddRoot(NodeId Id, AvailableSpace X, AvailableSpace Y, LocaleId? DefaultLocale = null, float Dpi = 96, bool UseRounding = true)
     {
-        if (id.Type != NodeType.View) throw new InvalidOperationException("Root must be view.");
-        ref var root = ref m_roots.GetValueRefOrUninitialized(id, out _);
-        root.Node = id;
+        if (Id.Type != NodeType.View) throw new InvalidOperationException("Root must be view.");
+        ref var root = ref m_roots.GetValueRefOrUninitialized(Id, out _);
+        root.DefaultLocale = DefaultLocale ?? default;
+        root.Node = Id;
         root.AvailableSpaceXValue = X.Value;
         root.AvailableSpaceYValue = Y.Value;
         root.AvailableSpaceX = X.Type;
         root.AvailableSpaceY = Y.Type;
+        root.Dpi = Dpi;
         root.UseRounding = UseRounding;
         return ref root;
+    }
+
+    public ref RootData GetRootData(NodeId Id, out bool Exists)
+    {
+        if (Id.Type != NodeType.View) throw new InvalidOperationException("Root must be view.");
+        return ref m_roots.GetValueRefOrNullRef(Id, out Exists);
     }
 
     public bool RemoveRoot(NodeId id) => m_roots.Remove(id);

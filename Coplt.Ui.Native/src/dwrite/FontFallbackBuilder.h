@@ -33,7 +33,7 @@ namespace Coplt
         HResult Impl_Add(char16 const* name, i32 length, bool* exists);
 
         COPLT_FORCE_INLINE
-        HResult Impl_AddLocaled(char16 const* locale, char16 const* name, i32 name_length, bool* exists);
+        HResult Impl_AddLocaled(LocaleId const* locale, char16 const* name, i32 name_length, bool* exists);
 
         COPLT_IMPL_END
     };

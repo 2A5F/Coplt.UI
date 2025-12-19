@@ -10,4 +10,6 @@ namespace Coplt
     {
         char16 const* LikelyLocale(const UScriptCode script);
     }
+
+    extern "C" COPLT_EXPORT const char* coplt_ui_get_user_ui_default_locale(usize* len);
 }

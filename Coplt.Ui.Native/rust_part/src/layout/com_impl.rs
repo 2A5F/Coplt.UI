@@ -4,11 +4,17 @@ use std::{
     os::raw::c_void,
     panic::{AssertUnwindSafe, RefUnwindSafe, UnwindSafe},
     process::Child,
+    str::FromStr,
     u32,
 };
 
-use cocom::{ComPtr, HResultE, MakeObject, object::ObjectPtr};
+use cocom::{
+    ComPtr, HResultE, MakeObject,
+    impls::ObjectBox,
+    object::{Object, ObjectPtr},
+};
 use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen, merge_ranges};
+use harfrust::{ShaperData, ShaperInstance, Tag, UnicodeBuffer, Variation};
 use icu::{
     properties::{
         CodePointMapData, CodePointSetData,
@@ -26,11 +32,24 @@ use crate::{
     IsZeroLength, c_available_space,
     col::{NArc, OrderedSet},
     com::*,
-    dwrite::DwLayout,
+    dwrite::{DwLayout, FontFace},
     feb_hr,
-    icu4c::{UBiDi, UBiDiDirection, UBiDiLevel},
+    icu4c::{self, UBiDi, UBiDiDirection, UBiDiLevel},
     utf16::Utf16Indices,
+    utils::UnicodeBufferPushUtf16,
 };
+
+macro_rules! tag {
+    { $a:expr, $b:expr, $c:expr, $d:expr } => {
+        const { harfrust::Tag::new(&[$a as u8, $b as u8, $c as u8, $d as u8]) }
+    };
+    { $str:expr } => {
+        const {
+            let str = $str.as_bytes();
+            harfrust::Tag::new(&[str[0] as u8, str[1] as u8, str[2] as u8, str[3] as u8])
+        }
+    };
+}
 
 #[repr(C)]
 #[derive(Debug)]
@@ -38,6 +57,7 @@ pub struct FontRange {
     pub start: u32,
     pub end: u32,
     pub font_face: ComPtr<IFontFace>,
+    pub style_range: u32,
 }
 
 #[derive(Debug)]
@@ -281,7 +301,7 @@ impl Layout {
 
         build_runs(paragraph);
 
-        // todo shape
+        shape(doc, root_style, style, paragraph);
 
         return;
 
@@ -451,6 +471,143 @@ impl Layout {
                     StyleRange: style,
                     FontRange: font,
                 });
+            }
+        }
+
+        fn shape(
+            doc: &mut super::SubDocInner,
+            root_style: &StyleData,
+            style: &TextStyleData,
+            paragraph: &mut TextParagraphData,
+        ) {
+            let text = &*{ paragraph.m_text };
+
+            if text.is_empty() {
+                return;
+            }
+
+            let default_locale = doc.root_data().DefaultLocale.or(doc.ctx().default_locale);
+
+            let text_direction = style.TextDirection().unwrap_or(root_style.TextDirection);
+            let writing_direction = style
+                .WritingDirection()
+                .unwrap_or(root_style.WritingDirection);
+
+            let dir = match (text_direction, writing_direction) {
+                (TextDirection::Forward, WritingDirection::Horizontal) => {
+                    harfrust::Direction::LeftToRight
+                }
+                (TextDirection::Forward, WritingDirection::Vertical) => {
+                    harfrust::Direction::TopToBottom
+                }
+                (TextDirection::Reverse, WritingDirection::Horizontal) => {
+                    harfrust::Direction::RightToLeft
+                }
+                (TextDirection::Reverse, WritingDirection::Vertical) => {
+                    harfrust::Direction::BottomToTop
+                }
+            };
+
+            let fonts_ranges = paragraph.font_ranges();
+            let style_ranges = paragraph.same_style_ranges();
+            let shaper_args: Vec<_> = fonts_ranges
+                .iter()
+                .map(|font_range| {
+                    let style_range = &style_ranges[font_range.style_range as usize];
+                    let span_style = style_range.style(doc).map(|s| &*s).unwrap_or(style);
+
+                    let font_weight = span_style
+                        .FontWeight()
+                        .or(style.FontWeight())
+                        .unwrap_or(root_style.FontWeight);
+                    let font_width = span_style
+                        .FontWidth()
+                        .or(style.FontWidth())
+                        .unwrap_or(root_style.FontWidth);
+                    let font_italic = span_style
+                        .FontItalic()
+                        .or(style.FontItalic())
+                        .unwrap_or(root_style.FontItalic);
+                    let font_oblique = span_style
+                        .FontOblique()
+                        .or(style.FontOblique())
+                        .unwrap_or(root_style.FontOblique);
+
+                    let font_face = &font_range.font_face;
+                    let font_face = unsafe { font_face.as_object::<FontFace>() };
+                    let font = font_face.font_ref();
+                    let shaper_data = ShaperData::new(font);
+                    let variations = [
+                        Variation {
+                            tag: tag!("wght"),
+                            value: font_weight as i32 as f32,
+                        },
+                        Variation {
+                            tag: tag!("wdth"),
+                            value: font_width.Width * 100.0,
+                        },
+                        Variation {
+                            tag: tag!("ital"),
+                            value: if font_italic { 1.0 } else { 0.0 },
+                        },
+                        Variation {
+                            tag: tag!("slnt"),
+                            value: if font_italic { font_oblique } else { 0.0 },
+                        },
+                    ];
+                    let instance = ShaperInstance::from_variations(font, variations);
+                    let pt_size = doc.root_data().Dpi / 72.0;
+
+                    (shaper_data, font, instance, pt_size)
+                })
+                .collect();
+            let shapers: Vec<_> = (0..fonts_ranges.len() as usize)
+                .into_iter()
+                .map(|i| {
+                    let (shaper_data, font, instance, pt_size) = &shaper_args[i];
+                    let shaper = shaper_data
+                        .shaper(font)
+                        .instance(Some(instance))
+                        .point_size(Some(*pt_size))
+                        .build();
+                    shaper
+                })
+                .collect();
+
+            let mut buffer = UnicodeBuffer::new();
+            for run_range in paragraph.run_ranges().iter() {
+                let span_style = run_range
+                    .get_style_range(paragraph)
+                    .style(doc)
+                    .map(|s| &*s)
+                    .unwrap_or(style);
+
+                let sub_text = &text[run_range.Start as usize..run_range.End as usize];
+
+                buffer.push_utf16(sub_text);
+                buffer.set_direction(dir);
+                let locale = span_style
+                    .Locale()
+                    .or(style.Locale())
+                    .unwrap_or(default_locale);
+                buffer.set_language(
+                    locale
+                        .to_language()
+                        .unwrap_or(harfrust::Language::from_str("en-us").unwrap()),
+                );
+                let script = run_range.get_script_range(paragraph).Script;
+                let script = icu::properties::props::Script::from_icu4c_value(script);
+                let script = icu4c::script::get_short_name(script);
+                buffer.set_script(harfrust::Script::from_str(script).unwrap());
+
+                let features = [];
+
+                let shaper = &shapers[run_range.FontRange as usize];
+                let glyph_buffer = shaper.shape(buffer, &features);
+
+                // todo
+
+                buffer = glyph_buffer.clear();
             }
         }
     }

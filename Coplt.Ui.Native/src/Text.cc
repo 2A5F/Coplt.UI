@@ -107,3 +107,10 @@ void Coplt::SplitTexts(List<TextRange>& out, const char16* str, const i32 len)
         );
     }
 }
+
+extern "C" const char* coplt_ui_get_user_ui_default_locale_impl(usize* len);
+
+const char* Coplt::coplt_ui_get_user_ui_default_locale(usize* len)
+{
+    return coplt_ui_get_user_ui_default_locale_impl(len);
+}

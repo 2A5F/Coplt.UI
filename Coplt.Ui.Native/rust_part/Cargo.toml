@@ -19,6 +19,7 @@ font-types = {workspace = true}
 harfrust = {workspace = true}
 icu = {workspace = true}
 read-fonts = {workspace = true}
+sys-locale = {workspace = true}
 taffy = {workspace = true}
 
 [target.'cfg(windows)'.dependencies]

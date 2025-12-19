@@ -656,20 +656,35 @@ impl crate::layout::LayoutInner for DwLayout {
         }
         .into();
 
-        for ssr in same_style_ranges {
+        for (n, ssr) in same_style_ranges.iter().enumerate() {
             let span_style = c_option!(#val; ssr => FirstSpan)
                 .map(|span| &*span.text_style_data(doc))
                 .unwrap_or(style);
 
-            let font_fallback = span_style.FontFallback().unwrap_or(root_style.FontFallback);
+            let font_fallback = span_style
+                .FontFallback()
+                .or(style.FontFallback())
+                .unwrap_or(root_style.FontFallback);
             let font_fallback = NonNull::new(font_fallback)
                 .map(get_dwrite_ffb)
                 .unwrap_or_else(|| self.system_font_fallback.clone());
 
-            let font_weight = span_style.FontWeight().unwrap_or(root_style.FontWeight);
-            let font_width = span_style.FontWidth().unwrap_or(root_style.FontWidth);
-            let font_italic = span_style.FontItalic().unwrap_or(root_style.FontItalic);
-            let font_oblique = span_style.FontOblique().unwrap_or(root_style.FontOblique);
+            let font_weight = span_style
+                .FontWeight()
+                .or(style.FontWeight())
+                .unwrap_or(root_style.FontWeight);
+            let font_width = span_style
+                .FontWidth()
+                .or(style.FontWidth())
+                .unwrap_or(root_style.FontWidth);
+            let font_italic = span_style
+                .FontItalic()
+                .or(style.FontItalic())
+                .unwrap_or(root_style.FontItalic);
+            let font_oblique = span_style
+                .FontOblique()
+                .or(style.FontOblique())
+                .unwrap_or(root_style.FontOblique);
 
             let axis_values: [DWRITE_FONT_AXIS_VALUE; _] = [
                 DWRITE_FONT_AXIS_VALUE {
@@ -720,6 +735,7 @@ impl crate::layout::LayoutInner for DwLayout {
                         start,
                         end: start + mapped_length,
                         font_face,
+                        style_range: n as u32,
                     });
 
                     start += mapped_length;
@@ -792,7 +808,7 @@ impl<'a> IDWriteTextAnalysisSource_Impl for TextAnalysisSource_Impl<'a> {
             let range = &self.locale_ranges[pos];
             unsafe {
                 *textlength = range.End - textposition;
-                *localename = range.Locale.Name;
+                *localename = range.Locale.Name as _;
             }
         } else {
             unsafe {
