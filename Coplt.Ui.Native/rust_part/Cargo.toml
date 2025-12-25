@@ -20,6 +20,7 @@ harfrust = {workspace = true}
 icu = {workspace = true}
 itertools = {workspace = true}
 read-fonts = {workspace = true}
+skrifa = {workspace = true}
 sys-locale = {workspace = true}
 taffy = {workspace = true}
 

@@ -16,5 +16,6 @@ harfrust = "0.4"
 icu = "2.1"
 itertools = "0.14"
 read-fonts = "0.36"
+skrifa = "0.39"
 sys-locale = "0.3.2"
 taffy = {path = "taffy"}

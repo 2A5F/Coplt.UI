@@ -402,7 +402,7 @@ mod com_impl {
             fn FontWidth -> FontWidth;
             fn FontOblique -> f32;
             fn FontWeight -> FontWeight;
-            fn LineHeight -> LengthPercentage { c_length_percentage };
+            fn LineHeight -> LengthPercentageAuto { c_length_percentage_auto };
             fn Cursor -> CursorType;
             fn PointerEvents -> PointerEvents;
             fn FontItalic -> bool;

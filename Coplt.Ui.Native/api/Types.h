@@ -1257,8 +1257,8 @@ namespace Coplt {
     struct GlyphData
     {
         ::Coplt::u32 Cluster;
-        ::Coplt::i32 Advance;
-        ::Coplt::i32 Offset;
+        ::Coplt::f32 Advance;
+        ::Coplt::f32 Offset;
         ::Coplt::u16 GlyphId;
         ::Coplt::GlyphDataFlags Flags;
     };
@@ -1430,6 +1430,9 @@ namespace Coplt {
         ::Coplt::u32 FontRange;
         ::Coplt::u32 GlyphStart;
         ::Coplt::u32 GlyphEnd;
+        ::Coplt::f32 Ascent;
+        ::Coplt::f32 Descent;
+        ::Coplt::f32 Leading;
     };
 
     struct TextData_SameStyleRange

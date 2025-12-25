@@ -14,7 +14,9 @@ use cocom::{
     object::{Object, ObjectPtr},
 };
 use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen, merge_ranges};
-use harfrust::{SerializeFlags, ShaperData, ShaperInstance, Tag, UnicodeBuffer, Variation};
+use harfrust::{
+    Feature, SerializeFlags, ShaperData, ShaperInstance, Tag, UnicodeBuffer, Variation,
+};
 use icu::{
     properties::{
         CodePointMapData, CodePointSetData,
@@ -23,6 +25,7 @@ use icu::{
     segmenter::{GraphemeClusterSegmenter, LineSegmenter},
 };
 use itertools::Itertools;
+use skrifa::{GlyphId, MetadataProvider};
 use taffy::{
     CacheTree, CoreStyle, LayoutPartialTree, LengthPercentage, LengthPercentageAuto, ResolveOrZero,
     RoundTree, Style, TraversePartialTree, TraverseTree,
@@ -39,6 +42,7 @@ use crate::{
     utf16::Utf16Indices,
     utils::UnicodeBufferPushUtf16,
 };
+use skrifa::prelude::Size as SkrifaSize;
 
 macro_rules! tag {
     { $a:expr, $b:expr, $c:expr, $d:expr } => {
@@ -474,6 +478,9 @@ impl Layout {
                     FontRange: font,
                     GlyphStart: 0,
                     GlyphEnd: 0,
+                    Ascent: 0.0,
+                    Descent: 0.0,
+                    Leading: 0.0,
                 });
             }
         }
@@ -520,14 +527,20 @@ impl Layout {
                 }
             };
 
+            let pt_size = doc.root_data().Dpi / 72.0;
+
             let fonts_ranges = paragraph.font_ranges();
             let style_ranges = paragraph.same_style_ranges();
-            let shaper_args: Vec<_> = fonts_ranges
+            let font_metas: Vec<_> = fonts_ranges
                 .iter()
                 .map(|font_range| {
                     let style_range = &style_ranges[font_range.style_range as usize];
                     let span_style = style_range.style(doc).map(|s| &*s).unwrap_or(style);
 
+                    let font_size = span_style
+                        .FontSize()
+                        .or(style.FontSize())
+                        .unwrap_or(root_style.FontSize);
                     let font_weight = span_style
                         .FontWeight()
                         .or(style.FontWeight())
@@ -549,6 +562,13 @@ impl Layout {
                     let font_face = unsafe { font_face.as_object::<FontFace>() };
                     let font = font_face.font_ref();
                     let shaper_data = ShaperData::new(font);
+                    let setting = [
+                        ("wght", font_weight as i32 as f32),
+                        ("wdth", font_width.Width * 100.0),
+                        ("ital", if font_italic { 1.0 } else { 0.0 }),
+                        ("slnt", if font_italic { font_oblique } else { 0.0 }),
+                    ];
+                    let location = font.axes().location(setting);
                     let variations = [
                         Variation {
                             tag: tag!("wght"),
@@ -568,15 +588,23 @@ impl Layout {
                         },
                     ];
                     let instance = ShaperInstance::from_variations(font, variations);
-                    let pt_size = doc.root_data().Dpi / 72.0;
+                    let metrics = font.metrics(SkrifaSize::new(font_size), &location);
 
-                    (shaper_data, font, instance, pt_size)
+                    (
+                        shaper_data,
+                        font,
+                        instance,
+                        pt_size,
+                        font_size,
+                        location,
+                        metrics,
+                    )
                 })
                 .collect();
             let shapers: Vec<_> = (0..fonts_ranges.len() as usize)
                 .into_iter()
                 .map(|i| {
-                    let (shaper_data, font, instance, pt_size) = &shaper_args[i];
+                    let (shaper_data, font, instance, pt_size, _, _, _) = &font_metas[i];
                     let shaper = shaper_data
                         .shaper(font)
                         .instance(Some(instance))
@@ -585,9 +613,21 @@ impl Layout {
                     shaper
                 })
                 .collect();
+            let glyph_metricses: Vec<_> = (0..fonts_ranges.len() as usize)
+                .into_iter()
+                .map(|i| {
+                    let (_, font, _, _, font_size, location, _) = &font_metas[i];
+                    font.glyph_metrics(SkrifaSize::new(*font_size), location)
+                })
+                .collect();
 
             let mut buffer = UnicodeBuffer::new();
             for run_range in paragraph.run_ranges().iter_mut() {
+                let metrics = &font_metas[run_range.FontRange as usize].6;
+                run_range.Ascent = metrics.ascent;
+                run_range.Descent = metrics.descent;
+                run_range.Leading = metrics.leading;
+
                 let span_style = run_range
                     .get_style_range(paragraph)
                     .style(doc)
@@ -613,9 +653,21 @@ impl Layout {
                 let script = icu4c::script::get_short_name(script);
                 buffer.set_script(harfrust::Script::from_str(script).unwrap());
 
-                let features = [];
+                // todo from style
+                let features = [
+                    Feature::new(tag!("rlig"), 1, ..),
+                    Feature::new(tag!("calt"), 1, ..),
+                    Feature::new(tag!("liga"), 1, ..),
+                    Feature::new(tag!("clig"), 1, ..),
+                    Feature::new(tag!("locl"), 1, ..),
+                    Feature::new(tag!("ccmp"), 1, ..),
+                    Feature::new(tag!("mark"), 1, ..),
+                    Feature::new(tag!("mkmk"), 1, ..),
+                    Feature::new(tag!("kern"), 1, ..),
+                ];
 
                 let shaper = &shapers[run_range.FontRange as usize];
+                let glyph_gmetrics = &glyph_metricses[run_range.FontRange as usize];
                 let glyph_buffer = shaper.shape(buffer, &features);
 
                 let glyph_len = glyph_buffer.len();
@@ -630,18 +682,25 @@ impl Layout {
                     if glyph_info.unsafe_to_break() {
                         flags |= GlyphDataFlags::UnsafeToBreak;
                     }
+                    let glyph_gmetric =
+                        glyph_gmetrics.advance_width(GlyphId::new(glyph_info.glyph_id));
+                    let scale = 1.0 / metrics.units_per_em as f32;
                     glyph_datas.push(GlyphData {
                         Cluster: glyph_info.cluster,
-                        Advance: if axis_y {
-                            glyph_position.y_advance
-                        } else {
-                            glyph_position.x_advance
-                        },
-                        Offset: if axis_y {
-                            glyph_position.x_offset
-                        } else {
-                            glyph_position.y_offset
-                        },
+                        Advance: glyph_gmetric.unwrap_or_else(|| {
+                            scale
+                                * if axis_y {
+                                    glyph_position.y_advance as f32
+                                } else {
+                                    glyph_position.x_advance as f32
+                                }
+                        }),
+                        Offset: scale
+                            * if axis_y {
+                                glyph_position.x_offset
+                            } else {
+                                glyph_position.y_offset
+                            } as f32,
                         GlyphId: glyph_info.glyph_id as u16,
                         Flags: flags,
                     });

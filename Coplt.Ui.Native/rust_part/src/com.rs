@@ -1375,8 +1375,8 @@ pub struct CommonData {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct GlyphData {
     pub Cluster: u32,
-    pub Advance: i32,
-    pub Offset: i32,
+    pub Advance: f32,
+    pub Offset: f32,
     pub GlyphId: u16,
     pub Flags: GlyphDataFlags,
 }
@@ -1555,6 +1555,9 @@ pub struct TextData_RunRange {
     pub FontRange: u32,
     pub GlyphStart: u32,
     pub GlyphEnd: u32,
+    pub Ascent: f32,
+    pub Descent: f32,
+    pub Leading: f32,
 }
 
 #[repr(C)]

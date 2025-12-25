@@ -83,7 +83,7 @@ public partial record struct StyleData()
     public float FontOblique = -20;
     public FontWeight FontWeight = FontWeight.Normal;
 
-    public float LineHeightValue = 1.2f;
+    public float LineHeightValue = 0;
 
     public GridPlacement GridRowStart = GridPlacement.Auto;
     public GridPlacement GridRowEnd = GridPlacement.Auto;
@@ -164,7 +164,7 @@ public partial record struct StyleData()
     public WordBreak WordBreak = WordBreak.Auto;
     public TextOrientation TextOrientation = TextOrientation.Mixed;
     public TextOverflow TextOverflow = TextOverflow.Clip;
-    public LengthType LineHeight = LengthType.Percent;
+    public LengthType LineHeight = LengthType.Auto;
 
     public void SetFontFallback(FontFallback? Fallback)
     {
@@ -304,7 +304,7 @@ public partial record struct TextStyleData()
     public float FontOblique = -20;
     public FontWeight FontWeight = FontWeight.Normal;
 
-    public float LineHeightValue = 1.2f;
+    public float LineHeightValue = 0;
 
     public CursorType Cursor = CursorType.Default;
     public PointerEvents PointerEvents = PointerEvents.Auto;
@@ -337,7 +337,7 @@ public partial record struct TextStyleData()
     public WordBreak WordBreak = WordBreak.Auto;
     public TextOrientation TextOrientation = TextOrientation.Mixed;
     public TextOverflow TextOverflow = TextOverflow.Clip;
-    public LengthType LineHeight = LengthType.Percent;
+    public LengthType LineHeight = LengthType.Auto;
 
     public void SetFontFallback(FontFallback? Fallback)
     {

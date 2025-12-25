@@ -1768,7 +1768,3 @@ impl From<LayoutOutput> for com::LayoutOutput {
         }
     }
 }
-
-impl com::TextStyleData {
-    // todo text style override; wait cocom flags enum
-}

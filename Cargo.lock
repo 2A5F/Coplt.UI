@@ -121,6 +121,7 @@ dependencies = [
  "icu",
  "itertools",
  "read-fonts",
+ "skrifa",
  "sys-locale",
  "taffy",
  "windows",
@@ -837,6 +838,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "skrifa"
+version = "0.39.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c9eb0b904a04d09bd68c65d946617b8ff733009999050f3b851c32fb3cfb60e"
+dependencies = [
+ "bytemuck",
+ "read-fonts",
 ]
 
 [[package]]

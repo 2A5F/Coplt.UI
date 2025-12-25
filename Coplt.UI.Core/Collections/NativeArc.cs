@@ -116,13 +116,20 @@ public unsafe partial struct NativeArc<T> : IEquatable<NativeArc<T>>
 
     #region Move
 
-    public NativeArc<T> Move() => Swap(default);
+    public NativeArc<T> Move() => Replace(default);
 
-    public NativeArc<T> Swap(NativeArc<T> other)
+    public NativeArc<T> Replace(NativeArc<T> other)
     {
         var self = this;
         this = other;
         return self;
+    }
+
+    public void Swap(ref NativeArc<T> other)
+    {
+        var self = this;
+        this = other;
+        other = self;
     }
 
     #endregion

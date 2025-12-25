@@ -4315,11 +4315,11 @@
           "name": "Cluster"
         },
         {
-          "type": 187,
+          "type": 192,
           "name": "Advance"
         },
         {
-          "type": 187,
+          "type": 192,
           "name": "Offset"
         },
         {
@@ -4928,6 +4928,18 @@
         {
           "type": 195,
           "name": "GlyphEnd"
+        },
+        {
+          "type": 192,
+          "name": "Ascent"
+        },
+        {
+          "type": 192,
+          "name": "Descent"
+        },
+        {
+          "type": 192,
+          "name": "Leading"
         }
       ]
     },

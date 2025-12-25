@@ -163,13 +163,19 @@ public record struct TextData_RunRange
     public uint GlyphEnd;
 
     public uint GlyphLength => GlyphEnd - GlyphStart;
+
+    public float Ascent;
+    public float Descent;
+    public float Leading;
+
+    public float FontLineHeight => Ascent + -Descent + Leading;
 }
 
 public record struct GlyphData
 {
     public uint Cluster;
-    public int Advance;
-    public int Offset;
+    public float Advance;
+    public float Offset;
     public ushort GlyphId;
     public GlyphDataFlags Flags;
 }
