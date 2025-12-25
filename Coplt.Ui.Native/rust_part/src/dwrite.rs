@@ -68,6 +68,7 @@ pub struct FontFace {
     info: NFontInfo,
     file: FontFile,
     font_ref: FontRef<'static>,
+    glyph_type_cache: DashMap<u16, GlyphType>,
 }
 
 unsafe impl Send for FontFace {}
@@ -122,6 +123,7 @@ impl FontFace {
                 )));
                 pmp!(this; .file).write(file);
                 pmp!(this; .font_ref).write(font_ref);
+                pmp!(this; .glyph_type_cache).write(DashMap::new());
             }))
         }
     }
@@ -177,6 +179,15 @@ impl impls::IFontFace for FontFace {
 
     fn get_Info(&self) -> *const crate::com::NFontInfo {
         &self.info
+    }
+
+    fn GetData(&self, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> () {
+        unsafe {
+            let data = self.font_ref.data().as_bytes();
+            *p_data = data.as_ptr() as *mut _;
+            *size = data.len();
+            *index = self.font_ref.ttc_index().unwrap_or(u32::MAX)
+        }
     }
 
     fn Equals(&self, other: *mut crate::com::IFontFace) -> bool {
@@ -831,5 +842,24 @@ impl<'a> IDWriteTextAnalysisSource_Impl for TextAnalysisSource_Impl<'a> {
             *textlength = 0;
         }
         Ok(())
+    }
+}
+
+impl FontFace {
+    pub fn get_glyph_type(
+        &self,
+        glyph_id: u16,
+        not_exists: impl FnOnce() -> GlyphType,
+    ) -> GlyphType {
+        match self.glyph_type_cache.entry(glyph_id) {
+            dashmap::Entry::Occupied(entry) => *entry.get(),
+            dashmap::Entry::Vacant(entry) => {
+                let typ = not_exists();
+                if let GlyphType::Outline | GlyphType::Color = typ {
+                    entry.insert(typ);
+                }
+                typ
+            }
+        }
     }
 }

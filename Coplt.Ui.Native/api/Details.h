@@ -560,6 +560,7 @@ struct ::Coplt::Internal::VirtualTable<::Coplt::IFontFace>
     IFrameSource* (*const COPLT_CDECL f_GetFrameSource)(const ::Coplt::IFontFace*) noexcept;
     IFontManager* (*const COPLT_CDECL f_GetFontManager)(const ::Coplt::IFontFace*) noexcept;
     ::Coplt::NFontInfo const* (*const COPLT_CDECL f_get_Info)(const ::Coplt::IFontFace*) noexcept;
+    void (*const COPLT_CDECL f_GetData)(const ::Coplt::IFontFace*, ::Coplt::u8** p_data, ::Coplt::usize* size, ::Coplt::u32* index) noexcept;
     bool (*const COPLT_CDECL f_Equals)(const ::Coplt::IFontFace*, IFontFace* other) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_HashCode)(const ::Coplt::IFontFace*) noexcept;
     ::Coplt::i32 (*const COPLT_CDECL f_GetFamilyNames)(const ::Coplt::IFontFace*, void* ctx, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* add) noexcept;
@@ -575,6 +576,7 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
     IFrameSource* COPLT_CDECL GetFrameSource(const ::Coplt::IFontFace* self) noexcept;
     IFontManager* COPLT_CDECL GetFontManager(const ::Coplt::IFontFace* self) noexcept;
     ::Coplt::NFontInfo const* COPLT_CDECL get_Info(const ::Coplt::IFontFace* self) noexcept;
+    void COPLT_CDECL GetData(const ::Coplt::IFontFace* self, ::Coplt::u8** p0, ::Coplt::usize* p1, ::Coplt::u32* p2) noexcept;
     bool COPLT_CDECL Equals(const ::Coplt::IFontFace* self, IFontFace* p0) noexcept;
     ::Coplt::i32 COPLT_CDECL HashCode(const ::Coplt::IFontFace* self) noexcept;
     ::Coplt::i32 COPLT_CDECL GetFamilyNames(const ::Coplt::IFontFace* self, void* p0, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* p1) noexcept;
@@ -619,6 +621,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
             .f_GetFrameSource = VirtualImpl_Coplt_IFontFace::GetFrameSource,
             .f_GetFontManager = VirtualImpl_Coplt_IFontFace::GetFontManager,
             .f_get_Info = VirtualImpl_Coplt_IFontFace::get_Info,
+            .f_GetData = VirtualImpl_Coplt_IFontFace::GetData,
             .f_Equals = VirtualImpl_Coplt_IFontFace::Equals,
             .f_HashCode = VirtualImpl_Coplt_IFontFace::HashCode,
             .f_GetFamilyNames = VirtualImpl_Coplt_IFontFace::GetFamilyNames,
@@ -638,6 +641,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
         virtual IFrameSource* Impl_GetFrameSource() const = 0;
         virtual IFontManager* Impl_GetFontManager() const = 0;
         virtual ::Coplt::NFontInfo const* Impl_get_Info() const = 0;
+        virtual void Impl_GetData(::Coplt::u8** p_data, ::Coplt::usize* size, ::Coplt::u32* index) const = 0;
         virtual bool Impl_Equals(IFontFace* other) const = 0;
         virtual ::Coplt::i32 Impl_HashCode() const = 0;
         virtual ::Coplt::HResult Impl_GetFamilyNames(void* ctx, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* add) const = 0;
@@ -699,6 +703,11 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
             return AsImpl(self)->Impl_get_Info();
         }
 
+        static void COPLT_CDECL f_GetData(const ::Coplt::IFontFace* self, ::Coplt::u8** p0, ::Coplt::usize* p1, ::Coplt::u32* p2) noexcept
+        {
+            AsImpl(self)->Impl_GetData(p0, p1, p2);
+        }
+
         static bool COPLT_CDECL f_Equals(const ::Coplt::IFontFace* self, IFontFace* p0) noexcept
         {
             return AsImpl(self)->Impl_Equals(p0);
@@ -732,6 +741,7 @@ struct ::Coplt::Internal::ComProxy<::Coplt::IFontFace>
         .f_GetFrameSource = VirtualImpl<Impl>::f_GetFrameSource,
         .f_GetFontManager = VirtualImpl<Impl>::f_GetFontManager,
         .f_get_Info = VirtualImpl<Impl>::f_get_Info,
+        .f_GetData = VirtualImpl<Impl>::f_GetData,
         .f_Equals = VirtualImpl<Impl>::f_Equals,
         .f_HashCode = VirtualImpl<Impl>::f_HashCode,
         .f_GetFamilyNames = VirtualImpl<Impl>::f_GetFamilyNames,
@@ -844,6 +854,18 @@ namespace Coplt::Internal::VirtualImpl_Coplt_IFontFace
         return r;
     }
 
+    inline void COPLT_CDECL GetData(const ::Coplt::IFontFace* self, ::Coplt::u8** p0, ::Coplt::usize* p1, ::Coplt::u32* p2) noexcept
+    {
+        struct { } r;
+        #ifdef COPLT_COM_BEFORE_VIRTUAL_CALL
+        COPLT_COM_BEFORE_VIRTUAL_CALL(::Coplt::IFontFace, GetData, void)
+        #endif
+        ::Coplt::Internal::AsImpl<::Coplt::IFontFace>(self)->Impl_GetData(p0, p1, p2);
+        #ifdef COPLT_COM_AFTER_VIRTUAL_CALL
+        COPLT_COM_AFTER_VIRTUAL_CALL(::Coplt::IFontFace, GetData, void)
+        #endif
+    }
+
     inline bool COPLT_CDECL Equals(const ::Coplt::IFontFace* self, IFontFace* p0) noexcept
     {
         bool r;
@@ -936,6 +958,10 @@ struct ::Coplt::Internal::CallComMethod<::Coplt::IFontFace>
     static COPLT_FORCE_INLINE ::Coplt::NFontInfo const* get_Info(const ::Coplt::IFontFace* self) noexcept
     {
         return COPLT_COM_PVTB(IFontFace, self)->f_get_Info(self);
+    }
+    static COPLT_FORCE_INLINE void GetData(const ::Coplt::IFontFace* self, ::Coplt::u8** p0, ::Coplt::usize* p1, ::Coplt::u32* p2) noexcept
+    {
+        COPLT_COM_PVTB(IFontFace, self)->f_GetData(self, p0, p1, p2);
     }
     static COPLT_FORCE_INLINE bool Equals(const ::Coplt::IFontFace* self, IFontFace* p0) noexcept
     {

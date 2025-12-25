@@ -1,9 +1,11 @@
 use std::{
     char::decode_utf16,
+    collections::HashMap,
     ops::{Deref, DerefMut, Range},
     os::raw::c_void,
     panic::{AssertUnwindSafe, RefUnwindSafe, UnwindSafe},
     process::Child,
+    ptr::NonNull,
     str::FromStr,
     u32,
 };
@@ -25,18 +27,19 @@ use icu::{
     segmenter::{GraphemeClusterSegmenter, LineSegmenter},
 };
 use itertools::Itertools;
-use skrifa::{GlyphId, MetadataProvider};
+use skrifa::{FontRef, GlyphId, MetadataProvider};
 use taffy::{
     CacheTree, CoreStyle, LayoutPartialTree, LengthPercentage, LengthPercentageAuto, ResolveOrZero,
     RoundTree, Style, TraversePartialTree, TraverseTree,
 };
 use windows::Win32::Graphics::DirectWrite::IDWriteFactory7;
 
+#[cfg(target_os = "windows")]
+use crate::dwrite;
 use crate::{
     IsZeroLength, c_available_space,
     col::{NArc, OrderedSet},
     com::*,
-    dwrite::{DwLayout, FontFace},
     feb_hr,
     icu4c::{self, UBiDi, UBiDiDirection, UBiDiLevel},
     utf16::Utf16Indices,
@@ -69,7 +72,29 @@ pub struct FontRange {
 #[cocom::object(ILayout)]
 pub struct Layout {
     #[cfg(target_os = "windows")]
-    pub(crate) inner: DwLayout,
+    pub(crate) inner: dwrite::DwLayout,
+}
+
+use font_face_ops::*;
+#[cfg(target_os = "windows")]
+mod font_face_ops {
+    use super::*;
+
+    pub fn get_font_ref(font_face: &'_ ComPtr<IFontFace>) -> &'_ FontRef<'_> {
+        use crate::dwrite::FontFace;
+        let font_face = unsafe { font_face.as_object::<FontFace>() };
+        font_face.font_ref()
+    }
+
+    pub fn get_glyph_type(
+        font_face: &ComPtr<IFontFace>,
+        glyph: u16,
+        not_exists: impl FnOnce() -> GlyphType,
+    ) -> GlyphType {
+        use crate::dwrite::FontFace;
+        let font_face = unsafe { font_face.as_object::<FontFace>() };
+        font_face.get_glyph_type(glyph, not_exists)
+    }
 }
 
 pub(crate) trait LayoutInner {
@@ -559,8 +584,7 @@ impl Layout {
                         .unwrap_or(root_style.FontOblique);
 
                     let font_face = &font_range.font_face;
-                    let font_face = unsafe { font_face.as_object::<FontFace>() };
-                    let font = font_face.font_ref();
+                    let font = get_font_ref(font_face);
                     let shaper_data = ShaperData::new(font);
                     let setting = [
                         ("wght", font_weight as i32 as f32),
@@ -590,25 +614,17 @@ impl Layout {
                     let instance = ShaperInstance::from_variations(font, variations);
                     let metrics = font.metrics(SkrifaSize::new(font_size), &location);
 
-                    (
-                        shaper_data,
-                        font,
-                        instance,
-                        pt_size,
-                        font_size,
-                        location,
-                        metrics,
-                    )
+                    (shaper_data, font, instance, font_size, location, metrics)
                 })
                 .collect();
             let shapers: Vec<_> = (0..fonts_ranges.len() as usize)
                 .into_iter()
                 .map(|i| {
-                    let (shaper_data, font, instance, pt_size, _, _, _) = &font_metas[i];
+                    let (shaper_data, font, instance, _, _, _) = &font_metas[i];
                     let shaper = shaper_data
                         .shaper(font)
                         .instance(Some(instance))
-                        .point_size(Some(*pt_size))
+                        .point_size(Some(pt_size))
                         .build();
                     shaper
                 })
@@ -616,17 +632,27 @@ impl Layout {
             let glyph_metricses: Vec<_> = (0..fonts_ranges.len() as usize)
                 .into_iter()
                 .map(|i| {
-                    let (_, font, _, _, font_size, location, _) = &font_metas[i];
+                    let (_, font, _, font_size, location, _) = &font_metas[i];
                     font.glyph_metrics(SkrifaSize::new(*font_size), location)
                 })
+                .collect();
+            let mut glyph_type_caches: Vec<_> = (0..fonts_ranges.len() as usize)
+                .into_iter()
+                .map(|_| HashMap::<(u32, u32), GlyphType>::new())
                 .collect();
 
             let mut buffer = UnicodeBuffer::new();
             for run_range in paragraph.run_ranges().iter_mut() {
-                let metrics = &font_metas[run_range.FontRange as usize].6;
+                let font_face = &fonts_ranges[run_range.FontRange as usize].font_face;
+                let glyph_type_cache = &mut glyph_type_caches[run_range.FontRange as usize];
+                let (_, font, _, font_size, _, metrics) = &font_metas[run_range.FontRange as usize];
                 run_range.Ascent = metrics.ascent;
                 run_range.Descent = metrics.descent;
                 run_range.Leading = metrics.leading;
+
+                let color_glyphs = font.color_glyphs();
+                let outline_glyphs = font.outline_glyphs();
+                let bitmap_strikes = font.bitmap_strikes();
 
                 let span_style = run_range
                     .get_style_range(paragraph)
@@ -682,9 +708,32 @@ impl Layout {
                     if glyph_info.unsafe_to_break() {
                         flags |= GlyphDataFlags::UnsafeToBreak;
                     }
-                    let glyph_gmetric =
-                        glyph_gmetrics.advance_width(GlyphId::new(glyph_info.glyph_id));
+                    let glyph_id = GlyphId::new(glyph_info.glyph_id);
+                    let glyph_gmetric = glyph_gmetrics.advance_width(glyph_id);
                     let scale = 1.0 / metrics.units_per_em as f32;
+
+                    let typ = match glyph_type_cache
+                        .entry((glyph_info.glyph_id, unsafe { f32::to_bits(*font_size) }))
+                    {
+                        std::collections::hash_map::Entry::Occupied(entry) => *entry.get(),
+                        std::collections::hash_map::Entry::Vacant(entry) => *entry.insert({
+                            get_glyph_type(font_face, glyph_info.glyph_id as u16, || {
+                                if color_glyphs.get(glyph_id).is_some() {
+                                    GlyphType::Color
+                                } else if outline_glyphs.get(glyph_id).is_some() {
+                                    GlyphType::Outline
+                                } else if bitmap_strikes
+                                    .glyph_for_size(SkrifaSize::new(*font_size), glyph_id)
+                                    .is_some()
+                                {
+                                    GlyphType::Bitmap
+                                } else {
+                                    GlyphType::Invalid
+                                }
+                            })
+                        }),
+                    };
+
                     glyph_datas.push(GlyphData {
                         Cluster: glyph_info.cluster,
                         Advance: glyph_gmetric.unwrap_or_else(|| {
@@ -703,6 +752,7 @@ impl Layout {
                             } as f32,
                         GlyphId: glyph_info.glyph_id as u16,
                         Flags: flags,
+                        Type: typ,
                     });
                 }
 

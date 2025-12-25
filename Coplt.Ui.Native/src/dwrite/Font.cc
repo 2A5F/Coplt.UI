@@ -9,15 +9,6 @@ using namespace Coplt;
 Font::Font(Rc<IDWriteFont3>& font)
     : m_font(std::move(font))
 {
-    DWRITE_FONT_METRICS metrics;
-    m_font->GetMetrics(&metrics);
-
-    m_info.Metrics.Ascent = static_cast<float>(metrics.ascent);
-    m_info.Metrics.Descent = static_cast<float>(metrics.descent);
-    m_info.Metrics.Leading = static_cast<float>(metrics.lineGap);
-    m_info.Metrics.LineHeight = static_cast<float>(metrics.ascent + metrics.descent + metrics.lineGap);
-    m_info.Metrics.UnitsPerEm = metrics.designUnitsPerEm;
-
     switch (m_font->GetStretch())
     {
     case DWRITE_FONT_STRETCH_UNDEFINED:

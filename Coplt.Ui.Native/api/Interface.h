@@ -48,6 +48,7 @@ namespace Coplt {
         COPLT_COM_METHOD(GetFrameSource, IFrameSource*, () const);
         COPLT_COM_METHOD(GetFontManager, IFontManager*, () const);
         COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
+        COPLT_COM_METHOD(GetData, void, (::Coplt::u8** p_data, ::Coplt::usize* size, ::Coplt::u32* index) const, p_data, size, index);
         COPLT_COM_METHOD(Equals, bool, (IFontFace* other) const, other);
         COPLT_COM_METHOD(HashCode, ::Coplt::i32, () const);
         COPLT_COM_METHOD(GetFamilyNames, ::Coplt::HResult, (void* ctx, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* add) const, ctx, add);

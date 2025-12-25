@@ -95,8 +95,6 @@ namespace Coplt {
 
     struct LocaleId;
 
-    struct FontMetrics;
-
     struct TextRange;
 
     struct ChildsData;
@@ -762,10 +760,18 @@ namespace Coplt {
         RightToLeft = 1,
     };
 
-    COPLT_ENUM_FLAGS(GlyphDataFlags, ::Coplt::u16)
+    COPLT_ENUM_FLAGS(GlyphDataFlags, ::Coplt::u8)
     {
         None = 0,
         UnsafeToBreak = 1,
+    };
+
+    enum class GlyphType : ::Coplt::u8
+    {
+        Invalid = 0,
+        Outline = 1,
+        Color = 2,
+        Bitmap = 3,
     };
 
     COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
@@ -1060,15 +1066,6 @@ namespace Coplt {
         ::Coplt::usize Length;
     };
 
-    struct FontMetrics
-    {
-        ::Coplt::f32 Ascent;
-        ::Coplt::f32 Descent;
-        ::Coplt::f32 Leading;
-        ::Coplt::f32 LineHeight;
-        ::Coplt::u16 UnitsPerEm;
-    };
-
     struct NodeId
     {
         ::Coplt::u32 Index;
@@ -1181,7 +1178,6 @@ namespace Coplt {
 
     struct NFontInfo
     {
-        ::Coplt::FontMetrics Metrics;
         ::Coplt::FontWidth Width;
         ::Coplt::FontWeight Weight;
         ::Coplt::FontFlags Flags;
@@ -1261,6 +1257,7 @@ namespace Coplt {
         ::Coplt::f32 Offset;
         ::Coplt::u16 GlyphId;
         ::Coplt::GlyphDataFlags Flags;
+        ::Coplt::GlyphType Type;
     };
 
     struct GridContainerStyle

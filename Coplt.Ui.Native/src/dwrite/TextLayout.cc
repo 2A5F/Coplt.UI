@@ -141,32 +141,6 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
     m_node = {};
 }
 
-const Rc<DWriteFontFace>& TextLayout::GetFallbackUndefFont()
-{
-    if (m_fallback_undef_font) return m_fallback_undef_font;
-
-    if (!m_one_space_analysis_source) m_one_space_analysis_source = Rc(new OneSpaceTextAnalysisSource());
-
-    const auto fm = m_node.ctx->font_manager;
-    const auto& system_font_fallback = m_layout->m_system_font_fallback;
-
-    u32 mapped_length{};
-    Rc<IDWriteFontFace5> mapped_font{};
-    f32 scale{};
-
-    if (const auto hr = system_font_fallback->MapCharacters(
-        m_one_space_analysis_source.get(), 0, 1,
-        nullptr, nullptr,
-        nullptr, 0,
-        &mapped_length, &scale,
-        mapped_font.put()
-    ); FAILED(hr) || !mapped_font)
-        throw ComException(hr, "Failed to map characters");
-
-    m_fallback_undef_font = DWriteFontFace::Get(fm, mapped_font);
-    return m_fallback_undef_font;
-}
-
 // void ParagraphData::CollectChars()
 // {
 //     const auto items = GetItems();

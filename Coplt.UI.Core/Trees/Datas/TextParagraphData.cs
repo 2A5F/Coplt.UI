@@ -178,11 +178,20 @@ public record struct GlyphData
     public float Offset;
     public ushort GlyphId;
     public GlyphDataFlags Flags;
+    public GlyphType Type;
 }
 
 [Flags]
-public enum GlyphDataFlags : ushort
+public enum GlyphDataFlags : byte
 {
     None = 0,
     UnsafeToBreak = 1 << 0,
+}
+
+public enum GlyphType : byte
+{
+    Invalid,
+    Outline,
+    Color,
+    Bitmap,
 }

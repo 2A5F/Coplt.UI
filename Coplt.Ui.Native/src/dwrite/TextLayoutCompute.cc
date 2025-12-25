@@ -545,7 +545,8 @@ std::span<const DWRITE_GLYPH_OFFSET> Run::GlyphOffsets(const ParagraphData& data
 bool Run::IsInlineBlock(const ParagraphData& data) const
 {
     const auto& font = data.m_font_ranges[FontRangeIndex];
-    return !font.Font;
+    return false;
+    // return !font.Font;
 }
 
 const ParagraphLineInfo& Run::GetLineInfo(const ParagraphData& data)
@@ -554,13 +555,13 @@ const ParagraphLineInfo& Run::GetLineInfo(const ParagraphData& data)
     const auto& font = data.m_font_ranges[FontRangeIndex];
     const auto& style_range = data.m_same_style_ranges[StyleRangeIndex];
     const auto& style = data.GetScope(style_range).StyleData();
-    if (!font.Font) return LineInfo;
+    // if (!font.Font) return LineInfo;
 
     HasLineInfo = true;
     if (style.WritingDirection == WritingDirection::Horizontal)
     {
         DWRITE_FONT_METRICS1 metrics{};
-        font.Font->m_face->GetMetrics(&metrics);
+        // font.Font->m_face->GetMetrics(&metrics);
         const auto scale = style.FontSize / metrics.designUnitsPerEm;
         LineInfo.Ascent = metrics.ascent * scale;
         LineInfo.Descent = metrics.descent * scale;
@@ -570,7 +571,7 @@ const ParagraphLineInfo& Run::GetLineInfo(const ParagraphData& data)
     {
         // todo: not sure, need test
         DWRITE_FONT_METRICS1 metrics{};
-        font.Font->m_face->GetMetrics(&metrics);
+        // font.Font->m_face->GetMetrics(&metrics);
         const auto scale = style.FontSize / metrics.designUnitsPerEm;
         LineInfo.LineGap = metrics.lineGap * scale;
         const auto glyph_box_size = metrics.glyphBoxRight - metrics.glyphBoxLeft;

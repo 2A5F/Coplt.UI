@@ -36,6 +36,7 @@ pub trait IFontFace : IUnknown {
     fn GetFrameSource(&self) -> *mut IFrameSource;
     fn GetFontManager(&self) -> *mut IFontManager;
     fn get_Info(&self) -> *const NFontInfo;
+    fn GetData(&self, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> ();
     fn Equals(&self, other: *mut IFontFace) -> bool;
     fn HashCode(&self) -> i32;
     fn GetFamilyNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
@@ -816,23 +817,32 @@ pub enum BidiDirection {
 bitflags::bitflags! {
     #[repr(transparent)]
     #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-    pub struct GlyphDataFlags : u16 {
+    pub struct GlyphDataFlags : u8 {
         const None = 0;
         const UnsafeToBreak = 1;
         const _ = !0;
     }
 }
 
-impl From<u16> for GlyphDataFlags {
-    fn from(value: u16) -> Self {
+impl From<u8> for GlyphDataFlags {
+    fn from(value: u8) -> Self {
         Self::from_bits_retain(value)
     }
 }
 
-impl From<GlyphDataFlags> for u16 {
+impl From<GlyphDataFlags> for u8 {
     fn from(value: GlyphDataFlags) -> Self {
         value.bits()
     }
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum GlyphType {
+    Invalid = 0,
+    Outline = 1,
+    Color = 2,
+    Bitmap = 3,
 }
 
 bitflags::bitflags! {
@@ -1254,7 +1264,6 @@ pub struct LayoutOutput {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NFontInfo {
-    pub Metrics: FontMetrics,
     pub Width: FontWidth,
     pub Weight: FontWeight,
     pub Flags: FontFlags,
@@ -1333,16 +1342,6 @@ pub struct LocaleId {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct FontMetrics {
-    pub Ascent: f32,
-    pub Descent: f32,
-    pub Leading: f32,
-    pub LineHeight: f32,
-    pub UnitsPerEm: u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextRange {
     pub Locale: CWStr,
     pub Start: i32,
@@ -1379,6 +1378,7 @@ pub struct GlyphData {
     pub Offset: f32,
     pub GlyphId: u16,
     pub Flags: GlyphDataFlags,
+    pub Type: GlyphType,
 }
 
 #[repr(C)]
@@ -1885,6 +1885,7 @@ pub mod details {
         pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontFace) -> *mut IFrameSource,
         pub f_GetFontManager: unsafe extern "C" fn(this: *const IFontFace) -> *mut IFontManager,
         pub f_get_Info: unsafe extern "C" fn(this: *const IFontFace) -> *const NFontInfo,
+        pub f_GetData: unsafe extern "C" fn(this: *const IFontFace, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> (),
         pub f_Equals: unsafe extern "C" fn(this: *const IFontFace, other: *mut IFontFace) -> bool,
         pub f_HashCode: unsafe extern "C" fn(this: *const IFontFace) -> i32,
         pub f_GetFamilyNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult,
@@ -1905,6 +1906,7 @@ pub mod details {
             f_GetFrameSource: Self::f_GetFrameSource,
             f_GetFontManager: Self::f_GetFontManager,
             f_get_Info: Self::f_get_Info,
+            f_GetData: Self::f_GetData,
             f_Equals: Self::f_Equals,
             f_HashCode: Self::f_HashCode,
             f_GetFamilyNames: Self::f_GetFamilyNames,
@@ -1934,6 +1936,9 @@ pub mod details {
         }
         unsafe extern "C" fn f_get_Info(this: *const IFontFace) -> *const NFontInfo {
             unsafe { (*O::GetObject(this as _)).get_Info() }
+        }
+        unsafe extern "C" fn f_GetData(this: *const IFontFace, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> () {
+            unsafe { (*O::GetObject(this as _)).GetData(p_data, size, index) }
         }
         unsafe extern "C" fn f_Equals(this: *const IFontFace, other: *mut IFontFace) -> bool {
             unsafe { (*O::GetObject(this as _)).Equals(other) }
@@ -2825,6 +2830,7 @@ pub mod impls {
         fn GetFrameSource(& self) -> *mut super::IFrameSource;
         fn GetFontManager(& self) -> *mut super::IFontManager;
         fn get_Info(& self) -> *const super::NFontInfo;
+        fn GetData(& self, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> ();
         fn Equals(& self, other: *mut super::IFontFace) -> bool;
         fn HashCode(& self) -> i32;
         fn GetFamilyNames(& self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;

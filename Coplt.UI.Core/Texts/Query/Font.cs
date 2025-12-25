@@ -21,7 +21,6 @@ public sealed unsafe partial class Font
     #region Properties
 
     public ref readonly Rc<IFont> Inner => ref m_inner;
-    public ref readonly FontMetrics Metrics => ref m_info->Metrics;
     public FontFamily Family => m_family;
     public int Index => m_index;
     public FontWidth Width => m_info->Width;

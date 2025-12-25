@@ -25,6 +25,8 @@ public unsafe partial struct IFontFace
     [ComType<ConstPtr<NFontInfo>>]
     public readonly partial NFontInfo* Info { get; }
 
+    public readonly partial void GetData(byte** p_data, nuint* size, uint* index);
+
     public readonly partial bool Equals(IFontFace* other);
     public readonly partial int HashCode();
 

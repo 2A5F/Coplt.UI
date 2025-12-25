@@ -7,7 +7,6 @@
 namespace Coplt
 {
     struct FontFamily;
-    struct DWriteFontFace;
 
     struct Font final : ComImpl<Font, IFont>
     {
