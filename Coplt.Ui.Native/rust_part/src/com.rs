@@ -883,16 +883,10 @@ bitflags::bitflags! {
         const PointerEvents = 1073741824;
         const FontItalic = 2147483648;
         const FontOpticalSizing = 4294967296;
-        const TextAlign = 8589934592;
-        const LineAlign = 17179869184;
-        const LocaleMode = 34359738368;
-        const TextDirection = 68719476736;
-        const WritingDirection = 137438953472;
-        const WrapFlags = 274877906944;
-        const TextWrap = 549755813888;
-        const WordBreak = 1099511627776;
-        const TextOrientation = 2199023255552;
-        const TextOverflow = 4398046511104;
+        const WrapFlags = 8589934592;
+        const TextWrap = 17179869184;
+        const WordBreak = 34359738368;
+        const TextOrientation = 68719476736;
         const _ = !0;
     }
 }
@@ -1292,7 +1286,6 @@ pub struct NLayoutContext {
     pub text_paragraph_buckets: *mut i32,
     pub text_paragraph_ctrl: *mut NNodeIdCtrl,
     pub text_paragraph_common_data: *mut CommonData,
-    pub text_paragraph_layout_data: *mut LayoutData,
     pub text_paragraph_childs_data: *mut ChildsData,
     pub text_paragraph_data: *mut TextParagraphData,
     pub text_paragraph_style_data: *mut TextStyleData,
@@ -1558,9 +1551,6 @@ pub struct TextData_RunRange {
     pub Ascent: f32,
     pub Descent: f32,
     pub Leading: f32,
-    pub FinalLayout: LayoutResult,
-    pub UnRoundedLayout: LayoutResult,
-    pub LayoutCache: LayoutCache,
 }
 
 #[repr(C)]
@@ -1597,12 +1587,13 @@ pub struct TextParagraphData {
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub m_run_ranges: NativeList<TextData_RunRange>,
     pub m_glyph_datas: NativeList<GlyphData>,
+    pub m_bounding_boxes: NativeList<AABB2DF>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextSpanData {
-    pub BoundingBoxes: NativeList<AABB2DF>,
+    pub m_bounding_boxes: NativeList<AABB2DF>,
     pub TextStart: u32,
     pub TextLength: u32,
 }
@@ -1656,16 +1647,11 @@ pub struct TextStyleData {
     pub PaddingLeft: LengthType,
     pub FontItalic: bool,
     pub FontOpticalSizing: bool,
-    pub TextAlign: TextAlign,
-    pub LineAlign: LineAlign,
     pub TabSize: LengthType,
-    pub TextDirection: TextDirection,
-    pub WritingDirection: WritingDirection,
     pub WrapFlags: WrapFlags,
     pub TextWrap: TextWrap,
     pub WordBreak: WordBreak,
     pub TextOrientation: TextOrientation,
-    pub TextOverflow: TextOverflow,
     pub LineHeight: LengthType,
 }
 

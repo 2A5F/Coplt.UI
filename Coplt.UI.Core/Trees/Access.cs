@@ -28,8 +28,6 @@ public static unsafe partial class Access
         public ref TextParagraphData Data => ref Document.UnsafeAt<TextParagraphData>(Id);
         public ref TextStyleData StyleData => ref Document.UnsafeAt<TextStyleData>(Id);
         public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
-        public ref LayoutData LayoutData => ref Document.UnsafeAt<LayoutData>(Id);
-        public LayoutView Layout => LayoutData.Layout;
         public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
         public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
 

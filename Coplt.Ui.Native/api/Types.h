@@ -810,16 +810,10 @@ namespace Coplt {
         PointerEvents = 1073741824,
         FontItalic = 2147483648,
         FontOpticalSizing = 4294967296,
-        TextAlign = 8589934592,
-        LineAlign = 17179869184,
-        LocaleMode = 34359738368,
-        TextDirection = 68719476736,
-        WritingDirection = 137438953472,
-        WrapFlags = 274877906944,
-        TextWrap = 549755813888,
-        WordBreak = 1099511627776,
-        TextOrientation = 2199023255552,
-        TextOverflow = 4398046511104,
+        WrapFlags = 8589934592,
+        TextWrap = 17179869184,
+        WordBreak = 34359738368,
+        TextOrientation = 68719476736,
     };
 
     enum class NodeType : ::Coplt::u8
@@ -1198,7 +1192,6 @@ namespace Coplt {
         ::Coplt::i32* text_paragraph_buckets;
         ::Coplt::NNodeIdCtrl* text_paragraph_ctrl;
         ::Coplt::CommonData* text_paragraph_common_data;
-        ::Coplt::LayoutData* text_paragraph_layout_data;
         ::Coplt::ChildsData* text_paragraph_childs_data;
         ::Coplt::TextParagraphData* text_paragraph_data;
         ::Coplt::TextStyleData* text_paragraph_style_data;
@@ -1430,9 +1423,6 @@ namespace Coplt {
         ::Coplt::f32 Ascent;
         ::Coplt::f32 Descent;
         ::Coplt::f32 Leading;
-        ::Coplt::LayoutResult FinalLayout;
-        ::Coplt::LayoutResult UnRoundedLayout;
-        ::Coplt::LayoutCache LayoutCache;
     };
 
     struct TextData_SameStyleRange
@@ -1466,11 +1456,12 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
         ::Coplt::NativeList<::Coplt::GlyphData> m_glyph_datas;
+        ::Coplt::NativeList<::Coplt::AABB2DF> m_bounding_boxes;
     };
 
     struct TextSpanData
     {
-        ::Coplt::NativeList<::Coplt::AABB2DF> BoundingBoxes;
+        ::Coplt::NativeList<::Coplt::AABB2DF> m_bounding_boxes;
         ::Coplt::u32 TextStart;
         ::Coplt::u32 TextLength;
     };
@@ -1523,16 +1514,11 @@ namespace Coplt {
         ::Coplt::LengthType PaddingLeft;
         bool FontItalic;
         bool FontOpticalSizing;
-        ::Coplt::TextAlign TextAlign;
-        ::Coplt::LineAlign LineAlign;
         ::Coplt::LengthType TabSize;
-        ::Coplt::TextDirection TextDirection;
-        ::Coplt::WritingDirection WritingDirection;
         ::Coplt::WrapFlags WrapFlags;
         ::Coplt::TextWrap TextWrap;
         ::Coplt::WordBreak WordBreak;
         ::Coplt::TextOrientation TextOrientation;
-        ::Coplt::TextOverflow TextOverflow;
         ::Coplt::LengthType LineHeight;
     };
 

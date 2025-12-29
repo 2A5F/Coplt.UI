@@ -638,10 +638,8 @@ impl crate::layout::LayoutInner for DwLayout {
 
         let fm = doc.ctx().font_manager;
 
-        let text_direction = style.TextDirection().unwrap_or(root_style.TextDirection);
-        let writing_direction = style
-            .WritingDirection()
-            .unwrap_or(root_style.WritingDirection);
+        let text_direction = root_style.TextDirection;
+        let writing_direction = root_style.WritingDirection;
 
         let dir = match (text_direction, writing_direction) {
             (TextDirection::Forward, WritingDirection::Horizontal) => {

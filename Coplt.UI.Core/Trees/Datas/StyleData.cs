@@ -245,16 +245,10 @@ public enum TextStyleOverride : ulong
     FontItalic = 1UL << 31,
     FontOpticalSizing = 1UL << 32,
 
-    TextAlign = 1UL << 33,
-    LineAlign = 1UL << 34,
-    LocaleMode = 1UL << 35,
-    TextDirection = 1UL << 36,
-    WritingDirection = 1UL << 37,
-    WrapFlags = 1UL << 38,
-    TextWrap = 1UL << 39,
-    WordBreak = 1UL << 40,
-    TextOrientation = 1UL << 41,
-    TextOverflow = 1UL << 42,
+    WrapFlags = 1UL << 33,
+    TextWrap = 1UL << 34,
+    WordBreak = 1UL << 35,
+    TextOrientation = 1UL << 36,
 }
 
 [Dropping]
@@ -327,16 +321,11 @@ public partial record struct TextStyleData()
     public bool FontItalic = false;
     public bool FontOpticalSizing = true;
 
-    public TextAlign TextAlign = TextAlign.Start;
-    public LineAlign LineAlign = LineAlign.Start;
     public LengthType TabSize = LengthType.Percent;
-    public TextDirection TextDirection = TextDirection.Forward;
-    public WritingDirection WritingDirection = WritingDirection.Horizontal;
     public WrapFlags WrapFlags = WrapFlags.None;
     public TextWrap TextWrap = TextWrap.Wrap;
     public WordBreak WordBreak = WordBreak.Auto;
     public TextOrientation TextOrientation = TextOrientation.Mixed;
-    public TextOverflow TextOverflow = TextOverflow.Clip;
     public LengthType LineHeight = LengthType.Auto;
 
     public void SetFontFallback(FontFallback? Fallback)

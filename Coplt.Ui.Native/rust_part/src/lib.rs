@@ -174,7 +174,11 @@ mod com_impl {
         str::FromStr,
     };
 
-    use taffy::{LengthPercentage, LengthPercentageAuto, ResolveOrZero};
+    use etagere::euclid::Rect;
+    use taffy::{
+        CoreStyle, LengthPercentage, LengthPercentageAuto, ResolveOrZero,
+        prelude::{TaffyAuto, TaffyZero},
+    };
 
     use crate::{
         col::{NArc, NBitSet, NList},
@@ -183,7 +187,7 @@ mod com_impl {
             GlyphData, IFontFallback, LayoutCache, LayoutCacheEntryLayoutOutput,
             LayoutCacheEntrySize, LayoutCacheFlags, LayoutCollapsibleMarginSet, LayoutData,
             LayoutResult, LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents,
-            TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange,
+            StyleData, TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange,
             TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection,
             TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode,
             TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
@@ -433,9 +437,6 @@ mod com_impl {
                 Ascent: Default::default(),
                 Descent: Default::default(),
                 Leading: Default::default(),
-                FinalLayout: Default::default(),
-                UnRoundedLayout: Default::default(),
-                LayoutCache: Default::default(),
             }
         }
     }
@@ -466,6 +467,13 @@ mod com_impl {
                 $(GetTextStyle! { fn $name -> $type $({ $get })? })*
             }
         };
+    }
+
+    #[allow(non_snake_case)]
+    impl StyleData {
+        pub fn LineHeight(&self) -> LengthPercentageAuto {
+            c_length_percentage_auto!(self => LineHeight)
+        }
     }
 
     GetTextStyle! {
@@ -504,15 +512,31 @@ mod com_impl {
             fn PointerEvents -> PointerEvents;
             fn FontItalic -> bool;
             fn FontOpticalSizing -> bool;
-            fn TextAlign -> TextAlign;
-            fn LineAlign -> LineAlign;
-            fn TextDirection -> TextDirection;
-            fn WritingDirection -> WritingDirection;
             fn WrapFlags -> WrapFlags;
             fn TextWrap -> TextWrap;
             fn WordBreak -> WordBreak;
             fn TextOrientation -> TextOrientation;
-            fn TextOverflow -> TextOverflow;
+        }
+    }
+
+    impl TextStyleData {
+        #[inline(always)]
+        pub fn margin(&self) -> taffy::Rect<LengthPercentageAuto> {
+            taffy::Rect {
+                left: self.MarginLeft().unwrap_or(LengthPercentageAuto::AUTO),
+                right: self.MarginRight().unwrap_or(LengthPercentageAuto::AUTO),
+                top: self.MarginTop().unwrap_or(LengthPercentageAuto::AUTO),
+                bottom: self.MarginBottom().unwrap_or(LengthPercentageAuto::AUTO),
+            }
+        }
+        #[inline(always)]
+        pub fn padding(&self) -> taffy::Rect<LengthPercentage> {
+            taffy::Rect {
+                left: self.PaddingLeft().unwrap_or(LengthPercentage::ZERO),
+                right: self.PaddingRight().unwrap_or(LengthPercentage::ZERO),
+                top: self.PaddingTop().unwrap_or(LengthPercentage::ZERO),
+                bottom: self.PaddingBottom().unwrap_or(LengthPercentage::ZERO),
+            }
         }
     }
 
@@ -640,6 +664,9 @@ mod com_impl {
             paragraph: &mut TextParagraphData,
         ) -> &'static mut TextData_ScriptRange {
             &mut paragraph.script_ranges()[self.ScriptRange as usize]
+        }
+        pub fn get_glyph_datas(&self, paragraph: &mut TextParagraphData) -> &'static [GlyphData] {
+            &paragraph.glyph_datas()[self.GlyphStart as usize..self.GlyphEnd as usize]
         }
     }
 }

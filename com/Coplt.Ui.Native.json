@@ -3114,44 +3114,20 @@
           "value": "4294967296"
         },
         {
-          "name": "TextAlign",
+          "name": "WrapFlags",
           "value": "8589934592"
         },
         {
-          "name": "LineAlign",
+          "name": "TextWrap",
           "value": "17179869184"
         },
         {
-          "name": "LocaleMode",
+          "name": "WordBreak",
           "value": "34359738368"
         },
         {
-          "name": "TextDirection",
-          "value": "68719476736"
-        },
-        {
-          "name": "WritingDirection",
-          "value": "137438953472"
-        },
-        {
-          "name": "WrapFlags",
-          "value": "274877906944"
-        },
-        {
-          "name": "TextWrap",
-          "value": "549755813888"
-        },
-        {
-          "name": "WordBreak",
-          "value": "1099511627776"
-        },
-        {
           "name": "TextOrientation",
-          "value": "2199023255552"
-        },
-        {
-          "name": "TextOverflow",
-          "value": "4398046511104"
+          "value": "68719476736"
         }
       ]
     },
@@ -4123,10 +4099,6 @@
           "name": "text_paragraph_common_data"
         },
         {
-          "type": 157,
-          "name": "text_paragraph_layout_data"
-        },
-        {
           "type": 149,
           "name": "text_paragraph_childs_data"
         },
@@ -4945,18 +4917,6 @@
         {
           "type": 194,
           "name": "Leading"
-        },
-        {
-          "type": 112,
-          "name": "FinalLayout"
-        },
-        {
-          "type": 112,
-          "name": "UnRoundedLayout"
-        },
-        {
-          "type": 106,
-          "name": "LayoutCache"
         }
       ]
     },
@@ -5056,6 +5016,10 @@
         {
           "type": 25,
           "name": "m_glyph_datas"
+        },
+        {
+          "type": 18,
+          "name": "m_bounding_boxes"
         }
       ]
     },
@@ -5064,7 +5028,7 @@
       "fields": [
         {
           "type": 18,
-          "name": "BoundingBoxes"
+          "name": "m_bounding_boxes"
         },
         {
           "type": 197,
@@ -5264,24 +5228,8 @@
           "name": "FontOpticalSizing"
         },
         {
-          "type": 134,
-          "name": "TextAlign"
-        },
-        {
-          "type": 129,
-          "name": "LineAlign"
-        },
-        {
           "type": 68,
           "name": "TabSize"
-        },
-        {
-          "type": 135,
-          "name": "TextDirection"
-        },
-        {
-          "type": 142,
-          "name": "WritingDirection"
         },
         {
           "type": 141,
@@ -5298,10 +5246,6 @@
         {
           "type": 136,
           "name": "TextOrientation"
-        },
-        {
-          "type": 137,
-          "name": "TextOverflow"
         },
         {
           "type": 68,

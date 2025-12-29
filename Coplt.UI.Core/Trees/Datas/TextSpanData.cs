@@ -8,8 +8,10 @@ namespace Coplt.UI.Trees.Datas;
 public partial record struct TextSpanData
 {
     [Drop]
-    public NativeList<AABB2DF> BoundingBoxes;
+    public NativeList<AABB2DF> m_bounding_boxes;
     
     public uint TextStart;
     public uint TextLength;
+
+    public ReadOnlySpan<AABB2DF> BoundingBoxes => m_bounding_boxes.AsSpan;
 }

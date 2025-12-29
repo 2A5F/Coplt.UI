@@ -182,12 +182,7 @@ impl SubDocInner {
         match id.typ() {
             NodeType::Null => panic!("null node"),
             NodeType::View => unsafe { &mut *self.ctx().view_layout_data.add(id.index() as usize) },
-            NodeType::TextParagraph => unsafe {
-                &mut *self
-                    .ctx()
-                    .text_paragraph_layout_data
-                    .add(id.index() as usize)
-            },
+            NodeType::TextParagraph => panic!("text paragraph does not have layout data"),
             NodeType::TextSpan => panic!("text span does not have layout data"),
         }
     }
@@ -403,7 +398,7 @@ impl<'a> TraverseTree for SubDoc<'a> {}
 
 impl<'a> LayoutPartialTree for SubDoc<'a> {
     type CoreContainerStyle<'b>
-        = ViewStyleHandle<'b>
+        = &'b StyleData
     where
         Self: 'b;
 
@@ -411,7 +406,7 @@ impl<'a> LayoutPartialTree for SubDoc<'a> {
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: taffy::NodeId) -> Self::CoreContainerStyle<'_> {
-        ViewStyleHandle(self, node_id.into())
+        self.style_data(node_id.into())
     }
 
     #[inline(always)]
@@ -436,7 +431,7 @@ impl<'a> LayoutPartialTree for SubDoc<'a> {
                     if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
                         return taffy::compute_hidden_layout(tree, node_id);
                     }
-                    let style = ViewStyleHandle(tree, id);
+                    let style = &*tree.style_data(id);
                     let visible = style.Visible;
                     if let com::Visible::Remove = visible {
                         return taffy::compute_hidden_layout(tree, node_id);
@@ -445,7 +440,7 @@ impl<'a> LayoutPartialTree for SubDoc<'a> {
                     if childs.count() == 0 {
                         return taffy::compute_leaf_layout(
                             inputs,
-                            &style,
+                            style,
                             |_, _| 0.0,
                             |_, _| Size::ZERO,
                         );
@@ -568,36 +563,14 @@ impl CacheTree for SubDocInner {
     }
 }
 
-impl<'a> LayoutBlockContainer for SubDoc<'a> {
-    type BlockContainerStyle<'b>
-        = ViewStyleHandle<'b>
-    where
-        Self: 'b;
-
-    type BlockItemStyle<'b>
-        = ViewStyleHandle<'b>
-    where
-        Self: 'b;
-
-    #[inline(always)]
-    fn get_block_container_style(&self, node_id: taffy::NodeId) -> Self::BlockContainerStyle<'_> {
-        ViewStyleHandle(self, node_id.into())
-    }
-
-    #[inline(always)]
-    fn get_block_child_style(&self, child_node_id: taffy::NodeId) -> Self::BlockItemStyle<'_> {
-        ViewStyleHandle(self, child_node_id.into())
-    }
-}
-
 impl<'a> LayoutFlexboxContainer for SubDoc<'a> {
     type FlexboxContainerStyle<'b>
-        = ViewStyleHandle<'b>
+        = &'b StyleData
     where
         Self: 'b;
 
     type FlexboxItemStyle<'b>
-        = ViewStyleHandle<'b>
+        = &'b StyleData
     where
         Self: 'b;
 
@@ -606,34 +579,34 @@ impl<'a> LayoutFlexboxContainer for SubDoc<'a> {
         &self,
         node_id: taffy::NodeId,
     ) -> Self::FlexboxContainerStyle<'_> {
-        ViewStyleHandle(self, node_id.into())
+        self.style_data(node_id.into())
     }
 
     #[inline(always)]
     fn get_flexbox_child_style(&self, child_node_id: taffy::NodeId) -> Self::FlexboxItemStyle<'_> {
-        ViewStyleHandle(self, child_node_id.into())
+        self.style_data(child_node_id.into())
     }
 }
 
 impl<'a> LayoutGridContainer for SubDoc<'a> {
     type GridContainerStyle<'b>
-        = ViewStyleHandle<'b>
+        = &'b StyleData
     where
         Self: 'b;
 
     type GridItemStyle<'b>
-        = ViewStyleHandle<'b>
+        = &'b StyleData
     where
         Self: 'b;
 
     #[inline(always)]
     fn get_grid_container_style(&self, node_id: taffy::NodeId) -> Self::GridContainerStyle<'_> {
-        ViewStyleHandle(self, node_id.into())
+        self.style_data(node_id.into())
     }
 
     #[inline(always)]
     fn get_grid_child_style(&self, child_node_id: taffy::NodeId) -> Self::GridItemStyle<'_> {
-        ViewStyleHandle(self, child_node_id.into())
+        self.style_data(child_node_id.into())
     }
 }
 
@@ -765,259 +738,6 @@ macro_rules! c_length_percentage {
             }
         })
     };
-}
-
-impl<'a> CoreStyle for ViewStyleHandle<'a> {
-    type CustomIdent = GridName;
-
-    #[inline(always)]
-    fn box_generation_mode(&self) -> taffy::BoxGenerationMode {
-        match self.Visible {
-            com::Visible::Remove => taffy::BoxGenerationMode::None,
-            com::Visible::Visible | com::Visible::Hidden => taffy::BoxGenerationMode::Normal,
-        }
-    }
-
-    #[inline(always)]
-    fn is_block(&self) -> bool {
-        false
-    }
-
-    #[inline(always)]
-    fn is_compressible_replaced(&self) -> bool {
-        false
-    }
-
-    #[inline(always)]
-    fn box_sizing(&self) -> taffy::BoxSizing {
-        match self.BoxSizing {
-            com::BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
-            com::BoxSizing::ContentBox => taffy::BoxSizing::ContentBox,
-        }
-    }
-
-    #[inline(always)]
-    fn overflow(&self) -> taffy::Point<taffy::Overflow> {
-        Point {
-            x: c_overflow!(self.OverflowX),
-            y: c_overflow!(self.OverflowY),
-        }
-    }
-
-    #[inline(always)]
-    fn scrollbar_width(&self) -> f32 {
-        self.ScrollBarSize
-    }
-
-    #[inline(always)]
-    fn position(&self) -> taffy::Position {
-        c_position!(self.Position)
-    }
-
-    #[inline(always)]
-    fn inset(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
-        taffy::Rect {
-            left: c_length_percentage_auto!(self => InsertLeft),
-            right: c_length_percentage_auto!(self => InsertRight),
-            top: c_length_percentage_auto!(self => InsertTop),
-            bottom: c_length_percentage_auto!(self => InsertBottom),
-        }
-    }
-
-    #[inline(always)]
-    fn size(&self) -> taffy::Size<taffy::Dimension> {
-        taffy::Size {
-            width: c_dimension!(self => Width),
-            height: c_dimension!(self => Height),
-        }
-    }
-
-    #[inline(always)]
-    fn min_size(&self) -> taffy::Size<taffy::Dimension> {
-        taffy::Size {
-            width: c_dimension!(self => MinWidth),
-            height: c_dimension!(self => MinHeight),
-        }
-    }
-
-    #[inline(always)]
-    fn max_size(&self) -> taffy::Size<taffy::Dimension> {
-        taffy::Size {
-            width: c_dimension!(self => MaxWidth),
-            height: c_dimension!(self => MaxHeight),
-        }
-    }
-
-    #[inline(always)]
-    fn aspect_ratio(&self) -> Option<f32> {
-        if self.HasAspectRatio {
-            Some(self.AspectRatioValue)
-        } else {
-            None
-        }
-    }
-
-    #[inline(always)]
-    fn margin(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
-        taffy::Rect {
-            left: c_length_percentage_auto!(self => MarginLeft),
-            right: c_length_percentage_auto!(self => MarginRight),
-            top: c_length_percentage_auto!(self => MarginTop),
-            bottom: c_length_percentage_auto!(self => MarginBottom),
-        }
-    }
-
-    #[inline(always)]
-    fn padding(&self) -> taffy::Rect<taffy::LengthPercentage> {
-        taffy::Rect {
-            left: c_length_percentage!(self => PaddingLeft),
-            right: c_length_percentage!(self => PaddingRight),
-            top: c_length_percentage!(self => PaddingTop),
-            bottom: c_length_percentage!(self => PaddingBottom),
-        }
-    }
-
-    #[inline(always)]
-    fn border(&self) -> taffy::Rect<taffy::LengthPercentage> {
-        taffy::Rect {
-            left: c_length_percentage!(self => BorderLeft),
-            right: c_length_percentage!(self => BorderRight),
-            top: c_length_percentage!(self => BorderTop),
-            bottom: c_length_percentage!(self => BorderBottom),
-        }
-    }
-}
-
-impl<'a> BlockContainerStyle for ViewStyleHandle<'a> {
-    #[inline(always)]
-    fn text_align(&self) -> taffy::TextAlign {
-        match self.TextAlign {
-            com::TextAlign::Start => taffy::TextAlign::LegacyLeft,
-            com::TextAlign::End => taffy::TextAlign::LegacyRight,
-            com::TextAlign::Center => taffy::TextAlign::LegacyCenter,
-        }
-    }
-}
-
-impl<'a> BlockItemStyle for ViewStyleHandle<'a> {
-    #[inline(always)]
-    fn is_table(&self) -> bool {
-        false
-    }
-}
-
-impl<'a> FlexboxContainerStyle for ViewStyleHandle<'a> {
-    #[inline(always)]
-    fn flex_direction(&self) -> taffy::FlexDirection {
-        match self.FlexDirection {
-            com::FlexDirection::Column => taffy::FlexDirection::Column,
-            com::FlexDirection::Row => taffy::FlexDirection::Row,
-            com::FlexDirection::ColumnReverse => taffy::FlexDirection::ColumnReverse,
-            com::FlexDirection::RowReverse => taffy::FlexDirection::RowReverse,
-        }
-    }
-
-    #[inline(always)]
-    fn flex_wrap(&self) -> taffy::FlexWrap {
-        match self.FlexWrap {
-            com::FlexWrap::NoWrap => taffy::FlexWrap::NoWrap,
-            com::FlexWrap::Wrap => taffy::FlexWrap::Wrap,
-            com::FlexWrap::WrapReverse => taffy::FlexWrap::WrapReverse,
-        }
-    }
-
-    #[inline(always)]
-    fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
-        taffy::Size {
-            width: c_length_percentage!(self => GapX),
-            height: c_length_percentage!(self => GapY),
-        }
-    }
-
-    #[inline(always)]
-    fn align_content(&self) -> Option<taffy::AlignContent> {
-        match self.AlignContent {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignContent::Start),
-            com::AlignType::End => Some(taffy::AlignContent::End),
-            com::AlignType::FlexStart => Some(taffy::AlignContent::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignContent::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignContent::Center),
-            com::AlignType::Baseline => None,
-            com::AlignType::Stretch => Some(taffy::AlignContent::Stretch),
-            com::AlignType::SpaceBetween => Some(taffy::AlignContent::SpaceBetween),
-            com::AlignType::SpaceEvenly => Some(taffy::AlignContent::SpaceEvenly),
-            com::AlignType::SpaceAround => Some(taffy::AlignContent::SpaceAround),
-        }
-    }
-
-    #[inline(always)]
-    fn align_items(&self) -> Option<taffy::AlignItems> {
-        match self.AlignItems {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignItems::Start),
-            com::AlignType::End => Some(taffy::AlignItems::End),
-            com::AlignType::FlexStart => Some(taffy::AlignItems::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignItems::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignItems::Center),
-            com::AlignType::Baseline => Some(taffy::AlignItems::Baseline),
-            com::AlignType::Stretch => Some(taffy::AlignItems::Stretch),
-            com::AlignType::SpaceBetween => None,
-            com::AlignType::SpaceEvenly => None,
-            com::AlignType::SpaceAround => None,
-        }
-    }
-
-    #[inline(always)]
-    fn justify_content(&self) -> Option<taffy::JustifyContent> {
-        match self.JustifyContent {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::JustifyContent::Start),
-            com::AlignType::End => Some(taffy::JustifyContent::End),
-            com::AlignType::FlexStart => Some(taffy::JustifyContent::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::JustifyContent::FlexEnd),
-            com::AlignType::Center => Some(taffy::JustifyContent::Center),
-            com::AlignType::Baseline => None,
-            com::AlignType::Stretch => Some(taffy::JustifyContent::Stretch),
-            com::AlignType::SpaceBetween => Some(taffy::JustifyContent::SpaceBetween),
-            com::AlignType::SpaceEvenly => Some(taffy::JustifyContent::SpaceEvenly),
-            com::AlignType::SpaceAround => Some(taffy::JustifyContent::SpaceAround),
-        }
-    }
-}
-
-impl<'a> FlexboxItemStyle for ViewStyleHandle<'a> {
-    #[inline(always)]
-    fn flex_basis(&self) -> taffy::Dimension {
-        c_dimension!(self => FlexBasis)
-    }
-
-    #[inline(always)]
-    fn flex_grow(&self) -> f32 {
-        self.FlexGrow
-    }
-
-    #[inline(always)]
-    fn flex_shrink(&self) -> f32 {
-        self.FlexShrink
-    }
-
-    #[inline(always)]
-    fn align_self(&self) -> Option<taffy::AlignSelf> {
-        match self.AlignSelf {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignSelf::Start),
-            com::AlignType::End => Some(taffy::AlignSelf::End),
-            com::AlignType::FlexStart => Some(taffy::AlignSelf::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignSelf::Center),
-            com::AlignType::Baseline => Some(taffy::AlignSelf::Baseline),
-            com::AlignType::Stretch => Some(taffy::AlignSelf::Stretch),
-            com::AlignType::SpaceBetween => None,
-            com::AlignType::SpaceEvenly => None,
-            com::AlignType::SpaceAround => None,
-        }
-    }
 }
 
 #[inline(always)]
@@ -1326,174 +1046,6 @@ impl<'a> Iterator for GridTemplateAreasIter<'a> {
 
 impl<'a> ExactSizeIterator for GridTemplateAreasIter<'a> {}
 
-impl<'s> GridContainerStyle for ViewStyleHandle<'s> {
-    type Repetition<'a>
-        = &'a com::GridTemplateRepetition
-    where
-        Self: 'a;
-
-    type TemplateTrackList<'a>
-        = TemplateTrackListIter<'a>
-    where
-        Self: 'a;
-
-    type AutoTrackList<'a>
-        = AutoTrackListIter<'a>
-    where
-        Self: 'a;
-
-    type TemplateLineNames<'a>
-        = TemplateLineNamesIter<'a>
-    where
-        Self: 'a;
-
-    type GridTemplateAreas<'a>
-        = GridTemplateAreasIter<'a>
-    where
-        Self: 'a;
-
-    #[inline(always)]
-    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
-        Some(TemplateTrackListIter(&self.Grid.val()?.GridTemplateRows, 0))
-    }
-
-    #[inline(always)]
-    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
-        Some(TemplateTrackListIter(
-            &self.Grid.val()?.GridTemplateColumns,
-            0,
-        ))
-    }
-
-    #[inline(always)]
-    fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
-        if let Some(grid) = self.Grid.val() {
-            AutoTrackListIter(&grid.GridAutoRows, 0)
-        } else {
-            AutoTrackListIter::empty()
-        }
-    }
-
-    #[inline(always)]
-    fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
-        if let Some(grid) = self.Grid.val() {
-            AutoTrackListIter(&grid.GridAutoColumns, 0)
-        } else {
-            AutoTrackListIter::empty()
-        }
-    }
-
-    #[inline(always)]
-    fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
-        Some(GridTemplateAreasIter(
-            &self.Grid.val()?.GridTemplateAreas,
-            0,
-        ))
-    }
-
-    #[inline(always)]
-    fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>> {
-        Some(TemplateLineNamesIter(
-            &self.Grid.val()?.GridTemplateColumnNames,
-            0,
-        ))
-    }
-
-    #[inline(always)]
-    fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>> {
-        Some(TemplateLineNamesIter(
-            &self.Grid.val()?.GridTemplateRowNames,
-            0,
-        ))
-    }
-
-    #[inline(always)]
-    fn grid_auto_flow(&self) -> taffy::GridAutoFlow {
-        match self.GridAutoFlow {
-            com::GridAutoFlow::Row => taffy::GridAutoFlow::Row,
-            com::GridAutoFlow::Column => taffy::GridAutoFlow::Column,
-            com::GridAutoFlow::RowDense => taffy::GridAutoFlow::RowDense,
-            com::GridAutoFlow::ColumnDense => taffy::GridAutoFlow::ColumnDense,
-        }
-    }
-
-    #[inline(always)]
-    fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
-        taffy::Size {
-            width: c_length_percentage!(self => GapX),
-            height: c_length_percentage!(self => GapY),
-        }
-    }
-
-    #[inline(always)]
-    fn align_content(&self) -> Option<taffy::AlignContent> {
-        match self.AlignContent {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignContent::Start),
-            com::AlignType::End => Some(taffy::AlignContent::End),
-            com::AlignType::FlexStart => Some(taffy::AlignContent::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignContent::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignContent::Center),
-            com::AlignType::Baseline => None,
-            com::AlignType::Stretch => Some(taffy::AlignContent::Stretch),
-            com::AlignType::SpaceBetween => Some(taffy::AlignContent::SpaceBetween),
-            com::AlignType::SpaceEvenly => Some(taffy::AlignContent::SpaceEvenly),
-            com::AlignType::SpaceAround => Some(taffy::AlignContent::SpaceAround),
-        }
-    }
-
-    #[inline(always)]
-    fn justify_content(&self) -> Option<taffy::JustifyContent> {
-        match self.JustifyContent {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::JustifyContent::Start),
-            com::AlignType::End => Some(taffy::JustifyContent::End),
-            com::AlignType::FlexStart => Some(taffy::JustifyContent::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::JustifyContent::FlexEnd),
-            com::AlignType::Center => Some(taffy::JustifyContent::Center),
-            com::AlignType::Baseline => None,
-            com::AlignType::Stretch => Some(taffy::JustifyContent::Stretch),
-            com::AlignType::SpaceBetween => Some(taffy::JustifyContent::SpaceBetween),
-            com::AlignType::SpaceEvenly => Some(taffy::JustifyContent::SpaceEvenly),
-            com::AlignType::SpaceAround => Some(taffy::JustifyContent::SpaceAround),
-        }
-    }
-
-    #[inline(always)]
-    fn align_items(&self) -> Option<taffy::AlignItems> {
-        match self.AlignItems {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignItems::Start),
-            com::AlignType::End => Some(taffy::AlignItems::End),
-            com::AlignType::FlexStart => Some(taffy::AlignItems::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignItems::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignItems::Center),
-            com::AlignType::Baseline => Some(taffy::AlignItems::Baseline),
-            com::AlignType::Stretch => Some(taffy::AlignItems::Stretch),
-            com::AlignType::SpaceBetween => None,
-            com::AlignType::SpaceEvenly => None,
-            com::AlignType::SpaceAround => None,
-        }
-    }
-
-    #[inline(always)]
-    fn justify_items(&self) -> Option<taffy::AlignItems> {
-        match self.JustifyItems {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignItems::Start),
-            com::AlignType::End => Some(taffy::AlignItems::End),
-            com::AlignType::FlexStart => Some(taffy::AlignItems::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignItems::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignItems::Center),
-            com::AlignType::Baseline => Some(taffy::AlignItems::Baseline),
-            com::AlignType::Stretch => Some(taffy::AlignItems::Stretch),
-            com::AlignType::SpaceBetween => None,
-            com::AlignType::SpaceEvenly => None,
-            com::AlignType::SpaceAround => None,
-        }
-    }
-}
-
 impl com::GridPlacement {
     #[inline(always)]
     pub fn to_taffy(&self) -> taffy::GridPlacement<GridName> {
@@ -1515,58 +1067,6 @@ impl com::GridPlacement {
                 },
                 self.Value1 as u16,
             ),
-        }
-    }
-}
-
-impl<'a> GridItemStyle for ViewStyleHandle<'a> {
-    #[inline(always)]
-    fn grid_row(&self) -> taffy::Line<taffy::GridPlacement<Self::CustomIdent>> {
-        taffy::Line {
-            start: self.GridRowStart.to_taffy(),
-            end: self.GridRowEnd.to_taffy(),
-        }
-    }
-
-    #[inline(always)]
-    fn grid_column(&self) -> taffy::Line<taffy::GridPlacement<Self::CustomIdent>> {
-        taffy::Line {
-            start: self.GridColumnStart.to_taffy(),
-            end: self.GridColumnEnd.to_taffy(),
-        }
-    }
-
-    #[inline(always)]
-    fn align_self(&self) -> Option<taffy::AlignSelf> {
-        match self.AlignSelf {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignSelf::Start),
-            com::AlignType::End => Some(taffy::AlignSelf::End),
-            com::AlignType::FlexStart => Some(taffy::AlignSelf::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignSelf::Center),
-            com::AlignType::Baseline => Some(taffy::AlignSelf::Baseline),
-            com::AlignType::Stretch => Some(taffy::AlignSelf::Stretch),
-            com::AlignType::SpaceBetween => None,
-            com::AlignType::SpaceEvenly => None,
-            com::AlignType::SpaceAround => None,
-        }
-    }
-
-    #[inline(always)]
-    fn justify_self(&self) -> Option<taffy::AlignSelf> {
-        match self.JustifySelf {
-            com::AlignType::None => None,
-            com::AlignType::Start => Some(taffy::AlignSelf::Start),
-            com::AlignType::End => Some(taffy::AlignSelf::End),
-            com::AlignType::FlexStart => Some(taffy::AlignSelf::FlexStart),
-            com::AlignType::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
-            com::AlignType::Center => Some(taffy::AlignSelf::Center),
-            com::AlignType::Baseline => Some(taffy::AlignSelf::Baseline),
-            com::AlignType::Stretch => Some(taffy::AlignSelf::Stretch),
-            com::AlignType::SpaceBetween => None,
-            com::AlignType::SpaceEvenly => None,
-            com::AlignType::SpaceAround => None,
         }
     }
 }
@@ -1785,6 +1285,461 @@ impl From<LayoutOutput> for com::LayoutOutput {
             HasFirstBaselinesX: value.first_baselines.x.is_some(),
             HasFirstBaselinesY: value.first_baselines.y.is_some(),
             MarginsCanCollapseThrough: value.margins_can_collapse_through,
+        }
+    }
+}
+
+impl CoreStyle for StyleData {
+    type CustomIdent = GridName;
+
+    #[inline(always)]
+    fn box_generation_mode(&self) -> taffy::BoxGenerationMode {
+        match self.Visible {
+            com::Visible::Remove => taffy::BoxGenerationMode::None,
+            com::Visible::Visible | com::Visible::Hidden => taffy::BoxGenerationMode::Normal,
+        }
+    }
+
+    #[inline(always)]
+    fn is_block(&self) -> bool {
+        false
+    }
+
+    #[inline(always)]
+    fn is_compressible_replaced(&self) -> bool {
+        false
+    }
+
+    #[inline(always)]
+    fn box_sizing(&self) -> taffy::BoxSizing {
+        match self.BoxSizing {
+            com::BoxSizing::BorderBox => taffy::BoxSizing::BorderBox,
+            com::BoxSizing::ContentBox => taffy::BoxSizing::ContentBox,
+        }
+    }
+
+    #[inline(always)]
+    fn overflow(&self) -> taffy::Point<taffy::Overflow> {
+        Point {
+            x: c_overflow!(self.OverflowX),
+            y: c_overflow!(self.OverflowY),
+        }
+    }
+
+    #[inline(always)]
+    fn scrollbar_width(&self) -> f32 {
+        self.ScrollBarSize
+    }
+
+    #[inline(always)]
+    fn position(&self) -> taffy::Position {
+        c_position!(self.Position)
+    }
+
+    #[inline(always)]
+    fn inset(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
+        taffy::Rect {
+            left: c_length_percentage_auto!(self => InsertLeft),
+            right: c_length_percentage_auto!(self => InsertRight),
+            top: c_length_percentage_auto!(self => InsertTop),
+            bottom: c_length_percentage_auto!(self => InsertBottom),
+        }
+    }
+
+    #[inline(always)]
+    fn size(&self) -> taffy::Size<taffy::Dimension> {
+        taffy::Size {
+            width: c_dimension!(self => Width),
+            height: c_dimension!(self => Height),
+        }
+    }
+
+    #[inline(always)]
+    fn min_size(&self) -> taffy::Size<taffy::Dimension> {
+        taffy::Size {
+            width: c_dimension!(self => MinWidth),
+            height: c_dimension!(self => MinHeight),
+        }
+    }
+
+    #[inline(always)]
+    fn max_size(&self) -> taffy::Size<taffy::Dimension> {
+        taffy::Size {
+            width: c_dimension!(self => MaxWidth),
+            height: c_dimension!(self => MaxHeight),
+        }
+    }
+
+    #[inline(always)]
+    fn aspect_ratio(&self) -> Option<f32> {
+        if self.HasAspectRatio {
+            Some(self.AspectRatioValue)
+        } else {
+            None
+        }
+    }
+
+    #[inline(always)]
+    fn margin(&self) -> taffy::Rect<taffy::LengthPercentageAuto> {
+        taffy::Rect {
+            left: c_length_percentage_auto!(self => MarginLeft),
+            right: c_length_percentage_auto!(self => MarginRight),
+            top: c_length_percentage_auto!(self => MarginTop),
+            bottom: c_length_percentage_auto!(self => MarginBottom),
+        }
+    }
+
+    #[inline(always)]
+    fn padding(&self) -> taffy::Rect<taffy::LengthPercentage> {
+        taffy::Rect {
+            left: c_length_percentage!(self => PaddingLeft),
+            right: c_length_percentage!(self => PaddingRight),
+            top: c_length_percentage!(self => PaddingTop),
+            bottom: c_length_percentage!(self => PaddingBottom),
+        }
+    }
+
+    #[inline(always)]
+    fn border(&self) -> taffy::Rect<taffy::LengthPercentage> {
+        taffy::Rect {
+            left: c_length_percentage!(self => BorderLeft),
+            right: c_length_percentage!(self => BorderRight),
+            top: c_length_percentage!(self => BorderTop),
+            bottom: c_length_percentage!(self => BorderBottom),
+        }
+    }
+}
+
+impl FlexboxContainerStyle for StyleData {
+    #[inline(always)]
+    fn flex_direction(&self) -> taffy::FlexDirection {
+        match self.FlexDirection {
+            com::FlexDirection::Column => taffy::FlexDirection::Column,
+            com::FlexDirection::Row => taffy::FlexDirection::Row,
+            com::FlexDirection::ColumnReverse => taffy::FlexDirection::ColumnReverse,
+            com::FlexDirection::RowReverse => taffy::FlexDirection::RowReverse,
+        }
+    }
+
+    #[inline(always)]
+    fn flex_wrap(&self) -> taffy::FlexWrap {
+        match self.FlexWrap {
+            com::FlexWrap::NoWrap => taffy::FlexWrap::NoWrap,
+            com::FlexWrap::Wrap => taffy::FlexWrap::Wrap,
+            com::FlexWrap::WrapReverse => taffy::FlexWrap::WrapReverse,
+        }
+    }
+
+    #[inline(always)]
+    fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
+        taffy::Size {
+            width: c_length_percentage!(self => GapX),
+            height: c_length_percentage!(self => GapY),
+        }
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<taffy::AlignContent> {
+        match self.AlignContent {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignContent::Start),
+            com::AlignType::End => Some(taffy::AlignContent::End),
+            com::AlignType::FlexStart => Some(taffy::AlignContent::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignContent::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignContent::Center),
+            com::AlignType::Baseline => None,
+            com::AlignType::Stretch => Some(taffy::AlignContent::Stretch),
+            com::AlignType::SpaceBetween => Some(taffy::AlignContent::SpaceBetween),
+            com::AlignType::SpaceEvenly => Some(taffy::AlignContent::SpaceEvenly),
+            com::AlignType::SpaceAround => Some(taffy::AlignContent::SpaceAround),
+        }
+    }
+
+    #[inline(always)]
+    fn align_items(&self) -> Option<taffy::AlignItems> {
+        match self.AlignItems {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignItems::Start),
+            com::AlignType::End => Some(taffy::AlignItems::End),
+            com::AlignType::FlexStart => Some(taffy::AlignItems::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignItems::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignItems::Center),
+            com::AlignType::Baseline => Some(taffy::AlignItems::Baseline),
+            com::AlignType::Stretch => Some(taffy::AlignItems::Stretch),
+            com::AlignType::SpaceBetween => None,
+            com::AlignType::SpaceEvenly => None,
+            com::AlignType::SpaceAround => None,
+        }
+    }
+
+    #[inline(always)]
+    fn justify_content(&self) -> Option<taffy::JustifyContent> {
+        match self.JustifyContent {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::JustifyContent::Start),
+            com::AlignType::End => Some(taffy::JustifyContent::End),
+            com::AlignType::FlexStart => Some(taffy::JustifyContent::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::JustifyContent::FlexEnd),
+            com::AlignType::Center => Some(taffy::JustifyContent::Center),
+            com::AlignType::Baseline => None,
+            com::AlignType::Stretch => Some(taffy::JustifyContent::Stretch),
+            com::AlignType::SpaceBetween => Some(taffy::JustifyContent::SpaceBetween),
+            com::AlignType::SpaceEvenly => Some(taffy::JustifyContent::SpaceEvenly),
+            com::AlignType::SpaceAround => Some(taffy::JustifyContent::SpaceAround),
+        }
+    }
+}
+
+impl FlexboxItemStyle for StyleData {
+    #[inline(always)]
+    fn flex_basis(&self) -> taffy::Dimension {
+        c_dimension!(self => FlexBasis)
+    }
+
+    #[inline(always)]
+    fn flex_grow(&self) -> f32 {
+        self.FlexGrow
+    }
+
+    #[inline(always)]
+    fn flex_shrink(&self) -> f32 {
+        self.FlexShrink
+    }
+
+    #[inline(always)]
+    fn align_self(&self) -> Option<taffy::AlignSelf> {
+        match self.AlignSelf {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignSelf::Start),
+            com::AlignType::End => Some(taffy::AlignSelf::End),
+            com::AlignType::FlexStart => Some(taffy::AlignSelf::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignSelf::Center),
+            com::AlignType::Baseline => Some(taffy::AlignSelf::Baseline),
+            com::AlignType::Stretch => Some(taffy::AlignSelf::Stretch),
+            com::AlignType::SpaceBetween => None,
+            com::AlignType::SpaceEvenly => None,
+            com::AlignType::SpaceAround => None,
+        }
+    }
+}
+
+impl GridContainerStyle for StyleData {
+    type Repetition<'a>
+        = &'a com::GridTemplateRepetition
+    where
+        Self: 'a;
+
+    type TemplateTrackList<'a>
+        = TemplateTrackListIter<'a>
+    where
+        Self: 'a;
+
+    type AutoTrackList<'a>
+        = AutoTrackListIter<'a>
+    where
+        Self: 'a;
+
+    type TemplateLineNames<'a>
+        = TemplateLineNamesIter<'a>
+    where
+        Self: 'a;
+
+    type GridTemplateAreas<'a>
+        = GridTemplateAreasIter<'a>
+    where
+        Self: 'a;
+
+    #[inline(always)]
+    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
+        Some(TemplateTrackListIter(&self.Grid.val()?.GridTemplateRows, 0))
+    }
+
+    #[inline(always)]
+    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
+        Some(TemplateTrackListIter(
+            &self.Grid.val()?.GridTemplateColumns,
+            0,
+        ))
+    }
+
+    #[inline(always)]
+    fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
+        if let Some(grid) = self.Grid.val() {
+            AutoTrackListIter(&grid.GridAutoRows, 0)
+        } else {
+            AutoTrackListIter::empty()
+        }
+    }
+
+    #[inline(always)]
+    fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
+        if let Some(grid) = self.Grid.val() {
+            AutoTrackListIter(&grid.GridAutoColumns, 0)
+        } else {
+            AutoTrackListIter::empty()
+        }
+    }
+
+    #[inline(always)]
+    fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
+        Some(GridTemplateAreasIter(
+            &self.Grid.val()?.GridTemplateAreas,
+            0,
+        ))
+    }
+
+    #[inline(always)]
+    fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>> {
+        Some(TemplateLineNamesIter(
+            &self.Grid.val()?.GridTemplateColumnNames,
+            0,
+        ))
+    }
+
+    #[inline(always)]
+    fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>> {
+        Some(TemplateLineNamesIter(
+            &self.Grid.val()?.GridTemplateRowNames,
+            0,
+        ))
+    }
+
+    #[inline(always)]
+    fn grid_auto_flow(&self) -> taffy::GridAutoFlow {
+        match self.GridAutoFlow {
+            com::GridAutoFlow::Row => taffy::GridAutoFlow::Row,
+            com::GridAutoFlow::Column => taffy::GridAutoFlow::Column,
+            com::GridAutoFlow::RowDense => taffy::GridAutoFlow::RowDense,
+            com::GridAutoFlow::ColumnDense => taffy::GridAutoFlow::ColumnDense,
+        }
+    }
+
+    #[inline(always)]
+    fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
+        taffy::Size {
+            width: c_length_percentage!(self => GapX),
+            height: c_length_percentage!(self => GapY),
+        }
+    }
+
+    #[inline(always)]
+    fn align_content(&self) -> Option<taffy::AlignContent> {
+        match self.AlignContent {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignContent::Start),
+            com::AlignType::End => Some(taffy::AlignContent::End),
+            com::AlignType::FlexStart => Some(taffy::AlignContent::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignContent::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignContent::Center),
+            com::AlignType::Baseline => None,
+            com::AlignType::Stretch => Some(taffy::AlignContent::Stretch),
+            com::AlignType::SpaceBetween => Some(taffy::AlignContent::SpaceBetween),
+            com::AlignType::SpaceEvenly => Some(taffy::AlignContent::SpaceEvenly),
+            com::AlignType::SpaceAround => Some(taffy::AlignContent::SpaceAround),
+        }
+    }
+
+    #[inline(always)]
+    fn justify_content(&self) -> Option<taffy::JustifyContent> {
+        match self.JustifyContent {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::JustifyContent::Start),
+            com::AlignType::End => Some(taffy::JustifyContent::End),
+            com::AlignType::FlexStart => Some(taffy::JustifyContent::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::JustifyContent::FlexEnd),
+            com::AlignType::Center => Some(taffy::JustifyContent::Center),
+            com::AlignType::Baseline => None,
+            com::AlignType::Stretch => Some(taffy::JustifyContent::Stretch),
+            com::AlignType::SpaceBetween => Some(taffy::JustifyContent::SpaceBetween),
+            com::AlignType::SpaceEvenly => Some(taffy::JustifyContent::SpaceEvenly),
+            com::AlignType::SpaceAround => Some(taffy::JustifyContent::SpaceAround),
+        }
+    }
+
+    #[inline(always)]
+    fn align_items(&self) -> Option<taffy::AlignItems> {
+        match self.AlignItems {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignItems::Start),
+            com::AlignType::End => Some(taffy::AlignItems::End),
+            com::AlignType::FlexStart => Some(taffy::AlignItems::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignItems::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignItems::Center),
+            com::AlignType::Baseline => Some(taffy::AlignItems::Baseline),
+            com::AlignType::Stretch => Some(taffy::AlignItems::Stretch),
+            com::AlignType::SpaceBetween => None,
+            com::AlignType::SpaceEvenly => None,
+            com::AlignType::SpaceAround => None,
+        }
+    }
+
+    #[inline(always)]
+    fn justify_items(&self) -> Option<taffy::AlignItems> {
+        match self.JustifyItems {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignItems::Start),
+            com::AlignType::End => Some(taffy::AlignItems::End),
+            com::AlignType::FlexStart => Some(taffy::AlignItems::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignItems::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignItems::Center),
+            com::AlignType::Baseline => Some(taffy::AlignItems::Baseline),
+            com::AlignType::Stretch => Some(taffy::AlignItems::Stretch),
+            com::AlignType::SpaceBetween => None,
+            com::AlignType::SpaceEvenly => None,
+            com::AlignType::SpaceAround => None,
+        }
+    }
+}
+
+impl GridItemStyle for StyleData {
+    #[inline(always)]
+    fn grid_row(&self) -> taffy::Line<taffy::GridPlacement<Self::CustomIdent>> {
+        taffy::Line {
+            start: self.GridRowStart.to_taffy(),
+            end: self.GridRowEnd.to_taffy(),
+        }
+    }
+
+    #[inline(always)]
+    fn grid_column(&self) -> taffy::Line<taffy::GridPlacement<Self::CustomIdent>> {
+        taffy::Line {
+            start: self.GridColumnStart.to_taffy(),
+            end: self.GridColumnEnd.to_taffy(),
+        }
+    }
+
+    #[inline(always)]
+    fn align_self(&self) -> Option<taffy::AlignSelf> {
+        match self.AlignSelf {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignSelf::Start),
+            com::AlignType::End => Some(taffy::AlignSelf::End),
+            com::AlignType::FlexStart => Some(taffy::AlignSelf::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignSelf::Center),
+            com::AlignType::Baseline => Some(taffy::AlignSelf::Baseline),
+            com::AlignType::Stretch => Some(taffy::AlignSelf::Stretch),
+            com::AlignType::SpaceBetween => None,
+            com::AlignType::SpaceEvenly => None,
+            com::AlignType::SpaceAround => None,
+        }
+    }
+
+    #[inline(always)]
+    fn justify_self(&self) -> Option<taffy::AlignSelf> {
+        match self.JustifySelf {
+            com::AlignType::None => None,
+            com::AlignType::Start => Some(taffy::AlignSelf::Start),
+            com::AlignType::End => Some(taffy::AlignSelf::End),
+            com::AlignType::FlexStart => Some(taffy::AlignSelf::FlexStart),
+            com::AlignType::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
+            com::AlignType::Center => Some(taffy::AlignSelf::Center),
+            com::AlignType::Baseline => Some(taffy::AlignSelf::Baseline),
+            com::AlignType::Stretch => Some(taffy::AlignSelf::Stretch),
+            com::AlignType::SpaceBetween => None,
+            com::AlignType::SpaceEvenly => None,
+            com::AlignType::SpaceAround => None,
         }
     }
 }

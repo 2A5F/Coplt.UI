@@ -1,6 +1,7 @@
 using Coplt.Com;
 using Coplt.Dropping;
 using Coplt.UI.Collections;
+using Coplt.UI.Core.Geometry;
 using Coplt.UI.Native;
 using Coplt.UI.Styles;
 using Coplt.UI.Texts;
@@ -35,6 +36,9 @@ public unsafe partial struct TextParagraphData
     [Drop]
     public NativeList<GlyphData> m_glyph_datas;
 
+    [Drop]
+    public NativeList<AABB2DF> m_bounding_boxes;
+
     public bool IsTextDirty(Document doc) => TextDirtyFrame == 0 || TextDirtyFrame == doc.CurrentFrame;
     public bool IsTextStyleDirty(Document doc) => TextStyleDirtyFrame == 0 || TextStyleDirtyFrame == doc.CurrentFrame;
     public void MarkTextDirty(Document doc) => TextDirtyFrame = doc.CurrentFrame;
@@ -48,6 +52,8 @@ public unsafe partial struct TextParagraphData
         m_text = NString.Create(text);
         MarkTextDirty(doc);
     }
+
+    public ReadOnlySpan<AABB2DF> BoundingBoxes => m_bounding_boxes.AsSpan;
 }
 
 public record struct TextData_ScriptRange
@@ -148,10 +154,6 @@ public record struct TextData_RunRange
     public float Leading;
 
     public float FontLineHeight => Ascent + -Descent + Leading;
-    
-    internal LayoutResult FinalLayout;
-    internal LayoutResult UnRoundedLayout;
-    internal LayoutCache LayoutCache;
 }
 
 public record struct GlyphData

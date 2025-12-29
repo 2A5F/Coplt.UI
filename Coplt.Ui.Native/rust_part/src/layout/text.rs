@@ -1,3 +1,4 @@
+use core::f32;
 use std::{collections::HashMap, ops::Range, str::FromStr, u64};
 
 use crate::{
@@ -31,7 +32,11 @@ macro_rules! tag {
 }
 
 use font_face_ops::*;
-use taffy::{CoreStyle, MaybeMath, MaybeResolve, Rect, ResolveOrZero, Size, SizingMode};
+use taffy::{
+    CoreStyle, LengthPercentageAuto, MaybeMath, MaybeResolve, Point, Rect, ResolveOrZero, Size,
+    SizingMode,
+    prelude::{TaffyMaxContent, TaffyZero},
+};
 #[cfg(target_os = "windows")]
 mod font_face_ops {
     use super::*;
@@ -54,7 +59,7 @@ mod font_face_ops {
 }
 
 struct RootConstants {
-    dir: WritingDirection,
+    dir: taffy::FlexDirection,
     min_size: Size<Option<f32>>,
     max_size: Size<Option<f32>>,
     margin: Rect<f32>,
@@ -74,7 +79,12 @@ fn compute_constants(
     let style = doc.style_data(id);
     let childs = doc.childs(id);
 
-    let dir = style.WritingDirection;
+    let dir = match (style.WritingDirection, style.TextDirection) {
+        (WritingDirection::Horizontal, TextDirection::Forward) => taffy::FlexDirection::Row,
+        (WritingDirection::Horizontal, TextDirection::Reverse) => taffy::FlexDirection::RowReverse,
+        (WritingDirection::Vertical, TextDirection::Forward) => taffy::FlexDirection::Column,
+        (WritingDirection::Vertical, TextDirection::Reverse) => taffy::FlexDirection::ColumnReverse,
+    };
     let parent_size = inputs.parent_size;
 
     let style = ViewStyleHandle(&doc, id);
@@ -153,24 +163,45 @@ impl Layout {
 
             let mut constants = compute_constants(doc, id, inputs);
 
-            // todo
+            if inputs.known_dimensions.width.is_none() || inputs.known_dimensions.height.is_none() {
+                let _ = compute_inner_size(self, doc, id, &constants, inputs);
+            };
 
-            for child in childs.iter() {
-                match child.typ() {
-                    NodeType::Null | NodeType::TextSpan => continue,
-                    NodeType::View => {
-                        // todo inline block
-                    }
-                    NodeType::TextParagraph => {
-                        let _r = self.compute_text_paragraph_layout(doc, *child, inputs, style);
-                        // todo
+            return taffy::LayoutOutput::HIDDEN;
+
+            fn compute_inner_size(
+                layout: &mut Layout,
+                doc: &mut super::SubDocInner,
+                id: NodeId,
+                constants: &RootConstants,
+                inputs: taffy::LayoutInput,
+            ) -> taffy::LayoutOutput {
+                let style = doc.style_data(id);
+                let childs = doc.childs(id);
+
+                for child in childs.iter() {
+                    match child.typ() {
+                        NodeType::Null | NodeType::TextSpan => continue,
+                        NodeType::View => {
+                            // todo inline block
+                        }
+                        NodeType::TextParagraph => {
+                            let _r = layout.compute_text_paragraph_layout(
+                                doc,
+                                *child,
+                                style,
+                                constants.dir,
+                                inputs.parent_size,
+                                f32::INFINITY,
+                                0.0,
+                            );
+                            // todo
+                        }
                     }
                 }
+
+                taffy::LayoutOutput::HIDDEN
             }
-
-            // todo
-
-            taffy::LayoutOutput::HIDDEN
         })
     }
 
@@ -178,21 +209,98 @@ impl Layout {
         &mut self,
         doc: &mut super::SubDocInner,
         id: NodeId,
-        inputs: taffy::LayoutInput,
         root_style: &StyleData,
+        dir: taffy::FlexDirection,
+        parent_size: Size<Option<f32>>,
+        available_space: f32,
+        start_offset: f32,
     ) -> taffy::LayoutOutput {
-        taffy::compute_cached_layout(doc, id.into(), inputs, |doc, _, inputs| {
+        if available_space.is_infinite() {
+            return calce_single_line(self, doc, id, root_style, parent_size, dir);
+        }
+
+        // todo break lines
+        return calce_single_line(self, doc, id, root_style, parent_size, dir);
+
+        fn calce_single_line(
+            layout: &mut Layout,
+            doc: &mut super::SubDocInner,
+            id: NodeId,
+            root_style: &StyleData,
+            parent_size: Size<Option<f32>>,
+            dir: taffy::FlexDirection,
+        ) -> taffy::LayoutOutput {
             let common = doc.common_data(id);
             let childs = doc.childs(id);
             let paragraph = doc.text_paragraph_data(id);
             let style = doc.text_style_data(id);
 
-            let runs = paragraph.run_ranges();
+            let runs = &**paragraph.run_ranges();
 
-            // todo
+            let mut size = Size::zero();
+            let mut sum_main_size = 0.0;
+            let mut max_cross_size = 0.0;
+            let mut max_base_line = 0.0;
+            for (i, run) in runs.iter().enumerate() {
+                let style_range = run.get_style_range(paragraph);
+                let run_style = style_range.style(doc).map(|a| &*a).unwrap_or(&*style);
 
-            taffy::LayoutOutput::HIDDEN
-        })
+                let margin = run_style.margin().resolve_or_zero(parent_size, |_, _| 0.0);
+                let padding = run_style.padding().resolve_or_zero(parent_size, |_, _| 0.0);
+
+                let is_style_start_run = style_range.Start == run.Start;
+                let is_style_end_run = style_range.End == run.End;
+
+                let mp_main_start = if is_style_start_run {
+                    margin.main_start(dir) + padding.main_start(dir)
+                } else {
+                    0.0
+                };
+                let mp_main_end = if is_style_end_run {
+                    margin.main_end(dir) + padding.main_end(dir)
+                } else {
+                    0.0
+                };
+                let mp_cross_start = margin.cross_start(dir) + padding.cross_start(dir);
+                let mp_cross_end = margin.cross_end(dir) + padding.cross_end(dir);
+
+                sum_main_size += mp_main_start;
+
+                let font_size = run_style
+                    .FontSize()
+                    .or(style.FontSize())
+                    .unwrap_or(root_style.FontSize);
+                let line_height = run_style
+                    .LineHeight()
+                    .or(style.LineHeight())
+                    .unwrap_or(root_style.LineHeight())
+                    .resolve_to_option(font_size, |_, _| 0.0)
+                    .unwrap_or_else(|| run.Ascent + run.Descent + run.Leading);
+                let line_height = mp_cross_start + line_height + mp_cross_end;
+
+                max_cross_size = f32::max(max_cross_size, line_height);
+                max_base_line = f32::max(max_base_line, run.Ascent);
+
+                let glyph_datas = run.get_glyph_datas(paragraph);
+                for glyph_data in glyph_datas.iter() {
+                    sum_main_size += glyph_data.Advance + glyph_data.Offset;
+                }
+
+                sum_main_size += mp_main_end;
+            }
+
+            size.set_main(dir, sum_main_size);
+            size.set_cross(dir, max_cross_size);
+
+            let mut base_line = Point::NONE;
+            if dir.is_row() {
+                base_line.x = Some(max_base_line);
+            } else {
+                base_line.y = Some(max_base_line);
+            }
+
+            taffy::LayoutOutput::from_sizes_and_baselines(size, size, base_line)
+        }
     }
 }
 
@@ -203,11 +311,7 @@ impl Layout {
 
         for child in childs.iter() {
             match child.typ() {
-                NodeType::Null | NodeType::TextSpan => continue,
-                NodeType::View => {
-                    // inline block not need
-                    continue;
-                }
+                NodeType::Null | NodeType::TextSpan | NodeType::View => continue,
                 NodeType::TextParagraph => {
                     let id = *child;
                     let paragraph = doc.text_paragraph_data(id);
@@ -361,7 +465,7 @@ impl Layout {
             let mut bidi = UBiDi::new();
             bidi.set_para(
                 text,
-                match style.TextDirection().unwrap_or(root_style.TextDirection) {
+                match root_style.TextDirection {
                     TextDirection::Forward => UBiDiLevel::LeftToRight,
                     TextDirection::Reverse => UBiDiLevel::RightToLeft,
                 },
@@ -532,10 +636,8 @@ impl Layout {
 
             let default_locale = doc.root_data().DefaultLocale.or(doc.ctx().default_locale);
 
-            let text_direction = style.TextDirection().unwrap_or(root_style.TextDirection);
-            let writing_direction = style
-                .WritingDirection()
-                .unwrap_or(root_style.WritingDirection);
+            let text_direction = root_style.TextDirection;
+            let writing_direction = root_style.WritingDirection;
 
             let axis_y = match writing_direction {
                 WritingDirection::Horizontal => false,
@@ -652,7 +754,7 @@ impl Layout {
                 let glyph_type_cache = &mut glyph_type_caches[run_range.FontRange as usize];
                 let (_, font, _, font_size, _, metrics) = &font_metas[run_range.FontRange as usize];
                 run_range.Ascent = metrics.ascent;
-                run_range.Descent = metrics.descent;
+                run_range.Descent = -metrics.descent;
                 run_range.Leading = metrics.leading;
 
                 let color_glyphs = font.color_glyphs();
@@ -870,6 +972,7 @@ struct SameStyleData {
     pub font_italic: bool,
     pub font_oblique: f32,
     pub text_orientation: TextOrientation,
+    pub line_height: LengthPercentageAuto,
 }
 
 impl SameStyleData {
@@ -882,6 +985,7 @@ impl SameStyleData {
             font_italic: style.FontItalic,
             font_oblique: style.FontOblique,
             text_orientation: style.TextOrientation,
+            line_height: style.LineHeight(),
         }
     }
 
@@ -894,6 +998,7 @@ impl SameStyleData {
             font_italic: style.FontItalic().unwrap_or(fallback.font_italic),
             font_oblique: style.FontOblique().unwrap_or(fallback.font_oblique),
             text_orientation: style.TextOrientation().unwrap_or(fallback.text_orientation),
+            line_height: style.LineHeight().unwrap_or(fallback.line_height),
         }
     }
 }

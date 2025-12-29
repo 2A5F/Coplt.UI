@@ -79,7 +79,7 @@ public sealed partial class Document
         {
             Attach<ManagedData>(ArcheTarget.All);
             Attach<CommonData>(ArcheTarget.All, storage: StorageType.Pinned);
-            Attach<LayoutData>(ArcheTarget.View | ArcheTarget.TextParagraph, storage: StorageType.Pinned);
+            Attach<LayoutData>(ArcheTarget.View, storage: StorageType.Pinned);
             Attach<ChildsData>(ArcheTarget.View | ArcheTarget.TextParagraph, storage: StorageType.Pinned);
             Attach<StyleData>(ArcheTarget.View, storage: StorageType.Pinned);
             Attach<TextStyleData>(ArcheTarget.TextParagraph | ArcheTarget.TextSpan, storage: StorageType.Pinned);
@@ -606,7 +606,7 @@ public sealed partial class Document
         while (true)
         {
             ref var data = ref UnsafeAt<CommonData>(node);
-            if (node.Type is NodeType.View or NodeType.TextParagraph)
+            if (node.Type is NodeType.View)
             {
                 ref var layout = ref UnsafeAt<LayoutData>(node);
                 if (layout.IsLayoutDirty(this)) return;
