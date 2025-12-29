@@ -66,6 +66,7 @@ struct RootConstants {
     border: Rect<f32>,
     node_outer_size: Size<Option<f32>>,
     node_inner_size: Size<Option<f32>>,
+    padding_border_sum: Size<f32>,
     container_size: Size<f32>,
 }
 
@@ -73,7 +74,7 @@ struct RootConstants {
 fn compute_constants(
     doc: &mut super::SubDocInner,
     id: NodeId,
-    inputs: taffy::LayoutInput,
+    inputs: &mut taffy::LayoutInput,
 ) -> RootConstants {
     let common = doc.common_data(id);
     let style = doc.style_data(id);
@@ -87,8 +88,6 @@ fn compute_constants(
     };
     let parent_size = inputs.parent_size;
 
-    let style = ViewStyleHandle(&doc, id);
-    inputs.known_dimensions;
     let aspect_ratio = style.aspect_ratio();
     let margin = style
         .margin()
@@ -106,34 +105,46 @@ fn compute_constants(
         taffy::Size::ZERO
     };
 
-    let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
-        taffy::Overflow::Scroll => style.scrollbar_width(),
-        _ => 0.0,
+    let min_size = style
+        .min_size()
+        .maybe_resolve(parent_size, |_, _| 0.0)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+
+    let max_size = style
+        .max_size()
+        .maybe_resolve(parent_size, |_, _| 0.0)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+
+    let clamped_style_size = style
+        .size()
+        .maybe_resolve(parent_size, |_, _| 0.0)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment)
+        .maybe_clamp(min_size, max_size);
+
+    let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
+        (Some(min), Some(max)) if max <= min => Some(min),
+        _ => None,
     });
 
-    let mut content_box_inset = padding + border;
-    content_box_inset.right += scrollbar_gutter.x;
-    content_box_inset.bottom += scrollbar_gutter.y;
+    inputs.known_dimensions = inputs.known_dimensions.or(min_max_definite_size
+        .or(clamped_style_size)
+        .maybe_max(padding_border_sum));
 
     let node_outer_size = inputs.known_dimensions;
-    let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
+    let node_inner_size = node_outer_size.maybe_sub(padding_border_sum);
 
     RootConstants {
         dir,
-        min_size: style
-            .min_size()
-            .maybe_resolve(parent_size, |_, _| 0.0)
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
-        max_size: style
-            .max_size()
-            .maybe_resolve(parent_size, |_, _| 0.0)
-            .maybe_apply_aspect_ratio(aspect_ratio)
-            .maybe_add(box_sizing_adjustment),
+        min_size,
+        max_size,
         margin,
         border,
         node_outer_size,
         node_inner_size,
+        padding_border_sum,
         container_size: Default::default(),
     }
 }
@@ -147,7 +158,7 @@ impl Layout {
     ) -> taffy::LayoutOutput {
         debug_assert!(matches!(id.typ(), NodeType::View));
 
-        taffy::compute_cached_layout(doc, id.into(), inputs, |doc, _, inputs| {
+        taffy::compute_cached_layout(doc, id.into(), inputs, |doc, _, mut inputs| {
             if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
                 return self.compute_hidden_layout(doc, id);
             }
@@ -156,16 +167,25 @@ impl Layout {
             let style = doc.style_data(id);
             let childs = doc.childs(id);
 
+            let mut constants = compute_constants(doc, id, &mut inputs);
+            // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
+            // is ComputeSize (and thus the container's size is all that we're interested in)
+            if inputs.run_mode == taffy::RunMode::ComputeSize {
+                if let Size {
+                    width: Some(width),
+                    height: Some(height),
+                } = inputs.known_dimensions
+                {
+                    return taffy::LayoutOutput::from_outer_size(Size { width, height });
+                }
+            }
+
             if layout.is_layout_dirty(doc) {
                 self.check_text_dirty(doc, id);
                 layout.LayoutDirtyFrame = u64::MAX;
             }
 
-            let mut constants = compute_constants(doc, id, inputs);
-
-            if inputs.known_dimensions.width.is_none() || inputs.known_dimensions.height.is_none() {
-                let _ = compute_inner_size(self, doc, id, &constants, inputs);
-            };
+            let _inner_size = compute_inner_size(self, doc, id, &constants, inputs);
 
             return taffy::LayoutOutput::HIDDEN;
 
@@ -174,10 +194,44 @@ impl Layout {
                 doc: &mut super::SubDocInner,
                 id: NodeId,
                 constants: &RootConstants,
-                inputs: taffy::LayoutInput,
+                root_inputs: taffy::LayoutInput,
             ) -> taffy::LayoutOutput {
                 let style = doc.style_data(id);
                 let childs = doc.childs(id);
+
+                let mut available_space = match (
+                    constants.node_inner_size.main(constants.dir),
+                    root_inputs.available_space.main(constants.dir),
+                ) {
+                    (Some(v), _) => v,
+                    (None, taffy::AvailableSpace::Definite(v)) => {
+                        f32::max(0.0, v - constants.padding_border_sum.main(constants.dir))
+                    }
+                    (None, taffy::AvailableSpace::MinContent) => f32::max(
+                        0.0,
+                        // max_size is correct, this may seem strange, but it's available space
+                        constants
+                            .max_size
+                            .main(constants.dir)
+                            .map(|a| a - constants.padding_border_sum.main(constants.dir))
+                            .unwrap_or_default(),
+                    ),
+                    (None, taffy::AvailableSpace::MaxContent) => f32::min(
+                        f32::INFINITY,
+                        constants
+                            .max_size
+                            .main(constants.dir)
+                            .map(|a| {
+                                f32::max(0.0, a - constants.padding_border_sum.main(constants.dir))
+                            })
+                            .unwrap_or(f32::INFINITY),
+                    ),
+                };
+
+                if available_space.is_nan() {
+                    available_space = 0.0;
+                }
+                let mut cur_offset = 0.0;
 
                 for child in childs.iter() {
                     match child.typ() {
@@ -191,9 +245,9 @@ impl Layout {
                                 *child,
                                 style,
                                 constants.dir,
-                                inputs.parent_size,
-                                f32::INFINITY,
-                                0.0,
+                                root_inputs.known_dimensions,
+                                available_space,
+                                &mut cur_offset,
                             );
                             // todo
                         }
@@ -213,7 +267,7 @@ impl Layout {
         dir: taffy::FlexDirection,
         parent_size: Size<Option<f32>>,
         available_space: f32,
-        start_offset: f32,
+        cur_offset: &mut f32,
     ) -> taffy::LayoutOutput {
         if available_space.is_infinite() {
             return calce_single_line(self, doc, id, root_style, parent_size, dir);
