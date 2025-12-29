@@ -1558,6 +1558,9 @@ pub struct TextData_RunRange {
     pub Ascent: f32,
     pub Descent: f32,
     pub Leading: f32,
+    pub FinalLayout: LayoutResult,
+    pub UnRoundedLayout: LayoutResult,
+    pub LayoutCache: LayoutCache,
 }
 
 #[repr(C)]

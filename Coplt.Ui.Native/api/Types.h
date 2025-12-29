@@ -1430,6 +1430,9 @@ namespace Coplt {
         ::Coplt::f32 Ascent;
         ::Coplt::f32 Descent;
         ::Coplt::f32 Leading;
+        ::Coplt::LayoutResult FinalLayout;
+        ::Coplt::LayoutResult UnRoundedLayout;
+        ::Coplt::LayoutCache LayoutCache;
     };
 
     struct TextData_SameStyleRange

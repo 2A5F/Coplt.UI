@@ -510,11 +510,7 @@ impl Layout {
                     BidiRange: bidi,
                     StyleRange: style,
                     FontRange: font,
-                    GlyphStart: 0,
-                    GlyphEnd: 0,
-                    Ascent: 0.0,
-                    Descent: 0.0,
-                    Leading: 0.0,
+                    ..Default::default()
                 });
             }
         }

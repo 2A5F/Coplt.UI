@@ -148,6 +148,10 @@ public record struct TextData_RunRange
     public float Leading;
 
     public float FontLineHeight => Ascent + -Descent + Leading;
+    
+    internal LayoutResult FinalLayout;
+    internal LayoutResult UnRoundedLayout;
+    internal LayoutCache LayoutCache;
 }
 
 public record struct GlyphData

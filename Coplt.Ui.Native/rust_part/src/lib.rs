@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
+use std::ffi::c_char;
 use std::fmt::Debug;
 use std::panic::UnwindSafe;
-use std::ffi::c_char;
 
 mod coplt_alloc {
     use core::alloc::GlobalAlloc;
@@ -179,7 +179,14 @@ mod com_impl {
     use crate::{
         col::{NArc, NBitSet, NList},
         com::{
-            ChildsData, CommonData, CursorType, FontWeight, FontWidth, GlyphData, IFontFallback, LayoutData, LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents, TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange, TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode, TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection
+            AvailableSpaceType, ChildsData, CommonData, CursorType, FontWeight, FontWidth,
+            GlyphData, IFontFallback, LayoutCache, LayoutCacheEntryLayoutOutput,
+            LayoutCacheEntrySize, LayoutCacheFlags, LayoutCollapsibleMarginSet, LayoutData,
+            LayoutResult, LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents,
+            TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange,
+            TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection,
+            TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode,
+            TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
@@ -303,6 +310,133 @@ mod com_impl {
     impl LayoutData {
         pub fn is_layout_dirty(&self, doc: &layout::SubDocInner) -> bool {
             self.LayoutDirtyFrame == doc.current_frame()
+        }
+    }
+
+    impl Default for LayoutResult {
+        fn default() -> Self {
+            Self {
+                Order: 0,
+                LocationX: 0.0,
+                LocationY: 0.0,
+                Width: 0.0,
+                Height: 0.0,
+                ContentWidth: 0.0,
+                ContentHeight: 0.0,
+                ScrollXSize: 0.0,
+                ScrollYSize: 0.0,
+                BorderTopSize: 0.0,
+                BorderRightSize: 0.0,
+                BorderBottomSize: 0.0,
+                BorderLeftSize: 0.0,
+                PaddingTopSize: 0.0,
+                PaddingRightSize: 0.0,
+                PaddingBottomSize: 0.0,
+                PaddingLeftSize: 0.0,
+                MarginTopSize: 0.0,
+                MarginRightSize: 0.0,
+                MarginBottomSize: 0.0,
+                MarginLeftSize: 0.0,
+            }
+        }
+    }
+
+    impl Default for LayoutCache {
+        fn default() -> Self {
+            Self {
+                FinalLayoutEntry: Default::default(),
+                MeasureEntries0: Default::default(),
+                MeasureEntries1: Default::default(),
+                MeasureEntries2: Default::default(),
+                MeasureEntries3: Default::default(),
+                MeasureEntries4: Default::default(),
+                MeasureEntries5: Default::default(),
+                MeasureEntries6: Default::default(),
+                MeasureEntries7: Default::default(),
+                MeasureEntries8: Default::default(),
+                Flags: LayoutCacheFlags::empty(),
+            }
+        }
+    }
+
+    impl Default for LayoutCacheEntryLayoutOutput {
+        fn default() -> Self {
+            Self {
+                KnownDimensionsWidthValue: Default::default(),
+                KnownDimensionsHeightValue: Default::default(),
+                AvailableSpaceWidthValue: Default::default(),
+                AvailableSpaceHeightValue: Default::default(),
+                HasKnownDimensionsWidth: Default::default(),
+                HasKnownDimensionsHeight: Default::default(),
+                AvailableSpaceWidth: AvailableSpaceType::Definite,
+                AvailableSpaceHeight: AvailableSpaceType::Definite,
+                Content: Default::default(),
+            }
+        }
+    }
+
+    impl Default for LayoutCacheEntrySize {
+        fn default() -> Self {
+            Self {
+                KnownDimensionsWidthValue: Default::default(),
+                KnownDimensionsHeightValue: Default::default(),
+                AvailableSpaceWidthValue: Default::default(),
+                AvailableSpaceHeightValue: Default::default(),
+                HasKnownDimensionsWidth: Default::default(),
+                HasKnownDimensionsHeight: Default::default(),
+                AvailableSpaceWidth: AvailableSpaceType::Definite,
+                AvailableSpaceHeight: AvailableSpaceType::Definite,
+                ContentWidth: Default::default(),
+                ContentHeight: Default::default(),
+            }
+        }
+    }
+
+    impl Default for com::LayoutOutput {
+        fn default() -> Self {
+            Self {
+                Width: Default::default(),
+                Height: Default::default(),
+                ContentWidth: Default::default(),
+                ContentHeight: Default::default(),
+                FirstBaselinesX: Default::default(),
+                FirstBaselinesY: Default::default(),
+                TopMargin: Default::default(),
+                BottomMargin: Default::default(),
+                HasFirstBaselinesX: Default::default(),
+                HasFirstBaselinesY: Default::default(),
+                MarginsCanCollapseThrough: Default::default(),
+            }
+        }
+    }
+
+    impl Default for LayoutCollapsibleMarginSet {
+        fn default() -> Self {
+            Self {
+                Positive: Default::default(),
+                Negative: Default::default(),
+            }
+        }
+    }
+
+    impl Default for TextData_RunRange {
+        fn default() -> Self {
+            Self {
+                Start: Default::default(),
+                End: Default::default(),
+                ScriptRange: Default::default(),
+                BidiRange: Default::default(),
+                StyleRange: Default::default(),
+                FontRange: Default::default(),
+                GlyphStart: Default::default(),
+                GlyphEnd: Default::default(),
+                Ascent: Default::default(),
+                Descent: Default::default(),
+                Leading: Default::default(),
+                FinalLayout: Default::default(),
+                UnRoundedLayout: Default::default(),
+                LayoutCache: Default::default(),
+            }
         }
     }
 
