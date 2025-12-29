@@ -64,14 +64,17 @@ impl Layout {
         doc: &mut super::SubDocInner,
         id: NodeId,
     ) -> taffy::LayoutOutput {
-        let data = &mut *doc.common_data(id);
-        super::cache_clear(&mut data.LayoutCache);
-        super::set_layout(&mut data.UnRoundedLayout, &taffy::Layout::with_order(0));
+        if let NodeType::View | NodeType::TextParagraph = id.typ() {
+            let data = &mut *doc.layout_data(id);
+            super::cache_clear(&mut data.LayoutCache);
+            super::set_layout(&mut data.UnRoundedLayout, &taffy::Layout::with_order(0));
 
-        let childs = doc.childs(id);
-
-        for child in childs.iter() {
-            self.compute_hidden_layout(doc, *child);
+            if let NodeType::View = id.typ() {
+                let childs = doc.childs(id);
+                for child in childs.iter() {
+                    self.compute_hidden_layout(doc, *child);
+                }
+            }
         }
 
         taffy::LayoutOutput::HIDDEN

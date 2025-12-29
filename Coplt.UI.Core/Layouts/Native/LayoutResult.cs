@@ -2,7 +2,7 @@
 
 namespace Coplt.UI.Native;
 
-internal record struct LayoutData
+internal record struct LayoutResult
 {
     public uint Order;
     public float LocationX;

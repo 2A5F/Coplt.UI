@@ -28,17 +28,19 @@ public unsafe struct NLayoutContext
     [ComType<Ptr<NNodeIdCtrl>>]
     public NSplitMapCtrl<uint>.Ctrl* view_ctrl;
     public CommonData* view_common_data;
+    public LayoutData* view_layout_data;
     public ChildsData* view_childs_data;
     public StyleData* view_style_data;
-    
+
     public int* text_paragraph_buckets;
     [ComType<Ptr<NNodeIdCtrl>>]
     public NSplitMapCtrl<uint>.Ctrl* text_paragraph_ctrl;
     public CommonData* text_paragraph_common_data;
+    public LayoutData* text_paragraph_layout_data;
     public ChildsData* text_paragraph_childs_data;
     public TextParagraphData* text_paragraph_data;
     public TextStyleData* text_paragraph_style_data;
-    
+
     public int* text_span_buckets;
     [ComType<Ptr<NNodeIdCtrl>>]
     public NSplitMapCtrl<uint>.Ctrl* text_span_ctrl;

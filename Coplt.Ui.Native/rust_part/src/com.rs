@@ -1221,7 +1221,23 @@ pub struct LayoutCollapsibleMarginSet {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct LayoutData {
+pub struct LayoutOutput {
+    pub Width: f32,
+    pub Height: f32,
+    pub ContentWidth: f32,
+    pub ContentHeight: f32,
+    pub FirstBaselinesX: f32,
+    pub FirstBaselinesY: f32,
+    pub TopMargin: LayoutCollapsibleMarginSet,
+    pub BottomMargin: LayoutCollapsibleMarginSet,
+    pub HasFirstBaselinesX: bool,
+    pub HasFirstBaselinesY: bool,
+    pub MarginsCanCollapseThrough: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LayoutResult {
     pub Order: u32,
     pub LocationX: f32,
     pub LocationY: f32,
@@ -1243,22 +1259,6 @@ pub struct LayoutData {
     pub MarginRightSize: f32,
     pub MarginBottomSize: f32,
     pub MarginLeftSize: f32,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct LayoutOutput {
-    pub Width: f32,
-    pub Height: f32,
-    pub ContentWidth: f32,
-    pub ContentHeight: f32,
-    pub FirstBaselinesX: f32,
-    pub FirstBaselinesY: f32,
-    pub TopMargin: LayoutCollapsibleMarginSet,
-    pub BottomMargin: LayoutCollapsibleMarginSet,
-    pub HasFirstBaselinesX: bool,
-    pub HasFirstBaselinesY: bool,
-    pub MarginsCanCollapseThrough: bool,
 }
 
 #[repr(C)]
@@ -1286,11 +1286,13 @@ pub struct NLayoutContext {
     pub view_buckets: *mut i32,
     pub view_ctrl: *mut NNodeIdCtrl,
     pub view_common_data: *mut CommonData,
+    pub view_layout_data: *mut LayoutData,
     pub view_childs_data: *mut ChildsData,
     pub view_style_data: *mut StyleData,
     pub text_paragraph_buckets: *mut i32,
     pub text_paragraph_ctrl: *mut NNodeIdCtrl,
     pub text_paragraph_common_data: *mut CommonData,
+    pub text_paragraph_layout_data: *mut LayoutData,
     pub text_paragraph_childs_data: *mut ChildsData,
     pub text_paragraph_data: *mut TextParagraphData,
     pub text_paragraph_style_data: *mut TextStyleData,
@@ -1354,10 +1356,6 @@ pub struct ChildsData {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
-    pub LayoutDirtyFrame: u64,
-    pub FinalLayout: LayoutData,
-    pub UnRoundedLayout: LayoutData,
-    pub LayoutCache: LayoutCache,
     pub NodeId: u32,
     pub ParentValue: NodeId,
     pub HasParent: bool,
@@ -1384,6 +1382,15 @@ pub struct GridContainerStyle {
     pub GridTemplateAreas: NativeList<GridTemplateArea>,
     pub GridTemplateColumnNames: NativeList<NativeList<GridName>>,
     pub GridTemplateRowNames: NativeList<NativeList<GridName>>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LayoutData {
+    pub LayoutDirtyFrame: u64,
+    pub FinalLayout: LayoutResult,
+    pub UnRoundedLayout: LayoutResult,
+    pub LayoutCache: LayoutCache,
 }
 
 #[repr(C)]

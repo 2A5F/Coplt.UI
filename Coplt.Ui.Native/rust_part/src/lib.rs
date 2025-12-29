@@ -179,12 +179,7 @@ mod com_impl {
     use crate::{
         col::{NArc, NBitSet, NList},
         com::{
-            ChildsData, CommonData, CursorType, FontWeight, FontWidth, GlyphData, IFontFallback,
-            LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents, TextAlign,
-            TextData_BidiRange, TextData_FontRange, TextData_LocaleRange, TextData_RunRange,
-            TextData_SameStyleRange, TextData_ScriptRange, TextDirection, TextOrientation,
-            TextOverflow, TextParagraphData, TextSpanData, TextSpanNode, TextStyleData,
-            TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
+            ChildsData, CommonData, CursorType, FontWeight, FontWidth, GlyphData, IFontFallback, LayoutData, LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents, TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange, TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode, TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection
         },
         layout::FontRange,
     };
@@ -305,7 +300,7 @@ mod com_impl {
         }
     }
 
-    impl CommonData {
+    impl LayoutData {
         pub fn is_layout_dirty(&self, doc: &layout::SubDocInner) -> bool {
             self.LayoutDirtyFrame == doc.current_frame()
         }

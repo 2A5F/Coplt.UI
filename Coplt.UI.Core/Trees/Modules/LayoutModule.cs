@@ -25,6 +25,7 @@ public sealed unsafe class LayoutModule : Document.IModule
                 view_buckets = document.ViewArche().GetBuckets(),
                 view_ctrl = document.ViewArche().GetCtrls(),
                 view_common_data = document.ViewStorageOf<CommonData>().AsPinned().GetDataPtr(),
+                view_layout_data = document.ViewStorageOf<LayoutData>().AsPinned().GetDataPtr(),
                 view_childs_data = document.ViewStorageOf<ChildsData>().AsPinned().GetDataPtr(),
                 view_style_data = document.ViewStorageOf<StyleData>().AsPinned().GetDataPtr(),
 
@@ -32,6 +33,7 @@ public sealed unsafe class LayoutModule : Document.IModule
                 text_paragraph_buckets = document.TextParagraphArche().GetBuckets(),
                 text_paragraph_ctrl = document.TextParagraphArche().GetCtrls(),
                 text_paragraph_common_data = document.TextParagraphStorageOf<CommonData>().AsPinned().GetDataPtr(),
+                text_paragraph_layout_data = document.TextParagraphStorageOf<LayoutData>().AsPinned().GetDataPtr(),
                 text_paragraph_childs_data = document.TextParagraphStorageOf<ChildsData>().AsPinned().GetDataPtr(),
                 text_paragraph_data = document.TextParagraphStorageOf<TextParagraphData>().AsPinned().GetDataPtr(),
                 text_paragraph_style_data = document.TextParagraphStorageOf<TextStyleData>().AsPinned().GetDataPtr(),

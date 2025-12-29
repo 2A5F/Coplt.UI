@@ -1,8 +1,8 @@
-use std::{collections::HashMap, ops::Range, str::FromStr};
+use std::{collections::HashMap, ops::Range, str::FromStr, u64};
 
 use crate::{
     IsZeroLength,
-    com::*,
+    com::{self, *},
     icu4c::{self, UBiDi, UBiDiDirection, UBiDiLevel},
     layout::{Layout, LayoutInner, ViewStyleHandle},
     utf16::Utf16Indices,
@@ -141,9 +141,15 @@ impl Layout {
             if inputs.run_mode == taffy::RunMode::PerformHiddenLayout {
                 return self.compute_hidden_layout(doc, id);
             }
-            let common = doc.common_data(id);
+
+            let layout = doc.layout_data(id);
             let style = doc.style_data(id);
             let childs = doc.childs(id);
+
+            if layout.is_layout_dirty(doc) {
+                self.check_text_dirty(doc, id);
+                layout.LayoutDirtyFrame = u64::MAX;
+            }
 
             let mut constants = compute_constants(doc, id, inputs);
 
@@ -168,32 +174,6 @@ impl Layout {
         })
     }
 
-    fn check_check_text_dirtys( &mut self,
-        doc: &mut super::SubDocInner,
-        id: NodeId,
-        inputs: taffy::LayoutInput,) {
-
-    }
-
-    fn check_text_dirty(
-        &mut self,
-        doc: &mut super::SubDocInner,
-        id: NodeId,
-        root_style: &StyleData,
-    ) {
-        let paragraph = doc.text_paragraph_data(id);
-        let style = doc.text_style_data(id);
-
-        if paragraph.is_text_dirty(doc) {
-            self.sync_text_info(doc, id, paragraph);
-        }
-        if paragraph.is_text_dirty(doc) || paragraph.is_text_style_dirty(doc) {
-            self.sync_styled_info(doc, id, paragraph, root_style, style);
-        }
-        paragraph.TextDirtyFrame = u64::MAX;
-        paragraph.TextStyleDirtyFrame = u64::MAX;
-    }
-
     fn compute_text_paragraph_layout(
         &mut self,
         doc: &mut super::SubDocInner,
@@ -207,17 +187,43 @@ impl Layout {
             let paragraph = doc.text_paragraph_data(id);
             let style = doc.text_style_data(id);
 
-            if paragraph.is_text_dirty(doc) {
-                self.sync_text_info(doc, id, paragraph);
-            }
-            if paragraph.is_text_dirty(doc) || paragraph.is_text_style_dirty(doc) {
-                self.sync_styled_info(doc, id, paragraph, root_style, style);
-            }
-            paragraph.TextDirtyFrame = u64::MAX;
-            paragraph.TextStyleDirtyFrame = u64::MAX;
+            let runs = paragraph.run_ranges();
+
+            // todo
 
             taffy::LayoutOutput::HIDDEN
         })
+    }
+}
+
+impl Layout {
+    fn check_text_dirty(&mut self, doc: &mut super::SubDocInner, id: NodeId) {
+        let root_style = doc.style_data(id);
+        let childs = doc.childs(id);
+
+        for child in childs.iter() {
+            match child.typ() {
+                NodeType::Null | NodeType::TextSpan => continue,
+                NodeType::View => {
+                    // inline block not need
+                    continue;
+                }
+                NodeType::TextParagraph => {
+                    let id = *child;
+                    let paragraph = doc.text_paragraph_data(id);
+                    let style = doc.text_style_data(id);
+
+                    if paragraph.is_text_dirty(doc) {
+                        self.sync_text_info(doc, id, paragraph);
+                    }
+                    if paragraph.is_text_dirty(doc) || paragraph.is_text_style_dirty(doc) {
+                        self.sync_styled_info(doc, id, paragraph, root_style, style);
+                    }
+                    paragraph.TextDirtyFrame = u64::MAX;
+                    paragraph.TextStyleDirtyFrame = u64::MAX;
+                }
+            }
+        }
     }
 
     fn sync_text_info(

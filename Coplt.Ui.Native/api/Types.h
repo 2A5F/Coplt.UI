@@ -75,9 +75,9 @@ namespace Coplt {
 
     struct LayoutCollapsibleMarginSet;
 
-    struct LayoutData;
-
     struct LayoutOutput;
+
+    struct LayoutResult;
 
     struct NFontInfo;
 
@@ -102,6 +102,8 @@ namespace Coplt {
     struct GlyphData;
 
     struct GridContainerStyle;
+
+    struct LayoutData;
 
     struct RootData;
 
@@ -1015,7 +1017,7 @@ namespace Coplt {
         ::Coplt::LayoutCacheFlags Flags;
     };
 
-    struct LayoutData
+    struct LayoutResult
     {
         ::Coplt::u32 Order;
         ::Coplt::f32 LocationX;
@@ -1190,11 +1192,13 @@ namespace Coplt {
         ::Coplt::i32* view_buckets;
         ::Coplt::NNodeIdCtrl* view_ctrl;
         ::Coplt::CommonData* view_common_data;
+        ::Coplt::LayoutData* view_layout_data;
         ::Coplt::ChildsData* view_childs_data;
         ::Coplt::StyleData* view_style_data;
         ::Coplt::i32* text_paragraph_buckets;
         ::Coplt::NNodeIdCtrl* text_paragraph_ctrl;
         ::Coplt::CommonData* text_paragraph_common_data;
+        ::Coplt::LayoutData* text_paragraph_layout_data;
         ::Coplt::ChildsData* text_paragraph_childs_data;
         ::Coplt::TextParagraphData* text_paragraph_data;
         ::Coplt::TextStyleData* text_paragraph_style_data;
@@ -1233,10 +1237,6 @@ namespace Coplt {
 
     struct CommonData
     {
-        ::Coplt::u64 LayoutDirtyFrame;
-        ::Coplt::LayoutData FinalLayout;
-        ::Coplt::LayoutData UnRoundedLayout;
-        ::Coplt::LayoutCache LayoutCache;
         ::Coplt::u32 NodeId;
         ::Coplt::NodeId ParentValue;
         bool HasParent;
@@ -1261,6 +1261,14 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::GridTemplateArea> GridTemplateAreas;
         ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateColumnNames;
         ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateRowNames;
+    };
+
+    struct LayoutData
+    {
+        ::Coplt::u64 LayoutDirtyFrame;
+        ::Coplt::LayoutResult FinalLayout;
+        ::Coplt::LayoutResult UnRoundedLayout;
+        ::Coplt::LayoutCache LayoutCache;
     };
 
     struct RootData

@@ -20,8 +20,8 @@ use crate::{
     col::{OrderedSet, StrideSlice, map::NativeMap, ordered_set},
     com::{
         self, ChildsData, CommonData, Container, GridName, GridNameType, ILib, LayoutCache,
-        NLayoutContext, NodeId, NodeType, RootData, StyleData, TextParagraphData, TextSpanData,
-        TextSpanNode, TextStyleData,
+        LayoutData, NLayoutContext, NodeId, NodeType, RootData, StyleData, TextParagraphData,
+        TextSpanData, TextSpanNode, TextStyleData,
     },
     utils::*,
 };
@@ -178,6 +178,21 @@ impl SubDocInner {
     }
 
     #[inline(always)]
+    pub fn layout_data(&self, id: NodeId) -> &'static mut LayoutData {
+        match id.typ() {
+            NodeType::Null => panic!("null node"),
+            NodeType::View => unsafe { &mut *self.ctx().view_layout_data.add(id.index() as usize) },
+            NodeType::TextParagraph => unsafe {
+                &mut *self
+                    .ctx()
+                    .text_paragraph_layout_data
+                    .add(id.index() as usize)
+            },
+            NodeType::TextSpan => panic!("text span does not have layout data"),
+        }
+    }
+
+    #[inline(always)]
     pub fn childs_data(&self, id: NodeId) -> &'static mut ChildsData {
         match id.typ() {
             NodeType::Null => panic!("null node"),
@@ -273,7 +288,7 @@ impl<'a> DerefMut for SubDoc<'a> {
 }
 
 #[inline(always)]
-fn get_layout(src: &com::LayoutData) -> taffy::Layout {
+fn get_layout(src: &com::LayoutResult) -> taffy::Layout {
     taffy::Layout {
         order: src.Order,
         location: taffy::Point {
@@ -314,7 +329,7 @@ fn get_layout(src: &com::LayoutData) -> taffy::Layout {
 }
 
 #[inline(always)]
-fn set_layout(dst: &mut com::LayoutData, src: &taffy::Layout) {
+fn set_layout(dst: &mut com::LayoutResult, src: &taffy::Layout) {
     dst.Order = src.order;
     dst.LocationX = src.location.x;
     dst.LocationY = src.location.y;
@@ -402,7 +417,7 @@ impl<'a> LayoutPartialTree for SubDoc<'a> {
     #[inline(always)]
     fn set_unrounded_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
         let id = NodeId::from(node_id);
-        let dst = self.common_data(id);
+        let dst = self.layout_data(id);
         set_layout(&mut dst.UnRoundedLayout, layout);
     }
 
@@ -457,14 +472,14 @@ impl<'a> RoundTree for SubDoc<'a> {
     #[inline(always)]
     fn get_unrounded_layout(&self, node_id: taffy::NodeId) -> taffy::Layout {
         let id = NodeId::from(node_id);
-        let data = self.common_data(id);
+        let data = self.layout_data(id);
         get_layout(&data.UnRoundedLayout)
     }
 
     #[inline(always)]
     fn set_final_layout(&mut self, node_id: taffy::NodeId, layout: &taffy::Layout) {
         let id = NodeId::from(node_id);
-        let data = self.common_data(id);
+        let data = self.layout_data(id);
         set_layout(&mut data.FinalLayout, layout);
     }
 
@@ -521,7 +536,7 @@ impl CacheTree for SubDocInner {
         run_mode: taffy::RunMode,
     ) -> Option<taffy::LayoutOutput> {
         let id = NodeId::from(node_id);
-        let data = &self.common_data(id).LayoutCache;
+        let data = &self.layout_data(id).LayoutCache;
         cache_get(data, known_dimensions, available_space, run_mode)
     }
 
@@ -535,7 +550,7 @@ impl CacheTree for SubDocInner {
         layout_output: taffy::LayoutOutput,
     ) {
         let id = NodeId::from(node_id);
-        let data = &mut self.common_data(id).LayoutCache;
+        let data = &mut self.layout_data(id).LayoutCache;
         cache_store(
             data,
             known_dimensions,
@@ -548,7 +563,7 @@ impl CacheTree for SubDocInner {
     #[inline(always)]
     fn cache_clear(&mut self, node_id: taffy::NodeId) {
         let id = NodeId::from(node_id);
-        let data = &mut self.common_data(id).LayoutCache;
+        let data = &mut self.layout_data(id).LayoutCache;
         cache_clear(data);
     }
 }
