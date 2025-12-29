@@ -1692,7 +1692,7 @@ pub mod details {
 
     impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IAtlasAllocator, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IAtlasAllocator = VitualTable_IAtlasAllocator {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1722,7 +1722,7 @@ pub mod details {
 
     impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IAtlasAllocator
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IAtlasAllocator as Interface>::VitualTable = VT::<T, IAtlasAllocator, O>::VTBL;
 
@@ -1731,19 +1731,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IAtlasAllocator {
+    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IAtlasAllocator, T, O> for IAtlasAllocator {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IAtlasAllocator::GUID {
+                static GUID: Guid = IAtlasAllocator::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1759,7 +1761,7 @@ pub mod details {
 
     impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFont, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFont = VitualTable_IFont {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1777,7 +1779,7 @@ pub mod details {
 
     impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFont
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFont as Interface>::VitualTable = VT::<T, IFont, O>::VTBL;
 
@@ -1786,19 +1788,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFont {
+    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFont, T, O> for IFont {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFont::GUID {
+                static GUID: Guid = IFont::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1815,7 +1819,7 @@ pub mod details {
 
     impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontCollection, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontCollection = VitualTable_IFontCollection {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1837,7 +1841,7 @@ pub mod details {
 
     impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontCollection
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontCollection as Interface>::VitualTable = VT::<T, IFontCollection, O>::VTBL;
 
@@ -1846,19 +1850,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontCollection {
+    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontCollection, T, O> for IFontCollection {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontCollection::GUID {
+                static GUID: Guid = IFontCollection::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1885,7 +1891,7 @@ pub mod details {
 
     impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFace, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFace = VitualTable_IFontFace {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1947,7 +1953,7 @@ pub mod details {
 
     impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFace
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFace as Interface>::VitualTable = VT::<T, IFontFace, O>::VTBL;
 
@@ -1956,19 +1962,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFace {
+    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFace, T, O> for IFontFace {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFace::GUID {
+                static GUID: Guid = IFontFace::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1982,7 +1990,7 @@ pub mod details {
 
     impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallback, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFallback = VitualTable_IFontFallback {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1992,7 +2000,7 @@ pub mod details {
 
     impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFallback
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFallback as Interface>::VitualTable = VT::<T, IFontFallback, O>::VTBL;
 
@@ -2001,19 +2009,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFallback {
+    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFallback, T, O> for IFontFallback {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFallback::GUID {
+                static GUID: Guid = IFontFallback::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2030,7 +2040,7 @@ pub mod details {
 
     impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallbackBuilder, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFallbackBuilder = VitualTable_IFontFallbackBuilder {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2052,7 +2062,7 @@ pub mod details {
 
     impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFallbackBuilder
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFallbackBuilder as Interface>::VitualTable = VT::<T, IFontFallbackBuilder, O>::VTBL;
 
@@ -2061,19 +2071,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFallbackBuilder {
+    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFallbackBuilder, T, O> for IFontFallbackBuilder {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFallbackBuilder::GUID {
+                static GUID: Guid = IFontFallbackBuilder::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2092,7 +2104,7 @@ pub mod details {
 
     impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFamily, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFamily = VitualTable_IFontFamily {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2122,7 +2134,7 @@ pub mod details {
 
     impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFamily
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFamily as Interface>::VitualTable = VT::<T, IFontFamily, O>::VTBL;
 
@@ -2131,19 +2143,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFamily {
+    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFamily, T, O> for IFontFamily {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFamily::GUID {
+                static GUID: Guid = IFontFamily::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2168,7 +2182,7 @@ pub mod details {
 
     impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> VT<T, IFontManager, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontManager = VitualTable_IFontManager {
             b: <IWeak as Vtbl<O>>::VTBL,
@@ -2222,7 +2236,7 @@ pub mod details {
 
     impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> Vtbl<O> for IFontManager
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontManager as Interface>::VitualTable = VT::<T, IFontManager, O>::VTBL;
 
@@ -2231,19 +2245,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontManager {
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontManager, T, O> for IFontManager {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontManager::GUID {
+                static GUID: Guid = IFontManager::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IWeak as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IWeak as QuIn<IWeak, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2259,7 +2275,7 @@ pub mod details {
 
     impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFrameSource, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFrameSource = VitualTable_IFrameSource {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2277,7 +2293,7 @@ pub mod details {
 
     impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFrameSource
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFrameSource as Interface>::VitualTable = VT::<T, IFrameSource, O>::VTBL;
 
@@ -2286,19 +2302,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFrameSource {
+    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFrameSource, T, O> for IFrameSource {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFrameSource::GUID {
+                static GUID: Guid = IFrameSource::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2313,7 +2331,7 @@ pub mod details {
 
     impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ILayout, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ILayout = VitualTable_ILayout {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2327,7 +2345,7 @@ pub mod details {
 
     impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ILayout
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ILayout as Interface>::VitualTable = VT::<T, ILayout, O>::VTBL;
 
@@ -2336,19 +2354,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ILayout {
+    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ILayout, T, O> for ILayout {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ILayout::GUID {
+                static GUID: Guid = ILayout::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2373,7 +2393,7 @@ pub mod details {
 
     impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ILib, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ILib = VitualTable_ILib {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2427,7 +2447,7 @@ pub mod details {
 
     impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ILib
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ILib as Interface>::VitualTable = VT::<T, ILib, O>::VTBL;
 
@@ -2436,19 +2456,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ILib {
+    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ILib, T, O> for ILib {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ILib::GUID {
+                static GUID: Guid = ILib::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2463,7 +2485,7 @@ pub mod details {
 
     impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IPath, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IPath = VitualTable_IPath {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2477,7 +2499,7 @@ pub mod details {
 
     impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IPath
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IPath as Interface>::VitualTable = VT::<T, IPath, O>::VTBL;
 
@@ -2486,19 +2508,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IPath {
+    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IPath, T, O> for IPath {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IPath::GUID {
+                static GUID: Guid = IPath::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2521,7 +2545,7 @@ pub mod details {
 
     impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IPathBuilder, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IPathBuilder = VitualTable_IPathBuilder {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2567,7 +2591,7 @@ pub mod details {
 
     impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IPathBuilder
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IPathBuilder as Interface>::VitualTable = VT::<T, IPathBuilder, O>::VTBL;
 
@@ -2576,19 +2600,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IPathBuilder {
+    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IPathBuilder, T, O> for IPathBuilder {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IPathBuilder::GUID {
+                static GUID: Guid = IPathBuilder::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2603,7 +2629,7 @@ pub mod details {
 
     impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IStub, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IStub = VitualTable_IStub {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2617,7 +2643,7 @@ pub mod details {
 
     impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IStub
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IStub as Interface>::VitualTable = VT::<T, IStub, O>::VTBL;
 
@@ -2626,19 +2652,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IStub {
+    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IStub, T, O> for IStub {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IStub::GUID {
+                static GUID: Guid = IStub::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2654,7 +2682,7 @@ pub mod details {
 
     impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITessellator, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ITessellator = VitualTable_ITessellator {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2672,7 +2700,7 @@ pub mod details {
 
     impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITessellator
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ITessellator as Interface>::VitualTable = VT::<T, ITessellator, O>::VTBL;
 
@@ -2681,19 +2709,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITessellator {
+    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ITessellator, T, O> for ITessellator {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ITessellator::GUID {
+                static GUID: Guid = ITessellator::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2707,7 +2737,7 @@ pub mod details {
 
     impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITextData, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ITextData = VitualTable_ITextData {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2717,7 +2747,7 @@ pub mod details {
 
     impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITextData
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ITextData as Interface>::VitualTable = VT::<T, ITextData, O>::VTBL;
 
@@ -2726,19 +2756,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITextData {
+    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ITextData, T, O> for ITextData {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ITextData::GUID {
+                static GUID: Guid = ITextData::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2752,7 +2784,7 @@ pub mod details {
 
     impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITextLayout, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ITextLayout = VitualTable_ITextLayout {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2762,7 +2794,7 @@ pub mod details {
 
     impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITextLayout
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ITextLayout as Interface>::VitualTable = VT::<T, ITextLayout, O>::VTBL;
 
@@ -2771,19 +2803,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITextLayout {
+    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ITextLayout, T, O> for ITextLayout {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ITextLayout::GUID {
+                static GUID: Guid = ITextLayout::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
