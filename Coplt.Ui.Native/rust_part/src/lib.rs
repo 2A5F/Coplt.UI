@@ -1,10 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-use std::error::Error;
 use std::fmt::Debug;
 use std::panic::UnwindSafe;
-use std::{any::Any, ffi::c_char};
+use std::ffi::c_char;
 
 mod coplt_alloc {
     use core::alloc::GlobalAlloc;

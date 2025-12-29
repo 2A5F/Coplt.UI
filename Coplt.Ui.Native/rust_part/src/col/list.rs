@@ -2,12 +2,10 @@ use std::{
     i32,
     ops::{Deref, DerefMut},
     ptr::drop_in_place,
-    vec::IntoIter,
 };
 
 use crate::coplt_alloc::{
-    coplt_alloc_array, coplt_free, coplt_realloc_array, coplt_ui_free, coplt_ui_malloc,
-    coplt_ui_realloc, coplt_zalloc_array,
+    coplt_alloc_array, coplt_realloc_array, coplt_ui_free, coplt_zalloc_array,
 };
 
 #[repr(C)]

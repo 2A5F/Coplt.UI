@@ -51,7 +51,7 @@ impl GetHashCode for f32 {
         if *self == 0.0 {
             return 0;
         }
-        unsafe { f32::to_bits(*self).cast_signed() }
+         f32::to_bits(*self).cast_signed()
     }
 }
 
@@ -60,7 +60,7 @@ impl GetHashCode for f64 {
         if *self == 0.0 {
             return 0;
         }
-        let v: i64 = unsafe { f64::to_bits(*self).cast_signed() };
+        let v: i64 = f64::to_bits(*self).cast_signed();
         v.get_hash_code()
     }
 }

@@ -1,7 +1,6 @@
-use std::{
-    alloc::Layout,
-    mem::{ManuallyDrop, MaybeUninit},
-};
+use std::
+    mem::ManuallyDrop
+;
 
 use crate::{
     col::{Enumerator, EnumeratorIter, GetHashCode, iter::EnumeratorIterator},

@@ -354,7 +354,7 @@ impl ChildIter {
             free_list: -1,
             free_count: -1,
         };
-        unsafe { Self(EMPTY.iter_ptr_copy()) }
+        Self(EMPTY.iter_ptr_copy())
     }
 }
 

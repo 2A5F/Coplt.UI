@@ -1,7 +1,7 @@
 use etagere::{euclid::Size2D, *};
 
 use super::com::*;
-use cocom::{ComPtr, MakeObject, impls::ObjectBoxNew, object::Object};
+use cocom::MakeObject;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn coplt_ui_new_atlas_allocator(

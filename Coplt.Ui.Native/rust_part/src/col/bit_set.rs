@@ -1,5 +1,3 @@
-use std::ops::Index;
-
 use crate::coplt_alloc::{coplt_alloc_array, coplt_free, coplt_zalloc_array};
 
 #[repr(C)]

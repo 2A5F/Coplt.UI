@@ -1,10 +1,4 @@
-use std::{
-    alloc::Layout,
-    hash::Hash,
-    mem::ManuallyDrop,
-    ops::{Deref, DerefMut},
-    sync::atomic,
-};
+use std::{hash::Hash, mem::ManuallyDrop, sync::atomic};
 
 use cocom::pmp;
 

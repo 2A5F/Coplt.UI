@@ -2,13 +2,11 @@ use std::{
     ffi::c_void,
     mem::MaybeUninit,
     panic::{RefUnwindSafe, UnwindSafe},
-    path::Path,
     ptr::NonNull,
 };
 
 use crate::{
     c_option,
-    col::NList,
     com::*,
     feb_hr,
     font_manager::FontManager,
