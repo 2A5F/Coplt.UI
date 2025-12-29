@@ -1279,6 +1279,7 @@ pub struct NFontPair {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
+    pub CurrentFrame: u64,
     pub font_manager: *mut IFontManager,
     pub default_locale: LocaleId,
     pub roots: *mut FFIMap,
@@ -1322,13 +1323,6 @@ pub struct NString {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct OpaqueObject {
-    pub Ptr: *mut core::ffi::c_void,
-    pub Drop: *mut core::ffi::c_void,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct FontWidth {
     pub Width: f32,
 }
@@ -1360,13 +1354,12 @@ pub struct ChildsData {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
+    pub LayoutDirtyFrame: u64,
     pub FinalLayout: LayoutData,
     pub UnRoundedLayout: LayoutData,
     pub LayoutCache: LayoutCache,
     pub NodeId: u32,
     pub ParentValue: NodeId,
-    pub LastLayoutVersion: u32,
-    pub LayoutVersion: u32,
     pub HasParent: bool,
 }
 
@@ -1581,7 +1574,9 @@ pub struct TextData_ScriptRange {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextParagraphData {
-    pub m_native_data: OpaqueObject,
+    pub TextDirtyFrame: u64,
+    pub TextStyleDirtyFrame: u64,
+    pub DirtySyncFrame: u64,
     pub m_text: NString,
     pub m_break_points: NativeBitSet,
     pub m_grapheme_cluster: NativeList<u32>,
@@ -1592,10 +1587,6 @@ pub struct TextParagraphData {
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub m_run_ranges: NativeList<TextData_RunRange>,
     pub m_glyph_datas: NativeList<GlyphData>,
-    pub LastTextVersion: u32,
-    pub TextVersion: u32,
-    pub LastTextStyleVersion: u32,
-    pub TextStyleVersion: u32,
 }
 
 #[repr(C)]

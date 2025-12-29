@@ -181,11 +181,11 @@ mod com_impl {
         col::{NArc, NBitSet, NList},
         com::{
             ChildsData, CommonData, CursorType, FontWeight, FontWidth, GlyphData, IFontFallback,
-            LineAlign, LocaleId, NString, NativeArc, NativeList, OpaqueObject, PointerEvents,
-            TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange,
-            TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection,
-            TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode,
-            TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
+            LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents, TextAlign,
+            TextData_BidiRange, TextData_FontRange, TextData_LocaleRange, TextData_RunRange,
+            TextData_SameStyleRange, TextData_ScriptRange, TextDirection, TextOrientation,
+            TextOverflow, TextParagraphData, TextSpanData, TextSpanNode, TextStyleData,
+            TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
@@ -268,37 +268,6 @@ mod com_impl {
         }
     }
 
-    impl OpaqueObject {
-        pub unsafe fn new<T>(obj: Box<T>) -> Self {
-            unsafe extern "C" fn do_drop<T>(obj: *mut c_void) {
-                if obj.is_null() {
-                    return;
-                }
-                let obj = obj as *mut T;
-                drop(unsafe { Box::from_raw(obj) });
-            }
-
-            let obj = Box::leak(obj);
-            let f: unsafe extern "C" fn(obj: *mut c_void) = do_drop::<T>;
-            Self {
-                Ptr: obj as *mut _ as _,
-                Drop: f as _,
-            }
-        }
-        pub fn free(&mut self) {
-            unsafe {
-                if self.Ptr.is_null() || self.Drop.is_null() {
-                    return;
-                }
-                let do_drop: unsafe extern "C" fn(obj: *mut c_void) =
-                    std::mem::transmute(self.Drop);
-                (do_drop)(self.Ptr);
-                self.Ptr = std::ptr::null_mut();
-                self.Drop = std::ptr::null_mut();
-            }
-        }
-    }
-
     impl LocaleId {
         pub fn or(self, other: Self) -> Self {
             if self.Name.is_null() { other } else { self }
@@ -338,8 +307,8 @@ mod com_impl {
     }
 
     impl CommonData {
-        pub fn is_layout_dirty(&self) -> bool {
-            self.LayoutVersion != self.LastLayoutVersion
+        pub fn is_layout_dirty(&self, doc: &layout::SubDocInner) -> bool {
+            self.LayoutDirtyFrame == doc.current_frame()
         }
     }
 
@@ -422,20 +391,12 @@ mod com_impl {
     impl TextSpanData {}
 
     impl TextParagraphData {
-        pub fn is_text_dirty(&self) -> bool {
-            self.LastTextVersion != self.TextVersion
+        pub fn is_text_dirty(&self, doc: &layout::SubDocInner) -> bool {
+            self.TextDirtyFrame == doc.current_frame()
         }
 
-        pub fn sync_text_dirty(&mut self) {
-            self.LastTextVersion = self.TextVersion
-        }
-
-        pub fn is_text_style_dirty(&self) -> bool {
-            self.LastTextStyleVersion != self.TextStyleVersion
-        }
-
-        pub fn sync_text_style_dirty(&mut self) {
-            self.LastTextStyleVersion = self.TextStyleVersion
+        pub fn is_text_style_dirty(&self, doc: &layout::SubDocInner) -> bool {
+            self.TextStyleDirtyFrame == doc.current_frame()
         }
 
         pub fn break_points(&mut self) -> &'static mut NBitSet {

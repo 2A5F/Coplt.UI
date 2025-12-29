@@ -17,6 +17,7 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
+    public ulong CurrentFrame;
     public IFontManager* font_manager;
     public LocaleId default_locale;
 

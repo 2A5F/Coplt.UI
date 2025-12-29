@@ -204,14 +204,14 @@ impl Layout {
             let paragraph = doc.text_paragraph_data(id);
             let style = doc.text_style_data(id);
 
-            if paragraph.is_text_dirty() {
+            if paragraph.is_text_dirty(doc) {
                 self.sync_text_info(doc, id, paragraph);
             }
-            if paragraph.is_text_dirty() || paragraph.is_text_style_dirty() {
+            if paragraph.is_text_dirty(doc) || paragraph.is_text_style_dirty(doc) {
                 self.sync_styled_info(doc, id, paragraph, root_style, style);
             }
-            paragraph.sync_text_dirty();
-            paragraph.sync_text_style_dirty();
+            paragraph.TextDirtyFrame = u64::MAX;
+            paragraph.TextStyleDirtyFrame = u64::MAX;
 
             taffy::LayoutOutput::HIDDEN
         })

@@ -254,7 +254,7 @@ public static unsafe partial class Access
         public string Text
         {
             get => node.Data.Text;
-            set => node.Data.Text = value;
+            set => node.Data.SetText(node.Document, value);
         }
     }
 }

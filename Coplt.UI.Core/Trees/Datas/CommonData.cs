@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Coplt.Dropping;
 using Coplt.Mathematics;
+using Coplt.UI.Miscellaneous;
 using Coplt.UI.Native;
 
 namespace Coplt.UI.Trees.Datas;
@@ -8,25 +9,19 @@ namespace Coplt.UI.Trees.Datas;
 [Dropping]
 public partial record struct CommonData()
 {
+    internal ulong LayoutDirtyFrame;
+
     internal LayoutData FinalLayout;
     internal LayoutData UnRoundedLayout;
     internal LayoutCache LayoutCache;
-    
+
     internal uint NodeId = uint.MaxValue;
     internal NodeId ParentValue;
 
-    /// <summary>
-    /// layout compute sync this to <see cref="LayoutVersion"/>
-    /// </summary>
-    internal uint LastLayoutVersion;
-    /// <summary>
-    /// dirty inc this
-    /// </summary>
-    internal uint LayoutVersion;
-
     internal bool HasParent = false;
-    
-    public bool IsLayoutDirty => LastLayoutVersion != LayoutVersion;
+
+    public bool IsLayoutDirty(Document doc) => LayoutDirtyFrame == 0 || LayoutDirtyFrame == doc.CurrentFrame;
+    public void MarkLayoutDirty(Document doc) => LayoutDirtyFrame = doc.CurrentFrame;
 
     public NodeId? Parent
     {

@@ -141,6 +141,11 @@ pub struct SubDocInner(*mut NLayoutContext, *mut RootData);
 
 impl SubDocInner {
     #[inline(always)]
+    pub fn current_frame(&self) -> u64 {
+        unsafe { (*self.0).CurrentFrame }
+    }
+
+    #[inline(always)]
     pub fn root_data(&self) -> &'static mut RootData {
         unsafe { &mut *self.1 }
     }

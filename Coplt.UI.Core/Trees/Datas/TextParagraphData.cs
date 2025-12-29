@@ -10,8 +10,10 @@ namespace Coplt.UI.Trees.Datas;
 [Dropping]
 public unsafe partial struct TextParagraphData
 {
-    [Drop]
-    internal OpaqueObject m_native_data;
+    internal ulong TextDirtyFrame;
+    internal ulong TextStyleDirtyFrame;
+    internal ulong DirtySyncFrame;
+
     [Drop]
     public NString m_text;
     [Drop]
@@ -33,41 +35,18 @@ public unsafe partial struct TextParagraphData
     [Drop]
     public NativeList<GlyphData> m_glyph_datas;
 
-    /// <summary>
-    /// layout compute sync this to <see cref="TextVersion"/>
-    /// </summary>
-    internal uint LastTextVersion;
-    /// <summary>
-    /// dirty inc this
-    /// </summary>
-    internal uint TextVersion;
+    public bool IsTextDirty(Document doc) => TextDirtyFrame == 0 || TextDirtyFrame == doc.CurrentFrame;
+    public bool IsTextStyleDirty(Document doc) => TextStyleDirtyFrame == 0 || TextStyleDirtyFrame == doc.CurrentFrame;
+    public void MarkTextDirty(Document doc) => TextDirtyFrame = doc.CurrentFrame;
+    public void MarkTextStyleDirty(Document doc) => TextStyleDirtyFrame = doc.CurrentFrame;
 
-    /// <summary>
-    /// layout compute sync this to <see cref="TextStyleVersion"/>
-    /// </summary>
-    internal uint LastTextStyleVersion;
-    /// <summary>
-    /// dirty inc this
-    /// </summary>
-    internal uint TextStyleVersion;
+    public string Text => m_text.ToString();
 
-    public bool IsTextDirty => LastTextVersion != TextVersion;
-    public bool IsTextStyleDirty => LastTextStyleVersion != TextStyleVersion;
-
-    public string Text
+    public void SetText(Document doc, string text)
     {
-        get => m_text.ToString();
-        set
-        {
-            m_text.Dispose();
-            m_text = NString.Create(value);
-            TextVersion++;
-        }
-    }
-
-    public void MarkTextStyleDirty()
-    {
-        TextStyleVersion++;
+        m_text.Dispose();
+        m_text = NString.Create(text);
+        MarkTextDirty(doc);
     }
 }
 

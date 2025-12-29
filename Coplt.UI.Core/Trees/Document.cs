@@ -39,6 +39,8 @@ public sealed partial class Document
 
     internal LocaleId DefaultLocale = Utils.GetUserUiDefaultLocale();
 
+    internal bool m_extern_frame_source;
+
     #endregion
 
     #region Ctor
@@ -48,6 +50,7 @@ public sealed partial class Document
         m_template = template;
         m_frame_source = frame_source ?? new();
         m_font_manager = font_manager ?? new(m_frame_source);
+        m_extern_frame_source = font_manager is not null;
         m_view_arche = m_template.m_view_arche.Create();
         m_text_paragraph_arche = m_template.m_text_paragraph_arche.Create();
         m_text_span_arche = m_template.m_text_span_arche.Create();
@@ -224,6 +227,8 @@ public sealed partial class Document
         internal override C Chain() => C<T>.Instance;
         internal override C Chain(C b) => b.Add<C<T>>();
     }
+
+    public ulong CurrentFrame { get; private set; }
 
     #endregion
 
@@ -600,8 +605,8 @@ public sealed partial class Document
         while (true)
         {
             ref var data = ref UnsafeAt<CommonData>(node);
-            if (data.IsLayoutDirty) return;
-            data.LayoutVersion++;
+            if (data.IsLayoutDirty(this)) return;
+            data.MarkLayoutDirty(this);
             data.LayoutCache.Flags = LayoutCacheFlags.Empty;
             if (data.Parent is { } parent)
             {
@@ -621,6 +626,21 @@ public sealed partial class Document
         foreach (var update in m_modules_update)
         {
             update(this);
+        }
+
+        if (!m_extern_frame_source)
+        {
+            var data = m_frame_source.Data;
+            m_frame_source.Data = new()
+            {
+                NthFrame = data.NthFrame + 1,
+                TimeTicks = (ulong)Stopwatch.GetTimestamp(),
+            };
+            CurrentFrame = data.NthFrame + 1;
+        }
+        else
+        {
+            CurrentFrame = m_frame_source.Data.NthFrame;
         }
     }
 

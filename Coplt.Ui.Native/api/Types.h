@@ -89,8 +89,6 @@ namespace Coplt {
 
     struct NString;
 
-    struct OpaqueObject;
-
     struct FontWidth;
 
     struct LocaleId;
@@ -1049,12 +1047,6 @@ namespace Coplt {
         ::Coplt::i32 m_len;
     };
 
-    struct OpaqueObject
-    {
-        void* Ptr;
-        void* Drop;
-    };
-
     struct FontWidth
     {
         ::Coplt::f32 Width;
@@ -1191,6 +1183,7 @@ namespace Coplt {
 
     struct NLayoutContext
     {
+        ::Coplt::u64 CurrentFrame;
         IFontManager* font_manager;
         ::Coplt::LocaleId default_locale;
         ::Coplt::FFIMap* roots;
@@ -1240,13 +1233,12 @@ namespace Coplt {
 
     struct CommonData
     {
+        ::Coplt::u64 LayoutDirtyFrame;
         ::Coplt::LayoutData FinalLayout;
         ::Coplt::LayoutData UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
         ::Coplt::u32 NodeId;
         ::Coplt::NodeId ParentValue;
-        ::Coplt::u32 LastLayoutVersion;
-        ::Coplt::u32 LayoutVersion;
         bool HasParent;
     };
 
@@ -1450,7 +1442,9 @@ namespace Coplt {
 
     struct TextParagraphData
     {
-        ::Coplt::OpaqueObject m_native_data;
+        ::Coplt::u64 TextDirtyFrame;
+        ::Coplt::u64 TextStyleDirtyFrame;
+        ::Coplt::u64 DirtySyncFrame;
         ::Coplt::NString m_text;
         ::Coplt::NativeBitSet m_break_points;
         ::Coplt::NativeList<::Coplt::u32> m_grapheme_cluster;
@@ -1461,10 +1455,6 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
         ::Coplt::NativeList<::Coplt::GlyphData> m_glyph_datas;
-        ::Coplt::u32 LastTextVersion;
-        ::Coplt::u32 TextVersion;
-        ::Coplt::u32 LastTextStyleVersion;
-        ::Coplt::u32 TextStyleVersion;
     };
 
     struct TextSpanData
