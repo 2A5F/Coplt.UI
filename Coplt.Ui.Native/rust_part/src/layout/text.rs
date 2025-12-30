@@ -428,6 +428,8 @@ async fn gen_break_lines(
         return;
     }
 
+    let grapheme_cluster = &**paragraph.grapheme_cluster();
+
     let available_space = ctx.available_space;
     let nth_line = &mut ctx.nth_line;
     let start_main_size = &mut ctx.cur_main_size;
@@ -509,8 +511,28 @@ async fn gen_break_lines(
         }
 
         let glyph_datas = run.get_glyph_datas(paragraph);
-        for glyph_data in glyph_datas.iter() {}
+        while glyph_datas.is_empty() {
+            let (count, size) = sum_glyph_cluster_size(glyph_datas);
+
+            // todo
+        }
     }
+}
+
+fn sum_glyph_cluster_size(glyph_datas: &[GlyphData]) -> (/* count */ u32, /* size */ f32) {
+    let mut iter = glyph_datas.iter();
+    let first = match iter.next() {
+        Some(a) => a,
+        None => return (0, 0.0),
+    };
+    let mut count = 1;
+    let mut size = first.Advance + first.Offset;
+    let cluster = first.Cluster;
+    while let Some(item) = iter.next().filter(|a| a.Cluster == cluster) {
+        count += 1;
+        size += item.Advance + item.Offset;
+    }
+    (count, size)
 }
 
 impl Layout {
