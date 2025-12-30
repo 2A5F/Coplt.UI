@@ -1,13 +1,13 @@
 #![allow(unused)]
 
-use std::ops::Range;
+use std::{ops::Range, pin::pin};
 
 use crate::*;
 
-pub fn merge_ranges<const N: usize>(
+pub fn merge_ranges<'a, const N: usize>(
     inputs: [&'_ mut dyn Iterator<Item = (/* index */ u32, Range<u32>)>; N],
-) -> impl Iterator<Item = (Range<u32>, /* index */ [u32; N])> {
-    a_gen(move |ctx| gen_merge_ranges(ctx, inputs)).to_iter()
+) -> Generator<'a, impl Coroutine<Yield = (Range<u32>, /* index */ [u32; N])>> {
+    a_gen(move |ctx| gen_merge_ranges(ctx, inputs))
 }
 
 async fn gen_merge_ranges<const N: usize>(
@@ -111,8 +111,7 @@ fn test_1() {
         &mut data.0.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
     let b: &mut dyn Iterator<Item = (/* index */ u32, Range<u32>)> =
         &mut data.1.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
-    let r = merge_ranges([a, b]);
-    let v: Vec<_> = r.collect();
+    let v: Vec<_> = merge_ranges([a, b]).iter().collect();
     println!("{v:?}");
 }
 
@@ -123,7 +122,6 @@ fn test_2() {
         &mut data.0.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
     let b: &mut dyn Iterator<Item = (/* index */ u32, Range<u32>)> =
         &mut data.1.iter().enumerate().map(|a| (a.0 as _, a.1.clone()));
-    let r = merge_ranges([a, b]);
-    let v: Vec<_> = r.collect();
+    let v: Vec<_> = merge_ranges([a, b]).iter().collect();
     println!("{v:?}");
 }

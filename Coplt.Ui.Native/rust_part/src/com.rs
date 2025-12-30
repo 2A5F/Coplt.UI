@@ -845,6 +845,15 @@ pub enum GlyphType {
     Bitmap = 3,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LineSpanType {
+    Common = 0,
+    Space = 1,
+    Tab = 2,
+    NewLine = 3,
+}
+
 bitflags::bitflags! {
     #[repr(transparent)]
     #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -1388,6 +1397,28 @@ pub struct LayoutData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LineData {
+    pub BoundingBox: AABB2DF,
+    pub Start: u32,
+    pub End: u32,
+    pub FirstSpan: u32,
+    pub NthLine: u32,
+    pub BaseLine: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LineSpan {
+    pub BoundingBox: AABB2DF,
+    pub Start: u32,
+    pub End: u32,
+    pub RunRange: u32,
+    pub NthLine: u32,
+    pub Type: LineSpanType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct RootData {
     pub DefaultLocale: LocaleId,
     pub Node: NodeId,
@@ -1587,7 +1618,8 @@ pub struct TextParagraphData {
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub m_run_ranges: NativeList<TextData_RunRange>,
     pub m_glyph_datas: NativeList<GlyphData>,
-    pub m_bounding_boxes: NativeList<AABB2DF>,
+    pub m_line_spans: NativeList<LineSpan>,
+    pub m_lines: NativeList<LineData>,
 }
 
 #[repr(C)]

@@ -10,7 +10,10 @@ use crate::{
     utils::UnicodeBufferPushUtf16,
 };
 use cocom::ComPtr;
-use coplt_ui_rust_common::{AGen, MakeGeneratorIter, a_gen, merge_ranges};
+use coplt_ui_rust_common::{
+    AGen, Coroutine, Generator, GeneratorToIter, IterableGenerator, a_gen, merge_ranges,
+};
+use font_types::BoundingBox;
 use harfrust::{Feature, ShaperData, ShaperInstance, UnicodeBuffer, Variation};
 use icu::{
     properties::{CodePointMapData, props::Script},
@@ -284,8 +287,6 @@ impl Layout {
             parent_size: Size<Option<f32>>,
             dir: taffy::FlexDirection,
         ) -> taffy::LayoutOutput {
-            let common = doc.common_data(id);
-            let childs = doc.childs(id);
             let paragraph = doc.text_paragraph_data(id);
             let style = doc.text_style_data(id);
 
@@ -355,6 +356,160 @@ impl Layout {
 
             taffy::LayoutOutput::from_sizes_and_baselines(size, size, base_line)
         }
+    }
+}
+
+struct LineBreakCtx {
+    pub nth_line: u32,
+    pub available_space: f32,
+    pub cur_main_size: f32,
+}
+
+#[allow(non_snake_case)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+struct PatialLineSpan {
+    pub Start: u32,
+    pub End: u32,
+    pub RunRange: u32,
+    pub NthLine: u32,
+    pub Type: LineSpanType,
+}
+
+impl From<PatialLineSpan> for LineSpan {
+    fn from(
+        PatialLineSpan {
+            Start,
+            End,
+            RunRange,
+            NthLine,
+            Type,
+        }: PatialLineSpan,
+    ) -> Self {
+        Self {
+            BoundingBox: AABB2DF {
+                MinX: 0.0,
+                MinY: 0.0,
+                MaxX: 0.0,
+                MaxY: 0.0,
+            },
+            Start,
+            End,
+            RunRange,
+            NthLine,
+            Type,
+        }
+    }
+}
+
+fn break_lines<'a>(
+    ctx: &mut LineBreakCtx,
+    doc: &mut super::SubDocInner,
+    paragraph: &mut TextParagraphData,
+    root_style: &StyleData,
+    style: &TextStyleData,
+    parent_size: Size<Option<f32>>,
+    dir: taffy::FlexDirection,
+) -> Generator<'a, impl Coroutine<Yield = PatialLineSpan>> {
+    a_gen(move |g| gen_break_lines(g, ctx, doc, paragraph, root_style, style, parent_size, dir))
+}
+
+async fn gen_break_lines(
+    g: AGen<PatialLineSpan>,
+    ctx: &mut LineBreakCtx,
+    doc: &mut super::SubDocInner,
+    paragraph: &mut TextParagraphData,
+    root_style: &StyleData,
+    style: &TextStyleData,
+    parent_size: Size<Option<f32>>,
+    dir: taffy::FlexDirection,
+) {
+    let runs = &**paragraph.run_ranges();
+    if runs.is_empty() {
+        return;
+    }
+
+    let available_space = ctx.available_space;
+    let nth_line = &mut ctx.nth_line;
+    let start_main_size = &mut ctx.cur_main_size;
+    let mut cur_main_size = *start_main_size;
+
+    let move_to_next_line =
+        |nth_line: &mut u32, start_main_size: &mut f32, cur_main_size: &mut f32| {
+            *nth_line += 1;
+            *start_main_size = 0.0;
+            *cur_main_size = 0.0;
+        };
+
+    for run in runs.iter() {
+        let style_range = run.get_style_range(paragraph);
+        let run_style = style_range.style(doc).map(|a| &*a).unwrap_or(&*style);
+
+        let (mp_main_start, mp_main_end, mp_cross_start, mp_cross_end, line_height) = {
+            let margin = run_style.margin().resolve_or_zero(parent_size, |_, _| 0.0);
+            let padding = run_style.padding().resolve_or_zero(parent_size, |_, _| 0.0);
+
+            let is_style_start_run = style_range.Start == run.Start;
+            let is_style_end_run = style_range.End == run.End;
+
+            let mp_main_start = if is_style_start_run {
+                margin.main_start(dir) + padding.main_start(dir)
+            } else {
+                0.0
+            };
+            let mp_main_end = if is_style_end_run {
+                margin.main_end(dir) + padding.main_end(dir)
+            } else {
+                0.0
+            };
+            let mp_cross_start = margin.cross_start(dir) + padding.cross_start(dir);
+            let mp_cross_end = margin.cross_end(dir) + padding.cross_end(dir);
+
+            let font_size = run_style
+                .FontSize()
+                .or(style.FontSize())
+                .unwrap_or(root_style.FontSize);
+            let line_height = run_style
+                .LineHeight()
+                .or(style.LineHeight())
+                .unwrap_or(root_style.LineHeight())
+                .resolve_to_option(font_size, |_, _| 0.0)
+                .unwrap_or_else(|| run.Ascent + run.Descent + run.Leading);
+            let line_height = mp_cross_start + line_height + mp_cross_end;
+
+            (
+                mp_main_start,
+                mp_main_end,
+                mp_cross_start,
+                mp_cross_end,
+                line_height,
+            )
+        };
+
+        let (allow_newline, wrap_in_space, allow_wrap) = {
+            let wrap_flags = run_style
+                .WrapFlags()
+                .or(style.WrapFlags())
+                .unwrap_or(root_style.WrapFlags);
+            let allow_newline = wrap_flags.contains(WrapFlags::AllowNewLine);
+            let wrap_in_space = wrap_flags.contains(WrapFlags::WrapInSpace);
+            let allow_wrap = run_style
+                .TextWrap()
+                .or(style.TextWrap())
+                .unwrap_or(root_style.TextWrap)
+                != TextWrap::NoWrap;
+
+            (allow_newline, wrap_in_space, allow_wrap)
+        };
+
+        let mut next_main_size = cur_main_size + mp_main_start;
+        // if line is not empty, move to next line
+        if next_main_size > available_space && *start_main_size > 0.0 {
+            // todo
+            move_to_next_line(nth_line, start_main_size, &mut cur_main_size);
+        }
+
+        let glyph_datas = run.get_glyph_datas(paragraph);
+        for glyph_data in glyph_datas.iter() {}
     }
 }
 
@@ -580,7 +735,9 @@ impl Layout {
                         || !child_style.PaddingRight().is_zero_length()
                         || !child_style.PaddingBottom().is_zero_length()
                 },
-            ) {
+            )
+            .iter()
+            {
                 same_style_ranges.push(TextData_SameStyleRange {
                     Start: range.start,
                     End: range.end,
@@ -618,7 +775,9 @@ impl Layout {
                 style,
                 root_locale,
                 |child_style, base| child_style.Locale().unwrap_or(*base),
-            ) {
+            )
+            .iter()
+            {
                 locale_ranges.push(TextData_LocaleRange {
                     Start: range.start,
                     End: range.end,
@@ -660,7 +819,7 @@ impl Layout {
                     .enumerate()
                     .map(|(n, r)| (n as u32, r.start..r.end)),
             ];
-            for (range, [script, bidi, style, font]) in merge_ranges(inputs) {
+            for (range, [script, bidi, style, font]) in merge_ranges(inputs).iter() {
                 run_ranges.push(TextData_RunRange {
                     Start: range.start,
                     End: range.end,
@@ -926,14 +1085,14 @@ impl Layout {
 }
 
 impl Layout {
-    pub fn iter_child_style_range<T: PartialEq + Clone + Unpin>(
+    pub fn iter_child_style_range<'a, T: PartialEq + Clone + Unpin>(
         doc: &mut super::SubDocInner,
         id: NodeId,
         text: &[u16],
         style: &TextStyleData,
         root_data: T,
         load_child_data: impl FnMut(&TextStyleData, &T) -> T,
-    ) -> impl Iterator<Item = (Range<u32>, T, Option<u32>)> {
+    ) -> Generator<'a, impl Coroutine<Yield = (Range<u32>, T, Option<u32>)>> {
         Self::iter_child_style_range_with_must_split(
             doc,
             id,
@@ -945,7 +1104,7 @@ impl Layout {
         )
     }
 
-    pub fn iter_child_style_range_with_must_split<T: PartialEq + Clone + Unpin>(
+    pub fn iter_child_style_range_with_must_split<'a, T: PartialEq + Clone + Unpin>(
         doc: &mut super::SubDocInner,
         id: NodeId,
         text: &[u16],
@@ -953,7 +1112,7 @@ impl Layout {
         root_data: T,
         mut load_child_data: impl FnMut(&TextStyleData, &T) -> T,
         mut must_split: impl FnMut(&TextStyleData) -> bool,
-    ) -> impl Iterator<Item = (Range<u32>, T, Option<u32>)> {
+    ) -> Generator<'a, impl Coroutine<Yield = (Range<u32>, T, Option<u32>)>> {
         a_gen(async move |ctx: AGen<(Range<u32>, T, Option<u32>)>| {
             let mut data = root_data.clone();
 
@@ -1013,7 +1172,6 @@ impl Layout {
                 ctx.Yield((cur_end..text_len, root_data, None)).await;
             }
         })
-        .to_iter()
     }
 }
 

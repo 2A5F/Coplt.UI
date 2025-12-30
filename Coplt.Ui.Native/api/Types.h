@@ -105,6 +105,10 @@ namespace Coplt {
 
     struct LayoutData;
 
+    struct LineData;
+
+    struct LineSpan;
+
     struct RootData;
 
     struct StyleData;
@@ -774,6 +778,14 @@ namespace Coplt {
         Bitmap = 3,
     };
 
+    enum class LineSpanType : ::Coplt::u8
+    {
+        Common = 0,
+        Space = 1,
+        Tab = 2,
+        NewLine = 3,
+    };
+
     COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
     {
         None = 0,
@@ -918,6 +930,14 @@ namespace Coplt {
     {
         ::Coplt::u64* m_items;
         ::Coplt::i32 m_size;
+    };
+
+    struct AABB2DF
+    {
+        ::Coplt::f32 MinX;
+        ::Coplt::f32 MinY;
+        ::Coplt::f32 MaxX;
+        ::Coplt::f32 MaxY;
     };
 
     struct PathBuilderCmdArc
@@ -1076,14 +1096,6 @@ namespace Coplt {
     {
         ::Coplt::u64 m_count;
         T0 m_data;
-    };
-
-    struct AABB2DF
-    {
-        ::Coplt::f32 MinX;
-        ::Coplt::f32 MinY;
-        ::Coplt::f32 MaxX;
-        ::Coplt::f32 MaxY;
     };
 
     struct AABB2DI
@@ -1262,6 +1274,26 @@ namespace Coplt {
         ::Coplt::LayoutResult FinalLayout;
         ::Coplt::LayoutResult UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
+    };
+
+    struct LineData
+    {
+        ::Coplt::AABB2DF BoundingBox;
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::u32 FirstSpan;
+        ::Coplt::u32 NthLine;
+        ::Coplt::f32 BaseLine;
+    };
+
+    struct LineSpan
+    {
+        ::Coplt::AABB2DF BoundingBox;
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::u32 RunRange;
+        ::Coplt::u32 NthLine;
+        ::Coplt::LineSpanType Type;
     };
 
     struct RootData
@@ -1456,7 +1488,8 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
         ::Coplt::NativeList<::Coplt::GlyphData> m_glyph_datas;
-        ::Coplt::NativeList<::Coplt::AABB2DF> m_bounding_boxes;
+        ::Coplt::NativeList<::Coplt::LineSpan> m_line_spans;
+        ::Coplt::NativeList<::Coplt::LineData> m_lines;
     };
 
     struct TextSpanData

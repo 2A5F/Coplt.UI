@@ -35,9 +35,10 @@ public unsafe partial struct TextParagraphData
     public NativeList<TextData_RunRange> m_run_ranges;
     [Drop]
     public NativeList<GlyphData> m_glyph_datas;
-
     [Drop]
-    public NativeList<AABB2DF> m_bounding_boxes;
+    public NativeList<LineSpan> m_line_spans;
+    [Drop]
+    public NativeList<LineData> m_lines;
 
     public bool IsTextDirty(Document doc) => TextDirtyFrame == 0 || TextDirtyFrame == doc.CurrentFrame;
     public bool IsTextStyleDirty(Document doc) => TextStyleDirtyFrame == 0 || TextStyleDirtyFrame == doc.CurrentFrame;
@@ -53,7 +54,9 @@ public unsafe partial struct TextParagraphData
         MarkTextDirty(doc);
     }
 
-    public ReadOnlySpan<AABB2DF> BoundingBoxes => m_bounding_boxes.AsSpan;
+    public ReadOnlySpan<LineSpan> LineSpans => m_line_spans.AsSpan;
+    /// map tp line span index
+    public ReadOnlySpan<LineData> Lines => m_lines.AsSpan;
 }
 
 public record struct TextData_ScriptRange
@@ -179,4 +182,32 @@ public enum GlyphType : byte
     Outline,
     Color,
     Bitmap,
+}
+
+public record struct LineSpan
+{
+    public AABB2DF BoundingBox;
+    public uint Start;
+    public uint End;
+    public uint RunRange;
+    public uint NthLine;
+    public LineSpanType Type;
+}
+
+public enum LineSpanType : byte
+{
+    Common,
+    Space,
+    Tab,
+    NewLine,
+}
+
+public record struct LineData
+{
+    public AABB2DF BoundingBox;
+    public uint Start;
+    public uint End;
+    public uint FirstSpan;
+    public uint NthLine;
+    public float BaseLine;
 }
