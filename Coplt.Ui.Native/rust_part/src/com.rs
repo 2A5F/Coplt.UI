@@ -848,10 +848,11 @@ pub enum GlyphType {
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum LineSpanType {
-    Common = 0,
+    Text = 0,
     Space = 1,
     Tab = 2,
     NewLine = 3,
+    Object = 4,
 }
 
 bitflags::bitflags! {
@@ -1393,27 +1394,35 @@ pub struct LayoutData {
     pub FinalLayout: LayoutResult,
     pub UnRoundedLayout: LayoutResult,
     pub LayoutCache: LayoutCache,
+    pub m_text_view_data: TextViewData,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LineData {
-    pub BoundingBox: AABB2DF,
-    pub Start: u32,
-    pub End: u32,
-    pub FirstSpan: u32,
-    pub NthLine: u32,
+    pub X: f32,
+    pub Y: f32,
+    pub Width: f32,
+    pub Height: f32,
     pub BaseLine: f32,
+    pub NthLine: u32,
+    pub SpanStart: u32,
+    pub SpanEnd: u32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct LineSpan {
-    pub BoundingBox: AABB2DF,
+pub struct LineSpanData {
+    pub X: f32,
+    pub Y: f32,
+    pub Width: f32,
+    pub Height: f32,
+    pub BaseLine: f32,
+    pub NthLine: u32,
+    pub NodeIndex: u32,
+    pub RunRange: u32,
     pub Start: u32,
     pub End: u32,
-    pub RunRange: u32,
-    pub NthLine: u32,
     pub Type: LineSpanType,
 }
 
@@ -1618,14 +1627,11 @@ pub struct TextParagraphData {
     pub m_font_ranges: NativeList<TextData_FontRange>,
     pub m_run_ranges: NativeList<TextData_RunRange>,
     pub m_glyph_datas: NativeList<GlyphData>,
-    pub m_line_spans: NativeList<LineSpan>,
-    pub m_lines: NativeList<LineData>,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct TextSpanData {
-    pub m_bounding_boxes: NativeList<AABB2DF>,
     pub TextStart: u32,
     pub TextLength: u32,
 }
@@ -1685,6 +1691,13 @@ pub struct TextStyleData {
     pub WordBreak: WordBreak,
     pub TextOrientation: TextOrientation,
     pub LineHeight: LengthType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextViewData {
+    pub m_line_spans: NativeList<LineSpanData>,
+    pub m_lines: NativeList<LineData>,
 }
 
 #[repr(C)]

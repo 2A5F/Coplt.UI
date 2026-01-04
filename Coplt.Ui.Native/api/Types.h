@@ -107,7 +107,7 @@ namespace Coplt {
 
     struct LineData;
 
-    struct LineSpan;
+    struct LineSpanData;
 
     struct RootData;
 
@@ -130,6 +130,8 @@ namespace Coplt {
     struct TextSpanData;
 
     struct TextStyleData;
+
+    struct TextViewData;
 
     struct NodeId;
 
@@ -780,10 +782,11 @@ namespace Coplt {
 
     enum class LineSpanType : ::Coplt::u8
     {
-        Common = 0,
+        Text = 0,
         Space = 1,
         Tab = 2,
         NewLine = 3,
+        Object = 4,
     };
 
     COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
@@ -932,14 +935,6 @@ namespace Coplt {
         ::Coplt::i32 m_size;
     };
 
-    struct AABB2DF
-    {
-        ::Coplt::f32 MinX;
-        ::Coplt::f32 MinY;
-        ::Coplt::f32 MaxX;
-        ::Coplt::f32 MaxY;
-    };
-
     struct PathBuilderCmdArc
     {
         ::Coplt::PathBuilderCmdType Type;
@@ -1074,6 +1069,12 @@ namespace Coplt {
         ::Coplt::usize Length;
     };
 
+    struct TextViewData
+    {
+        ::Coplt::NativeList<::Coplt::LineSpanData> m_line_spans;
+        ::Coplt::NativeList<::Coplt::LineData> m_lines;
+    };
+
     struct NodeId
     {
         ::Coplt::u32 Index;
@@ -1096,6 +1097,14 @@ namespace Coplt {
     {
         ::Coplt::u64 m_count;
         T0 m_data;
+    };
+
+    struct AABB2DF
+    {
+        ::Coplt::f32 MinX;
+        ::Coplt::f32 MinY;
+        ::Coplt::f32 MaxX;
+        ::Coplt::f32 MaxY;
     };
 
     struct AABB2DI
@@ -1274,25 +1283,33 @@ namespace Coplt {
         ::Coplt::LayoutResult FinalLayout;
         ::Coplt::LayoutResult UnRoundedLayout;
         ::Coplt::LayoutCache LayoutCache;
+        ::Coplt::TextViewData m_text_view_data;
     };
 
     struct LineData
     {
-        ::Coplt::AABB2DF BoundingBox;
-        ::Coplt::u32 Start;
-        ::Coplt::u32 End;
-        ::Coplt::u32 FirstSpan;
-        ::Coplt::u32 NthLine;
+        ::Coplt::f32 X;
+        ::Coplt::f32 Y;
+        ::Coplt::f32 Width;
+        ::Coplt::f32 Height;
         ::Coplt::f32 BaseLine;
+        ::Coplt::u32 NthLine;
+        ::Coplt::u32 SpanStart;
+        ::Coplt::u32 SpanEnd;
     };
 
-    struct LineSpan
+    struct LineSpanData
     {
-        ::Coplt::AABB2DF BoundingBox;
+        ::Coplt::f32 X;
+        ::Coplt::f32 Y;
+        ::Coplt::f32 Width;
+        ::Coplt::f32 Height;
+        ::Coplt::f32 BaseLine;
+        ::Coplt::u32 NthLine;
+        ::Coplt::u32 NodeIndex;
+        ::Coplt::u32 RunRange;
         ::Coplt::u32 Start;
         ::Coplt::u32 End;
-        ::Coplt::u32 RunRange;
-        ::Coplt::u32 NthLine;
         ::Coplt::LineSpanType Type;
     };
 
@@ -1488,13 +1505,10 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
         ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
         ::Coplt::NativeList<::Coplt::GlyphData> m_glyph_datas;
-        ::Coplt::NativeList<::Coplt::LineSpan> m_line_spans;
-        ::Coplt::NativeList<::Coplt::LineData> m_lines;
     };
 
     struct TextSpanData
     {
-        ::Coplt::NativeList<::Coplt::AABB2DF> m_bounding_boxes;
         ::Coplt::u32 TextStart;
         ::Coplt::u32 TextLength;
     };

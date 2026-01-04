@@ -1,8 +1,9 @@
 use core::f32;
-use std::{collections::HashMap, ops::Range, str::FromStr, u64};
+use std::{collections::HashMap, fmt::Debug, ops::Range, str::FromStr, u64};
 
 use crate::{
     IsZeroLength,
+    col::NList,
     com::{self, *},
     icu4c::{self, UBiDi, UBiDiDirection, UBiDiLevel},
     layout::{Layout, LayoutInner, ViewStyleHandle},
@@ -61,6 +62,7 @@ mod font_face_ops {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default)]
 struct RootConstants {
     dir: taffy::FlexDirection,
     min_size: Size<Option<f32>>,
@@ -188,351 +190,414 @@ impl Layout {
                 layout.LayoutDirtyFrame = u64::MAX;
             }
 
-            let _inner_size = compute_inner_size(self, doc, id, &constants, inputs);
+            let _inner_size = self.compute_text_layout_inner(doc, id, &constants, inputs);
 
             return taffy::LayoutOutput::HIDDEN;
-
-            fn compute_inner_size(
-                layout: &mut Layout,
-                doc: &mut super::SubDocInner,
-                id: NodeId,
-                constants: &RootConstants,
-                root_inputs: taffy::LayoutInput,
-            ) -> taffy::LayoutOutput {
-                let style = doc.style_data(id);
-                let childs = doc.childs(id);
-
-                let mut available_space = match (
-                    constants.node_inner_size.main(constants.dir),
-                    root_inputs.available_space.main(constants.dir),
-                ) {
-                    (Some(v), _) => v,
-                    (None, taffy::AvailableSpace::Definite(v)) => {
-                        f32::max(0.0, v - constants.padding_border_sum.main(constants.dir))
-                    }
-                    (None, taffy::AvailableSpace::MinContent) => f32::max(
-                        0.0,
-                        // max_size is correct, this may seem strange, but it's available space
-                        constants
-                            .max_size
-                            .main(constants.dir)
-                            .map(|a| a - constants.padding_border_sum.main(constants.dir))
-                            .unwrap_or_default(),
-                    ),
-                    (None, taffy::AvailableSpace::MaxContent) => f32::min(
-                        f32::INFINITY,
-                        constants
-                            .max_size
-                            .main(constants.dir)
-                            .map(|a| {
-                                f32::max(0.0, a - constants.padding_border_sum.main(constants.dir))
-                            })
-                            .unwrap_or(f32::INFINITY),
-                    ),
-                };
-
-                if available_space.is_nan() {
-                    available_space = 0.0;
-                }
-                let mut cur_offset = 0.0;
-
-                for child in childs.iter() {
-                    match child.typ() {
-                        NodeType::Null | NodeType::TextSpan => continue,
-                        NodeType::View => {
-                            // todo inline block
-                        }
-                        NodeType::TextParagraph => {
-                            let _r = layout.compute_text_paragraph_layout(
-                                doc,
-                                *child,
-                                style,
-                                constants.dir,
-                                root_inputs.known_dimensions,
-                                available_space,
-                                &mut cur_offset,
-                            );
-                            // todo
-                        }
-                    }
-                }
-
-                taffy::LayoutOutput::HIDDEN
-            }
         })
     }
 
-    fn compute_text_paragraph_layout(
+    fn compute_text_layout_inner(
         &mut self,
         doc: &mut super::SubDocInner,
         id: NodeId,
-        root_style: &StyleData,
-        dir: taffy::FlexDirection,
-        parent_size: Size<Option<f32>>,
-        available_space: f32,
-        cur_offset: &mut f32,
+        constants: &RootConstants,
+        root_inputs: taffy::LayoutInput,
     ) -> taffy::LayoutOutput {
-        if available_space.is_infinite() {
-            return calce_single_line(self, doc, id, root_style, parent_size, dir);
+        let layout_data = doc.layout_data(id);
+        let root_style = doc.style_data(id);
+        let childs = doc.childs(id);
+        let mut line_spans = layout_data.text_view_data().line_spans();
+        let mut lines = layout_data.text_view_data().lines();
+
+        let mut tmp_line_spans = NList::new();
+        let mut tmp_lines = NList::new();
+        if root_inputs.run_mode != taffy::RunMode::PerformLayout {
+            line_spans = &mut tmp_line_spans;
+            lines = &mut tmp_lines;
+        } else {
+            line_spans.clear();
+            lines.clear();
         }
 
-        // todo break lines
-        return calce_single_line(self, doc, id, root_style, parent_size, dir);
-
-        fn calce_single_line(
-            layout: &mut Layout,
-            doc: &mut super::SubDocInner,
-            id: NodeId,
-            root_style: &StyleData,
-            parent_size: Size<Option<f32>>,
-            dir: taffy::FlexDirection,
-        ) -> taffy::LayoutOutput {
-            let paragraph = doc.text_paragraph_data(id);
-            let style = doc.text_style_data(id);
-
-            let runs = &**paragraph.run_ranges();
-
-            let mut size = Size::zero();
-            let mut sum_main_size = 0.0;
-            let mut max_cross_size = 0.0;
-            let mut max_base_line = 0.0;
-            for (i, run) in runs.iter().enumerate() {
-                let style_range = run.get_style_range(paragraph);
-                let run_style = style_range.style(doc).map(|a| &*a).unwrap_or(&*style);
-
-                let margin = run_style.margin().resolve_or_zero(parent_size, |_, _| 0.0);
-                let padding = run_style.padding().resolve_or_zero(parent_size, |_, _| 0.0);
-
-                let is_style_start_run = style_range.Start == run.Start;
-                let is_style_end_run = style_range.End == run.End;
-
-                let mp_main_start = if is_style_start_run {
-                    margin.main_start(dir) + padding.main_start(dir)
-                } else {
-                    0.0
-                };
-                let mp_main_end = if is_style_end_run {
-                    margin.main_end(dir) + padding.main_end(dir)
-                } else {
-                    0.0
-                };
-                let mp_cross_start = margin.cross_start(dir) + padding.cross_start(dir);
-                let mp_cross_end = margin.cross_end(dir) + padding.cross_end(dir);
-
-                sum_main_size += mp_main_start;
-
-                let font_size = run_style
-                    .FontSize()
-                    .or(style.FontSize())
-                    .unwrap_or(root_style.FontSize);
-                let line_height = run_style
-                    .LineHeight()
-                    .or(style.LineHeight())
-                    .unwrap_or(root_style.LineHeight())
-                    .resolve_to_option(font_size, |_, _| 0.0)
-                    .unwrap_or_else(|| run.Ascent + run.Descent + run.Leading);
-                let line_height = mp_cross_start + line_height + mp_cross_end;
-
-                max_cross_size = f32::max(max_cross_size, line_height);
-                max_base_line = f32::max(max_base_line, run.Ascent);
-
-                let glyph_datas = run.get_glyph_datas(paragraph);
-                for glyph_data in glyph_datas.iter() {
-                    sum_main_size += glyph_data.Advance + glyph_data.Offset;
+        let available_space = {
+            let mut available_space = match (
+                constants.node_inner_size.main(constants.dir),
+                root_inputs.available_space.main(constants.dir),
+            ) {
+                (Some(v), _) => v,
+                (None, taffy::AvailableSpace::Definite(v)) => {
+                    f32::max(0.0, v - constants.padding_border_sum.main(constants.dir))
                 }
-
-                sum_main_size += mp_main_end;
+                (None, taffy::AvailableSpace::MinContent) => f32::max(
+                    0.0,
+                    // max_size is correct, this may seem strange, but it's available space
+                    constants
+                        .max_size
+                        .main(constants.dir)
+                        .map(|a| a - constants.padding_border_sum.main(constants.dir))
+                        .unwrap_or_default(),
+                ),
+                (None, taffy::AvailableSpace::MaxContent) => f32::min(
+                    f32::INFINITY,
+                    constants
+                        .max_size
+                        .main(constants.dir)
+                        .map(|a| {
+                            f32::max(0.0, a - constants.padding_border_sum.main(constants.dir))
+                        })
+                        .unwrap_or(f32::INFINITY),
+                ),
+            };
+            if available_space.is_nan() {
+                available_space = 0.0;
             }
+            available_space
+        };
 
-            size.set_main(dir, sum_main_size);
-            size.set_cross(dir, max_cross_size);
+        let dir = constants.dir;
+        let known_dimensions = root_inputs.known_dimensions;
 
-            let mut base_line = Point::NONE;
-            if dir.is_row() {
-                base_line.x = Some(max_base_line);
-            } else {
-                base_line.y = Some(max_base_line);
+        let mut ctx = LineBreakCtx::new(available_space, constants);
+        for child in childs.iter() {
+            match child.typ() {
+                NodeType::Null | NodeType::TextSpan => continue,
+                NodeType::View => {
+                    // todo inline block
+                    continue;
+                }
+                NodeType::TextParagraph => {
+                    let style = doc.text_style_data(*child);
+                    let paragraph = doc.text_paragraph_data(*child);
+                    let runs = &**paragraph.run_ranges();
+                    if runs.is_empty() {
+                        continue;
+                    }
+
+                    let break_afters = paragraph.break_points();
+
+                    let same_style_ranges = &**paragraph.same_style_ranges();
+                    let same_style_constants: Vec<_> = same_style_ranges
+                        .iter()
+                        .map(|a| {
+                            let run_style = a.style(doc).map(|a| &*a).unwrap_or(&*style);
+                            let margin = run_style
+                                .margin()
+                                .resolve_or_zero(known_dimensions, |_, _| 0.0);
+                            let padding = run_style
+                                .padding()
+                                .resolve_or_zero(known_dimensions, |_, _| 0.0);
+
+                            let mp_main_start = margin.main_start(dir) + padding.main_start(dir);
+                            let mp_main_end = margin.main_end(dir) + padding.main_end(dir);
+
+                            let mp_cross_start = margin.cross_start(dir) + padding.cross_start(dir);
+                            let mp_cross_end = margin.cross_end(dir) + padding.cross_end(dir);
+
+                            let font_size = run_style
+                                .FontSize()
+                                .or(style.FontSize())
+                                .unwrap_or(root_style.FontSize);
+                            let line_height = run_style
+                                .LineHeight()
+                                .or(style.LineHeight())
+                                .unwrap_or(root_style.LineHeight())
+                                .resolve_to_option(font_size, |_, _| 0.0);
+                            let line_height = line_height
+                                .map(|line_height| mp_cross_start + line_height + mp_cross_end);
+
+                            let wrap_flags = run_style
+                                .WrapFlags()
+                                .or(style.WrapFlags())
+                                .unwrap_or(root_style.WrapFlags);
+                            let allow_newline = wrap_flags.contains(WrapFlags::AllowNewLine);
+                            let wrap_in_space = wrap_flags.contains(WrapFlags::WrapInSpace);
+                            let allow_wrap = run_style
+                                .TextWrap()
+                                .or(style.TextWrap())
+                                .unwrap_or(root_style.TextWrap)
+                                != TextWrap::NoWrap;
+
+                            SameStyleConstants {
+                                mp_main_start,
+                                mp_main_end,
+                                mp_cross_start,
+                                mp_cross_end,
+                                line_height,
+                                allow_newline,
+                                wrap_in_space,
+                                allow_wrap,
+                            }
+                        })
+                        .collect();
+
+                    for (run_index, run) in runs.iter().enumerate() {
+                        let style_range = run.get_style_range(paragraph);
+                        let sc = &same_style_constants[run.StyleRange as usize];
+
+                        let mut run_ctx = LineBreakRunCtx::new(
+                            child.Index,
+                            run_index as u32,
+                            run,
+                            lines,
+                            line_spans,
+                            sc,
+                        );
+
+                        ctx.apply_run_start(&mut run_ctx);
+
+                        let mut glyph_datas = run.get_glyph_datas(paragraph);
+                        while !glyph_datas.is_empty() {
+                            let gcs = GlyphClusterSize::calc_next(run, glyph_datas);
+                            let is_break_after = break_afters.get(gcs.last_cluster() as i32);
+                            ctx.apply_cluster(&mut run_ctx, &gcs, is_break_after);
+                            glyph_datas = &glyph_datas[gcs.glyph_count as usize..];
+                        }
+
+                        ctx.apply_run_end(&mut run_ctx);
+                    }
+                }
             }
-
-            taffy::LayoutOutput::from_sizes_and_baselines(size, size, base_line)
         }
+        ctx.finally();
+
+        return taffy::LayoutOutput::HIDDEN;
     }
 }
 
-struct LineBreakCtx {
-    pub nth_line: u32,
-    pub available_space: f32,
-    pub cur_main_size: f32,
+#[derive(Debug, Clone, Copy, Default)]
+struct LineBreakCursor {
+    pub span: u32,
+    pub char: u32,
+    pub offset: f32,
 }
 
-#[allow(non_snake_case)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-struct PatialLineSpan {
-    pub Start: u32,
-    pub End: u32,
-    pub RunRange: u32,
-    pub NthLine: u32,
-    pub Type: LineSpanType,
+impl LineBreakCursor {
+    pub fn new(span: u32, char: u32, offset: f32) -> Self {
+        Self { span, char, offset }
+    }
 }
 
-impl From<PatialLineSpan> for LineSpan {
-    fn from(
-        PatialLineSpan {
-            Start,
-            End,
-            RunRange,
-            NthLine,
-            Type,
-        }: PatialLineSpan,
+struct LineBreakRunCtx<'a> {
+    pub node_index: u32,
+    pub run_index: u32,
+    pub run: &'a TextData_RunRange,
+    pub lines: &'a mut NList<LineData>,
+    pub line_spans: &'a mut NList<LineSpanData>,
+    pub style_constants: &'a SameStyleConstants,
+}
+
+impl<'a> LineBreakRunCtx<'a> {
+    pub fn new(
+        node_index: u32,
+        run_index: u32,
+        run: &'a TextData_RunRange,
+        lines: &'a mut NList<LineData>,
+        line_spans: &'a mut NList<LineSpanData>,
+        style_constants: &'a SameStyleConstants,
     ) -> Self {
         Self {
-            BoundingBox: AABB2DF {
-                MinX: 0.0,
-                MinY: 0.0,
-                MaxX: 0.0,
-                MaxY: 0.0,
-            },
-            Start,
-            End,
-            RunRange,
-            NthLine,
-            Type,
+            node_index,
+            run_index,
+            run,
+            lines,
+            line_spans,
+            style_constants,
         }
     }
 }
 
-fn break_lines<'a>(
-    ctx: &mut LineBreakCtx,
-    doc: &mut super::SubDocInner,
-    paragraph: &mut TextParagraphData,
-    root_style: &StyleData,
-    style: &TextStyleData,
-    parent_size: Size<Option<f32>>,
-    dir: taffy::FlexDirection,
-) -> Generator<'a, impl Coroutine<Yield = PatialLineSpan>> {
-    a_gen(move |g| gen_break_lines(g, ctx, doc, paragraph, root_style, style, parent_size, dir))
+#[derive(Debug, Clone, Default)]
+struct LineBreakCtx {
+    pub available_space: f32,
+    pub dir: taffy::FlexDirection,
+
+    pub max_main_size: f32,
+    pub sum_cross_size: f32,
+
+    pub cursor: LineBreakCursor,
+
+    pub nth_line: u32,
+    pub cur_line_start_span: u32,
+    pub cur_line_max_line_height: f32,
+    pub cur_line_max_base_line: f32,
+
+    pub cur_run_line_height: f32,
+    pub cur_run_base_line: f32,
+
+    pub cur_span_start: LineBreakCursor,
+    pub last_break_point: Option<LineBreakCursor>,
 }
 
-async fn gen_break_lines(
-    g: AGen<PatialLineSpan>,
-    ctx: &mut LineBreakCtx,
-    doc: &mut super::SubDocInner,
-    paragraph: &mut TextParagraphData,
-    root_style: &StyleData,
-    style: &TextStyleData,
-    parent_size: Size<Option<f32>>,
-    dir: taffy::FlexDirection,
-) {
-    let runs = &**paragraph.run_ranges();
-    if runs.is_empty() {
-        return;
+impl LineBreakCtx {
+    pub fn new(available_space: f32, constants: &RootConstants) -> Self {
+        Self {
+            available_space,
+            dir: constants.dir,
+            ..Default::default()
+        }
     }
 
-    let grapheme_cluster = &**paragraph.grapheme_cluster();
+    fn shoud_wrap(&self) -> bool {
+        self.cursor.offset > self.available_space
+            && self
+                .last_break_point
+                .map(|a| a.offset > 0.0)
+                .unwrap_or(false)
+    }
 
-    let available_space = ctx.available_space;
-    let nth_line = &mut ctx.nth_line;
-    let start_main_size = &mut ctx.cur_main_size;
-    let mut cur_main_size = *start_main_size;
-
-    let move_to_next_line =
-        |nth_line: &mut u32, start_main_size: &mut f32, cur_main_size: &mut f32| {
-            *nth_line += 1;
-            *start_main_size = 0.0;
-            *cur_main_size = 0.0;
-        };
-
-    for run in runs.iter() {
-        let style_range = run.get_style_range(paragraph);
-        let run_style = style_range.style(doc).map(|a| &*a).unwrap_or(&*style);
-
-        let (mp_main_start, mp_main_end, mp_cross_start, mp_cross_end, line_height) = {
-            let margin = run_style.margin().resolve_or_zero(parent_size, |_, _| 0.0);
-            let padding = run_style.padding().resolve_or_zero(parent_size, |_, _| 0.0);
-
-            let is_style_start_run = style_range.Start == run.Start;
-            let is_style_end_run = style_range.End == run.End;
-
-            let mp_main_start = if is_style_start_run {
-                margin.main_start(dir) + padding.main_start(dir)
-            } else {
-                0.0
-            };
-            let mp_main_end = if is_style_end_run {
-                margin.main_end(dir) + padding.main_end(dir)
-            } else {
-                0.0
-            };
-            let mp_cross_start = margin.cross_start(dir) + padding.cross_start(dir);
-            let mp_cross_end = margin.cross_end(dir) + padding.cross_end(dir);
-
-            let font_size = run_style
-                .FontSize()
-                .or(style.FontSize())
-                .unwrap_or(root_style.FontSize);
-            let line_height = run_style
-                .LineHeight()
-                .or(style.LineHeight())
-                .unwrap_or(root_style.LineHeight())
-                .resolve_to_option(font_size, |_, _| 0.0)
-                .unwrap_or_else(|| run.Ascent + run.Descent + run.Leading);
-            let line_height = mp_cross_start + line_height + mp_cross_end;
-
-            (
-                mp_main_start,
-                mp_main_end,
-                mp_cross_start,
-                mp_cross_end,
-                line_height,
-            )
-        };
-
-        let (allow_newline, wrap_in_space, allow_wrap) = {
-            let wrap_flags = run_style
-                .WrapFlags()
-                .or(style.WrapFlags())
-                .unwrap_or(root_style.WrapFlags);
-            let allow_newline = wrap_flags.contains(WrapFlags::AllowNewLine);
-            let wrap_in_space = wrap_flags.contains(WrapFlags::WrapInSpace);
-            let allow_wrap = run_style
-                .TextWrap()
-                .or(style.TextWrap())
-                .unwrap_or(root_style.TextWrap)
-                != TextWrap::NoWrap;
-
-            (allow_newline, wrap_in_space, allow_wrap)
-        };
-
-        let mut next_main_size = cur_main_size + mp_main_start;
-        // if line is not empty, move to next line
-        if next_main_size > available_space && *start_main_size > 0.0 {
-            // todo
-            move_to_next_line(nth_line, start_main_size, &mut cur_main_size);
+    pub fn apply_cluster(
+        &mut self,
+        rc: &mut LineBreakRunCtx,
+        gcs: &GlyphClusterSize,
+        is_break_after: bool,
+    ) {
+        self.cursor.offset += gcs.size;
+        self.cursor.char += gcs.char_count;
+        if self.shoud_wrap() {
+            self.break_line(rc);
         }
 
-        let glyph_datas = run.get_glyph_datas(paragraph);
-        while glyph_datas.is_empty() {
-            let (count, size) = sum_glyph_cluster_size(glyph_datas);
+        // todo
+    }
 
-            // todo
+    pub fn apply_run_start(&mut self, rc: &mut LineBreakRunCtx) {
+        let sc = rc.style_constants;
+        let line_height = sc
+            .line_height
+            .unwrap_or_else(|| rc.run.Ascent + rc.run.Descent + rc.run.Leading);
+        let base_line = rc.run.Ascent;
+
+        self.cur_run_base_line = base_line;
+        self.cur_run_line_height = sc.mp_cross_start + line_height + sc.mp_cross_end;
+
+        self.cursor.offset += sc.mp_main_start;
+        self.cursor.char = rc.run.Start;
+        if self.shoud_wrap() {
+            self.break_line(rc);
         }
+    }
+
+    pub fn apply_run_end(&mut self, rc: &mut LineBreakRunCtx) {
+        self.cursor.offset += rc.style_constants.mp_main_end;
+        // todo
+    }
+
+    fn break_line(&mut self, rc: &mut LineBreakRunCtx) {
+        if let Some(last_break_point) = self.last_break_point {
+            if last_break_point.char != self.cur_span_start.char {
+                let start = self.cur_span_start.offset;
+                let size = last_break_point.offset - self.cur_span_start.offset;
+                let line_height = self.cur_run_line_height;
+                let base_line = self.cur_run_base_line;
+                rc.line_spans.push(LineSpanData {
+                    X: if self.dir.is_row() { start } else { 0.0 },
+                    Y: if self.dir.is_row() { 0.0 } else { start },
+                    Width: if self.dir.is_row() { size } else { line_height },
+                    Height: if self.dir.is_row() { line_height } else { size },
+                    BaseLine: base_line,
+                    NthLine: self.nth_line,
+                    NodeIndex: rc.node_index,
+                    RunRange: rc.run_index,
+                    Start: self.cur_span_start.char,
+                    End: last_break_point.char,
+                    Type: LineSpanType::Text,
+                });
+            }
+        }
+
+        debug_assert!(rc.line_spans.len() > 0);
+
+        let span_start = self.cur_line_start_span;
+        let span_end = rc.line_spans.len() as u32;
+        let start_span = &rc.line_spans[span_start as usize];
+        let end_span = &rc.line_spans[span_end as usize - 1];
+        let size = if self.dir.is_row() {
+            end_span.X + end_span.Width - start_span.X
+        } else {
+            end_span.Y + end_span.Height - start_span.Y
+        };
+        let line_height = self.cur_line_max_line_height;
+        let start = self.sum_cross_size;
+        rc.lines.push(LineData {
+            X: if self.dir.is_row() { start } else { 0.0 },
+            Y: if self.dir.is_row() { 0.0 } else { start },
+            Width: if self.dir.is_row() { size } else { line_height },
+            Height: if self.dir.is_row() { line_height } else { size },
+            BaseLine: self.cur_line_max_base_line,
+            NthLine: self.nth_line,
+            SpanStart: span_start,
+            SpanEnd: span_end,
+        });
+        self.nth_line += 1;
+        self.sum_cross_size += line_height;
+        self.max_main_size = self.max_main_size.max(size);
+        self.cur_line_start_span = span_end;
+        if let Some(last_break_point) = self.last_break_point {
+            self.cursor.offset -= last_break_point.offset;
+        }
+        self.last_break_point = None;
+        self.cur_span_start = self.cursor;
+    }
+
+    fn finally(&mut self) {
+        // todo
     }
 }
 
-fn sum_glyph_cluster_size(glyph_datas: &[GlyphData]) -> (/* count */ u32, /* size */ f32) {
-    let mut iter = glyph_datas.iter();
-    let first = match iter.next() {
-        Some(a) => a,
-        None => return (0, 0.0),
-    };
-    let mut count = 1;
-    let mut size = first.Advance + first.Offset;
-    let cluster = first.Cluster;
-    while let Some(item) = iter.next().filter(|a| a.Cluster == cluster) {
-        count += 1;
-        size += item.Advance + item.Offset;
+#[derive(Debug, Clone, Copy, Default)]
+struct SameStyleConstants {
+    pub mp_main_start: f32,
+    pub mp_main_end: f32,
+    pub mp_cross_start: f32,
+    pub mp_cross_end: f32,
+    pub line_height: Option<f32>,
+    pub allow_newline: bool,
+    pub wrap_in_space: bool,
+    pub allow_wrap: bool,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct GlyphClusterSize {
+    pub cluster: u32,
+    pub char_count: u32,
+    pub glyph_count: u32,
+    pub size: f32,
+}
+
+impl GlyphClusterSize {
+    pub fn calc_next(run: &TextData_RunRange, rem_glyph_datas: &[GlyphData]) -> Self {
+        let mut iter = rem_glyph_datas.iter();
+        let first = match iter.next() {
+            Some(a) => a,
+            None => return Default::default(),
+        };
+        let mut glyph_count = 1;
+        let mut size = first.Advance + first.Offset;
+        let cluster = first.Cluster;
+        while let Some(item) = iter.next().filter(|a| a.Cluster == cluster) {
+            glyph_count += 1;
+            size += item.Advance + item.Offset;
+        }
+        let char_count = if glyph_count >= rem_glyph_datas.len() {
+            run.End - cluster
+        } else {
+            rem_glyph_datas[glyph_count].Cluster - cluster
+        };
+        Self {
+            cluster,
+            char_count,
+            glyph_count: glyph_count as u32,
+            size,
+        }
     }
-    (count, size)
+
+    pub fn last_cluster(&self) -> u32 {
+        if self.char_count == 0 {
+            0
+        } else {
+            self.cluster + self.char_count - 1
+        }
+    }
 }
 
 impl Layout {
@@ -585,13 +650,28 @@ impl Layout {
             let mut last_i = 0;
             let mut cur_script = Script::Common;
 
+            // todo rewrite script merge
+
             let map = CodePointMapData::<Script>::new();
             for (i, script) in Utf16Indices::new(text).map(|(i, c)| (i, map.get32(c))) {
                 if i == 0 {
                     cur_script = script;
                     continue;
                 }
+                if matches!(
+                    cur_script,
+                    Script::Common | Script::Inherited | Script::Unknown
+                ) {
+                    continue;
+                }
                 if script != cur_script {
+                    if matches!(
+                        cur_script,
+                        Script::Common | Script::Inherited | Script::Unknown
+                    ) {
+                        cur_script = script;
+                        continue;
+                    }
                     script_ranges.add(TextData_ScriptRange {
                         Start: last_i,
                         End: i as u32,

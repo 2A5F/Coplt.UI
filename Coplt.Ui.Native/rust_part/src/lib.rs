@@ -186,16 +186,28 @@ mod com_impl {
             AvailableSpaceType, ChildsData, CommonData, CursorType, FontWeight, FontWidth,
             GlyphData, IFontFallback, LayoutCache, LayoutCacheEntryLayoutOutput,
             LayoutCacheEntrySize, LayoutCacheFlags, LayoutCollapsibleMarginSet, LayoutData,
-            LayoutResult, LineAlign, LocaleId, NString, NativeArc, NativeList, PointerEvents,
-            StyleData, TextAlign, TextData_BidiRange, TextData_FontRange, TextData_LocaleRange,
-            TextData_RunRange, TextData_SameStyleRange, TextData_ScriptRange, TextDirection,
-            TextOrientation, TextOverflow, TextParagraphData, TextSpanData, TextSpanNode,
-            TextStyleData, TextStyleOverride, TextWrap, WordBreak, WrapFlags, WritingDirection,
+            LayoutResult, LineAlign, LineData, LineSpanData, LocaleId, NString, NativeArc,
+            NativeList, PointerEvents, StyleData, TextAlign, TextData_BidiRange,
+            TextData_FontRange, TextData_LocaleRange, TextData_RunRange, TextData_SameStyleRange,
+            TextData_ScriptRange, TextDirection, TextOrientation, TextOverflow, TextParagraphData,
+            TextSpanData, TextSpanNode, TextStyleData, TextStyleOverride, TextViewData, TextWrap,
+            WordBreak, WrapFlags, WritingDirection,
         },
         layout::FontRange,
     };
 
     use super::*;
+
+    impl Default for com::AABB2DF {
+        fn default() -> Self {
+            Self {
+                MinX: Default::default(),
+                MinY: Default::default(),
+                MaxX: Default::default(),
+                MaxY: Default::default(),
+            }
+        }
+    }
 
     unsafe impl<T> Send for com::NativeList<T> {}
     unsafe impl<T> Sync for com::NativeList<T> {}
@@ -314,6 +326,10 @@ mod com_impl {
     impl LayoutData {
         pub fn is_layout_dirty(&self, doc: &layout::SubDocInner) -> bool {
             self.LayoutDirtyFrame == doc.current_frame()
+        }
+
+        pub fn text_view_data(&mut self) -> &mut TextViewData {
+            &mut self.m_text_view_data
         }
     }
 
@@ -537,6 +553,15 @@ mod com_impl {
                 top: self.PaddingTop().unwrap_or(LengthPercentage::ZERO),
                 bottom: self.PaddingBottom().unwrap_or(LengthPercentage::ZERO),
             }
+        }
+    }
+
+    impl TextViewData {
+        pub fn line_spans(&mut self) -> &'static mut NList<LineSpanData> {
+            unsafe { std::mem::transmute(&mut self.m_line_spans) }
+        }
+        pub fn lines(&mut self) -> &'static mut NList<LineData> {
+            unsafe { std::mem::transmute(&mut self.m_lines) }
         }
     }
 

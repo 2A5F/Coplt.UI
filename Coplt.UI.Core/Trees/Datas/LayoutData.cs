@@ -6,6 +6,7 @@ using Coplt.UI.Native;
 
 namespace Coplt.UI.Trees.Datas;
 
+[Dropping]
 public partial record struct LayoutData()
 {
     internal ulong LayoutDirtyFrame;
@@ -14,12 +15,17 @@ public partial record struct LayoutData()
     internal LayoutResult UnRoundedLayout;
     internal LayoutCache LayoutCache;
 
+    [Drop]
+    internal TextViewData m_text_view_data;
 
     public bool IsLayoutDirty(Document doc) => LayoutDirtyFrame == 0 || LayoutDirtyFrame == doc.CurrentFrame;
     public void MarkLayoutDirty(Document doc) => LayoutDirtyFrame = doc.CurrentFrame;
 
     [UnscopedRef]
     public LayoutView Layout => new(ref this);
+
+    [UnscopedRef]
+    public ref readonly TextViewData TextViewData => ref m_text_view_data;
 }
 
 public ref struct LayoutView(ref LayoutData Data)
