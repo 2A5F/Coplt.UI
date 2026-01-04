@@ -358,7 +358,7 @@ impl Layout {
                 }
             }
         }
-        ctx.finally();
+        ctx.finally(lines, line_spans);
 
         return taffy::LayoutOutput::HIDDEN;
     }
@@ -456,8 +456,9 @@ impl LineBreakCtx {
         if self.shoud_wrap() {
             self.break_line(rc);
         }
-
-        // todo
+        if is_break_after {
+            self.last_break_point = Some(self.cursor);
+        }
     }
 
     pub fn apply_run_start(&mut self, rc: &mut LineBreakRunCtx) {
@@ -475,34 +476,87 @@ impl LineBreakCtx {
         if self.shoud_wrap() {
             self.break_line(rc);
         }
+
+        self.cur_line_max_base_line = self.cur_line_max_base_line.max(self.cur_run_base_line);
+        self.cur_line_max_line_height = self.cur_line_max_line_height.max(self.cur_run_line_height);
     }
 
     pub fn apply_run_end(&mut self, rc: &mut LineBreakRunCtx) {
         self.cursor.offset += rc.style_constants.mp_main_end;
-        // todo
+        if self.cursor.char != self.cur_span_start.char {
+            debug_assert!(self.cursor.char >= self.cur_span_start.char);
+            let start = self.cur_span_start.offset;
+            let size = self.cursor.offset - self.cur_span_start.offset;
+            let line_height = self.cur_run_line_height;
+            let base_line = self.cur_run_base_line;
+            rc.line_spans.push(LineSpanData {
+                X: if self.dir.is_row() { start } else { 0.0 },
+                Y: if self.dir.is_row() { 0.0 } else { start },
+                Width: if self.dir.is_row() { size } else { line_height },
+                Height: if self.dir.is_row() { line_height } else { size },
+                BaseLine: base_line,
+                NthLine: self.nth_line,
+                NodeIndex: rc.node_index,
+                RunRange: rc.run_index,
+                Start: self.cur_span_start.char,
+                End: self.cursor.char,
+                Type: LineSpanType::Text,
+            });
+            self.cur_span_start = self.cursor;
+        }
+
+        self.cur_run_base_line = 0.0;
+        self.cur_run_line_height = 0.0;
     }
 
     fn break_line(&mut self, rc: &mut LineBreakRunCtx) {
         if let Some(last_break_point) = self.last_break_point {
             if last_break_point.char != self.cur_span_start.char {
-                let start = self.cur_span_start.offset;
-                let size = last_break_point.offset - self.cur_span_start.offset;
-                let line_height = self.cur_run_line_height;
-                let base_line = self.cur_run_base_line;
-                rc.line_spans.push(LineSpanData {
-                    X: if self.dir.is_row() { start } else { 0.0 },
-                    Y: if self.dir.is_row() { 0.0 } else { start },
-                    Width: if self.dir.is_row() { size } else { line_height },
-                    Height: if self.dir.is_row() { line_height } else { size },
-                    BaseLine: base_line,
-                    NthLine: self.nth_line,
-                    NodeIndex: rc.node_index,
-                    RunRange: rc.run_index,
-                    Start: self.cur_span_start.char,
-                    End: last_break_point.char,
-                    Type: LineSpanType::Text,
-                });
+                if last_break_point.char > self.cur_span_start.char {
+                    let start = self.cur_span_start.offset;
+                    let size = last_break_point.offset - self.cur_span_start.offset;
+                    let line_height = self.cur_run_line_height;
+                    let base_line = self.cur_run_base_line;
+                    rc.line_spans.push(LineSpanData {
+                        X: if self.dir.is_row() { start } else { 0.0 },
+                        Y: if self.dir.is_row() { 0.0 } else { start },
+                        Width: if self.dir.is_row() { size } else { line_height },
+                        Height: if self.dir.is_row() { line_height } else { size },
+                        BaseLine: base_line,
+                        NthLine: self.nth_line,
+                        NodeIndex: rc.node_index,
+                        RunRange: rc.run_index,
+                        Start: self.cur_span_start.char,
+                        End: last_break_point.char,
+                        Type: LineSpanType::Text,
+                    });
+                    self.cur_span_start = last_break_point;
+                } else {
+                    todo!()
+                }
             }
+        }
+        // force break line; newline
+        else if self.cursor.char != self.cur_span_start.char {
+            debug_assert!(self.cursor.char >= self.cur_span_start.char);
+            let start = self.cur_span_start.offset;
+            let size = self.cursor.offset - self.cur_span_start.offset;
+            let line_height = self.cur_run_line_height;
+            let base_line = self.cur_run_base_line;
+            rc.line_spans.push(LineSpanData {
+                X: if self.dir.is_row() { start } else { 0.0 },
+                Y: if self.dir.is_row() { 0.0 } else { start },
+                Width: if self.dir.is_row() { size } else { line_height },
+                Height: if self.dir.is_row() { line_height } else { size },
+                BaseLine: base_line,
+                NthLine: self.nth_line,
+                NodeIndex: rc.node_index,
+                RunRange: rc.run_index,
+                Start: self.cur_span_start.char,
+                End: self.cursor.char,
+                Type: LineSpanType::Text,
+            });
+            self.cur_span_start = self.cursor;
         }
 
         debug_assert!(rc.line_spans.len() > 0);
@@ -517,10 +571,10 @@ impl LineBreakCtx {
             end_span.Y + end_span.Height - start_span.Y
         };
         let line_height = self.cur_line_max_line_height;
-        let start = self.sum_cross_size;
+        let cross_start = self.sum_cross_size;
         rc.lines.push(LineData {
-            X: if self.dir.is_row() { start } else { 0.0 },
-            Y: if self.dir.is_row() { 0.0 } else { start },
+            X: if self.dir.is_row() { 0.0 } else { cross_start },
+            Y: if self.dir.is_row() { cross_start } else { 0.0 },
             Width: if self.dir.is_row() { size } else { line_height },
             Height: if self.dir.is_row() { line_height } else { size },
             BaseLine: self.cur_line_max_base_line,
@@ -534,13 +588,39 @@ impl LineBreakCtx {
         self.cur_line_start_span = span_end;
         if let Some(last_break_point) = self.last_break_point {
             self.cursor.offset -= last_break_point.offset;
+        } else {
+            self.cursor.offset = 0.0;
         }
         self.last_break_point = None;
-        self.cur_span_start = self.cursor;
+        self.cur_span_start.offset = 0.0;
+        self.cur_line_max_base_line = self.cur_run_base_line;
+        self.cur_line_max_line_height = self.cur_run_line_height;
     }
 
-    fn finally(&mut self) {
-        // todo
+    fn finally(&mut self, lines: &mut NList<LineData>, line_spans: &mut NList<LineSpanData>) {
+        if self.cur_line_start_span < line_spans.len() as u32 {
+            let span_start = self.cur_line_start_span;
+            let span_end = line_spans.len() as u32;
+            let start_span = &line_spans[span_start as usize];
+            let end_span = &line_spans[span_end as usize - 1];
+            let size = if self.dir.is_row() {
+                end_span.X + end_span.Width - start_span.X
+            } else {
+                end_span.Y + end_span.Height - start_span.Y
+            };
+            let line_height = self.cur_line_max_line_height;
+            let cross_start = self.sum_cross_size;
+            lines.push(LineData {
+                X: if self.dir.is_row() { 0.0 } else { cross_start },
+                Y: if self.dir.is_row() { cross_start } else { 0.0 },
+                Width: if self.dir.is_row() { size } else { line_height },
+                Height: if self.dir.is_row() { line_height } else { size },
+                BaseLine: self.cur_line_max_base_line,
+                NthLine: self.nth_line,
+                SpanStart: span_start,
+                SpanEnd: span_end,
+            });
+        }
     }
 }
 
@@ -658,10 +738,7 @@ impl Layout {
                     cur_script = script;
                     continue;
                 }
-                if matches!(
-                    cur_script,
-                    Script::Common | Script::Inherited | Script::Unknown
-                ) {
+                if matches!(script, Script::Common | Script::Inherited | Script::Unknown) {
                     continue;
                 }
                 if script != cur_script {

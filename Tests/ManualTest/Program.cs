@@ -2,6 +2,7 @@
 // Console.WriteLine(ff);
 
 using System.Diagnostics;
+using Coplt.Mathematics;
 using Coplt.UI.Miscellaneous;
 using Coplt.UI.Native;
 using Coplt.UI.Styles;
@@ -32,16 +33,16 @@ NativeLib.Instance.SetLogger((l, msg) => Console.WriteLine($"[{l}] {msg}"));
 var locale = Utils.GetUserUiDefaultLocale();
 Console.WriteLine($"{locale}");
 
-var ff = FontFallback.Create("Calibri");
-// var ff = FontFallback.Create("Microsoft YaHei UI");
-Console.WriteLine(ff);
+// var ff = FontFallback.Create("Calibri");
+// // var ff = FontFallback.Create("Microsoft YaHei UI");
+// Console.WriteLine(ff);
 
 using var doc = new Document.Builder().Create();
 var node = new Access.View(doc)
 {
     MaxWidth = 100, Height = Length.Auto,
     Container = Container.Text,
-    FontFallback = ff,
+    // FontFallback = ff,
     WrapFlags = WrapFlags.AllowNewLine,
 };
 doc.AddRoot(node.Id);
@@ -56,13 +57,22 @@ doc.AddRoot(node.Id);
 // node.Add("😀");
 // node.Add("a c");
 // node.Add("123 阿斯顿 asd");
-var paragraph = node.Add("asd qwe");
+var paragraph = node.Add("Never Gonna Give You Up");
 var start = Stopwatch.GetTimestamp();
 doc.Update();
 var end = Stopwatch.GetTimestamp();
 var elapsed = Stopwatch.GetElapsedTime(start, end);
 Console.WriteLine($"{elapsed}; {elapsed.TotalMilliseconds}ms; {elapsed.TotalMicroseconds}us");
 Console.WriteLine(node.Layout.ToString());
-var layout = doc.At<LayoutData>(node.Id);
-var data = doc.At<TextParagraphData>(paragraph.Id);
-Console.WriteLine($"{data.Text}");
+ref readonly var layout = ref doc.At<LayoutData>(node.Id).TextViewData;
+ref readonly var data = ref doc.At<TextParagraphData>(paragraph.Id);
+var text = data.Text;
+Console.WriteLine($"{text}");
+foreach (ref readonly var line in layout.Lines)
+{
+    Console.WriteLine($"  <line({line.NthLine}) pos=({line.X}, {line.Y}) size=({line.Width}, {line.Height}) baseline=({line.BaseLine}) />");
+    foreach (var line_span in layout.LineSpans[(int)line.SpanStart..(int)line.SpanEnd])
+    {
+        Console.WriteLine($"    <span pos=({line_span.X}, {line_span.Y}) size=({line_span.Width}, {line_span.Height}) baseline=({line_span.BaseLine}) text=\"{text[(int)line_span.Start..(int)line_span.End]}\" />");
+    }
+}
