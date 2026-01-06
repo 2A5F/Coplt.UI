@@ -247,6 +247,18 @@ public static unsafe partial class Access
                 style.GridRowEnd = value;
             }
         }
+
+        public TextAlign TextAlign
+        {
+            get => node.StyleData.TextAlign;
+            set => node.StyleData.TextAlign = value;
+        }
+
+        public LineAlign LineAlign
+        {
+            get => node.StyleData.LineAlign;
+            set => node.StyleData.LineAlign = value;
+        }
     }
 
     extension(TextParagraph node)

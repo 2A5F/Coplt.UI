@@ -190,9 +190,42 @@ impl Layout {
                 layout.LayoutDirtyFrame = u64::MAX;
             }
 
-            let _inner_size = self.compute_text_layout_inner(doc, id, &constants, inputs);
+            let inner_size = self.compute_text_layout_inner(doc, id, &constants, &inputs);
+            let outer_size = constants
+                .node_outer_size
+                .unwrap_or(inner_size + constants.padding_border_sum);
+            let inner_size = constants.node_inner_size.unwrap_or(inner_size);
 
-            return taffy::LayoutOutput::HIDDEN;
+            if inputs.run_mode == taffy::RunMode::ComputeSize {
+                return taffy::LayoutOutput::from_sizes(outer_size, inner_size);
+            }
+
+            let mut line_spans = layout.text_view_data().line_spans();
+            let mut lines = layout.text_view_data().lines();
+
+            if lines.len() == 0 {
+                return taffy::LayoutOutput::from_sizes(outer_size, inner_size);
+            }
+
+            self.perform_text_layout_inner(doc, id, &constants, &inputs, inner_size);
+
+            let last_base_line = lines.last().unwrap().BaseLine;
+            let base_line = taffy::Point {
+                x: if constants.dir.is_row() {
+                    None
+                } else {
+                    Some(last_base_line)
+                },
+                y: if constants.dir.is_row() {
+                    Some(last_base_line)
+                } else {
+                    None
+                },
+            };
+
+            return taffy::LayoutOutput::from_sizes_and_baselines(
+                outer_size, inner_size, base_line,
+            );
         })
     }
 
@@ -201,23 +234,18 @@ impl Layout {
         doc: &mut super::SubDocInner,
         id: NodeId,
         constants: &RootConstants,
-        root_inputs: taffy::LayoutInput,
-    ) -> taffy::LayoutOutput {
+        root_inputs: &taffy::LayoutInput,
+    ) -> taffy::Size<f32> {
         let layout_data = doc.layout_data(id);
         let root_style = doc.style_data(id);
         let childs = doc.childs(id);
         let mut line_spans = layout_data.text_view_data().line_spans();
         let mut lines = layout_data.text_view_data().lines();
 
-        let mut tmp_line_spans = NList::new();
-        let mut tmp_lines = NList::new();
-        if root_inputs.run_mode != taffy::RunMode::PerformLayout {
-            line_spans = &mut tmp_line_spans;
-            lines = &mut tmp_lines;
-        } else {
-            line_spans.clear();
-            lines.clear();
-        }
+        let should_output = root_inputs.run_mode == taffy::RunMode::PerformLayout;
+
+        let line_spans = &mut MiList::new_with_clear(should_output, line_spans);
+        let lines = &mut MiList::new_with_clear(should_output, lines);
 
         let available_space = {
             let mut available_space = match (
@@ -255,7 +283,6 @@ impl Layout {
         };
 
         let dir = constants.dir;
-        let known_dimensions = root_inputs.known_dimensions;
 
         let mut ctx = LineBreakCtx::new(available_space, constants);
         for child in childs.iter() {
@@ -280,12 +307,8 @@ impl Layout {
                         .iter()
                         .map(|a| {
                             let run_style = a.style(doc).map(|a| &*a).unwrap_or(&*style);
-                            let margin = run_style
-                                .margin()
-                                .resolve_or_zero(known_dimensions, |_, _| 0.0);
-                            let padding = run_style
-                                .padding()
-                                .resolve_or_zero(known_dimensions, |_, _| 0.0);
+                            let margin = run_style.margin().resolve_or_zero(None, |_, _| 0.0);
+                            let padding = run_style.padding().resolve_or_zero(None, |_, _| 0.0);
 
                             let mp_main_start = margin.main_start(dir) + padding.main_start(dir);
                             let mp_main_end = margin.main_end(dir) + padding.main_end(dir);
@@ -348,7 +371,7 @@ impl Layout {
                         let mut glyph_datas = run.get_glyph_datas(paragraph);
                         while !glyph_datas.is_empty() {
                             let gcs = GlyphClusterSize::calc_next(run, glyph_datas);
-                            let is_break_after = break_afters.get(gcs.last_cluster() as i32);
+                            let is_break_after = break_afters.get(run.Start as i32 + gcs.last_cluster() as i32);
                             ctx.apply_cluster(&mut run_ctx, &gcs, is_break_after);
                             glyph_datas = &glyph_datas[gcs.glyph_count as usize..];
                         }
@@ -360,7 +383,77 @@ impl Layout {
         }
         ctx.finally(lines, line_spans);
 
-        return taffy::LayoutOutput::HIDDEN;
+        let mut size = taffy::Size::ZERO;
+        size.set_main(constants.dir, ctx.max_main_size);
+        size.set_cross(constants.dir, ctx.sum_cross_size);
+
+        return size;
+    }
+
+    fn perform_text_layout_inner(
+        &mut self,
+        doc: &mut super::SubDocInner,
+        id: NodeId,
+        constants: &RootConstants,
+        root_inputs: &taffy::LayoutInput,
+        inner_size: Size<f32>,
+    ) {
+        let layout_data = doc.layout_data(id);
+        let root_style = doc.style_data(id);
+        let childs = doc.childs(id);
+        let mut line_spans = layout_data.text_view_data().line_spans();
+        let mut lines = layout_data.text_view_data().lines();
+
+        debug_assert_eq!(root_inputs.run_mode, taffy::RunMode::PerformLayout);
+        debug_assert!(line_spans.len() > 0 && lines.len() > 0);
+
+        for line in lines.iter_mut() {
+            match root_style.TextAlign {
+                TextAlign::Start => {}
+                TextAlign::End => {
+                    if constants.dir.is_row() {
+                        line.X = inner_size.width - line.Width;
+                    } else {
+                        line.Y = inner_size.height - line.Height;
+                    }
+                }
+                TextAlign::Center => {
+                    if constants.dir.is_row() {
+                        line.X = (inner_size.width - line.Width) * 0.5;
+                    } else {
+                        line.Y = (inner_size.height - line.Height) * 0.5;
+                    }
+                }
+            }
+            let spans = &mut line_spans[line.SpanStart as usize..line.SpanEnd as usize];
+            for span in spans.iter_mut() {
+                match root_style.LineAlign {
+                    LineAlign::Baseline => {
+                        let offset = line.BaseLine - span.BaseLine;
+                        if constants.dir.is_row() {
+                            span.Y = offset;
+                        } else {
+                            span.X = offset;
+                        }
+                    }
+                    LineAlign::Start => {}
+                    LineAlign::End => {
+                        if constants.dir.is_row() {
+                            span.Y = line.Height - span.Height;
+                        } else {
+                            span.X = line.Width - span.Width;
+                        }
+                    }
+                    LineAlign::Center => {
+                        if constants.dir.is_row() {
+                            span.Y = (line.Height - span.Height) * 0.5;
+                        } else {
+                            span.X = (line.Width - span.Width) * 0.5;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -377,22 +470,22 @@ impl LineBreakCursor {
     }
 }
 
-struct LineBreakRunCtx<'a> {
+struct LineBreakRunCtx<'a, 'b> {
     pub node_index: u32,
     pub run_index: u32,
     pub run: &'a TextData_RunRange,
-    pub lines: &'a mut NList<LineData>,
-    pub line_spans: &'a mut NList<LineSpanData>,
+    pub lines: &'a mut MiList<'b, LineData>,
+    pub line_spans: &'a mut MiList<'b, LineSpanData>,
     pub style_constants: &'a SameStyleConstants,
 }
 
-impl<'a> LineBreakRunCtx<'a> {
+impl<'a, 'b> LineBreakRunCtx<'a, 'b> {
     pub fn new(
         node_index: u32,
         run_index: u32,
         run: &'a TextData_RunRange,
-        lines: &'a mut NList<LineData>,
-        line_spans: &'a mut NList<LineSpanData>,
+        lines: &'a mut MiList<'b, LineData>,
+        line_spans: &'a mut MiList<'b, LineSpanData>,
         style_constants: &'a SameStyleConstants,
     ) -> Self {
         Self {
@@ -402,6 +495,34 @@ impl<'a> LineBreakRunCtx<'a> {
             lines,
             line_spans,
             style_constants,
+        }
+    }
+}
+
+enum MiList<'a, T> {
+    Real(&'a mut NList<T>),
+    Ignore { len: i32 },
+}
+
+impl<'a, T> MiList<'a, T> {
+    pub fn new_with_clear(should_output: bool, list: &'a mut NList<T>) -> Self {
+        if should_output {
+            list.clear();
+            Self::Real(list)
+        } else {
+            Self::Ignore { len: 0 }
+        }
+    }
+    pub fn add(&mut self, val: T) {
+        match self {
+            MiList::Real(list) => list.add(val),
+            MiList::Ignore { len } => *len += 1,
+        }
+    }
+    pub fn len(&self) -> i32 {
+        match self {
+            MiList::Real(list) => list.len(),
+            MiList::Ignore { len } => *len,
         }
     }
 }
@@ -420,6 +541,7 @@ struct LineBreakCtx {
     pub cur_line_start_span: u32,
     pub cur_line_max_line_height: f32,
     pub cur_line_max_base_line: f32,
+    pub cur_line_size: f32,
 
     pub cur_run_line_height: f32,
     pub cur_run_base_line: f32,
@@ -489,7 +611,7 @@ impl LineBreakCtx {
             let size = self.cursor.offset - self.cur_span_start.offset;
             let line_height = self.cur_run_line_height;
             let base_line = self.cur_run_base_line;
-            rc.line_spans.push(LineSpanData {
+            rc.line_spans.add(LineSpanData {
                 X: if self.dir.is_row() { start } else { 0.0 },
                 Y: if self.dir.is_row() { 0.0 } else { start },
                 Width: if self.dir.is_row() { size } else { line_height },
@@ -502,6 +624,7 @@ impl LineBreakCtx {
                 End: self.cursor.char,
                 Type: LineSpanType::Text,
             });
+            self.cur_line_size += size;
             self.cur_span_start = self.cursor;
         }
 
@@ -517,7 +640,7 @@ impl LineBreakCtx {
                     let size = last_break_point.offset - self.cur_span_start.offset;
                     let line_height = self.cur_run_line_height;
                     let base_line = self.cur_run_base_line;
-                    rc.line_spans.push(LineSpanData {
+                    rc.line_spans.add(LineSpanData {
                         X: if self.dir.is_row() { start } else { 0.0 },
                         Y: if self.dir.is_row() { 0.0 } else { start },
                         Width: if self.dir.is_row() { size } else { line_height },
@@ -530,6 +653,7 @@ impl LineBreakCtx {
                         End: last_break_point.char,
                         Type: LineSpanType::Text,
                     });
+                    self.cur_line_size += size;
                     self.cur_span_start = last_break_point;
                 } else {
                     todo!()
@@ -543,7 +667,7 @@ impl LineBreakCtx {
             let size = self.cursor.offset - self.cur_span_start.offset;
             let line_height = self.cur_run_line_height;
             let base_line = self.cur_run_base_line;
-            rc.line_spans.push(LineSpanData {
+            rc.line_spans.add(LineSpanData {
                 X: if self.dir.is_row() { start } else { 0.0 },
                 Y: if self.dir.is_row() { 0.0 } else { start },
                 Width: if self.dir.is_row() { size } else { line_height },
@@ -556,6 +680,7 @@ impl LineBreakCtx {
                 End: self.cursor.char,
                 Type: LineSpanType::Text,
             });
+            self.cur_line_size += size;
             self.cur_span_start = self.cursor;
         }
 
@@ -563,16 +688,10 @@ impl LineBreakCtx {
 
         let span_start = self.cur_line_start_span;
         let span_end = rc.line_spans.len() as u32;
-        let start_span = &rc.line_spans[span_start as usize];
-        let end_span = &rc.line_spans[span_end as usize - 1];
-        let size = if self.dir.is_row() {
-            end_span.X + end_span.Width - start_span.X
-        } else {
-            end_span.Y + end_span.Height - start_span.Y
-        };
+        let size = self.cur_line_size;
         let line_height = self.cur_line_max_line_height;
         let cross_start = self.sum_cross_size;
-        rc.lines.push(LineData {
+        rc.lines.add(LineData {
             X: if self.dir.is_row() { 0.0 } else { cross_start },
             Y: if self.dir.is_row() { cross_start } else { 0.0 },
             Width: if self.dir.is_row() { size } else { line_height },
@@ -582,6 +701,7 @@ impl LineBreakCtx {
             SpanStart: span_start,
             SpanEnd: span_end,
         });
+        self.cur_line_size = 0.0;
         self.nth_line += 1;
         self.sum_cross_size += line_height;
         self.max_main_size = self.max_main_size.max(size);
@@ -597,20 +717,14 @@ impl LineBreakCtx {
         self.cur_line_max_line_height = self.cur_run_line_height;
     }
 
-    fn finally(&mut self, lines: &mut NList<LineData>, line_spans: &mut NList<LineSpanData>) {
+    fn finally(&mut self, lines: &mut MiList<LineData>, line_spans: &mut MiList<LineSpanData>) {
         if self.cur_line_start_span < line_spans.len() as u32 {
             let span_start = self.cur_line_start_span;
             let span_end = line_spans.len() as u32;
-            let start_span = &line_spans[span_start as usize];
-            let end_span = &line_spans[span_end as usize - 1];
-            let size = if self.dir.is_row() {
-                end_span.X + end_span.Width - start_span.X
-            } else {
-                end_span.Y + end_span.Height - start_span.Y
-            };
+            let size = self.cur_line_size;
             let line_height = self.cur_line_max_line_height;
             let cross_start = self.sum_cross_size;
-            lines.push(LineData {
+            lines.add(LineData {
                 X: if self.dir.is_row() { 0.0 } else { cross_start },
                 Y: if self.dir.is_row() { cross_start } else { 0.0 },
                 Width: if self.dir.is_row() { size } else { line_height },
@@ -620,6 +734,9 @@ impl LineBreakCtx {
                 SpanStart: span_start,
                 SpanEnd: span_end,
             });
+            self.nth_line += 1;
+            self.sum_cross_size += line_height;
+            self.max_main_size = self.max_main_size.max(size);
         }
     }
 }
@@ -659,7 +776,7 @@ impl GlyphClusterSize {
             size += item.Advance + item.Offset;
         }
         let char_count = if glyph_count >= rem_glyph_datas.len() {
-            run.End - cluster
+            run.End - cluster - run.Start
         } else {
             rem_glyph_datas[glyph_count].Cluster - cluster
         };

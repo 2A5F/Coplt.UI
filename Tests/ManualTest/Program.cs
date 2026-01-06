@@ -57,7 +57,7 @@ doc.AddRoot(node.Id);
 // node.Add("😀");
 // node.Add("a c");
 // node.Add("123 阿斯顿 asd");
-var paragraph = node.Add("Never Gonna Give You Up");
+var paragraph = node.Add("Never Gonna Give 有朋自远方来不亦乐乎");
 var start = Stopwatch.GetTimestamp();
 doc.Update();
 var end = Stopwatch.GetTimestamp();
@@ -67,7 +67,6 @@ Console.WriteLine(node.Layout.ToString());
 ref readonly var layout = ref doc.At<LayoutData>(node.Id).TextViewData;
 ref readonly var data = ref doc.At<TextParagraphData>(paragraph.Id);
 var text = data.Text;
-Console.WriteLine($"{text}");
 foreach (ref readonly var line in layout.Lines)
 {
     Console.WriteLine($"  <line({line.NthLine}) pos=({line.X}, {line.Y}) size=({line.Width}, {line.Height}) baseline=({line.BaseLine}) />");
@@ -76,3 +75,4 @@ foreach (ref readonly var line in layout.Lines)
         Console.WriteLine($"    <span pos=({line_span.X}, {line_span.Y}) size=({line_span.Width}, {line_span.Height}) baseline=({line_span.BaseLine}) text=\"{text[(int)line_span.Start..(int)line_span.End]}\" />");
     }
 }
+Console.WriteLine($"{text}");

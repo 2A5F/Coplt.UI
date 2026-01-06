@@ -155,7 +155,7 @@ public partial record struct StyleData()
     public bool FontOpticalSizing = true;
 
     public TextAlign TextAlign = TextAlign.Start;
-    public LineAlign LineAlign = LineAlign.Start;
+    public LineAlign LineAlign = LineAlign.Baseline;
     public LengthType TabSize = LengthType.Percent;
     public TextDirection TextDirection = TextDirection.Forward;
     public WritingDirection WritingDirection = WritingDirection.Horizontal;
