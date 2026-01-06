@@ -7,7 +7,6 @@ namespace Coplt.UI.Native;
 
 public unsafe struct NFontInfo
 {
-    public FontMetrics Metrics;
     public FontWidth Width;
     public FontWeight Weight;
     public FontFlags Flags;

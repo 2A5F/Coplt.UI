@@ -9,6 +9,10 @@
         <IsAotCompatible>true</IsAotCompatible>
         <NoWarn>CS8500;CS0649</NoWarn>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <UpToDateCheckInput Include="../Coplt.Ui.Native/**/*" Visible="false"/>
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Coplt.Dropping" Version="0.6.0"/>
@@ -41,6 +45,11 @@
     <Target Name="GenCom" AfterTargets="ReadyGenCom">
         <Exec Command="..\Coplt.Com2\Coplt.Com2\bin\Release\net10.0\Coplt.Com2.exe" Condition="'$(Configuration)' == 'Release'"/>
         <Exec Command="..\Coplt.Com2\Coplt.Com2\bin\Debug\net10.0\Coplt.Com2.exe" Condition="'$(Configuration)' == 'Debug'"/>
+    </Target>
+
+    <Target Name="BuildNative" AfterTargets="GenCom">
+        <Exec WorkingDirectory="../" Command="cmake --build --target Coplt.Ui.Native --config Release --preset Release"  Condition="'$(Configuration)' == 'Release'" />
+        <Exec WorkingDirectory="../" Command="cmake --build --target Coplt.Ui.Native --config Debug --preset Debug"  Condition="'$(Configuration)' == 'Debug'" />
     </Target>
     
     <Target Name="BuildNative" BeforeTargets="Publish">

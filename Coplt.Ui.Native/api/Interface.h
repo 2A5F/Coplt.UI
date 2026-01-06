@@ -40,12 +40,15 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontFace
 
+        COPLT_COM_METHOD(SetManagedHandle, void, (void* Handle, ::Coplt::Func<void, void*>* OnDrop), Handle, OnDrop);
+        COPLT_COM_METHOD(GetManagedHandle, void*, ());
         COPLT_COM_METHOD(get_Id, ::Coplt::u64, () const);
         COPLT_COM_METHOD(get_RefCount, ::Coplt::u32, () const);
         COPLT_COM_METHOD(get_FrameTime, ::Coplt::FrameTime const*, () const);
         COPLT_COM_METHOD(GetFrameSource, IFrameSource*, () const);
         COPLT_COM_METHOD(GetFontManager, IFontManager*, () const);
         COPLT_COM_METHOD(get_Info, ::Coplt::NFontInfo const*, () const);
+        COPLT_COM_METHOD(GetData, void, (::Coplt::u8** p_data, ::Coplt::usize* size, ::Coplt::u32* index) const, p_data, size, index);
         COPLT_COM_METHOD(Equals, bool, (IFontFace* other) const, other);
         COPLT_COM_METHOD(HashCode, ::Coplt::i32, () const);
         COPLT_COM_METHOD(GetFamilyNames, ::Coplt::HResult, (void* ctx, ::Coplt::Func<void, void*, ::Coplt::char16*, ::Coplt::i32, ::Coplt::char16*, ::Coplt::i32>* add) const, ctx, add);
@@ -63,7 +66,7 @@ namespace Coplt {
 
         COPLT_COM_METHOD(Build, ::Coplt::HResult, (IFontFallback** ff), ff);
         COPLT_COM_METHOD(Add, ::Coplt::HResult, (::Coplt::char16 const* name, ::Coplt::i32 length, bool* exists), name, length, exists);
-        COPLT_COM_METHOD(AddLocaled, ::Coplt::HResult, (::Coplt::char16 const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists), locale, name, name_length, exists);
+        COPLT_COM_METHOD(AddLocaled, ::Coplt::HResult, (::Coplt::LocaleId const* locale, ::Coplt::char16 const* name, ::Coplt::i32 name_length, bool* exists), locale, name, name_length, exists);
     };
 
     COPLT_COM_INTERFACE(IFontFamily, "f8009d34-9417-4b87-b23b-b7885d27aeab", ::Coplt::IUnknown)
@@ -81,6 +84,8 @@ namespace Coplt {
     {
         COPLT_COM_INTERFACE_BODY_Coplt_IFontManager
 
+        COPLT_COM_METHOD(SetManagedHandle, void, (void* Handle, ::Coplt::Func<void, void*>* OnDrop), Handle, OnDrop);
+        COPLT_COM_METHOD(GetManagedHandle, void*, ());
         COPLT_COM_METHOD(SetAssocUpdate, ::Coplt::u64, (void* Data, ::Coplt::Func<void, void*>* OnDrop, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnAdd, ::Coplt::Func<void, void*, IFontFace*, ::Coplt::u64>* OnExpired), Data, OnDrop, OnAdd, OnExpired);
         COPLT_COM_METHOD(RemoveAssocUpdate, void, (::Coplt::u64 AssocUpdateId), AssocUpdateId);
         COPLT_COM_METHOD(GetFrameSource, IFrameSource*, ());

@@ -1,6 +1,10 @@
-use crate::com::LayoutCache;
+use std::ffi::c_void;
+
+use crate::com::{LayoutCache, LayoutCacheFlags};
+use crate::utf16::Utf16Indices;
 use crate::{layout::*, *};
 use concat_idents::concat_idents;
+use harfrust::UnicodeBuffer;
 
 pub fn cache_get(
     data: &LayoutCache,
@@ -10,7 +14,7 @@ pub fn cache_get(
 ) -> Option<taffy::LayoutOutput> {
     match run_mode {
         taffy::RunMode::PerformLayout => {
-            if data.Flags as u16 & com::LayoutCacheFlags::Final as u16 == 0 {
+            if data.Flags.contains(com::LayoutCacheFlags::Final) {
                 return None;
             }
             let entry_known_dimensions = taffy::Size {
@@ -103,7 +107,7 @@ pub fn cache_get(
             macro_rules! check {
                     ( $n:tt ) => {
                         concat_idents!(has_name = Measure, $n {
-                            if data.Flags as u16 & com::LayoutCacheFlags::has_name as u16 != 0 {
+                            if data.Flags.contains(com::LayoutCacheFlags::has_name) {
                                 concat_idents!(val_name = MeasureEntries, $n {
                                     if let Some(r) = check(&data.val_name) {
                                         return Some(r);
@@ -137,9 +141,7 @@ pub fn cache_store(
 ) {
     match run_mode {
         taffy::RunMode::PerformLayout => {
-            data.Flags = unsafe {
-                std::mem::transmute(data.Flags as u16 | com::LayoutCacheFlags::Final as u16)
-            };
+            data.Flags |= com::LayoutCacheFlags::Final;
             data.FinalLayoutEntry = com::LayoutCacheEntryLayoutOutput {
                 KnownDimensionsWidthValue: known_dimensions.width.unwrap_or_default(),
                 KnownDimensionsHeightValue: known_dimensions.height.unwrap_or_default(),
@@ -188,7 +190,7 @@ pub fn cache_store(
             let i = taffy::Cache::compute_cache_slot(known_dimensions, available_space);
             let items =
                 unsafe { std::slice::from_raw_parts_mut(&mut data.MeasureEntries0 as *mut _, 9) };
-            data.Flags = unsafe { std::mem::transmute(data.Flags as u16 | 1 << (i + 1) as u16) };
+            data.Flags |= LayoutCacheFlags::from(1u16 << (i + 1));
             items[i] = com::LayoutCacheEntrySize {
                 KnownDimensionsWidthValue: known_dimensions.width.unwrap_or_default(),
                 KnownDimensionsHeightValue: known_dimensions.height.unwrap_or_default(),
@@ -259,4 +261,49 @@ where
     );
 
     computed_size_and_baselines
+}
+
+#[derive(Debug)]
+pub struct ManagedHandle(
+    pub *mut c_void,
+    pub Option<unsafe extern "C" fn(*mut core::ffi::c_void) -> ()>,
+);
+
+impl ManagedHandle {
+    pub fn new(h: *mut c_void, f: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> Self {
+        if (f as usize) == 0 {
+            Self(h, None)
+        } else {
+            Self(h, Some(f))
+        }
+    }
+}
+
+impl Default for ManagedHandle {
+    fn default() -> Self {
+        Self(Default::default(), Default::default())
+    }
+}
+
+impl Drop for ManagedHandle {
+    fn drop(&mut self) {
+        unsafe {
+            if let Some(f) = self.1 {
+                f(self.0)
+            }
+        }
+    }
+}
+
+pub trait UnicodeBufferPushUtf16 {
+    fn push_utf16(&mut self, str: &[u16]);
+}
+
+impl UnicodeBufferPushUtf16 for UnicodeBuffer {
+    fn push_utf16(&mut self, str: &[u16]) {
+        self.reserve(str.len());
+        for (index, c) in Utf16Indices::new(str) {
+            self.add(unsafe { char::from_u32_unchecked(c) }, index as u32);
+        }
+    }
 }

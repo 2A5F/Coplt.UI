@@ -5,26 +5,19 @@
 
 namespace Coplt
 {
+    extern "C" void coplt_ui_dwrite_get_font_face_info(IDWriteFontFace5* face, NFontInfo* info);
+}
+
+namespace Coplt {
     struct DWriteFontFace final : ComImpl<DWriteFontFace, IFontFace>
     {
-        Rc<IFrameSource> m_frame_source{};
-        Weak<IFontManager> m_manager{};
-        FrameTime m_frame_time{};
-
-        Rc<IDWriteFontFace5> m_face{};
-        NFontInfo m_info{};
-
-        explicit DWriteFontFace(Rc<IDWriteFontFace5>&& face, IFontManager* manager, bool do_register);
-        explicit DWriteFontFace(const Rc<IDWriteFontFace5>& face, IFontManager* manager, bool do_register);
-
-        static Rc<DWriteFontFace> Get(IFontManager* manager, const Rc<IDWriteFontFace5>& face);
-
-        void Init(IFontManager* manager, bool do_register);
-        void InitInfo();
-
-        void OnStrongCountSub(u32 old_count);
-
         COPLT_IMPL_START
+
+        COPLT_FORCE_INLINE
+        void Impl_SetManagedHandle(void* Handle, Func<void, void*>* OnDrop);
+
+        COPLT_FORCE_INLINE
+        void* Impl_GetManagedHandle();
 
         COPLT_FORCE_INLINE
         u64 Impl_get_Id() const;
@@ -45,6 +38,9 @@ namespace Coplt
         NFontInfo const* Impl_get_Info() const;
 
         COPLT_FORCE_INLINE
+        void Impl_GetData(u8** p_data, usize* size, u32* index) const;
+
+        COPLT_FORCE_INLINE
         bool Impl_Equals(IFontFace* other) const;
 
         COPLT_FORCE_INLINE
@@ -57,13 +53,5 @@ namespace Coplt
         HResult Impl_GetFaceNames(void* ctx, Func<void, void*, char16*, i32, char16*, i32>* add) const;
 
         COPLT_IMPL_END
-
-        bool Equals(IFontFace* other) const;
-        i32 GetHashCode() const;
-
-        void GetFamilyNames(void* ctx, Func<void, void*, char16*, i32, char16*, i32>* add) const;
-        void GetFaceNames(void* ctx, Func<void, void*, char16*, i32, char16*, i32>* add) const;
-
-        static void GetNames(IDWriteLocalizedStrings* names, void* ctx, Func<void, void*, char16*, i32, char16*, i32>* add);
     };
-}
+} // namespace Coplt

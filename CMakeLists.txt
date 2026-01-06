@@ -22,4 +22,4 @@ add_subdirectory(ThirdParty/corrosion)
 add_subdirectory(Coplt.Com2)
 add_subdirectory(Coplt.Ui.Native)
 
-corrosion_import_crate(MANIFEST_PATH coplt_ui_rusty/Cargo.toml)
+corrosion_import_crate(MANIFEST_PATH Coplt.Ui.Native/rust_part/Cargo.toml)

@@ -28,12 +28,15 @@ pub trait IFontCollection : IUnknown {
 
 #[cocom::interface("09c443bc-9736-4aac-8117-6890555005ff")]
 pub trait IFontFace : IUnknown {
+    fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
     fn get_Id(&self) -> u64;
     fn get_RefCount(&self) -> u32;
     fn get_FrameTime(&self) -> *const FrameTime;
     fn GetFrameSource(&self) -> *mut IFrameSource;
     fn GetFontManager(&self) -> *mut IFontManager;
     fn get_Info(&self) -> *const NFontInfo;
+    fn GetData(&self, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> ();
     fn Equals(&self, other: *mut IFontFace) -> bool;
     fn HashCode(&self) -> i32;
     fn GetFamilyNames(&self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
@@ -48,7 +51,7 @@ pub trait IFontFallback : IUnknown {
 pub trait IFontFallbackBuilder : IUnknown {
     fn Build(&mut self, ff: *mut *mut IFontFallback) -> HResult;
     fn Add(&mut self, name: *const u16, length: i32, exists: *mut bool) -> HResult;
-    fn AddLocaled(&mut self, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
+    fn AddLocaled(&mut self, locale: *const LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
 }
 
 #[cocom::interface("f8009d34-9417-4b87-b23b-b7885d27aeab")]
@@ -62,6 +65,8 @@ pub trait IFontFamily : IUnknown {
 
 #[cocom::interface("15a9651e-4fa2-48f3-9291-df0f9681a7d1")]
 pub trait IFontManager : IWeak + IUnknown {
+    fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
     fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64;
     fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
     fn GetFrameSource(&mut self) -> *mut IFrameSource;
@@ -280,20 +285,35 @@ pub enum LogLevel {
     Fatal = 5,
 }
 
-#[repr(u16)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum LayoutCacheFlags {
-    Empty = 0,
-    Final = 1,
-    Measure0 = 2,
-    Measure1 = 4,
-    Measure2 = 8,
-    Measure3 = 16,
-    Measure4 = 32,
-    Measure5 = 64,
-    Measure6 = 128,
-    Measure7 = 256,
-    Measure8 = 512,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct LayoutCacheFlags : u16 {
+        const Empty = 0;
+        const Final = 1;
+        const Measure0 = 2;
+        const Measure1 = 4;
+        const Measure2 = 8;
+        const Measure3 = 16;
+        const Measure4 = 32;
+        const Measure5 = 64;
+        const Measure6 = 128;
+        const Measure7 = 256;
+        const Measure8 = 512;
+        const _ = !0;
+    }
+}
+
+impl From<u16> for LayoutCacheFlags {
+    fn from(value: u16) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<LayoutCacheFlags> for u16 {
+    fn from(value: LayoutCacheFlags) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(u8)]
@@ -309,7 +329,6 @@ pub enum Container {
     Flex = 0,
     Grid = 1,
     Text = 2,
-    Block = 3,
 }
 
 #[repr(u8)]
@@ -405,13 +424,6 @@ pub enum LineAlign {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum LocaleMode {
-    Normal = 0,
-    ByScript = 1,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum Overflow {
     Visible = 0,
     Clip = 1,
@@ -445,15 +457,6 @@ pub enum TextAlign {
 pub enum TextDirection {
     Forward = 0,
     Reverse = 1,
-    LeftToRight = 2,
-    RightToLeft = 3,
-}
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum TextMode {
-    Block = 0,
-    Inline = 1,
 }
 
 #[repr(u8)]
@@ -494,15 +497,30 @@ pub enum WordBreak {
     KeepAll = 2,
 }
 
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum WrapFlags {
-    None = 0,
-    AllowNewLine = 1,
-    WrapInSpace = 2,
-    TrimStart = 4,
-    TrimEnd = 8,
-    Trim = 12,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct WrapFlags : u8 {
+        const None = 0;
+        const AllowNewLine = 1;
+        const WrapInSpace = 2;
+        const TrimStart = 4;
+        const TrimEnd = 8;
+        const Trim = 12;
+        const _ = !0;
+    }
+}
+
+impl From<u8> for WrapFlags {
+    fn from(value: u8) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<WrapFlags> for u8 {
+    fn from(value: WrapFlags) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(u8)]
@@ -547,12 +565,27 @@ pub enum CharCategory {
     FinalPunctuation = 29,
 }
 
-#[repr(i32)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
-pub enum FontFlags {
-    None = 0,
-    Color = 1,
-    Monospaced = 2,
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct FontFlags : i32 {
+        const None = 0;
+        const Color = 1;
+        const Monospaced = 2;
+        const _ = !0;
+    }
+}
+
+impl From<i32> for FontFlags {
+    fn from(value: i32) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<FontFlags> for i32 {
+    fn from(value: FontFlags) -> Self {
+        value.bits()
+    }
 }
 
 #[repr(i32)]
@@ -776,9 +809,117 @@ pub enum ScriptCode {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum BidiDirection {
+    LeftToRight = 0,
+    RightToLeft = 1,
+}
+
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct GlyphDataFlags : u8 {
+        const None = 0;
+        const UnsafeToBreak = 1;
+        const _ = !0;
+    }
+}
+
+impl From<u8> for GlyphDataFlags {
+    fn from(value: u8) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<GlyphDataFlags> for u8 {
+    fn from(value: GlyphDataFlags) -> Self {
+        value.bits()
+    }
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum GlyphType {
+    Invalid = 0,
+    Outline = 1,
+    Color = 2,
+    Bitmap = 3,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub enum LineSpanType {
+    Text = 0,
+    Space = 1,
+    Tab = 2,
+    NewLine = 3,
+    Object = 4,
+}
+
+bitflags::bitflags! {
+    #[repr(transparent)]
+    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    pub struct TextStyleOverride : u64 {
+        const None = 0;
+        const FontFallback = 1;
+        const Locale = 2;
+        const TextColorR = 4;
+        const TextColorG = 8;
+        const TextColorB = 16;
+        const TextColorA = 32;
+        const Opacity = 64;
+        const BackgroundColorR = 128;
+        const BackgroundColorG = 256;
+        const BackgroundColorB = 512;
+        const BackgroundColorA = 1024;
+        const InsertTop = 2048;
+        const InsertRight = 4096;
+        const InsertBottom = 8192;
+        const InsertLeft = 16384;
+        const MarginTop = 32768;
+        const MarginRight = 65536;
+        const MarginBottom = 131072;
+        const MarginLeft = 262144;
+        const PaddingTop = 524288;
+        const PaddingRight = 1048576;
+        const PaddingBottom = 2097152;
+        const PaddingLeft = 4194304;
+        const TabSize = 8388608;
+        const FontSize = 16777216;
+        const FontWidth = 33554432;
+        const FontOblique = 67108864;
+        const FontWeight = 134217728;
+        const LineHeight = 268435456;
+        const Cursor = 536870912;
+        const PointerEvents = 1073741824;
+        const FontItalic = 2147483648;
+        const FontOpticalSizing = 4294967296;
+        const WrapFlags = 8589934592;
+        const TextWrap = 17179869184;
+        const WordBreak = 34359738368;
+        const TextOrientation = 68719476736;
+        const _ = !0;
+    }
+}
+
+impl From<u64> for TextStyleOverride {
+    fn from(value: u64) -> Self {
+        Self::from_bits_retain(value)
+    }
+}
+
+impl From<TextStyleOverride> for u64 {
+    fn from(value: TextStyleOverride) -> Self {
+        value.bits()
+    }
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum NodeType {
-    View = 0,
-    Text = 1,
+    Null = 0,
+    View = 1,
+    TextParagraph = 2,
+    TextSpan = 3,
 }
 
 #[repr(C)]
@@ -806,6 +947,13 @@ pub struct NativeArcInner<T0 /* T */> {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NativeArc<T0 /* T */> {
     pub m_ptr: *mut NativeArcInner<T0>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct NativeBitSet {
+    pub m_items: *mut u64,
+    pub m_size: i32,
 }
 
 #[repr(C)]
@@ -1077,7 +1225,23 @@ pub struct LayoutCollapsibleMarginSet {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct LayoutData {
+pub struct LayoutOutput {
+    pub Width: f32,
+    pub Height: f32,
+    pub ContentWidth: f32,
+    pub ContentHeight: f32,
+    pub FirstBaselinesX: f32,
+    pub FirstBaselinesY: f32,
+    pub TopMargin: LayoutCollapsibleMarginSet,
+    pub BottomMargin: LayoutCollapsibleMarginSet,
+    pub HasFirstBaselinesX: bool,
+    pub HasFirstBaselinesY: bool,
+    pub MarginsCanCollapseThrough: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LayoutResult {
     pub Order: u32,
     pub LocationX: f32,
     pub LocationY: f32,
@@ -1103,24 +1267,7 @@ pub struct LayoutData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct LayoutOutput {
-    pub Width: f32,
-    pub Height: f32,
-    pub ContentWidth: f32,
-    pub ContentHeight: f32,
-    pub FirstBaselinesX: f32,
-    pub FirstBaselinesY: f32,
-    pub TopMargin: LayoutCollapsibleMarginSet,
-    pub BottomMargin: LayoutCollapsibleMarginSet,
-    pub HasFirstBaselinesX: bool,
-    pub HasFirstBaselinesY: bool,
-    pub MarginsCanCollapseThrough: bool,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NFontInfo {
-    pub Metrics: FontMetrics,
     pub Width: FontWidth,
     pub Weight: FontWeight,
     pub Flags: FontFlags,
@@ -1136,14 +1283,30 @@ pub struct NFontPair {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NLayoutContext {
+    pub CurrentFrame: u64,
     pub font_manager: *mut IFontManager,
+    pub default_locale: LocaleId,
     pub roots: *mut FFIMap,
-    pub node_buckets: *mut i32,
-    pub node_ctrl: *mut NNodeIdCtrl,
-    pub node_common_data: *mut CommonData,
-    pub node_childs_data: *mut ChildsData,
-    pub node_style_data: *mut StyleData,
-    pub node_count: i32,
+    pub view_buckets: *mut i32,
+    pub view_ctrl: *mut NNodeIdCtrl,
+    pub view_common_data: *mut CommonData,
+    pub view_layout_data: *mut LayoutData,
+    pub view_childs_data: *mut ChildsData,
+    pub view_style_data: *mut StyleData,
+    pub text_paragraph_buckets: *mut i32,
+    pub text_paragraph_ctrl: *mut NNodeIdCtrl,
+    pub text_paragraph_common_data: *mut CommonData,
+    pub text_paragraph_childs_data: *mut ChildsData,
+    pub text_paragraph_data: *mut TextParagraphData,
+    pub text_paragraph_style_data: *mut TextStyleData,
+    pub text_span_buckets: *mut i32,
+    pub text_span_ctrl: *mut NNodeIdCtrl,
+    pub text_span_common_data: *mut CommonData,
+    pub text_span_data: *mut TextSpanData,
+    pub text_span_style_data: *mut TextStyleData,
+    pub view_count: i32,
+    pub text_paragraph_count: i32,
+    pub text_span_count: i32,
     pub rounding: bool,
 }
 
@@ -1172,17 +1335,8 @@ pub struct FontWidth {
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct LocaleId {
-    pub Name: *mut u16,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-pub struct FontMetrics {
-    pub Ascent: f32,
-    pub Descent: f32,
-    pub Leading: f32,
-    pub LineHeight: f32,
-    pub UnitsPerEm: u16,
+    pub Name: *mut u8,
+    pub Length: usize,
 }
 
 #[repr(C)]
@@ -1200,24 +1354,25 @@ pub struct TextRange {
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct ChildsData {
     pub m_childs: FFIOrderedSet,
-    pub m_texts: FFIMap,
-    pub m_text_id_inc: u32,
-    pub m_version: u64,
-    pub m_last_version: u64,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct CommonData {
-    pub TextLayoutObject: *mut ITextLayout,
-    pub TextLayoutBelongTo: *mut ITextLayout,
-    pub FinalLayout: LayoutData,
-    pub UnRoundedLayout: LayoutData,
-    pub LayoutCache: LayoutCache,
-    pub LastLayoutVersion: u32,
-    pub LastTextLayoutVersion: u32,
-    pub LayoutVersion: u32,
-    pub TextLayoutVersion: u32,
+    pub NodeId: u32,
+    pub ParentValue: NodeId,
+    pub HasParent: bool,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct GlyphData {
+    pub Cluster: u32,
+    pub Advance: f32,
+    pub Offset: f32,
+    pub GlyphId: u16,
+    pub Flags: GlyphDataFlags,
+    pub Type: GlyphType,
 }
 
 #[repr(C)]
@@ -1234,12 +1389,53 @@ pub struct GridContainerStyle {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LayoutData {
+    pub LayoutDirtyFrame: u64,
+    pub FinalLayout: LayoutResult,
+    pub UnRoundedLayout: LayoutResult,
+    pub LayoutCache: LayoutCache,
+    pub m_text_view_data: TextViewData,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LineData {
+    pub X: f32,
+    pub Y: f32,
+    pub Width: f32,
+    pub Height: f32,
+    pub BaseLine: f32,
+    pub NthLine: u32,
+    pub SpanStart: u32,
+    pub SpanEnd: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct LineSpanData {
+    pub X: f32,
+    pub Y: f32,
+    pub Width: f32,
+    pub Height: f32,
+    pub BaseLine: f32,
+    pub NthLine: u32,
+    pub NodeIndex: u32,
+    pub RunRange: u32,
+    pub Start: u32,
+    pub End: u32,
+    pub Type: LineSpanType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct RootData {
+    pub DefaultLocale: LocaleId,
     pub Node: NodeId,
     pub AvailableSpaceXValue: f32,
     pub AvailableSpaceYValue: f32,
     pub AvailableSpaceX: AvailableSpaceType,
     pub AvailableSpaceY: AvailableSpaceType,
+    pub Dpi: f32,
     pub UseRounding: bool,
 }
 
@@ -1301,7 +1497,6 @@ pub struct StyleData {
     pub Visible: Visible,
     pub Position: Position,
     pub Container: Container,
-    pub TextMode: TextMode,
     pub BoxSizing: BoxSizing,
     pub Cursor: CursorType,
     pub PointerEvents: PointerEvents,
@@ -1347,7 +1542,6 @@ pub struct StyleData {
     pub TextAlign: TextAlign,
     pub LineAlign: LineAlign,
     pub TabSize: LengthType,
-    pub LocaleMode: LocaleMode,
     pub TextDirection: TextDirection,
     pub WritingDirection: WritingDirection,
     pub WrapFlags: WrapFlags,
@@ -1360,9 +1554,163 @@ pub struct StyleData {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_BidiRange {
+    pub Start: u32,
+    pub End: u32,
+    pub Direction: BidiDirection,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_FontRange {
+    pub Start: u32,
+    pub End: u32,
+    pub m_font_face: *mut IFontFace,
+    pub StyleRange: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_LocaleRange {
+    pub Start: u32,
+    pub End: u32,
+    pub Locale: LocaleId,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_RunRange {
+    pub Start: u32,
+    pub End: u32,
+    pub ScriptRange: u32,
+    pub BidiRange: u32,
+    pub StyleRange: u32,
+    pub FontRange: u32,
+    pub GlyphStart: u32,
+    pub GlyphEnd: u32,
+    pub Ascent: f32,
+    pub Descent: f32,
+    pub Leading: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_SameStyleRange {
+    pub Start: u32,
+    pub End: u32,
+    pub FirstSpanValue: TextSpanNode,
+    pub HasFirstSpan: bool,
+    pub ComputedFontSize: f32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextData_ScriptRange {
+    pub Start: u32,
+    pub End: u32,
+    pub Script: u16,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextParagraphData {
+    pub TextDirtyFrame: u64,
+    pub TextStyleDirtyFrame: u64,
+    pub DirtySyncFrame: u64,
+    pub m_text: NString,
+    pub m_break_points: NativeBitSet,
+    pub m_grapheme_cluster: NativeList<u32>,
+    pub m_script_ranges: NativeList<TextData_ScriptRange>,
+    pub m_bidi_ranges: NativeList<TextData_BidiRange>,
+    pub m_same_style_ranges: NativeList<TextData_SameStyleRange>,
+    pub m_locale_ranges: NativeList<TextData_LocaleRange>,
+    pub m_font_ranges: NativeList<TextData_FontRange>,
+    pub m_run_ranges: NativeList<TextData_RunRange>,
+    pub m_glyph_datas: NativeList<GlyphData>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextSpanData {
+    pub TextStart: u32,
+    pub TextLength: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextStyleData {
+    pub Override: TextStyleOverride,
+    pub FontFallback: *mut IFontFallback,
+    pub Locale: LocaleId,
+    pub TextColorR: f32,
+    pub TextColorG: f32,
+    pub TextColorB: f32,
+    pub TextColorA: f32,
+    pub Opacity: f32,
+    pub BackgroundColorR: f32,
+    pub BackgroundColorG: f32,
+    pub BackgroundColorB: f32,
+    pub BackgroundColorA: f32,
+    pub InsertTopValue: f32,
+    pub InsertRightValue: f32,
+    pub InsertBottomValue: f32,
+    pub InsertLeftValue: f32,
+    pub MarginTopValue: f32,
+    pub MarginRightValue: f32,
+    pub MarginBottomValue: f32,
+    pub MarginLeftValue: f32,
+    pub PaddingTopValue: f32,
+    pub PaddingRightValue: f32,
+    pub PaddingBottomValue: f32,
+    pub PaddingLeftValue: f32,
+    pub TabSizeValue: f32,
+    pub FontSize: f32,
+    pub FontWidth: FontWidth,
+    pub FontOblique: f32,
+    pub FontWeight: FontWeight,
+    pub LineHeightValue: f32,
+    pub Cursor: CursorType,
+    pub PointerEvents: PointerEvents,
+    pub InsertTop: LengthType,
+    pub InsertRight: LengthType,
+    pub InsertBottom: LengthType,
+    pub InsertLeft: LengthType,
+    pub MarginTop: LengthType,
+    pub MarginRight: LengthType,
+    pub MarginBottom: LengthType,
+    pub MarginLeft: LengthType,
+    pub PaddingTop: LengthType,
+    pub PaddingRight: LengthType,
+    pub PaddingBottom: LengthType,
+    pub PaddingLeft: LengthType,
+    pub FontItalic: bool,
+    pub FontOpticalSizing: bool,
+    pub TabSize: LengthType,
+    pub WrapFlags: WrapFlags,
+    pub TextWrap: TextWrap,
+    pub WordBreak: WordBreak,
+    pub TextOrientation: TextOrientation,
+    pub LineHeight: LengthType,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextViewData {
+    pub m_line_spans: NativeList<LineSpanData>,
+    pub m_lines: NativeList<LineData>,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct NodeId {
     pub Index: u32,
     pub IdAndType: u32,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+pub struct TextSpanNode {
+    pub Index: u32,
 }
 
 pub mod details {
@@ -1385,7 +1733,7 @@ pub mod details {
 
     impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IAtlasAllocator, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IAtlasAllocator = VitualTable_IAtlasAllocator {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1415,7 +1763,7 @@ pub mod details {
 
     impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IAtlasAllocator
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IAtlasAllocator as Interface>::VitualTable = VT::<T, IAtlasAllocator, O>::VTBL;
 
@@ -1424,19 +1772,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IAtlasAllocator {
+    impl<T: impls::IAtlasAllocator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IAtlasAllocator, T, O> for IAtlasAllocator {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IAtlasAllocator::GUID {
+                static GUID: Guid = IAtlasAllocator::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1452,7 +1802,7 @@ pub mod details {
 
     impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFont, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFont = VitualTable_IFont {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1470,7 +1820,7 @@ pub mod details {
 
     impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFont
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFont as Interface>::VitualTable = VT::<T, IFont, O>::VTBL;
 
@@ -1479,19 +1829,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFont {
+    impl<T: impls::IFont + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFont, T, O> for IFont {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFont::GUID {
+                static GUID: Guid = IFont::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1508,7 +1860,7 @@ pub mod details {
 
     impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontCollection, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontCollection = VitualTable_IFontCollection {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1530,7 +1882,7 @@ pub mod details {
 
     impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontCollection
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontCollection as Interface>::VitualTable = VT::<T, IFontCollection, O>::VTBL;
 
@@ -1539,19 +1891,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontCollection {
+    impl<T: impls::IFontCollection + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontCollection, T, O> for IFontCollection {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontCollection::GUID {
+                static GUID: Guid = IFontCollection::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1561,12 +1915,15 @@ pub mod details {
     pub struct VitualTable_IFontFace {
         b: <IUnknown as Interface>::VitualTable,
 
+        pub f_SetManagedHandle: unsafe extern "C" fn(this: *const IFontFace, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> (),
+        pub f_GetManagedHandle: unsafe extern "C" fn(this: *const IFontFace) -> *mut core::ffi::c_void,
         pub f_get_Id: unsafe extern "C" fn(this: *const IFontFace) -> u64,
         pub f_get_RefCount: unsafe extern "C" fn(this: *const IFontFace) -> u32,
         pub f_get_FrameTime: unsafe extern "C" fn(this: *const IFontFace) -> *const FrameTime,
         pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontFace) -> *mut IFrameSource,
         pub f_GetFontManager: unsafe extern "C" fn(this: *const IFontFace) -> *mut IFontManager,
         pub f_get_Info: unsafe extern "C" fn(this: *const IFontFace) -> *const NFontInfo,
+        pub f_GetData: unsafe extern "C" fn(this: *const IFontFace, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> (),
         pub f_Equals: unsafe extern "C" fn(this: *const IFontFace, other: *mut IFontFace) -> bool,
         pub f_HashCode: unsafe extern "C" fn(this: *const IFontFace) -> i32,
         pub f_GetFamilyNames: unsafe extern "C" fn(this: *const IFontFace, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult,
@@ -1575,22 +1932,31 @@ pub mod details {
 
     impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFace, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFace = VitualTable_IFontFace {
             b: <IUnknown as Vtbl<O>>::VTBL,
+            f_SetManagedHandle: Self::f_SetManagedHandle,
+            f_GetManagedHandle: Self::f_GetManagedHandle,
             f_get_Id: Self::f_get_Id,
             f_get_RefCount: Self::f_get_RefCount,
             f_get_FrameTime: Self::f_get_FrameTime,
             f_GetFrameSource: Self::f_GetFrameSource,
             f_GetFontManager: Self::f_GetFontManager,
             f_get_Info: Self::f_get_Info,
+            f_GetData: Self::f_GetData,
             f_Equals: Self::f_Equals,
             f_HashCode: Self::f_HashCode,
             f_GetFamilyNames: Self::f_GetFamilyNames,
             f_GetFaceNames: Self::f_GetFaceNames,
         };
 
+        unsafe extern "C" fn f_SetManagedHandle(this: *const IFontFace, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> () {
+            unsafe { (*O::GetObject(this as _)).SetManagedHandle(Handle, OnDrop) }
+        }
+        unsafe extern "C" fn f_GetManagedHandle(this: *const IFontFace) -> *mut core::ffi::c_void {
+            unsafe { (*O::GetObject(this as _)).GetManagedHandle() }
+        }
         unsafe extern "C" fn f_get_Id(this: *const IFontFace) -> u64 {
             unsafe { (*O::GetObject(this as _)).get_Id() }
         }
@@ -1609,6 +1975,9 @@ pub mod details {
         unsafe extern "C" fn f_get_Info(this: *const IFontFace) -> *const NFontInfo {
             unsafe { (*O::GetObject(this as _)).get_Info() }
         }
+        unsafe extern "C" fn f_GetData(this: *const IFontFace, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> () {
+            unsafe { (*O::GetObject(this as _)).GetData(p_data, size, index) }
+        }
         unsafe extern "C" fn f_Equals(this: *const IFontFace, other: *mut IFontFace) -> bool {
             unsafe { (*O::GetObject(this as _)).Equals(other) }
         }
@@ -1625,7 +1994,7 @@ pub mod details {
 
     impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFace
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFace as Interface>::VitualTable = VT::<T, IFontFace, O>::VTBL;
 
@@ -1634,19 +2003,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFace {
+    impl<T: impls::IFontFace + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFace, T, O> for IFontFace {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFace::GUID {
+                static GUID: Guid = IFontFace::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1660,7 +2031,7 @@ pub mod details {
 
     impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallback, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFallback = VitualTable_IFontFallback {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1670,7 +2041,7 @@ pub mod details {
 
     impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFallback
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFallback as Interface>::VitualTable = VT::<T, IFontFallback, O>::VTBL;
 
@@ -1679,19 +2050,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFallback {
+    impl<T: impls::IFontFallback + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFallback, T, O> for IFontFallback {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFallback::GUID {
+                static GUID: Guid = IFontFallback::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1703,12 +2076,12 @@ pub mod details {
 
         pub f_Build: unsafe extern "C" fn(this: *const IFontFallbackBuilder, ff: *mut *mut IFontFallback) -> HResult,
         pub f_Add: unsafe extern "C" fn(this: *const IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult,
-        pub f_AddLocaled: unsafe extern "C" fn(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
+        pub f_AddLocaled: unsafe extern "C" fn(this: *const IFontFallbackBuilder, locale: *const LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult,
     }
 
     impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFallbackBuilder, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFallbackBuilder = VitualTable_IFontFallbackBuilder {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1723,14 +2096,14 @@ pub mod details {
         unsafe extern "C" fn f_Add(this: *const IFontFallbackBuilder, name: *const u16, length: i32, exists: *mut bool) -> HResult {
             unsafe { (*O::GetObject(this as _)).Add(name, length, exists) }
         }
-        unsafe extern "C" fn f_AddLocaled(this: *const IFontFallbackBuilder, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult {
+        unsafe extern "C" fn f_AddLocaled(this: *const IFontFallbackBuilder, locale: *const LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult {
             unsafe { (*O::GetObject(this as _)).AddLocaled(locale, name, name_length, exists) }
         }
     }
 
     impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFallbackBuilder
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFallbackBuilder as Interface>::VitualTable = VT::<T, IFontFallbackBuilder, O>::VTBL;
 
@@ -1739,19 +2112,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFallbackBuilder {
+    impl<T: impls::IFontFallbackBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFallbackBuilder, T, O> for IFontFallbackBuilder {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFallbackBuilder::GUID {
+                static GUID: Guid = IFontFallbackBuilder::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1770,7 +2145,7 @@ pub mod details {
 
     impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFontFamily, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontFamily = VitualTable_IFontFamily {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1800,7 +2175,7 @@ pub mod details {
 
     impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFontFamily
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontFamily as Interface>::VitualTable = VT::<T, IFontFamily, O>::VTBL;
 
@@ -1809,19 +2184,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontFamily {
+    impl<T: impls::IFontFamily + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontFamily, T, O> for IFontFamily {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontFamily::GUID {
+                static GUID: Guid = IFontFamily::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1831,6 +2208,8 @@ pub mod details {
     pub struct VitualTable_IFontManager {
         b: <IWeak as Interface>::VitualTable,
 
+        pub f_SetManagedHandle: unsafe extern "C" fn(this: *const IFontManager, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> (),
+        pub f_GetManagedHandle: unsafe extern "C" fn(this: *const IFontManager) -> *mut core::ffi::c_void,
         pub f_SetAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64,
         pub f_RemoveAssocUpdate: unsafe extern "C" fn(this: *const IFontManager, AssocUpdateId: u64) -> (),
         pub f_GetFrameSource: unsafe extern "C" fn(this: *const IFontManager) -> *mut IFrameSource,
@@ -1844,10 +2223,12 @@ pub mod details {
 
     impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> VT<T, IFontManager, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFontManager = VitualTable_IFontManager {
             b: <IWeak as Vtbl<O>>::VTBL,
+            f_SetManagedHandle: Self::f_SetManagedHandle,
+            f_GetManagedHandle: Self::f_GetManagedHandle,
             f_SetAssocUpdate: Self::f_SetAssocUpdate,
             f_RemoveAssocUpdate: Self::f_RemoveAssocUpdate,
             f_GetFrameSource: Self::f_GetFrameSource,
@@ -1859,6 +2240,12 @@ pub mod details {
             f_Get: Self::f_Get,
         };
 
+        unsafe extern "C" fn f_SetManagedHandle(this: *const IFontManager, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> () {
+            unsafe { (*O::GetObject(this as _)).SetManagedHandle(Handle, OnDrop) }
+        }
+        unsafe extern "C" fn f_GetManagedHandle(this: *const IFontManager) -> *mut core::ffi::c_void {
+            unsafe { (*O::GetObject(this as _)).GetManagedHandle() }
+        }
         unsafe extern "C" fn f_SetAssocUpdate(this: *const IFontManager, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut IFontFace, u64) -> ()) -> u64 {
             unsafe { (*O::GetObject(this as _)).SetAssocUpdate(Data, OnDrop, OnAdd, OnExpired) }
         }
@@ -1890,7 +2277,7 @@ pub mod details {
 
     impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T> + impls::ObjectBoxWeak> Vtbl<O> for IFontManager
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFontManager as Interface>::VitualTable = VT::<T, IFontManager, O>::VTBL;
 
@@ -1899,19 +2286,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFontManager {
+    impl<T: impls::IFontManager + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFontManager, T, O> for IFontManager {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFontManager::GUID {
+                static GUID: Guid = IFontManager::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IWeak as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IWeak as QuIn<IWeak, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1927,7 +2316,7 @@ pub mod details {
 
     impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IFrameSource, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IFrameSource = VitualTable_IFrameSource {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1945,7 +2334,7 @@ pub mod details {
 
     impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IFrameSource
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IFrameSource as Interface>::VitualTable = VT::<T, IFrameSource, O>::VTBL;
 
@@ -1954,19 +2343,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IFrameSource {
+    impl<T: impls::IFrameSource + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IFrameSource, T, O> for IFrameSource {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IFrameSource::GUID {
+                static GUID: Guid = IFrameSource::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -1981,7 +2372,7 @@ pub mod details {
 
     impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ILayout, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ILayout = VitualTable_ILayout {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -1995,7 +2386,7 @@ pub mod details {
 
     impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ILayout
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ILayout as Interface>::VitualTable = VT::<T, ILayout, O>::VTBL;
 
@@ -2004,19 +2395,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ILayout {
+    impl<T: impls::ILayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ILayout, T, O> for ILayout {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ILayout::GUID {
+                static GUID: Guid = ILayout::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2041,7 +2434,7 @@ pub mod details {
 
     impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ILib, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ILib = VitualTable_ILib {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2095,7 +2488,7 @@ pub mod details {
 
     impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ILib
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ILib as Interface>::VitualTable = VT::<T, ILib, O>::VTBL;
 
@@ -2104,19 +2497,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ILib {
+    impl<T: impls::ILib + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ILib, T, O> for ILib {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ILib::GUID {
+                static GUID: Guid = ILib::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2131,7 +2526,7 @@ pub mod details {
 
     impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IPath, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IPath = VitualTable_IPath {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2145,7 +2540,7 @@ pub mod details {
 
     impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IPath
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IPath as Interface>::VitualTable = VT::<T, IPath, O>::VTBL;
 
@@ -2154,19 +2549,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IPath {
+    impl<T: impls::IPath + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IPath, T, O> for IPath {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IPath::GUID {
+                static GUID: Guid = IPath::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2189,7 +2586,7 @@ pub mod details {
 
     impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IPathBuilder, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IPathBuilder = VitualTable_IPathBuilder {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2235,7 +2632,7 @@ pub mod details {
 
     impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IPathBuilder
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IPathBuilder as Interface>::VitualTable = VT::<T, IPathBuilder, O>::VTBL;
 
@@ -2244,19 +2641,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IPathBuilder {
+    impl<T: impls::IPathBuilder + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IPathBuilder, T, O> for IPathBuilder {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IPathBuilder::GUID {
+                static GUID: Guid = IPathBuilder::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2271,7 +2670,7 @@ pub mod details {
 
     impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, IStub, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_IStub = VitualTable_IStub {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2285,7 +2684,7 @@ pub mod details {
 
     impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for IStub
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <IStub as Interface>::VitualTable = VT::<T, IStub, O>::VTBL;
 
@@ -2294,19 +2693,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for IStub {
+    impl<T: impls::IStub + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<IStub, T, O> for IStub {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == IStub::GUID {
+                static GUID: Guid = IStub::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2322,7 +2723,7 @@ pub mod details {
 
     impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITessellator, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ITessellator = VitualTable_ITessellator {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2340,7 +2741,7 @@ pub mod details {
 
     impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITessellator
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ITessellator as Interface>::VitualTable = VT::<T, ITessellator, O>::VTBL;
 
@@ -2349,19 +2750,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITessellator {
+    impl<T: impls::ITessellator + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ITessellator, T, O> for ITessellator {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ITessellator::GUID {
+                static GUID: Guid = ITessellator::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2375,7 +2778,7 @@ pub mod details {
 
     impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITextData, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ITextData = VitualTable_ITextData {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2385,7 +2788,7 @@ pub mod details {
 
     impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITextData
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ITextData as Interface>::VitualTable = VT::<T, ITextData, O>::VTBL;
 
@@ -2394,19 +2797,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITextData {
+    impl<T: impls::ITextData + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ITextData, T, O> for ITextData {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ITextData::GUID {
+                static GUID: Guid = ITextData::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2420,7 +2825,7 @@ pub mod details {
 
     impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> VT<T, ITextLayout, O>
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         pub const VTBL: VitualTable_ITextLayout = VitualTable_ITextLayout {
             b: <IUnknown as Vtbl<O>>::VTBL,
@@ -2430,7 +2835,7 @@ pub mod details {
 
     impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> Vtbl<O> for ITextLayout
     where
-        T::Interface: details::QuIn<T, O>,
+        T::Interface: details::QuIn<T::Interface, T, O>,
     {
         const VTBL: <ITextLayout as Interface>::VitualTable = VT::<T, ITextLayout, O>::VTBL;
 
@@ -2439,19 +2844,21 @@ pub mod details {
         }
     }
 
-    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<T, O> for ITextLayout {
+    impl<T: impls::ITextLayout + impls::Object, O: impls::ObjectBox<Object = T>> QuIn<ITextLayout, T, O> for ITextLayout {
+        #[inline(always)]
         unsafe fn QueryInterface(
             this: *mut T,
-            guid: *const Guid,
+            guid: Guid,
             out: *mut *mut core::ffi::c_void,
         ) -> HResult {
             unsafe {
-                if *guid == ITextLayout::GUID {
+                static GUID: Guid = ITextLayout::GUID;
+                if guid == GUID {
                     *out = this as _;
                     O::AddRef(this as _);
                     return HResultE::Ok.into();
                 }
-                <IUnknown as QuIn<T, O>>::QueryInterface(this, guid, out)
+                <IUnknown as QuIn<IUnknown, T, O>>::QueryInterface(this, guid, out)
             }
         }
     }
@@ -2481,12 +2888,15 @@ pub mod impls {
     }
 
     pub trait IFontFace : IUnknown {
+        fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+        fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
         fn get_Id(& self) -> u64;
         fn get_RefCount(& self) -> u32;
         fn get_FrameTime(& self) -> *const super::FrameTime;
         fn GetFrameSource(& self) -> *mut super::IFrameSource;
         fn GetFontManager(& self) -> *mut super::IFontManager;
         fn get_Info(& self) -> *const super::NFontInfo;
+        fn GetData(& self, p_data: *mut *mut u8, size: *mut usize, index: *mut u32) -> ();
         fn Equals(& self, other: *mut super::IFontFace) -> bool;
         fn HashCode(& self) -> i32;
         fn GetFamilyNames(& self, ctx: *mut core::ffi::c_void, add: unsafe extern "C" fn(*mut core::ffi::c_void, *mut u16, i32, *mut u16, i32) -> ()) -> HResult;
@@ -2499,7 +2909,7 @@ pub mod impls {
     pub trait IFontFallbackBuilder : IUnknown {
         fn Build(&mut self, ff: *mut *mut super::IFontFallback) -> HResult;
         fn Add(&mut self, name: *const u16, length: i32, exists: *mut bool) -> HResult;
-        fn AddLocaled(&mut self, locale: *const u16, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
+        fn AddLocaled(&mut self, locale: *const super::LocaleId, name: *const u16, name_length: i32, exists: *mut bool) -> HResult;
     }
 
     pub trait IFontFamily : IUnknown {
@@ -2511,6 +2921,8 @@ pub mod impls {
     }
 
     pub trait IFontManager : IWeak {
+        fn SetManagedHandle(&mut self, Handle: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> ()) -> ();
+        fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void;
         fn SetAssocUpdate(&mut self, Data: *mut core::ffi::c_void, OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (), OnAdd: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> (), OnExpired: unsafe extern "C" fn(*mut core::ffi::c_void, *mut super::IFontFace, u64) -> ()) -> u64;
         fn RemoveAssocUpdate(&mut self, AssocUpdateId: u64) -> ();
         fn GetFrameSource(&mut self) -> *mut super::IFrameSource;

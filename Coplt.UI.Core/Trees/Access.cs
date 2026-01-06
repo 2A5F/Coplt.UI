@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Coplt.UI.Collections;
 using Coplt.UI.Core.Styles;
+using Coplt.UI.Native;
 using Coplt.UI.Styles;
 using Coplt.UI.Texts;
 using Coplt.UI.Trees.Datas;
@@ -14,42 +15,82 @@ namespace Coplt.UI.Trees;
 public static unsafe partial class Access
 {
     /// <inheritdoc cref="Access"/>
-    public readonly struct View(Document document)
+    public readonly struct TextParagraph(Document document)
     {
         public Document Document { get; } = document;
-        public NodeId Id { get; } = document.CreateView();
+        public NodeId Id { get; } = document.CreateTextParagraph();
 
-        public ref StyleData StyleData => ref Document.At<StyleData>(Id);
-        public ref CommonData CommonData => ref Document.At<CommonData>(Id);
-        public LayoutView Layout => CommonData.Layout;
-        public ref ChildsData ChildsData => ref Document.At<ChildsData>(Id);
-        public ref ManagedData ManagedData => ref Document.At<ManagedData>(Id);
-
-        public void Add(string text)
+        public TextParagraph(View parent) : this(parent.Document)
         {
-            ChildsData.UnsafeAddText(text);
-            Document.DirtyTextLayout(Id);
+            parent.Add(this);
         }
+
+        public ref TextParagraphData Data => ref Document.UnsafeAt<TextParagraphData>(Id);
+        public ref TextStyleData StyleData => ref Document.UnsafeAt<TextStyleData>(Id);
+        public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
+        public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
+        public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
 
         public void Add(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
-            ref var parent = ref Document.At<ParentData>(node.Id);
-            if (parent.Parent.HasValue) throw new ArgumentException("Target node already has a parent");
-            ChildsData.UnsafeAdd(node.Id);
-            parent.UnsafeSetParent(Id);
-            Document.DirtyLayout(Id);
+            node.Document.AddChild(Id, node.Id);
         }
 
         public void Remove(View node)
         {
             if (node.Document != Document) throw new InvalidOperationException();
-            ref var parent = ref Document.At<ParentData>(node.Id);
-            if (parent.Parent != Id) throw new ArgumentException("Target node is not a child of this node");
-            var r = ChildsData.UnsafeRemove(node.Id);
-            Debug.Assert(r);
-            parent.UnsafeRemoveParent();
-            Document.DirtyLayout(Id);
+            node.Document.RemoveChild(Id, node.Id);
+        }
+    }
+
+    /// <inheritdoc cref="Access"/>
+    public readonly struct View(Document document)
+    {
+        public Document Document { get; } = document;
+        public NodeId Id { get; } = document.CreateView();
+
+        public View(View parent) : this(parent.Document)
+        {
+            parent.Add(this);
+        }
+
+        public ref StyleData StyleData => ref Document.UnsafeAt<StyleData>(Id);
+        public ref CommonData CommonData => ref Document.UnsafeAt<CommonData>(Id);
+        public ref LayoutData LayoutData => ref Document.UnsafeAt<LayoutData>(Id);
+        public LayoutView Layout => LayoutData.Layout;
+        public ref ChildsData ChildsData => ref Document.UnsafeAt<ChildsData>(Id);
+        public ref ManagedData ManagedData => ref Document.UnsafeAt<ManagedData>(Id);
+
+        public void Add(View node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.AddChild(Id, node.Id);
+        }
+
+        public void Remove(View node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.RemoveChild(Id, node.Id);
+        }
+        public void Add(TextParagraph node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.AddChild(Id, node.Id);
+        }
+
+        public void Remove(TextParagraph node)
+        {
+            if (node.Document != Document) throw new InvalidOperationException();
+            node.Document.RemoveChild(Id, node.Id);
+        }
+
+        public TextParagraph Add(string text)
+        {
+            return new TextParagraph(this)
+            {
+                Text = text
+            };
         }
     }
 
@@ -59,12 +100,6 @@ public static unsafe partial class Access
         {
             get => node.StyleData.Container;
             set => node.StyleData.Container = value;
-        }
-
-        public TextMode TextMode
-        {
-            get => node.StyleData.TextMode;
-            set => node.StyleData.TextMode = value;
         }
 
         public Visible Visible
@@ -211,6 +246,27 @@ public static unsafe partial class Access
                 style.GridRowStart = value;
                 style.GridRowEnd = value;
             }
+        }
+
+        public TextAlign TextAlign
+        {
+            get => node.StyleData.TextAlign;
+            set => node.StyleData.TextAlign = value;
+        }
+
+        public LineAlign LineAlign
+        {
+            get => node.StyleData.LineAlign;
+            set => node.StyleData.LineAlign = value;
+        }
+    }
+
+    extension(TextParagraph node)
+    {
+        public string Text
+        {
+            get => node.Data.Text;
+            set => node.Data.SetText(node.Document, value);
         }
     }
 }

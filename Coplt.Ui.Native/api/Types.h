@@ -16,6 +16,8 @@ namespace Coplt {
     template <class T0 /* T */>
     struct NativeArc;
 
+    struct NativeBitSet;
+
     template <class T0 /* T */>
     struct NativeList;
 
@@ -73,9 +75,9 @@ namespace Coplt {
 
     struct LayoutCollapsibleMarginSet;
 
-    struct LayoutData;
-
     struct LayoutOutput;
+
+    struct LayoutResult;
 
     struct NFontInfo;
 
@@ -91,21 +93,49 @@ namespace Coplt {
 
     struct LocaleId;
 
-    struct FontMetrics;
-
     struct TextRange;
 
     struct ChildsData;
 
     struct CommonData;
 
+    struct GlyphData;
+
     struct GridContainerStyle;
+
+    struct LayoutData;
+
+    struct LineData;
+
+    struct LineSpanData;
 
     struct RootData;
 
     struct StyleData;
 
+    struct TextData_BidiRange;
+
+    struct TextData_FontRange;
+
+    struct TextData_LocaleRange;
+
+    struct TextData_RunRange;
+
+    struct TextData_SameStyleRange;
+
+    struct TextData_ScriptRange;
+
+    struct TextParagraphData;
+
+    struct TextSpanData;
+
+    struct TextStyleData;
+
+    struct TextViewData;
+
     struct NodeId;
+
+    struct TextSpanNode;
 
     struct IAtlasAllocator;
 
@@ -295,7 +325,6 @@ namespace Coplt {
         Flex = 0,
         Grid = 1,
         Text = 2,
-        Block = 3,
     };
 
     enum class CursorType : ::Coplt::u8
@@ -383,12 +412,6 @@ namespace Coplt {
         Center = 3,
     };
 
-    enum class LocaleMode : ::Coplt::u8
-    {
-        Normal = 0,
-        ByScript = 1,
-    };
-
     enum class Overflow : ::Coplt::u8
     {
         Visible = 0,
@@ -419,14 +442,8 @@ namespace Coplt {
     {
         Forward = 0,
         Reverse = 1,
-        LeftToRight = 2,
-        RightToLeft = 3,
-    };
-
-    enum class TextMode : ::Coplt::u8
-    {
-        Block = 0,
-        Inline = 1,
+        LeftToRight = 0,
+        RightToLeft = 1,
     };
 
     enum class TextOrientation : ::Coplt::u8
@@ -743,10 +760,83 @@ namespace Coplt {
         TraditionalHanWithLatin = 212,
     };
 
+    enum class BidiDirection : ::Coplt::u8
+    {
+        LeftToRight = 0,
+        RightToLeft = 1,
+    };
+
+    COPLT_ENUM_FLAGS(GlyphDataFlags, ::Coplt::u8)
+    {
+        None = 0,
+        UnsafeToBreak = 1,
+    };
+
+    enum class GlyphType : ::Coplt::u8
+    {
+        Invalid = 0,
+        Outline = 1,
+        Color = 2,
+        Bitmap = 3,
+    };
+
+    enum class LineSpanType : ::Coplt::u8
+    {
+        Text = 0,
+        Space = 1,
+        Tab = 2,
+        NewLine = 3,
+        Object = 4,
+    };
+
+    COPLT_ENUM_FLAGS(TextStyleOverride, ::Coplt::u64)
+    {
+        None = 0,
+        FontFallback = 1,
+        Locale = 2,
+        TextColorR = 4,
+        TextColorG = 8,
+        TextColorB = 16,
+        TextColorA = 32,
+        Opacity = 64,
+        BackgroundColorR = 128,
+        BackgroundColorG = 256,
+        BackgroundColorB = 512,
+        BackgroundColorA = 1024,
+        InsertTop = 2048,
+        InsertRight = 4096,
+        InsertBottom = 8192,
+        InsertLeft = 16384,
+        MarginTop = 32768,
+        MarginRight = 65536,
+        MarginBottom = 131072,
+        MarginLeft = 262144,
+        PaddingTop = 524288,
+        PaddingRight = 1048576,
+        PaddingBottom = 2097152,
+        PaddingLeft = 4194304,
+        TabSize = 8388608,
+        FontSize = 16777216,
+        FontWidth = 33554432,
+        FontOblique = 67108864,
+        FontWeight = 134217728,
+        LineHeight = 268435456,
+        Cursor = 536870912,
+        PointerEvents = 1073741824,
+        FontItalic = 2147483648,
+        FontOpticalSizing = 4294967296,
+        WrapFlags = 8589934592,
+        TextWrap = 17179869184,
+        WordBreak = 34359738368,
+        TextOrientation = 68719476736,
+    };
+
     enum class NodeType : ::Coplt::u8
     {
-        View = 0,
-        Text = 1,
+        Null = 0,
+        View = 1,
+        TextParagraph = 2,
+        TextSpan = 3,
     };
 
     struct LayoutCollapsibleMarginSet
@@ -839,6 +929,12 @@ namespace Coplt {
         ::Coplt::NativeArcInner<T0>* m_ptr;
     };
 
+    struct NativeBitSet
+    {
+        ::Coplt::u64* m_items;
+        ::Coplt::i32 m_size;
+    };
+
     struct PathBuilderCmdArc
     {
         ::Coplt::PathBuilderCmdType Type;
@@ -902,17 +998,6 @@ namespace Coplt {
         ::Coplt::char16 const* Locale;
     };
 
-    struct FFIMap
-    {
-        ::Coplt::i32* m_buckets;
-        void* m_entries;
-        ::Coplt::u64 m_fast_mode_multiplier;
-        ::Coplt::i32 m_cap;
-        ::Coplt::i32 m_count;
-        ::Coplt::i32 m_free_list;
-        ::Coplt::i32 m_free_count;
-    };
-
     struct FFIOrderedSet
     {
         ::Coplt::i32* m_buckets;
@@ -941,7 +1026,7 @@ namespace Coplt {
         ::Coplt::LayoutCacheFlags Flags;
     };
 
-    struct LayoutData
+    struct LayoutResult
     {
         ::Coplt::u32 Order;
         ::Coplt::f32 LocationX;
@@ -966,6 +1051,13 @@ namespace Coplt {
         ::Coplt::f32 MarginLeftSize;
     };
 
+    struct NString
+    {
+        ::Coplt::char16 const* m_str;
+        void* m_handle;
+        ::Coplt::i32 m_len;
+    };
+
     struct FontWidth
     {
         ::Coplt::f32 Width;
@@ -973,22 +1065,25 @@ namespace Coplt {
 
     struct LocaleId
     {
-        ::Coplt::char16* Name;
+        ::Coplt::u8* Name;
+        ::Coplt::usize Length;
     };
 
-    struct FontMetrics
+    struct TextViewData
     {
-        ::Coplt::f32 Ascent;
-        ::Coplt::f32 Descent;
-        ::Coplt::f32 Leading;
-        ::Coplt::f32 LineHeight;
-        ::Coplt::u16 UnitsPerEm;
+        ::Coplt::NativeList<::Coplt::LineSpanData> m_line_spans;
+        ::Coplt::NativeList<::Coplt::LineData> m_lines;
     };
 
     struct NodeId
     {
         ::Coplt::u32 Index;
         ::Coplt::u32 IdAndType;
+    };
+
+    struct TextSpanNode
+    {
+        ::Coplt::u32 Index;
     };
 
     struct Str8
@@ -1068,6 +1163,17 @@ namespace Coplt {
         ::Coplt::u64 TimeTicks;
     };
 
+    struct FFIMap
+    {
+        ::Coplt::i32* m_buckets;
+        void* m_entries;
+        ::Coplt::u64 m_fast_mode_multiplier;
+        ::Coplt::i32 m_cap;
+        ::Coplt::i32 m_count;
+        ::Coplt::i32 m_free_list;
+        ::Coplt::i32 m_free_count;
+    };
+
     struct FontFallbackBuilderCreateInfo
     {
         bool DisableSystemFallback;
@@ -1081,7 +1187,6 @@ namespace Coplt {
 
     struct NFontInfo
     {
-        ::Coplt::FontMetrics Metrics;
         ::Coplt::FontWidth Width;
         ::Coplt::FontWeight Weight;
         ::Coplt::FontFlags Flags;
@@ -1095,14 +1200,30 @@ namespace Coplt {
 
     struct NLayoutContext
     {
+        ::Coplt::u64 CurrentFrame;
         IFontManager* font_manager;
+        ::Coplt::LocaleId default_locale;
         ::Coplt::FFIMap* roots;
-        ::Coplt::i32* node_buckets;
-        ::Coplt::NNodeIdCtrl* node_ctrl;
-        ::Coplt::CommonData* node_common_data;
-        ::Coplt::ChildsData* node_childs_data;
-        ::Coplt::StyleData* node_style_data;
-        ::Coplt::i32 node_count;
+        ::Coplt::i32* view_buckets;
+        ::Coplt::NNodeIdCtrl* view_ctrl;
+        ::Coplt::CommonData* view_common_data;
+        ::Coplt::LayoutData* view_layout_data;
+        ::Coplt::ChildsData* view_childs_data;
+        ::Coplt::StyleData* view_style_data;
+        ::Coplt::i32* text_paragraph_buckets;
+        ::Coplt::NNodeIdCtrl* text_paragraph_ctrl;
+        ::Coplt::CommonData* text_paragraph_common_data;
+        ::Coplt::ChildsData* text_paragraph_childs_data;
+        ::Coplt::TextParagraphData* text_paragraph_data;
+        ::Coplt::TextStyleData* text_paragraph_style_data;
+        ::Coplt::i32* text_span_buckets;
+        ::Coplt::NNodeIdCtrl* text_span_ctrl;
+        ::Coplt::CommonData* text_span_common_data;
+        ::Coplt::TextSpanData* text_span_data;
+        ::Coplt::TextStyleData* text_span_style_data;
+        ::Coplt::i32 view_count;
+        ::Coplt::i32 text_paragraph_count;
+        ::Coplt::i32 text_span_count;
         bool rounding;
     };
 
@@ -1111,13 +1232,6 @@ namespace Coplt {
         ::Coplt::i32 HashCode;
         ::Coplt::i32 Next;
         ::Coplt::NodeId Key;
-    };
-
-    struct NString
-    {
-        ::Coplt::char16 const* m_str;
-        void* m_handle;
-        ::Coplt::i32 m_len;
     };
 
     struct TextRange
@@ -1133,23 +1247,23 @@ namespace Coplt {
     struct ChildsData
     {
         ::Coplt::FFIOrderedSet m_childs;
-        ::Coplt::FFIMap m_texts;
-        ::Coplt::u32 m_text_id_inc;
-        ::Coplt::u64 m_version;
-        ::Coplt::u64 m_last_version;
     };
 
     struct CommonData
     {
-        ITextLayout* TextLayoutObject;
-        ITextLayout* TextLayoutBelongTo;
-        ::Coplt::LayoutData FinalLayout;
-        ::Coplt::LayoutData UnRoundedLayout;
-        ::Coplt::LayoutCache LayoutCache;
-        ::Coplt::u32 LastLayoutVersion;
-        ::Coplt::u32 LastTextLayoutVersion;
-        ::Coplt::u32 LayoutVersion;
-        ::Coplt::u32 TextLayoutVersion;
+        ::Coplt::u32 NodeId;
+        ::Coplt::NodeId ParentValue;
+        bool HasParent;
+    };
+
+    struct GlyphData
+    {
+        ::Coplt::u32 Cluster;
+        ::Coplt::f32 Advance;
+        ::Coplt::f32 Offset;
+        ::Coplt::u16 GlyphId;
+        ::Coplt::GlyphDataFlags Flags;
+        ::Coplt::GlyphType Type;
     };
 
     struct GridContainerStyle
@@ -1163,13 +1277,51 @@ namespace Coplt {
         ::Coplt::NativeList<::Coplt::NativeList<::Coplt::GridName>> GridTemplateRowNames;
     };
 
+    struct LayoutData
+    {
+        ::Coplt::u64 LayoutDirtyFrame;
+        ::Coplt::LayoutResult FinalLayout;
+        ::Coplt::LayoutResult UnRoundedLayout;
+        ::Coplt::LayoutCache LayoutCache;
+        ::Coplt::TextViewData m_text_view_data;
+    };
+
+    struct LineData
+    {
+        ::Coplt::f32 X;
+        ::Coplt::f32 Y;
+        ::Coplt::f32 Width;
+        ::Coplt::f32 Height;
+        ::Coplt::f32 BaseLine;
+        ::Coplt::u32 NthLine;
+        ::Coplt::u32 SpanStart;
+        ::Coplt::u32 SpanEnd;
+    };
+
+    struct LineSpanData
+    {
+        ::Coplt::f32 X;
+        ::Coplt::f32 Y;
+        ::Coplt::f32 Width;
+        ::Coplt::f32 Height;
+        ::Coplt::f32 BaseLine;
+        ::Coplt::u32 NthLine;
+        ::Coplt::u32 NodeIndex;
+        ::Coplt::u32 RunRange;
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::LineSpanType Type;
+    };
+
     struct RootData
     {
+        ::Coplt::LocaleId DefaultLocale;
         ::Coplt::NodeId Node;
         ::Coplt::f32 AvailableSpaceXValue;
         ::Coplt::f32 AvailableSpaceYValue;
         ::Coplt::AvailableSpaceType AvailableSpaceX;
         ::Coplt::AvailableSpaceType AvailableSpaceY;
+        ::Coplt::f32 Dpi;
         bool UseRounding;
     };
 
@@ -1230,7 +1382,6 @@ namespace Coplt {
         ::Coplt::Visible Visible;
         ::Coplt::Position Position;
         ::Coplt::Container Container;
-        ::Coplt::TextMode TextMode;
         ::Coplt::BoxSizing BoxSizing;
         ::Coplt::CursorType Cursor;
         ::Coplt::PointerEvents PointerEvents;
@@ -1276,7 +1427,6 @@ namespace Coplt {
         ::Coplt::TextAlign TextAlign;
         ::Coplt::LineAlign LineAlign;
         ::Coplt::LengthType TabSize;
-        ::Coplt::LocaleMode LocaleMode;
         ::Coplt::TextDirection TextDirection;
         ::Coplt::WritingDirection WritingDirection;
         ::Coplt::WrapFlags WrapFlags;
@@ -1284,6 +1434,138 @@ namespace Coplt {
         ::Coplt::WordBreak WordBreak;
         ::Coplt::TextOrientation TextOrientation;
         ::Coplt::TextOverflow TextOverflow;
+        ::Coplt::LengthType LineHeight;
+    };
+
+    struct TextData_BidiRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::BidiDirection Direction;
+    };
+
+    struct TextData_FontRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        IFontFace* m_font_face;
+        ::Coplt::u32 StyleRange;
+    };
+
+    struct TextData_LocaleRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::LocaleId Locale;
+    };
+
+    struct TextData_RunRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::u32 ScriptRange;
+        ::Coplt::u32 BidiRange;
+        ::Coplt::u32 StyleRange;
+        ::Coplt::u32 FontRange;
+        ::Coplt::u32 GlyphStart;
+        ::Coplt::u32 GlyphEnd;
+        ::Coplt::f32 Ascent;
+        ::Coplt::f32 Descent;
+        ::Coplt::f32 Leading;
+    };
+
+    struct TextData_SameStyleRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::TextSpanNode FirstSpanValue;
+        bool HasFirstSpan;
+        ::Coplt::f32 ComputedFontSize;
+    };
+
+    struct TextData_ScriptRange
+    {
+        ::Coplt::u32 Start;
+        ::Coplt::u32 End;
+        ::Coplt::u16 Script;
+    };
+
+    struct TextParagraphData
+    {
+        ::Coplt::u64 TextDirtyFrame;
+        ::Coplt::u64 TextStyleDirtyFrame;
+        ::Coplt::u64 DirtySyncFrame;
+        ::Coplt::NString m_text;
+        ::Coplt::NativeBitSet m_break_points;
+        ::Coplt::NativeList<::Coplt::u32> m_grapheme_cluster;
+        ::Coplt::NativeList<::Coplt::TextData_ScriptRange> m_script_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_BidiRange> m_bidi_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_SameStyleRange> m_same_style_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_LocaleRange> m_locale_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_FontRange> m_font_ranges;
+        ::Coplt::NativeList<::Coplt::TextData_RunRange> m_run_ranges;
+        ::Coplt::NativeList<::Coplt::GlyphData> m_glyph_datas;
+    };
+
+    struct TextSpanData
+    {
+        ::Coplt::u32 TextStart;
+        ::Coplt::u32 TextLength;
+    };
+
+    struct TextStyleData
+    {
+        ::Coplt::TextStyleOverride Override;
+        IFontFallback* FontFallback;
+        ::Coplt::LocaleId Locale;
+        ::Coplt::f32 TextColorR;
+        ::Coplt::f32 TextColorG;
+        ::Coplt::f32 TextColorB;
+        ::Coplt::f32 TextColorA;
+        ::Coplt::f32 Opacity;
+        ::Coplt::f32 BackgroundColorR;
+        ::Coplt::f32 BackgroundColorG;
+        ::Coplt::f32 BackgroundColorB;
+        ::Coplt::f32 BackgroundColorA;
+        ::Coplt::f32 InsertTopValue;
+        ::Coplt::f32 InsertRightValue;
+        ::Coplt::f32 InsertBottomValue;
+        ::Coplt::f32 InsertLeftValue;
+        ::Coplt::f32 MarginTopValue;
+        ::Coplt::f32 MarginRightValue;
+        ::Coplt::f32 MarginBottomValue;
+        ::Coplt::f32 MarginLeftValue;
+        ::Coplt::f32 PaddingTopValue;
+        ::Coplt::f32 PaddingRightValue;
+        ::Coplt::f32 PaddingBottomValue;
+        ::Coplt::f32 PaddingLeftValue;
+        ::Coplt::f32 TabSizeValue;
+        ::Coplt::f32 FontSize;
+        ::Coplt::FontWidth FontWidth;
+        ::Coplt::f32 FontOblique;
+        ::Coplt::FontWeight FontWeight;
+        ::Coplt::f32 LineHeightValue;
+        ::Coplt::CursorType Cursor;
+        ::Coplt::PointerEvents PointerEvents;
+        ::Coplt::LengthType InsertTop;
+        ::Coplt::LengthType InsertRight;
+        ::Coplt::LengthType InsertBottom;
+        ::Coplt::LengthType InsertLeft;
+        ::Coplt::LengthType MarginTop;
+        ::Coplt::LengthType MarginRight;
+        ::Coplt::LengthType MarginBottom;
+        ::Coplt::LengthType MarginLeft;
+        ::Coplt::LengthType PaddingTop;
+        ::Coplt::LengthType PaddingRight;
+        ::Coplt::LengthType PaddingBottom;
+        ::Coplt::LengthType PaddingLeft;
+        bool FontItalic;
+        bool FontOpticalSizing;
+        ::Coplt::LengthType TabSize;
+        ::Coplt::WrapFlags WrapFlags;
+        ::Coplt::TextWrap TextWrap;
+        ::Coplt::WordBreak WordBreak;
+        ::Coplt::TextOrientation TextOrientation;
         ::Coplt::LengthType LineHeight;
     };
 

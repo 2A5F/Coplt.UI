@@ -37,7 +37,6 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
     public uint RefCount => m_inner.RefCount;
     public ref readonly Rc<IFontFace> Inner => ref m_inner;
     public ref readonly FrameTime FrameTime => ref *m_frame_time;
-    public ref readonly FontMetrics Metrics => ref m_info->Metrics;
     public FontWidth Width => m_info->Width;
     public FontWeight Weight => m_info->Weight;
 
@@ -45,6 +44,30 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
 
     public bool IsColor => (m_info->Flags & FontFlags.Color) != 0;
     public bool IsMonospaced => (m_info->Flags & FontFlags.Monospaced) != 0;
+
+    public ReadOnlySpan<byte> Data
+    {
+        get
+        {
+            byte* p_data;
+            nuint size;
+            uint index;
+            m_inner.GetData(&p_data, &size, &index);
+            return new(p_data, (int)size);
+        }
+    }
+
+    public uint? IndexInTTC
+    {
+        get
+        {
+            byte* p_data;
+            nuint size;
+            uint index;
+            m_inner.GetData(&p_data, &size, &index);
+            return index == uint.MaxValue ? null : index;
+        }
+    }
 
     public FrozenDictionary<CultureInfo, string> FamilyNames =>
         m_family_names ?? Interlocked.CompareExchange(ref m_family_names, GetFamilyNames(), null) ?? m_family_names;
@@ -74,6 +97,9 @@ public sealed unsafe partial class FontFace : IEquatable<FontFace>
         m_id = m_inner.Id;
         m_frame_time = m_inner.FrameTime;
         m_info = m_inner.Info;
+
+        var weak_handle = GCHandle.ToIntPtr(GCHandle.Alloc(this, GCHandleType.Weak));
+        m_inner.SetManagedHandle((void*)weak_handle, &NativeUtils.FreeGcHandle);
     }
 
     #endregion

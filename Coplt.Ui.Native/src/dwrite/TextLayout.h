@@ -13,7 +13,6 @@
 namespace Coplt
 {
     struct LoggerData;
-    struct DWriteFontFace;
 }
 
 namespace Coplt::LayoutCalc
@@ -146,14 +145,14 @@ namespace Coplt::LayoutCalc::Texts
 
         std::vector<ParagraphData> m_paragraph_datas{};
 
-        Rc<DWriteFontFace> m_fallback_undef_font{};
+        // Rc<DWriteFontFace> m_fallback_undef_font{};
         Rc<OneSpaceTextAnalysisSource> m_one_space_analysis_source{};
         void ReBuild(Layout* layout, CtxNodeRef node);
 
         COPLT_IMPL_START
         COPLT_IMPL_END
 
-        const Rc<DWriteFontFace>& GetFallbackUndefFont();
+        // const Rc<DWriteFontFace>& GetFallbackUndefFont();
 
         void Compute(void* sub_doc, LayoutOutput& out, const LayoutInputs& inputs, CtxNodeRef node);
         LayoutOutput Compute(void* sub_doc, const LayoutInputs& inputs);
@@ -245,7 +244,7 @@ namespace Coplt::LayoutCalc::Texts
     {
         u32 Start;
         u32 Length;
-        Rc<DWriteFontFace> Font;
+        // Rc<DWriteFontFace> Font;
         // item range only alive when IsInlineBlock is true
         u32 ItemStart;
         u32 ItemLength;
@@ -346,15 +345,15 @@ namespace Coplt::LayoutCalc::Texts
 
         std::vector<Paragraph>& GetTextLayoutParagraphs() const;
         Paragraph& GetParagraph() const;
-        std::span<TextItem> GetItems() const;
-        std::span<TextItem> GetItems(u32 Start, u32 Length) const;
+        // std::span<TextItem> GetItems() const;
+        // std::span<TextItem> GetItems(u32 Start, u32 Length) const;
 
         CtxNodeRef GetScope(NodeId node) const;
-        CtxNodeRef GetScope(const TextItem& item) const;
+        // CtxNodeRef GetScope(const TextItem& item) const;
         CtxNodeRef GetScope(const TextScopeRange& range) const;
         CtxNodeRef GetScope(const SameStyleRange& range) const;
 
-        void CollectChars();
+        // void CollectChars();
         void AnalyzeFonts();
         void AnalyzeStyles();
         void CollectRuns();

@@ -26,3 +26,27 @@ public record struct NodeId(uint Index, uint Id, NodeType Type)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint NormalizeId(uint id) => id & 0x0FFF_FFFF;
 }
+
+public readonly record struct ViewNode(uint Index)
+{
+    public readonly uint Index = Index;
+
+    public static explicit operator ViewNode(NodeId node) =>
+        node.Type is not NodeType.View ? throw new InvalidCastException() : new(node.Index);
+}
+
+public readonly record struct TextParagraphNode(uint Index)
+{
+    public readonly uint Index = Index;
+
+    public static explicit operator TextParagraphNode(NodeId node) =>
+        node.Type is not NodeType.TextParagraph ? throw new InvalidCastException() : new(node.Index);
+}
+
+public readonly record struct TextSpanNode(uint Index)
+{
+    public readonly uint Index = Index;
+
+    public static explicit operator TextSpanNode(NodeId node) =>
+        node.Type is not NodeType.TextSpan ? throw new InvalidCastException() : new(node.Index);
+}

@@ -19,7 +19,7 @@ public unsafe partial struct IFontFallbackBuilder
 
     public partial HResult Add([ComType<ConstPtr<char>>] char* name, int length, bool* exists);
     public partial HResult AddLocaled(
-        [ComType<ConstPtr<char>>] char* locale,
+        [ComType<ConstPtr<LocaleId>>] LocaleId* locale,
         [ComType<ConstPtr<char>>] char* name, int name_length,
         bool* exists
     );

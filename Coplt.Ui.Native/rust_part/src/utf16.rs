@@ -1,0 +1,47 @@
+/// Similar to [`core::str::CharIndices`] for UTF-16 strings, represented as `[u16]`.
+///
+/// Contrary to [`core::str::CharIndices`], the second element of the
+/// [`Iterator::Item`] is a Unicode code point represented by a [`u32`],
+/// rather than a Unicode scalar value represented by a [`char`], because this
+/// iterator preserves unpaired surrogates.
+#[derive(Clone, Debug)]
+pub struct Utf16Indices<'a> {
+    front_offset: usize,
+    iter: &'a [u16],
+}
+
+impl<'a> Utf16Indices<'a> {
+    pub fn new(input: &'a [u16]) -> Self {
+        Self {
+            front_offset: 0,
+            iter: input,
+        }
+    }
+}
+
+impl Iterator for Utf16Indices<'_> {
+    type Item = (usize, u32);
+
+    #[inline]
+    fn next(&mut self) -> Option<(usize, u32)> {
+        let (index, ch) = self.iter.get(self.front_offset).map(|ch| {
+            self.front_offset += 1;
+            (self.front_offset - 1, *ch)
+        })?;
+
+        let mut ch = ch as u32;
+        if (ch & 0xfc00) != 0xd800 {
+            return Some((index, ch));
+        }
+
+        if let Some(next) = self.iter.get(self.front_offset) {
+            let next = *next as u32;
+            if (next & 0xfc00) == 0xdc00 {
+                // Combine low and high surrogates to UTF-32 code point.
+                ch = ((ch & 0x3ff) << 10) + (next & 0x3ff) + 0x10000;
+                self.front_offset += 1;
+            }
+        }
+        Some((index, ch))
+    }
+}

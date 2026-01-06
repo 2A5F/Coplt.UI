@@ -1,0 +1,29 @@
+[package]
+edition = "2024"
+name = "coplt_ui_rust_part"
+publish = false
+version = "0.1.0"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+anyhow = {workspace = true}
+bitflags = {workspace = true}
+cocom = {workspace = true}
+concat-idents = {workspace = true}
+coplt_ui_rust_common = {workspace = true}
+dashmap = {workspace = true}
+etagere = {workspace = true}
+font-types = {workspace = true}
+harfrust = {workspace = true}
+icu = {workspace = true}
+itertools = {workspace = true}
+read-fonts = {workspace = true}
+skrifa = {workspace = true}
+sys-locale = {workspace = true}
+taffy = {workspace = true}
+
+[target.'cfg(windows)'.dependencies]
+windows = {version = "0.62", features = ["Win32_System_Com", "Win32_Graphics_DirectWrite", "Win32_Storage_FileSystem", "Win32_Security", "Win32_System_Memory"]}
+windows-core = "0.62"

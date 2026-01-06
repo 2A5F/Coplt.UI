@@ -2,6 +2,7 @@
 using Coplt.Com;
 using Coplt.UI.Collections;
 using Coplt.UI.Native.Collections;
+using Coplt.UI.Styles;
 using Coplt.UI.Trees;
 using Coplt.UI.Trees.Datas;
 
@@ -16,19 +17,39 @@ public struct NNodeIdCtrl
 
 public unsafe struct NLayoutContext
 {
+    public ulong CurrentFrame;
     public IFontManager* font_manager;
+    public LocaleId default_locale;
 
     [ComType<Ptr<FFIMap>>]
     public NativeMap<NodeId, RootData>* roots;
 
-    public int* node_buckets;
+    public int* view_buckets;
     [ComType<Ptr<NNodeIdCtrl>>]
-    public NSplitMapCtrl<uint>.Ctrl* node_ctrl;
-    public CommonData* node_common_data;
-    public ChildsData* node_childs_data;
-    public StyleData* node_style_data;
+    public NSplitMapCtrl<uint>.Ctrl* view_ctrl;
+    public CommonData* view_common_data;
+    public LayoutData* view_layout_data;
+    public ChildsData* view_childs_data;
+    public StyleData* view_style_data;
 
-    public int node_count;
+    public int* text_paragraph_buckets;
+    [ComType<Ptr<NNodeIdCtrl>>]
+    public NSplitMapCtrl<uint>.Ctrl* text_paragraph_ctrl;
+    public CommonData* text_paragraph_common_data;
+    public ChildsData* text_paragraph_childs_data;
+    public TextParagraphData* text_paragraph_data;
+    public TextStyleData* text_paragraph_style_data;
+
+    public int* text_span_buckets;
+    [ComType<Ptr<NNodeIdCtrl>>]
+    public NSplitMapCtrl<uint>.Ctrl* text_span_ctrl;
+    public CommonData* text_span_common_data;
+    public TextSpanData* text_span_data;
+    public TextStyleData* text_span_style_data;
+
+    public int view_count;
+    public int text_paragraph_count;
+    public int text_span_count;
 
     public bool rounding;
 }

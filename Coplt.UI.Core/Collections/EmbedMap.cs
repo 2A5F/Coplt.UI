@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Coplt.UI.Collections;
 
@@ -469,6 +470,16 @@ public struct EmbedMap<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 
     [UnscopedRef]
     public readonly bool Contains(TKey key) => !Unsafe.IsNullRef(ref FindValue(key));
+
+    #endregion
+
+    #region UnsafeAt
+
+    public ref TKey UnsafeKeyAt(int index) =>
+        ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_entries!), index).Key;
+
+    public ref TValue UnsafeValueAt(int index) =>
+        ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_entries!), index).Value;
 
     #endregion
 

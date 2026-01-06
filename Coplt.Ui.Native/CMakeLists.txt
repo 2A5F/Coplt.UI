@@ -26,7 +26,7 @@ else ()
 endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE
         Coplt::Com
-        coplt_ui_rusty
+        coplt_ui_rust_part
         cpptrace::cpptrace
         mimalloc-static
         fmt::fmt-header-only

@@ -1,12 +1,8 @@
-use std::{
-    alloc::Layout,
-    hash::Hash,
-    mem::ManuallyDrop,
-    ops::{Deref, DerefMut},
-    sync::atomic,
-};
+use std::{hash::Hash, mem::ManuallyDrop, sync::atomic};
 
-use crate::coplt_alloc::coplt_free;
+use cocom::pmp;
+
+use crate::coplt_alloc::{coplt_free, coplt_ui_malloc, coplt_ui_zalloc};
 
 #[repr(C)]
 pub struct NArc<T> {
@@ -20,6 +16,21 @@ struct Inner<T> {
 }
 
 impl<T> NArc<T> {
+    pub fn new(val: T) -> Self {
+        unsafe {
+            let ptr = coplt_ui_malloc(size_of::<T>(), align_of::<T>()) as *mut Inner<T>;
+            pmp!(ptr; .count).write(1);
+            pmp!(ptr; .value).write(val);
+            Self { ptr }
+        }
+    }
+    pub unsafe fn new_zeroed() -> Self {
+        unsafe {
+            let ptr = coplt_ui_zalloc(size_of::<T>(), align_of::<T>()) as *mut Inner<T>;
+            pmp!(ptr; .count).write(1);
+            Self { ptr }
+        }
+    }
     pub fn val(&self) -> Option<&T> {
         if self.ptr.is_null() {
             None

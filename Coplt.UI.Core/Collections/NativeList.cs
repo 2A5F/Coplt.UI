@@ -48,6 +48,32 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
         m_items = capacity == 0 ? null : Alloc(capacity);
     }
 
+    public static NativeList<T> CreateFiled(int length, T value)
+    {
+        if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
+        NativeList<T> r = new()
+        {
+            m_items = Alloc(length),
+            m_cap = length,
+            m_size = length,
+        };
+        r.AsSpan.Fill(value);
+        return r;
+    }
+
+    public static NativeList<T> CreateZeroed(int length)
+    {
+        if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
+        NativeList<T> r = new()
+        {
+            m_items = Alloc(length),
+            m_cap = length,
+            m_size = length,
+        };
+        r.AsSpan.Clear();
+        return r;
+    }
+
     #endregion
 
     #region Props
@@ -88,7 +114,7 @@ public unsafe partial struct NativeList<T> : IList<T>, IReadOnlyList<T>, IEquata
             }
             else if (value != m_cap)
             {
-                if (m_size > 0)
+                if (value > 0)
                 {
                     m_items = ReAlloc(m_items, value);
                 }

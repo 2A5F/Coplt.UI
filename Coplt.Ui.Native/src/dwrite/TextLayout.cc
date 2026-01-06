@@ -62,30 +62,31 @@ Paragraph& ParagraphData::GetParagraph() const
     return GetTextLayoutParagraphs()[m_index];
 }
 
-std::span<TextItem> ParagraphData::GetItems() const
-{
-    const auto& paragraph = GetParagraph();
-    return GetItems(paragraph.ItemStart, paragraph.ItemLength);
-}
-
-std::span<TextItem> ParagraphData::GetItems(const u32 Start, const u32 Length) const
-{
-    return std::span(m_text_layout->m_items.data() + Start, Length);
-}
+// std::span<TextItem> ParagraphData::GetItems() const
+// {
+//     const auto& paragraph = GetParagraph();
+//     return GetItems(paragraph.ItemStart, paragraph.ItemLength);
+// }
+//
+// std::span<TextItem> ParagraphData::GetItems(const u32 Start, const u32 Length) const
+// {
+//     return std::span(m_text_layout->m_items.data() + Start, Length);
+// }
 
 CtxNodeRef ParagraphData::GetScope(const NodeId node) const
 {
     return CtxNodeRef(m_text_layout->m_node.ctx, node);
 }
 
-CtxNodeRef ParagraphData::GetScope(const TextItem& item) const
-{
-    const auto root_scope = m_text_layout->m_node;
-    return
-        item.Scope == -1
-        ? root_scope
-        : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
-}
+// CtxNodeRef ParagraphData::GetScope(const TextItem& item) const
+// {
+//     // const auto root_scope = m_text_layout->m_node;
+//     // return
+//     //     item.Scope == -1
+//     //     ? root_scope
+//     //     : CtxNodeRef(root_scope.ctx, m_text_layout->m_scopes[item.Scope]);
+//     return {};
+// }
 
 CtxNodeRef ParagraphData::GetScope(const TextScopeRange& range) const
 {
@@ -118,7 +119,7 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
         data.m_index = i;
         data.m_layout = layout;
         data.ReBuild();
-        data.CollectChars();
+        // data.CollectChars();
         if (const auto hr = layout->m_text_analyzer->AnalyzeScript(
             data.m_src.get(), 0, paragraph.LogicTextLength, data.m_sink.get()
         ); FAILED(hr))
@@ -140,73 +141,47 @@ void TextLayout::ReBuild(Layout* layout, CtxNodeRef node)
     m_node = {};
 }
 
-const Rc<DWriteFontFace>& TextLayout::GetFallbackUndefFont()
-{
-    if (m_fallback_undef_font) return m_fallback_undef_font;
-
-    if (!m_one_space_analysis_source) m_one_space_analysis_source = Rc(new OneSpaceTextAnalysisSource());
-
-    const auto fm = m_node.ctx->font_manager;
-    const auto& system_font_fallback = m_layout->m_system_font_fallback;
-
-    u32 mapped_length{};
-    Rc<IDWriteFontFace5> mapped_font{};
-    f32 scale{};
-
-    if (const auto hr = system_font_fallback->MapCharacters(
-        m_one_space_analysis_source.get(), 0, 1,
-        nullptr, nullptr,
-        nullptr, 0,
-        &mapped_length, &scale,
-        mapped_font.put()
-    ); FAILED(hr) || !mapped_font)
-        throw ComException(hr, "Failed to map characters");
-
-    m_fallback_undef_font = DWriteFontFace::Get(fm, mapped_font);
-    return m_fallback_undef_font;
-}
-
-void ParagraphData::CollectChars()
-{
-    const auto items = GetItems();
-    const auto& paragraph = GetParagraph();
-    m_chars.reserve(paragraph.LogicTextLength);
-    m_char_metas.resize(paragraph.LogicTextLength);
-    for (const auto& item : items)
-    {
-        const auto text = GetText(m_text_layout->m_node.ctx, &item);
-        const u32 len = item.LogicTextLength;
-        const u32 start = m_chars.size();
-        m_chars.insert(m_chars.end(), text, text + len);
-        const auto str = m_chars.data();
-        for (u32 i = start; i < m_chars.size();)
-        {
-            const u32 li = i;
-            UChar32 c;
-            U16_NEXT(str, i, len, c);
-            switch (c)
-            {
-            case 0x0009:
-                str[li] = 0x0020;
-                m_char_metas[li].RawType = RawCharType::HT;
-                break;
-            case 0x000B:
-                str[li] = 0x0020;
-                m_char_metas[li].RawType = RawCharType::VT;
-                break;
-            case 0x000A:
-                str[li] = 0x0020;
-                m_char_metas[li].RawType = RawCharType::LF;
-                break;
-            case 0x000D:
-                str[li] = 0x0020;
-                m_char_metas[li].RawType = RawCharType::CR;
-                break;
-            default: break;
-            }
-        }
-    }
-}
+// void ParagraphData::CollectChars()
+// {
+//     const auto items = GetItems();
+//     const auto& paragraph = GetParagraph();
+//     m_chars.reserve(paragraph.LogicTextLength);
+//     m_char_metas.resize(paragraph.LogicTextLength);
+//     for (const auto& item : items)
+//     {
+//         const auto text = GetText(m_text_layout->m_node.ctx, &item);
+//         const u32 len = item.LogicTextLength;
+//         const u32 start = m_chars.size();
+//         m_chars.insert(m_chars.end(), text, text + len);
+//         const auto str = m_chars.data();
+//         for (u32 i = start; i < m_chars.size();)
+//         {
+//             const u32 li = i;
+//             UChar32 c;
+//             U16_NEXT(str, i, len, c);
+//             switch (c)
+//             {
+//             case 0x0009:
+//                 str[li] = 0x0020;
+//                 m_char_metas[li].RawType = RawCharType::HT;
+//                 break;
+//             case 0x000B:
+//                 str[li] = 0x0020;
+//                 m_char_metas[li].RawType = RawCharType::VT;
+//                 break;
+//             case 0x000A:
+//                 str[li] = 0x0020;
+//                 m_char_metas[li].RawType = RawCharType::LF;
+//                 break;
+//             case 0x000D:
+//                 str[li] = 0x0020;
+//                 m_char_metas[li].RawType = RawCharType::CR;
+//                 break;
+//             default: break;
+//             }
+//         }
+//     }
+// }
 
 void ParagraphData::AnalyzeFonts()
 {
@@ -214,259 +189,259 @@ void ParagraphData::AnalyzeFonts()
 
     const auto& system_font_fallback = m_layout->m_system_font_fallback;
 
-    const auto& items = GetItems();
-    u32 item_start = 0;
-    u32 item_length = 0;
-    u32 logic_text_start = 0;
-    u32 logic_text_length = 0;
-    IDWriteFontFallback1* cur_fall_back{};
-    auto cur_item_type = TextItemType::Block;
-    auto cur_font_weight = FontWeight::Normal;
-    auto cur_font_width = 1.0f;
-    auto cur_font_italic = false;
-    auto cur_font_oblique = 1.0f;
-    const auto add_range = [&]
-    {
-        if (cur_item_type == TextItemType::InlineBlock)
-        {
-            m_font_ranges.push_back(
-                FontRange{
-                    .Start = logic_text_start,
-                    .Length = logic_text_length,
-                    .Font = nullptr,
-                    .ItemStart = item_start,
-                    .ItemLength = item_length,
-                    .IsInlineBlock = true,
-                }
-            );
-            return;
-        }
-
-        const DWRITE_FONT_AXIS_VALUE axis_values[] = {
-            DWRITE_FONT_AXIS_VALUE{
-                .axisTag = DWRITE_FONT_AXIS_TAG_WEIGHT,
-                .value = static_cast<f32>(cur_font_weight),
-            },
-            DWRITE_FONT_AXIS_VALUE{
-                .axisTag = DWRITE_FONT_AXIS_TAG_WIDTH,
-                .value = cur_font_width * 100,
-            },
-            DWRITE_FONT_AXIS_VALUE{
-                .axisTag = DWRITE_FONT_AXIS_TAG_ITALIC,
-                .value = cur_font_italic ? 1.0f : 0.0f,
-            },
-            DWRITE_FONT_AXIS_VALUE{
-                .axisTag = DWRITE_FONT_AXIS_TAG_SLANT,
-                .value = cur_font_italic ? cur_font_oblique : 0.0f,
-            },
-        };
-
-        auto text_start = logic_text_start;
-        auto text_length = logic_text_length;
-
-        for (;;)
-        {
-            u32 mapped_length{};
-            Rc<IDWriteFontFace5> mapped_font{};
-            f32 scale{};
-
-            if (const auto hr = cur_fall_back->MapCharacters(
-                m_src.get(), text_start, text_length,
-                nullptr, nullptr,
-                axis_values, std::size(axis_values),
-                &mapped_length, &scale,
-                mapped_font.put()
-            ); FAILED(hr))
-                throw ComException(hr, "Failed to map characters");
-
-            // // not find, retry use system font fallback
-            // if (mapped_font == nullptr && cur_fall_back != system_font_fallback)
-            // {
-            //     if (const auto hr = system_font_fallback->MapCharacters(
-            //         m_src.get(), text_start, text_length,
-            //         nullptr, nullptr,
-            //         axis_values, std::size(axis_values),
-            //         &mapped_length, &scale,
-            //         mapped_font.put()
-            //     ); FAILED(hr))
-            //         throw ComException(hr, "Failed to map characters");
-            // }
-
-            #ifdef _DEBUG
-            // if (mapped_font && Logger().IsEnabled(LogLevel::Trace))
-            // {
-            //     u32 len{};
-            //     const char16* local{};
-            //     m_src->GetLocaleName(text_start, &len, &local);
-            //
-            //     const auto name = GetFamilyNames(mapped_font);
-            //     Logger().Log(
-            //         LogLevel::Trace,
-            //         fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
-            //     );
-            // }
-            #endif
-
-            m_font_ranges.push_back(
-                FontRange{
-                    .Start = text_start,
-                    .Length = mapped_length,
-                    .Font = mapped_font ? DWriteFontFace::Get(fm, mapped_font) : nullptr,
-                    .ItemStart = 0,
-                    .ItemLength = 0,
-                    .IsInlineBlock = false,
-                }
-            );
-
-            if (mapped_length >= text_length) break;
-            text_start += mapped_length;
-            text_length -= mapped_length;
-        }
-    };
-    for (u32 i = 0; i < items.size(); ++i)
-    {
-        const auto& item = items[i];
-        const auto scope = GetScope(item);
-        const auto& style = scope.StyleData();
-        const auto scope_fallback =
-            style.FontFallback
-            ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
-            : system_font_fallback.get();
-        if (item.Type == TextItemType::Text)
-        {
-            const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
-            if (
-                cur_item_type == item.Type
-                && cur_fall_back == scope_fallback
-                && cur_font_weight == style.FontWeight
-                && cur_font_width == style.FontWidth.Width
-                && cur_font_italic == style.FontItalic
-                && cur_font_oblique == font_oblique
-            )
-            {
-                if (logic_text_length == 0)
-                {
-                    item_start = i;
-                    logic_text_start = item.LogicTextStart;
-                }
-                item_length++;
-                logic_text_length += item.LogicTextLength;
-                continue;
-            }
-            if (logic_text_length != 0) add_range();
-            item_start = i;
-            item_length = 1;
-            logic_text_start = item.LogicTextStart;
-            logic_text_length = item.LogicTextLength;
-            cur_item_type = item.Type;
-            cur_fall_back = scope_fallback;
-            cur_font_weight = style.FontWeight;
-            cur_font_width = style.FontWidth.Width;
-            cur_font_italic = style.FontItalic;
-            cur_font_oblique = font_oblique;
-        }
-        else
-        {
-            if (cur_item_type == item.Type)
-            {
-                if (logic_text_length == 0)
-                {
-                    item_start = i;
-                    logic_text_start = item.LogicTextStart;
-                }
-                item_length++;
-                logic_text_length += item.LogicTextLength;
-                continue;
-            }
-            if (logic_text_length != 0) add_range();
-            item_start = i;
-            item_length = 1;
-            logic_text_start = item.LogicTextStart;
-            logic_text_length = item.LogicTextLength;
-            cur_item_type = item.Type;
-            cur_fall_back = nullptr;
-        }
-    }
-    if (logic_text_length != 0) add_range();
-
-    // Forward merge
-    u32 pre_has_font_text = -1;
-    for (u32 i = 0; i < m_font_ranges.size(); ++i)
-    {
-        auto& range = m_font_ranges[i];
-        if (range.IsInlineBlock) pre_has_font_text = -1;
-        else if (range.Font)
-        {
-            if (pre_has_font_text == -1) pre_has_font_text = i;
-            else
-            {
-                auto& pre_range = m_font_ranges[pre_has_font_text];
-                if (pre_range.Font.get() != range.Font.get()) pre_has_font_text = i;
-                else
-                {
-                    COPLT_DEBUG_ASSERT(pre_range.Start + pre_range.Length == range.Start);
-                    pre_range.Length += range.Length;
-                    range.Length = 0;
-                }
-            }
-        }
-        else if (pre_has_font_text != -1)
-        {
-            auto& pre_range = m_font_ranges[pre_has_font_text];
-            COPLT_DEBUG_ASSERT(pre_range.Start + pre_range.Length == range.Start);
-            pre_range.Length += range.Length;
-            range.Length = 0;
-        }
-    }
-
-    // Reverse merge
-    pre_has_font_text = -1;
-    for (u32 n = m_font_ranges.size(); n > 0; --n)
-    {
-        const auto i = n - 1;
-        auto& range = m_font_ranges[i];
-        if (range.IsInlineBlock || range.Length == 0) pre_has_font_text = -1;
-        else if (range.Font)
-        {
-            if (pre_has_font_text == -1) pre_has_font_text = i;
-            else
-            {
-                auto& pre_range = m_font_ranges[pre_has_font_text];
-                if (pre_range.Font.get() != range.Font.get()) pre_has_font_text = i;
-                else
-                {
-                    COPLT_DEBUG_ASSERT(range.Start + range.Length == pre_range.Start);
-                    pre_range.Start = range.Start;
-                    pre_range.Length += range.Length;
-                    range.Length = 0;
-                }
-            }
-        }
-        else if (pre_has_font_text != -1)
-        {
-            auto& pre_range = m_font_ranges[pre_has_font_text];
-            COPLT_DEBUG_ASSERT(range.Start + range.Length == pre_range.Start);
-            pre_range.Start = range.Start;
-            pre_range.Length += range.Length;
-            range.Length = 0;
-        }
-    }
-
-    // Finally, make sure all text range have fonts, and remove empty range
-    for (u32 i = 0; i < m_font_ranges.size(); ++i)
-    {
-        auto& range = m_font_ranges[i];
-        if (range.IsInlineBlock) m_font_ranges_tmp.push_back(std::move(range));
-        else if (range.Length == 0) continue;
-        else if (range.Font) m_font_ranges_tmp.push_back(std::move(range));
-        else
-        {
-            range.Font = m_text_layout->GetFallbackUndefFont();
-            m_font_ranges_tmp.push_back(std::move(range));
-        }
-    }
-    std::swap(m_font_ranges, m_font_ranges_tmp);
-    m_font_ranges_tmp.clear();
+    // const auto& items = GetItems();
+    // u32 item_start = 0;
+    // u32 item_length = 0;
+    // u32 logic_text_start = 0;
+    // u32 logic_text_length = 0;
+    // IDWriteFontFallback1* cur_fall_back{};
+    // auto cur_item_type = TextItemType::Block;
+    // auto cur_font_weight = FontWeight::Normal;
+    // auto cur_font_width = 1.0f;
+    // auto cur_font_italic = false;
+    // auto cur_font_oblique = 1.0f;
+    // const auto add_range = [&]
+    // {
+    //     if (cur_item_type == TextItemType::InlineBlock)
+    //     {
+    //         m_font_ranges.push_back(
+    //             FontRange{
+    //                 .Start = logic_text_start,
+    //                 .Length = logic_text_length,
+    //                 .Font = nullptr,
+    //                 .ItemStart = item_start,
+    //                 .ItemLength = item_length,
+    //                 .IsInlineBlock = true,
+    //             }
+    //         );
+    //         return;
+    //     }
+    //
+    //     const DWRITE_FONT_AXIS_VALUE axis_values[] = {
+    //         DWRITE_FONT_AXIS_VALUE{
+    //             .axisTag = DWRITE_FONT_AXIS_TAG_WEIGHT,
+    //             .value = static_cast<f32>(cur_font_weight),
+    //         },
+    //         DWRITE_FONT_AXIS_VALUE{
+    //             .axisTag = DWRITE_FONT_AXIS_TAG_WIDTH,
+    //             .value = cur_font_width * 100,
+    //         },
+    //         DWRITE_FONT_AXIS_VALUE{
+    //             .axisTag = DWRITE_FONT_AXIS_TAG_ITALIC,
+    //             .value = cur_font_italic ? 1.0f : 0.0f,
+    //         },
+    //         DWRITE_FONT_AXIS_VALUE{
+    //             .axisTag = DWRITE_FONT_AXIS_TAG_SLANT,
+    //             .value = cur_font_italic ? cur_font_oblique : 0.0f,
+    //         },
+    //     };
+    //
+    //     auto text_start = logic_text_start;
+    //     auto text_length = logic_text_length;
+    //
+    //     for (;;)
+    //     {
+    //         u32 mapped_length{};
+    //         Rc<IDWriteFontFace5> mapped_font{};
+    //         f32 scale{};
+    //
+    //         if (const auto hr = cur_fall_back->MapCharacters(
+    //             m_src.get(), text_start, text_length,
+    //             nullptr, nullptr,
+    //             axis_values, std::size(axis_values),
+    //             &mapped_length, &scale,
+    //             mapped_font.put()
+    //         ); FAILED(hr))
+    //             throw ComException(hr, "Failed to map characters");
+    //
+    //         // // not find, retry use system font fallback
+    //         // if (mapped_font == nullptr && cur_fall_back != system_font_fallback)
+    //         // {
+    //         //     if (const auto hr = system_font_fallback->MapCharacters(
+    //         //         m_src.get(), text_start, text_length,
+    //         //         nullptr, nullptr,
+    //         //         axis_values, std::size(axis_values),
+    //         //         &mapped_length, &scale,
+    //         //         mapped_font.put()
+    //         //     ); FAILED(hr))
+    //         //         throw ComException(hr, "Failed to map characters");
+    //         // }
+    //
+    //         #ifdef _DEBUG
+    //         // if (mapped_font && Logger().IsEnabled(LogLevel::Trace))
+    //         // {
+    //         //     u32 len{};
+    //         //     const char16* local{};
+    //         //     m_src->GetLocaleName(text_start, &len, &local);
+    //         //
+    //         //     const auto name = GetFamilyNames(mapped_font);
+    //         //     Logger().Log(
+    //         //         LogLevel::Trace,
+    //         //         fmt::format(L"{}; {} :: {}", ((usize)mapped_font.get()), local, name)
+    //         //     );
+    //         // }
+    //         #endif
+    //
+    //         m_font_ranges.push_back(
+    //             FontRange{
+    //                 .Start = text_start,
+    //                 .Length = mapped_length,
+    //                 .Font = mapped_font ? DWriteFontFace::Get(fm, mapped_font) : nullptr,
+    //                 .ItemStart = 0,
+    //                 .ItemLength = 0,
+    //                 .IsInlineBlock = false,
+    //             }
+    //         );
+    //
+    //         if (mapped_length >= text_length) break;
+    //         text_start += mapped_length;
+    //         text_length -= mapped_length;
+    //     }
+    // };
+    // for (u32 i = 0; i < items.size(); ++i)
+    // {
+    //     const auto& item = items[i];
+    //     const auto scope = GetScope(item);
+    //     const auto& style = scope.StyleData();
+    //     const auto scope_fallback =
+    //         style.FontFallback
+    //         ? static_cast<BaseFontFallback*>(style.FontFallback)->m_fallback.get()
+    //         : system_font_fallback.get();
+    //     // if (item.Type == TextItemType::Text)
+    //     // {
+    //     //     const auto font_oblique = std::clamp(style.FontOblique, -90.0f, 90.0f);
+    //     //     if (
+    //     //         cur_item_type == item.Type
+    //     //         && cur_fall_back == scope_fallback
+    //     //         && cur_font_weight == style.FontWeight
+    //     //         && cur_font_width == style.FontWidth.Width
+    //     //         && cur_font_italic == style.FontItalic
+    //     //         && cur_font_oblique == font_oblique
+    //     //     )
+    //     //     {
+    //     //         if (logic_text_length == 0)
+    //     //         {
+    //     //             item_start = i;
+    //     //             logic_text_start = item.LogicTextStart;
+    //     //         }
+    //     //         item_length++;
+    //     //         logic_text_length += item.LogicTextLength;
+    //     //         continue;
+    //     //     }
+    //     //     if (logic_text_length != 0) add_range();
+    //     //     item_start = i;
+    //     //     item_length = 1;
+    //     //     logic_text_start = item.LogicTextStart;
+    //     //     logic_text_length = item.LogicTextLength;
+    //     //     cur_item_type = item.Type;
+    //     //     cur_fall_back = scope_fallback;
+    //     //     cur_font_weight = style.FontWeight;
+    //     //     cur_font_width = style.FontWidth.Width;
+    //     //     cur_font_italic = style.FontItalic;
+    //     //     cur_font_oblique = font_oblique;
+    //     // }
+    //     // else
+    //     // {
+    //     //     if (cur_item_type == item.Type)
+    //     //     {
+    //     //         if (logic_text_length == 0)
+    //     //         {
+    //     //             item_start = i;
+    //     //             logic_text_start = item.LogicTextStart;
+    //     //         }
+    //     //         item_length++;
+    //     //         logic_text_length += item.LogicTextLength;
+    //     //         continue;
+    //     //     }
+    //     //     if (logic_text_length != 0) add_range();
+    //     //     item_start = i;
+    //     //     item_length = 1;
+    //     //     logic_text_start = item.LogicTextStart;
+    //     //     logic_text_length = item.LogicTextLength;
+    //     //     cur_item_type = item.Type;
+    //     //     cur_fall_back = nullptr;
+    //     // }
+    // }
+    // if (logic_text_length != 0) add_range();
+    //
+    // // Forward merge
+    // u32 pre_has_font_text = -1;
+    // for (u32 i = 0; i < m_font_ranges.size(); ++i)
+    // {
+    //     auto& range = m_font_ranges[i];
+    //     if (range.IsInlineBlock) pre_has_font_text = -1;
+    //     else if (range.Font)
+    //     {
+    //         if (pre_has_font_text == -1) pre_has_font_text = i;
+    //         else
+    //         {
+    //             auto& pre_range = m_font_ranges[pre_has_font_text];
+    //             if (pre_range.Font.get() != range.Font.get()) pre_has_font_text = i;
+    //             else
+    //             {
+    //                 COPLT_DEBUG_ASSERT(pre_range.Start + pre_range.Length == range.Start);
+    //                 pre_range.Length += range.Length;
+    //                 range.Length = 0;
+    //             }
+    //         }
+    //     }
+    //     else if (pre_has_font_text != -1)
+    //     {
+    //         auto& pre_range = m_font_ranges[pre_has_font_text];
+    //         COPLT_DEBUG_ASSERT(pre_range.Start + pre_range.Length == range.Start);
+    //         pre_range.Length += range.Length;
+    //         range.Length = 0;
+    //     }
+    // }
+    //
+    // // Reverse merge
+    // pre_has_font_text = -1;
+    // for (u32 n = m_font_ranges.size(); n > 0; --n)
+    // {
+    //     const auto i = n - 1;
+    //     auto& range = m_font_ranges[i];
+    //     if (range.IsInlineBlock || range.Length == 0) pre_has_font_text = -1;
+    //     else if (range.Font)
+    //     {
+    //         if (pre_has_font_text == -1) pre_has_font_text = i;
+    //         else
+    //         {
+    //             auto& pre_range = m_font_ranges[pre_has_font_text];
+    //             if (pre_range.Font.get() != range.Font.get()) pre_has_font_text = i;
+    //             else
+    //             {
+    //                 COPLT_DEBUG_ASSERT(range.Start + range.Length == pre_range.Start);
+    //                 pre_range.Start = range.Start;
+    //                 pre_range.Length += range.Length;
+    //                 range.Length = 0;
+    //             }
+    //         }
+    //     }
+    //     else if (pre_has_font_text != -1)
+    //     {
+    //         auto& pre_range = m_font_ranges[pre_has_font_text];
+    //         COPLT_DEBUG_ASSERT(range.Start + range.Length == pre_range.Start);
+    //         pre_range.Start = range.Start;
+    //         pre_range.Length += range.Length;
+    //         range.Length = 0;
+    //     }
+    // }
+    //
+    // // Finally, make sure all text range have fonts, and remove empty range
+    // for (u32 i = 0; i < m_font_ranges.size(); ++i)
+    // {
+    //     auto& range = m_font_ranges[i];
+    //     if (range.IsInlineBlock) m_font_ranges_tmp.push_back(std::move(range));
+    //     else if (range.Length == 0) continue;
+    //     else if (range.Font) m_font_ranges_tmp.push_back(std::move(range));
+    //     else
+    //     {
+    //         range.Font = m_text_layout->GetFallbackUndefFont();
+    //         m_font_ranges_tmp.push_back(std::move(range));
+    //     }
+    // }
+    // std::swap(m_font_ranges, m_font_ranges_tmp);
+    // m_font_ranges_tmp.clear();
 }
 
 void ParagraphData::AnalyzeStyles()
@@ -590,153 +565,153 @@ void ParagraphData::CollectRuns()
 
 void ParagraphData::AnalyzeGlyphsFirst()
 {
-    std::vector<u16> cluster_map;
-    std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_props;
-    std::vector<u16> glyph_indices;
-    std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_props;
-
-    auto& analyzer = m_layout->m_text_analyzer;
-    const auto& items = m_text_layout->m_items;
-    auto item_index = 0;
-    for (auto& run : m_runs)
-    {
-        const auto& script = m_script_ranges[run.ScriptRangeIndex];
-        const auto& bidi = m_bidi_ranges[run.BidiRangeIndex];
-        const auto& font = m_font_ranges[run.FontRangeIndex];
-        const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
-
-        COPLT_DEBUG_ASSERT(font.IsInlineBlock ? !font.Font : true, "inline block definitely no font");
-        if (!font.Font) continue; // skip if no font find
-
-        const auto scope = GetScope(same_style);
-        const auto& style = scope.StyleData();
-
-        const auto is_rtl = bidi.ResolvedLevel % 2 == 1;
-        const auto locale = style.LocaleMode == LocaleMode::ByScript ? script.Locale : style.Locale.Name;
-
-        // todo features from style
-        DWRITE_FONT_FEATURE features[] = {
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING,
-                .parameter = 1,
-            },
-            DWRITE_FONT_FEATURE{
-                .nameTag = DWRITE_FONT_FEATURE_TAG_KERNING,
-                .parameter = 1,
-            },
-        };
-        DWRITE_TYPOGRAPHIC_FEATURES typ_features[] = {
-            DWRITE_TYPOGRAPHIC_FEATURES{
-                .features = features,
-                .featureCount = std::size(features)
-            },
-        };
-        const DWRITE_TYPOGRAPHIC_FEATURES* arg_features = typ_features;
-        const u32 feature_range_length = run.Length;
-
-        const auto text = m_chars.data() + run.Start;
-
-        HRESULT hr{};
-        u32 actual_glyph_count{};
-        auto buf_size = 3 * run.Length / 2 + 16;
-        for (;;)
-        {
-            if (cluster_map.size() < run.Length)
-            {
-                cluster_map.resize(run.Length, {});
-                text_props.resize(run.Length, {});
-            }
-            if (glyph_indices.size() < buf_size)
-            {
-                glyph_indices.resize(buf_size, {});
-                glyph_props.resize(buf_size, {});
-            }
-            hr = analyzer->GetGlyphs(
-                text,
-                run.Length,
-                font.Font->m_face.get(),
-                false, // sideways
-                is_rtl,
-                &script.Analysis,
-                locale,
-                nullptr, // todo number subsitiution
-                &arg_features,
-                &feature_range_length,
-                1,
-                glyph_indices.size(),
-                cluster_map.data(),
-                text_props.data(),
-                glyph_indices.data(),
-                glyph_props.data(),
-                &actual_glyph_count
-            );
-            if (hr != ERROR_INSUFFICIENT_BUFFER) break;
-            buf_size *= 2;
-        }
-        if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
-
-        run.ClusterStartIndex = m_cluster_map.size();
-        run.GlyphStartIndex = m_glyph_indices.size();
-        run.ActualGlyphCount = actual_glyph_count;
-
-        m_cluster_map.insert(m_cluster_map.end(), cluster_map.data(), cluster_map.data() + run.Length);
-        m_text_props.insert(m_text_props.end(), text_props.data(), text_props.data() + run.Length);
-        m_glyph_indices.insert(m_glyph_indices.end(), glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
-        m_glyph_props.insert(m_glyph_props.end(), glyph_props.data(), glyph_props.data() + actual_glyph_count);
-
-        m_glyph_advances.resize(m_glyph_advances.size() + actual_glyph_count, {});
-        m_glyph_offsets.resize(m_glyph_offsets.size() + actual_glyph_count, {});
-
-        hr = analyzer->GetGlyphPlacements(
-            text,
-            cluster_map.data(),
-            text_props.data(),
-            run.Length,
-            glyph_indices.data(),
-            glyph_props.data(),
-            actual_glyph_count,
-            font.Font->m_face.get(),
-            style.FontSize,
-            false, // sideways
-            is_rtl,
-            &script.Analysis,
-            locale,
-            &arg_features,
-            &feature_range_length,
-            1,
-            m_glyph_advances.data() + run.GlyphStartIndex,
-            m_glyph_offsets.data() + run.GlyphStartIndex
-        );
-        if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
-    }
+    // std::vector<u16> cluster_map;
+    // std::vector<DWRITE_SHAPING_TEXT_PROPERTIES> text_props;
+    // std::vector<u16> glyph_indices;
+    // std::vector<DWRITE_SHAPING_GLYPH_PROPERTIES> glyph_props;
+    //
+    // auto& analyzer = m_layout->m_text_analyzer;
+    // const auto& items = m_text_layout->m_items;
+    // auto item_index = 0;
+    // for (auto& run : m_runs)
+    // {
+    //     const auto& script = m_script_ranges[run.ScriptRangeIndex];
+    //     const auto& bidi = m_bidi_ranges[run.BidiRangeIndex];
+    //     const auto& font = m_font_ranges[run.FontRangeIndex];
+    //     const auto& same_style = m_same_style_ranges[run.StyleRangeIndex];
+    //
+    //     COPLT_DEBUG_ASSERT(font.IsInlineBlock ? !font.Font : true, "inline block definitely no font");
+    //     if (!font.Font) continue; // skip if no font find
+    //
+    //     const auto scope = GetScope(same_style);
+    //     const auto& style = scope.StyleData();
+    //
+    //     const auto is_rtl = bidi.ResolvedLevel % 2 == 1;
+    //     const auto locale = style.LocaleMode == LocaleMode::ByScript ? script.Locale : style.Locale.Name;
+    //
+    //     // todo features from style
+    //     DWRITE_FONT_FEATURE features[] = {
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING,
+    //             .parameter = 1,
+    //         },
+    //         DWRITE_FONT_FEATURE{
+    //             .nameTag = DWRITE_FONT_FEATURE_TAG_KERNING,
+    //             .parameter = 1,
+    //         },
+    //     };
+    //     DWRITE_TYPOGRAPHIC_FEATURES typ_features[] = {
+    //         DWRITE_TYPOGRAPHIC_FEATURES{
+    //             .features = features,
+    //             .featureCount = std::size(features)
+    //         },
+    //     };
+    //     const DWRITE_TYPOGRAPHIC_FEATURES* arg_features = typ_features;
+    //     const u32 feature_range_length = run.Length;
+    //
+    //     const auto text = m_chars.data() + run.Start;
+    //
+    //     HRESULT hr{};
+    //     u32 actual_glyph_count{};
+    //     auto buf_size = 3 * run.Length / 2 + 16;
+    //     for (;;)
+    //     {
+    //         if (cluster_map.size() < run.Length)
+    //         {
+    //             cluster_map.resize(run.Length, {});
+    //             text_props.resize(run.Length, {});
+    //         }
+    //         if (glyph_indices.size() < buf_size)
+    //         {
+    //             glyph_indices.resize(buf_size, {});
+    //             glyph_props.resize(buf_size, {});
+    //         }
+    //         hr = analyzer->GetGlyphs(
+    //             text,
+    //             run.Length,
+    //             font.Font->m_face.get(),
+    //             false, // sideways
+    //             is_rtl,
+    //             &script.Analysis,
+    //             locale,
+    //             nullptr, // todo number subsitiution
+    //             &arg_features,
+    //             &feature_range_length,
+    //             1,
+    //             glyph_indices.size(),
+    //             cluster_map.data(),
+    //             text_props.data(),
+    //             glyph_indices.data(),
+    //             glyph_props.data(),
+    //             &actual_glyph_count
+    //         );
+    //         if (hr != ERROR_INSUFFICIENT_BUFFER) break;
+    //         buf_size *= 2;
+    //     }
+    //     if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
+    //
+    //     run.ClusterStartIndex = m_cluster_map.size();
+    //     run.GlyphStartIndex = m_glyph_indices.size();
+    //     run.ActualGlyphCount = actual_glyph_count;
+    //
+    //     m_cluster_map.insert(m_cluster_map.end(), cluster_map.data(), cluster_map.data() + run.Length);
+    //     m_text_props.insert(m_text_props.end(), text_props.data(), text_props.data() + run.Length);
+    //     m_glyph_indices.insert(m_glyph_indices.end(), glyph_indices.data(), glyph_indices.data() + actual_glyph_count);
+    //     m_glyph_props.insert(m_glyph_props.end(), glyph_props.data(), glyph_props.data() + actual_glyph_count);
+    //
+    //     m_glyph_advances.resize(m_glyph_advances.size() + actual_glyph_count, {});
+    //     m_glyph_offsets.resize(m_glyph_offsets.size() + actual_glyph_count, {});
+    //
+    //     hr = analyzer->GetGlyphPlacements(
+    //         text,
+    //         cluster_map.data(),
+    //         text_props.data(),
+    //         run.Length,
+    //         glyph_indices.data(),
+    //         glyph_props.data(),
+    //         actual_glyph_count,
+    //         font.Font->m_face.get(),
+    //         style.FontSize,
+    //         false, // sideways
+    //         is_rtl,
+    //         &script.Analysis,
+    //         locale,
+    //         &arg_features,
+    //         &feature_range_length,
+    //         1,
+    //         m_glyph_advances.data() + run.GlyphStartIndex,
+    //         m_glyph_offsets.data() + run.GlyphStartIndex
+    //     );
+    //     if (FAILED(hr)) throw ComException(hr, "Failed to get glyphs");
+    // }
 }
 
 // void ParagraphData::AnalyzeGlyphsCarets()
@@ -906,45 +881,45 @@ HRESULT TextAnalysisSource::GetLocaleName(
         {
             const auto offset = textPosition - scope_range.LogicTextStart;
             *textLength = scope_range.LogicTextLength - offset;
-            *localeName = scope_style.Locale.Name;
+            *localeName = reinterpret_cast<WCHAR*>(scope_style.Locale.Name);
             return S_OK;
         }
-        if (scope_style.LocaleMode == LocaleMode::ByScript)
-        {
-            const auto& script_ranges = m_paragraph_data->m_script_ranges;
-            if (script_ranges.empty() || textPosition >= paragraph.LogicTextLength)
-            {
-                *textLength = 0;
-                *localeName = nullptr;
-                return S_OK;
-            }
-            if (paragraph.Type == TextParagraphType::Block)
-            {
-                *textLength = 1;
-                *localeName = nullptr;
-                return S_OK;
-            }
-            const auto index = Algorithm::BinarySearch(
-                script_ranges.data(), static_cast<i32>(script_ranges.size()), textPosition,
-                [](const ScriptRange& item, const u32 pos)
-                {
-                    if (pos < item.Start) return 1;
-                    if (pos >= item.Start + item.Length) return -1;
-                    return 0;
-                }
-            );
-            if (index < 0)
-            {
-                *textLength = 0;
-                *localeName = nullptr;
-                return S_OK;
-            }
-            const auto& range = script_ranges[index];
-            const auto offset = textPosition - range.Start;
-            *textLength = range.Length - offset;
-            *localeName = range.Locale;
-            return S_OK;
-        }
+        // if (scope_style.LocaleMode == LocaleMode::ByScript)
+        // {
+        //     const auto& script_ranges = m_paragraph_data->m_script_ranges;
+        //     if (script_ranges.empty() || textPosition >= paragraph.LogicTextLength)
+        //     {
+        //         *textLength = 0;
+        //         *localeName = nullptr;
+        //         return S_OK;
+        //     }
+        //     if (paragraph.Type == TextParagraphType::Block)
+        //     {
+        //         *textLength = 1;
+        //         *localeName = nullptr;
+        //         return S_OK;
+        //     }
+        //     const auto index = Algorithm::BinarySearch(
+        //         script_ranges.data(), static_cast<i32>(script_ranges.size()), textPosition,
+        //         [](const ScriptRange& item, const u32 pos)
+        //         {
+        //             if (pos < item.Start) return 1;
+        //             if (pos >= item.Start + item.Length) return -1;
+        //             return 0;
+        //         }
+        //     );
+        //     if (index < 0)
+        //     {
+        //         *textLength = 0;
+        //         *localeName = nullptr;
+        //         return S_OK;
+        //     }
+        //     const auto& range = script_ranges[index];
+        //     const auto offset = textPosition - range.Start;
+        //     *textLength = range.Length - offset;
+        //     *localeName = range.Locale;
+        //     return S_OK;
+        // }
     }
     *textLength = 0;
     *localeName = L"";

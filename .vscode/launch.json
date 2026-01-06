@@ -1,0 +1,15 @@
+{
+  "configurations": [
+    {
+      "name": "Debug",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/Tests/ManualTest/bin/Debug/net10.0/ManualTest.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "console": "integratedTerminal"
+    }
+  ]
+}

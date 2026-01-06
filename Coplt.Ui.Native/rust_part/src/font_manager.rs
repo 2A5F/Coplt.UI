@@ -15,8 +15,14 @@ use std::{
 
 use dashmap::DashMap;
 
+use crate::{dwrite::FontFace, utils::ManagedHandle};
+
 use super::com::*;
-use cocom::{ComPtr, MakeObject, MakeObjectWeak, impls::ObjectBoxNew, object::Object};
+use cocom::{
+    ComPtr, MakeObject, MakeObjectWeak,
+    impls::ObjectBoxNew,
+    object::{Object, ObjectPtr},
+};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn coplt_ui_new_font_manager(
@@ -74,6 +80,8 @@ impl Drop for AssocUpdate {
 #[cocom::object(IFontManager)]
 #[derive(Debug)]
 pub struct FontManager {
+    managed_handle: ManagedHandle,
+
     frame_source: ComPtr<IFrameSource>,
 
     expire_frame: u64,
@@ -90,6 +98,8 @@ pub struct FontManager {
 impl FontManager {
     pub fn new(frame_source: ComPtr<IFrameSource>) -> Self {
         Self {
+            managed_handle: Default::default(),
+
             frame_source,
 
             expire_frame: 180,
@@ -111,6 +121,18 @@ unsafe impl Sync for FontManager {}
 impl impls::IWeak for FontManager {}
 
 impl impls::IFontManager for FontManager {
+    fn SetManagedHandle(
+        &mut self,
+        Handle: *mut core::ffi::c_void,
+        OnDrop: unsafe extern "C" fn(*mut core::ffi::c_void) -> (),
+    ) -> () {
+        self.managed_handle = ManagedHandle::new(Handle, OnDrop);
+    }
+
+    fn GetManagedHandle(&mut self) -> *mut core::ffi::c_void {
+        self.managed_handle.0
+    }
+
     fn SetAssocUpdate(
         &mut self,
         Data: *mut core::ffi::c_void,
@@ -234,5 +256,27 @@ impl impls::IFontManager for FontManager {
         };
         drop(lock_guard);
         r
+    }
+}
+
+impl FontManager {
+    pub fn get_or_add(
+        &mut self,
+        id: u64,
+        on_add: impl FnOnce() -> anyhow::Result<ComPtr<IFontFace>>,
+    ) -> anyhow::Result<ComPtr<IFontFace>> {
+        let lock_guard = self.op_lock.read().unwrap();
+        let r = match self.id_to_faces.entry(id) {
+            dashmap::Entry::Occupied(entry) => entry.get().clone(),
+            dashmap::Entry::Vacant(entry) => {
+                let r = entry.insert(on_add()?).clone();
+                for au in self.assoc_updates.values() {
+                    au.on_add(r.ptr().as_ptr(), id);
+                }
+                r
+            }
+        };
+        drop(lock_guard);
+        Ok(r)
     }
 }

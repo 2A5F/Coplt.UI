@@ -1,0 +1,9 @@
+[package]
+edition = "2024"
+name = "coplt_ui_rust_common"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+anyhow = {workspace = true}
+dashmap = {workspace = true}

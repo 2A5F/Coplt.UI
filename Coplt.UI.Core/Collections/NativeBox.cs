@@ -26,6 +26,7 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
 
     #region Drop
 
+    [Drop]
     private void Drop()
     {
         if (m_ptr == null) return;
@@ -47,6 +48,7 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
     }
 
     public static NativeBox<T> New() => new(NativeLib.Alloc<T>());
+    public static NativeBox<T> NewZeroed() => new(NativeLib.ZAlloc<T>());
 
     #endregion
 
@@ -76,6 +78,15 @@ public unsafe partial struct NativeBox<T>(T* ptr) : IEquatable<NativeBox<T>>
     #region GetPinnableReference
 
     public ref T GetPinnableReference() => ref Value;
+
+    #endregion
+
+    #region bool
+
+    public static implicit operator bool(NativeBox<T> self) => self.m_ptr != null;
+    public static bool operator true(NativeBox<T> self) => self.m_ptr != null;
+    public static bool operator false(NativeBox<T> self) => self.m_ptr == null;
+    public static bool operator !(NativeBox<T> self) => self.m_ptr == null;
 
     #endregion
 
