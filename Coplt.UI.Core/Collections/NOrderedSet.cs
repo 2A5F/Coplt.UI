@@ -82,6 +82,7 @@ public unsafe partial struct NOrderedSet<T> : ICollection<T>
 
     #region Drop
 
+    [Drop]
     private void Drop()
     {
         if (m_buckets != null)

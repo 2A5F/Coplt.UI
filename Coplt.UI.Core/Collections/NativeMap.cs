@@ -609,6 +609,34 @@ public unsafe partial struct NativeMap<TKey, TValue> : IEnumerable<KeyValuePair<
 
     #endregion
 
+    #region Drop
+
+    [Drop]
+    private void Drop()
+    {
+        var count = m_count;
+        if (count > 0)
+        {
+            Debug.Assert(m_buckets != null, "_buckets should be non-null");
+            Debug.Assert(m_entries != null, "_entries should be non-null");
+
+            if (DisposeProxy<TKey>.IsDisposable || DisposeProxy<TValue>.IsDisposable)
+            {
+                foreach (var kv in this)
+                {
+                    DisposeProxy.TryDispose(ref kv.Key);
+                    DisposeProxy.TryDispose(ref kv.Value);
+                }
+            }
+        }
+
+        NativeMemory.Free(m_buckets);
+        NativeMemory.Free(m_entries);
+        this = default;
+    }
+
+    #endregion
+
     #region Enumerator
 
     [UnscopedRef]
